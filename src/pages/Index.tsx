@@ -2,6 +2,7 @@
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -36,12 +37,16 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-                  Start Assessment
-                </Button>
-                <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
-                  Learn More
-                </Button>
+                <Link to="/assessment">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
+                    Start Assessment
+                  </Button>
+                </Link>
+                <Link to="/assessment">
+                  <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                    Learn More
+                  </Button>
+                </Link>
               </motion.div>
             </div>
             <motion.div 
