@@ -13,6 +13,7 @@ export const Logo = ({ className }: LogoProps) => {
         alt="ELIA GO"
         className="h-10 w-auto"
       />
+      <span className="text-xl font-semibold text-primary">Elia GO</span>
     </div>
   );
 };
