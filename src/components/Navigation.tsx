@@ -12,7 +12,7 @@ export const Navigation = () => {
             <Logo />
           </Link>
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-600 hover:text-primary transition-colors">Features</a>
+            <Link to="/features" className="text-gray-600 hover:text-primary transition-colors">Features</Link>
             <a href="#assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</a>
             <a href="#training" className="text-gray-600 hover:text-primary transition-colors">Training</a>
             <Link to="/register">
