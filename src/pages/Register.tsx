@@ -46,10 +46,12 @@ export default function Register() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    console.log("Starting registration process...", values);
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
-        password: crypto.randomUUID(), // Generate a random password that will be reset via email
+        password: crypto.randomUUID(),
         options: {
           data: {
             first_name: values.firstName,
@@ -61,20 +63,33 @@ export default function Register() {
         },
       });
 
-      if (error) throw error;
+      console.log("Supabase response:", { data, error });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       toast({
         title: "Registration successful!",
         description: "Please check your email to confirm your account.",
       });
       
-      // Redirect to a confirmation page or home
       navigate("/register/confirmation");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      let errorMessage = "Something went wrong. Please try again.";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
+      }
+
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
