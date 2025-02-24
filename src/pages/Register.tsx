@@ -46,12 +46,16 @@ export default function Register() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log("Starting registration process...", values);
+    console.log("Starting registration process...");
     
     try {
+      // Generate a strong password (at least 6 characters as required by Supabase)
+      const password = crypto.randomUUID() + "A1!"; // Ensuring password meets complexity requirements
+      
+      console.log("Attempting to sign up with Supabase...");
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
-        password: crypto.randomUUID(),
+        password: password,
         options: {
           data: {
             first_name: values.firstName,
@@ -63,7 +67,7 @@ export default function Register() {
         },
       });
 
-      console.log("Supabase response:", { data, error });
+      console.log("Supabase response received:", { data, error });
 
       if (error) {
         console.error("Supabase error:", error);
