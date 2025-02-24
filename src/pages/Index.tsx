@@ -56,8 +56,8 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/lovable-uploads/163720d8-fbe9-442f-abe6-8cdf59b26473.png"
-                alt="Mediterranean landscape"
+                src="/lovable-uploads/bf07f304-1895-4f5e-a378-715282528884.png"
+                alt="Olive tree"
                 className="w-full rounded-2xl shadow-xl animate-float"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
