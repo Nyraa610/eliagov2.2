@@ -10,6 +10,7 @@ import RegisterConfirmation from "./pages/RegisterConfirmation";
 import Assessment from "./pages/Assessment";
 import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register/confirmation" element={<RegisterConfirmation />} />
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/features" element={<Features />} />

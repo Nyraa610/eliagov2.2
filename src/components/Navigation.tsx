@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
 import { Link } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 export const Navigation = () => {
   return (
@@ -15,6 +16,12 @@ export const Navigation = () => {
             <Link to="/features" className="text-gray-600 hover:text-primary transition-colors">Features</Link>
             <a href="#assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</a>
             <a href="#training" className="text-gray-600 hover:text-primary transition-colors">Training</a>
+            <Link to="/login">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            </Link>
             <Link to="/register">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                 Get Started
