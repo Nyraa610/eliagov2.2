@@ -12,6 +12,13 @@ import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import Training from "./pages/Training";
+
+// Admin Routes
+import AdminTraining from "./pages/admin/Training";
+import CourseForm from "./pages/admin/CourseForm";
+import ModuleManagement from "./pages/admin/ModuleManagement";
+import ContentManagement from "./pages/admin/ContentManagement";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +36,16 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/features" element={<Features />} />
+          
+          {/* Training Routes */}
+          <Route path="/training" element={<Training />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/training" element={<AdminTraining />} />
+          <Route path="/admin/courses/:id" element={<CourseForm />} />
+          <Route path="/admin/courses/:courseId/modules" element={<ModuleManagement />} />
+          <Route path="/admin/courses/:courseId/modules/:moduleId/content" element={<ContentManagement />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
