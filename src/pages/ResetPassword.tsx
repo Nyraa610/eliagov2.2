@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,22 +13,55 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have a hash fragment with an access_token
-    const hash = window.location.hash;
-    if (!hash || !hash.includes("access_token")) {
-      // If no access token is found, redirect to login
-      toast({
-        variant: "destructive",
-        title: "Invalid reset link",
-        description: "The password reset link is invalid or has expired.",
-      });
-      navigate("/login");
-    }
-  }, [navigate, toast]);
+    const handlePasswordReset = async () => {
+      try {
+        // Check if we have a hash fragment with access_token
+        const hash = window.location.hash;
+        if (!hash) {
+          throw new Error("No hash fragment found in URL");
+        }
+
+        // Parse the hash to get the access token
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get("access_token");
+        
+        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+        
+        if (!accessToken) {
+          throw new Error("No access token found in URL");
+        }
+        
+        // Set the session with the access token
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get("refresh_token") || "",
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // Validation successful
+        setIsInitialized(true);
+      } catch (error: any) {
+        console.error("Password reset initialization error:", error);
+        toast({
+          variant: "destructive",
+          title: "Invalid reset link",
+          description: "The password reset link is invalid or has expired.",
+        });
+        navigate("/login");
+      }
+    };
+
+    handlePasswordReset();
+  }, [navigate, toast, location]);
 
   const validatePassword = (password: string) => {
     if (password.length < 8) {
@@ -66,35 +99,58 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("No active session found");
+      }
+
       const { error } = await supabase.auth.updateUser({
         password,
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Password reset failed",
-          description: error.message,
-        });
-        setError(error.message);
-      } else {
-        toast({
-          title: "Password updated successfully",
-          description: "You can now log in with your new password",
-        });
-        navigate("/login");
+        throw error;
       }
+
+      toast({
+        title: "Password updated successfully",
+        description: "You can now log in with your new password",
+      });
+      
+      // Sign out the user after successful password reset
+      await supabase.auth.signOut();
+      
+      // Redirect to login
+      navigate("/login");
     } catch (error: any) {
+      console.error("Password reset error:", error);
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
       });
-      setError("An unexpected error occurred");
+      setError(error.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-md mx-auto text-center">
+            <div className="animate-pulse">
+              <p className="text-gray-600">Verifying your reset link...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">

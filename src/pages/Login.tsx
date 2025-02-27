@@ -57,28 +57,33 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Get the current URL origin
+      const origin = window.location.origin;
+      
+      // The redirectTo should be the reset-password page
+      const redirectTo = `${origin}/reset-password`;
+      
+      console.log("Sending reset password email with redirect to:", redirectTo);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo,
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Password reset failed",
-          description: error.message,
-        });
-      } else {
-        setResetSent(true);
-        toast({
-          title: "Password reset email sent",
-          description: "Check your email for a password reset link",
-        });
+        throw error;
       }
-    } catch (error) {
+      
+      setResetSent(true);
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for a password reset link",
+      });
+    } catch (error: any) {
+      console.error("Reset password error:", error);
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
       setIsLoading(false);
