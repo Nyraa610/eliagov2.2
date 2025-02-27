@@ -20,6 +20,12 @@ import { Navigation } from "@/components/Navigation";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   phone: z.string().min(10, "Please enter a valid phone number"),
@@ -36,6 +42,7 @@ export default function Register() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
+      password: "",
       firstName: "",
       lastName: "",
       phone: "",
@@ -49,13 +56,10 @@ export default function Register() {
     console.log("Starting registration process...");
     
     try {
-      // Generate a strong password (at least 6 characters as required by Supabase)
-      const password = crypto.randomUUID() + "A1!"; // Ensuring password meets complexity requirements
-      
       console.log("Attempting to sign up with Supabase...");
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
-        password: password,
+        password: values.password,
         options: {
           data: {
             first_name: values.firstName,
@@ -124,6 +128,19 @@ export default function Register() {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="email@company.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
