@@ -1,24 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Plus, ChevronUp, ChevronDown, Edit, Trash2, BookOpen } from "lucide-react";
-import { Course, Module } from "@/types/training";
-import { trainingService } from "@/services/trainingService";
+import { moduleService } from "@/services/moduleService";
+import { courseService } from "@/services/courseService";
+import { Module, Course } from "@/types/training";
+import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -31,6 +31,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Optional: Import a library for drag-and-drop functionality
+// import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+// import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+// import { CSS } from '@dnd-kit/utilities';
+
 export default function ModuleManagement() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -40,119 +45,117 @@ export default function ModuleManagement() {
   const [modules, setModules] = useState<Module[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  const [currentModule, setCurrentModule] = useState<Partial<Module>>({
-    title: "",
-    description: "",
-    sequence_order: 1,
-  });
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [moduleIdToDelete, setModuleIdToDelete] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentModule, setCurrentModule] = useState<Module | null>(null);
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [moduleDescription, setModuleDescription] = useState("");
+  
+  const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!courseId) return;
+    if (courseId) {
+      fetchData();
+    }
+  }, [courseId]);
 
-    const fetchCourseAndModules = async () => {
-      setIsLoading(true);
-      try {
-        const courseData = await trainingService.getCourseById(courseId);
-        setCourse(courseData);
-
-        const modulesData = await trainingService.getModulesByCourseId(courseId);
-        setModules(modulesData);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error fetching data",
-          description: error.message,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCourseAndModules();
-  }, [courseId, toast]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setCurrentModule((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddOrUpdateModule = async () => {
-    if (!courseId) return;
-
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      const moduleData = {
-        ...currentModule,
-        course_id: courseId,
-        sequence_order: currentModule.id 
-          ? currentModule.sequence_order 
-          : modules.length > 0 
-            ? Math.max(...modules.map(m => m.sequence_order)) + 1 
-            : 1
-      };
-
-      const { data, error } = await supabase
-        .from("modules")
-        .upsert([moduleData], { onConflict: "id" })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: currentModule.id ? "Module updated" : "Module added",
-        description: `Successfully ${currentModule.id ? "updated" : "added"} the module.`,
-      });
-
-      setIsEditDialogOpen(false);
+      if (!courseId) throw new Error("Course ID is required");
       
-      // Refresh modules list
-      const updatedModules = await trainingService.getModulesByCourseId(courseId);
-      setModules(updatedModules);
+      const [courseData, modulesData] = await Promise.all([
+        courseService.getCourseById(courseId),
+        moduleService.getModulesByCourseId(courseId)
+      ]);
       
-      // Reset form
-      setCurrentModule({
-        title: "",
-        description: "",
-        sequence_order: 1,
-      });
+      setCourse(courseData);
+      setModules(modulesData);
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error saving module",
+        title: "Error fetching data",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openCreateDialog = () => {
+    setIsEditing(false);
+    setCurrentModule(null);
+    setModuleTitle("");
+    setModuleDescription("");
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (module: Module) => {
+    setIsEditing(true);
+    setCurrentModule(module);
+    setModuleTitle(module.title);
+    setModuleDescription(module.description || "");
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveModule = async () => {
+    if (!moduleTitle.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Module title is required.",
+      });
+      return;
+    }
+
+    try {
+      if (isEditing && currentModule) {
+        await moduleService.updateModule(currentModule.id, {
+          title: moduleTitle,
+          description: moduleDescription.trim() ? moduleDescription : null,
+        });
+        
+        toast({
+          title: "Module updated",
+          description: "The module has been successfully updated.",
+        });
+      } else {
+        if (!courseId) throw new Error("Course ID is required");
+        
+        await moduleService.createModule({
+          course_id: courseId,
+          title: moduleTitle,
+          description: moduleDescription.trim() ? moduleDescription : null,
+          sequence_order: modules.length + 1,
+        });
+        
+        toast({
+          title: "Module created",
+          description: "The module has been successfully created.",
+        });
+      }
+      
+      setIsDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: `Error ${isEditing ? "updating" : "creating"} module`,
         description: error.message,
       });
     }
   };
 
-  const handleEditModule = (module: Module) => {
-    setCurrentModule(module);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!moduleIdToDelete) return;
-
+  const handleDeleteModule = async () => {
+    if (!deleteModuleId) return;
+    
     try {
-      const { error } = await supabase
-        .from("modules")
-        .delete()
-        .eq("id", moduleIdToDelete);
-
-      if (error) throw error;
-
+      await moduleService.deleteModule(deleteModuleId);
       toast({
         title: "Module deleted",
         description: "The module has been successfully deleted.",
       });
-
-      // Refresh modules list
-      if (courseId) {
-        const updatedModules = await trainingService.getModulesByCourseId(courseId);
-        setModules(updatedModules);
-      }
+      fetchData();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -160,66 +163,46 @@ export default function ModuleManagement() {
         description: error.message,
       });
     } finally {
-      setIsDeleteDialogOpen(false);
-      setModuleIdToDelete(null);
+      setDeleteModuleId(null);
     }
-  };
-
-  const handleMoveModule = async (id: string, direction: "up" | "down") => {
-    const moduleIndex = modules.findIndex(m => m.id === id);
-    if (
-      (direction === "up" && moduleIndex === 0) || 
-      (direction === "down" && moduleIndex === modules.length - 1)
-    ) {
-      return;
-    }
-
-    const swapWithIndex = direction === "up" ? moduleIndex - 1 : moduleIndex + 1;
-    
-    const currentModule = modules[moduleIndex];
-    const swapModule = modules[swapWithIndex];
-    
-    // Swap the sequence orders
-    const tempOrder = currentModule.sequence_order;
-    
-    try {
-      // Update the first module
-      await supabase
-        .from("modules")
-        .update({ sequence_order: swapModule.sequence_order })
-        .eq("id", currentModule.id);
-      
-      // Update the second module
-      await supabase
-        .from("modules")
-        .update({ sequence_order: tempOrder })
-        .eq("id", swapModule.id);
-      
-      // Refresh modules list
-      if (courseId) {
-        const updatedModules = await trainingService.getModulesByCourseId(courseId);
-        setModules(updatedModules);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error reordering modules",
-        description: error.message,
-      });
-    }
-  };
-
-  const handleManageContent = (moduleId: string) => {
-    navigate(`/admin/courses/${courseId}/modules/${moduleId}/content`);
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 page-header-spacing">
           <div className="flex justify-center items-center h-64">
             <p>Loading modules...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+        <Navigation />
+        <div className="container mx-auto px-4 page-header-spacing">
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/admin/training")}
+              className="mr-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </div>
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-2">Course Not Found</h2>
+              <p className="text-muted-foreground mb-4">The course you're looking for doesn't exist.</p>
+              <Button onClick={() => navigate("/admin/training")}>
+                Return to Courses
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -229,175 +212,147 @@ export default function ModuleManagement() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 page-header-spacing pb-8">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate("/admin/training")} className="mr-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/admin/training")}
+            className="mr-4"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Courses
+            Back
           </Button>
-          <h1 className="text-3xl font-bold text-primary">
-            Manage Modules: {course?.title}
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary flex-grow">
+            {course.title} - Modules
           </h1>
+          <Button onClick={openCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Module
+          </Button>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-muted-foreground">
-            Organize your course into modules. Each module can contain videos, text content, and quizzes.
-          </p>
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setCurrentModule({
-                title: "",
-                description: "",
-                sequence_order: modules.length > 0 ? Math.max(...modules.map(m => m.sequence_order)) + 1 : 1
-              })}>
+        {modules.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <h3 className="text-lg font-medium mb-2">No Modules Yet</h3>
+              <p className="text-muted-foreground mb-4 text-center max-w-md">
+                Start creating modules to organize your course content.
+              </p>
+              <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Module
+                Create First Module
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{currentModule.id ? "Edit Module" : "Add Module"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Module Title</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={currentModule.title}
-                    onChange={handleInputChange}
-                    placeholder="Enter module title"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={currentModule.description || ""}
-                    onChange={handleInputChange}
-                    placeholder="Enter module description"
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddOrUpdateModule}>
-                  {currentModule.id ? "Update" : "Add"} Module
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Course Modules</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {modules.length === 0 ? (
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium">No modules yet</h3>
-                <p className="text-muted-foreground mt-2 mb-4">
-                  Get started by adding your first module to this course.
-                </p>
-                <Button onClick={() => setIsEditDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Module
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {modules.map((module) => (
-                  <div
-                    key={module.id}
-                    className="flex items-center justify-between border rounded-md p-4"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-medium">{module.title}</h3>
-                      {module.description && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {module.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleManageContent(module.id)}
-                      >
-                        Manage Content
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleMoveModule(module.id, "up")}
-                        disabled={modules.indexOf(module) === 0}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleMoveModule(module.id, "down")}
-                        disabled={modules.indexOf(module) === modules.length - 1}
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditModule(module)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setModuleIdToDelete(module.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {modules.map((module, index) => (
+              <Card key={module.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center">
+                    <GripVertical className="h-5 w-5 mr-2 text-muted-foreground cursor-grab" />
+                    <CardTitle className="flex-grow">{module.title}</CardTitle>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete this module and all its content, including videos, text, and quizzes.
-                This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setModuleIdToDelete(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {module.description || "No description provided."}
+                  </p>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(module)}
+                      className="mr-2"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteModuleId(module.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
+                  <Link to={`/admin/courses/${courseId}/modules/${module.id}/content`}>
+                    <Button size="sm">
+                      Manage Content
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Module Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditing ? 'Edit Module' : 'Add Module'}</DialogTitle>
+            <DialogDescription>
+              {isEditing 
+                ? 'Update the module details below.' 
+                : 'Create a new module to organize your course content.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Module Title</Label>
+              <Input
+                id="title"
+                value={moduleTitle}
+                onChange={(e) => setModuleTitle(e.target.value)}
+                placeholder="Enter module title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                value={moduleDescription}
+                onChange={(e) => setModuleDescription(e.target.value)}
+                placeholder="Enter module description"
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveModule}>
+              <Save className="h-4 w-4 mr-2" />
+              {isEditing ? 'Update Module' : 'Create Module'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteModuleId} onOpenChange={(open) => !open && setDeleteModuleId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the module
+              and all its associated content.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteModule} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
