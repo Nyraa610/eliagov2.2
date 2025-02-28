@@ -43,6 +43,22 @@ export const supabaseService = {
     }
   },
   
+  getAllProfiles: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+      return { data: null, error };
+    }
+  },
+  
   updateUserProfile: async (profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -61,6 +77,22 @@ export const supabaseService = {
     } catch (error) {
       console.error("Error updating user profile:", error);
       return null;
+    }
+  },
+  
+  updateUserRole: async (userId: string, role: UserRole): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId);
+        
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      return false;
     }
   },
   

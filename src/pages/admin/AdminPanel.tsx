@@ -108,12 +108,7 @@ export default function AdminPanel() {
                     <Button 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => {
-                        toast({
-                          title: "Coming Soon",
-                          description: "This feature will be available in a future update."
-                        });
-                      }}
+                      onClick={() => navigate("/admin/users")}
                     >
                       User Management
                     </Button>
@@ -188,16 +183,26 @@ export default function AdminPanel() {
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
                   <CardDescription>
-                    This feature will be available in a future update
+                    View and manage user accounts and roles
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">User Management Coming Soon</h3>
-                    <p className="text-muted-foreground">
-                      This feature is under development and will be available in a future update.
-                    </p>
+                  <div className="space-y-4">
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Users className="h-4 w-4 mr-2 text-primary" />
+                        User Accounts
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        View and manage user accounts, change user roles between admin and regular user.
+                      </p>
+                      <Button 
+                        onClick={() => navigate("/admin/users")}
+                        size="sm"
+                      >
+                        Manage Users
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

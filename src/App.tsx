@@ -21,6 +21,7 @@ import QuizManagement from "@/pages/admin/QuizManagement";
 import Profile from "@/pages/Profile";
 import Unauthorized from "@/pages/Unauthorized";
 import AdminPanel from "@/pages/admin/AdminPanel";
+import UserManagement from "@/pages/admin/UserManagement";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const router = createBrowserRouter([
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/panel",
     element: <ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>,
+  },
+  {
+    path: "/admin/users",
+    element: <ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>,
   },
   {
     path: "/admin/training",
