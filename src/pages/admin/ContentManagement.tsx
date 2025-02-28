@@ -56,6 +56,7 @@ export default function ContentManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [contentItemIdToDelete, setContentItemIdToDelete] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (!moduleId) return;
@@ -102,6 +103,8 @@ export default function ContentManagement() {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setVideoFile(e.target.files[0]);
+      // Clear the video URL if a file is selected
+      setCurrentContentItem((prev) => ({ ...prev, video_url: "" }));
     }
   };
 
@@ -109,13 +112,34 @@ export default function ContentManagement() {
     if (!moduleId) return;
     
     setIsSubmitting(true);
+    setUploadProgress(0);
     
     try {
       let videoUrl = currentContentItem.video_url;
 
       // If it's a video content and a new file is uploaded
       if (currentContentItem.content_type === "video" && videoFile) {
-        videoUrl = await trainingService.uploadVideo(videoFile);
+        try {
+          toast({
+            title: "Uploading video",
+            description: "Please wait while your video is being uploaded...",
+          });
+          
+          videoUrl = await trainingService.uploadVideo(videoFile);
+          
+          toast({
+            title: "Video uploaded",
+            description: "Your video has been successfully uploaded.",
+          });
+        } catch (uploadError: any) {
+          toast({
+            variant: "destructive",
+            title: "Video upload failed",
+            description: uploadError.message,
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       const contentData = {
@@ -125,7 +149,7 @@ export default function ContentManagement() {
         sequence_order: currentContentItem.id 
           ? currentContentItem.sequence_order 
           : contentItems.length > 0 
-            ? Math.max(...contentItems.map(item => item.sequence_order)) + 1 
+            ? Math.max(...contentItems.map(item => item.sequence_order || 0)) + 1 
             : 1
       };
 
@@ -163,8 +187,10 @@ export default function ContentManagement() {
         title: "Error saving content",
         description: error.message,
       });
+      console.error("Error saving content:", error);
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -309,7 +335,7 @@ export default function ContentManagement() {
                 content_type: "text",
                 content: "",
                 video_url: "",
-                sequence_order: contentItems.length > 0 ? Math.max(...contentItems.map(item => item.sequence_order)) + 1 : 1
+                sequence_order: contentItems.length > 0 ? Math.max(...contentItems.map(item => item.sequence_order || 0)) + 1 : 1
               })}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Content
@@ -399,7 +425,13 @@ export default function ContentManagement() {
                         value={currentContentItem.video_url || ""}
                         onChange={handleInputChange}
                         placeholder="Enter video URL (YouTube, Vimeo, etc.)"
+                        disabled={!!videoFile}
                       />
+                      {videoFile && (
+                        <p className="text-xs text-amber-600">
+                          URL input is disabled because you're uploading a file. Clear the file input to use a URL instead.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -426,7 +458,10 @@ export default function ContentManagement() {
               <DialogFooter>
                 <Button 
                   variant="outline" 
-                  onClick={() => setIsEditDialogOpen(false)}
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setVideoFile(null);
+                  }}
                   disabled={isSubmitting}
                 >
                   Cancel

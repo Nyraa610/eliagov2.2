@@ -85,13 +85,13 @@ export const trainingService = {
   // User Enrollments
   async enrollUserInCourse(courseId: string): Promise<UserEnrollment> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     // Check if user is already enrolled
     const { data: existingEnrollment } = await supabase
       .from('user_enrollments')
       .select('*')
-      .eq('user_id', user.user?.id)
+      .eq('user_id', user.user.id)
       .eq('course_id', courseId)
       .single();
     
@@ -100,7 +100,7 @@ export const trainingService = {
     // Create new enrollment
     const { data, error } = await supabase
       .from('user_enrollments')
-      .insert([{ user_id: user.user?.id, course_id: courseId }])
+      .insert([{ user_id: user.user.id, course_id: courseId }])
       .select()
       .single();
     
@@ -110,12 +110,12 @@ export const trainingService = {
 
   async getUserEnrollments(): Promise<UserEnrollment[]> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('user_enrollments')
       .select('*')
-      .eq('user_id', user.user?.id);
+      .eq('user_id', user.user.id);
     
     if (error) throw error;
     return data as UserEnrollment[];
@@ -123,12 +123,12 @@ export const trainingService = {
 
   async getEnrollmentByCourseId(courseId: string): Promise<UserEnrollment | null> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('user_enrollments')
       .select('*')
-      .eq('user_id', user.user?.id)
+      .eq('user_id', user.user.id)
       .eq('course_id', courseId)
       .single();
     
@@ -139,12 +139,12 @@ export const trainingService = {
   // Module & Content Completions
   async markModuleAsCompleted(moduleId: string): Promise<ModuleCompletion> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('module_completions')
       .upsert([{ 
-        user_id: user.user?.id, 
+        user_id: user.user.id, 
         module_id: moduleId,
         is_completed: true,
         completed_at: new Date().toISOString()
@@ -158,12 +158,12 @@ export const trainingService = {
 
   async markContentAsCompleted(contentItemId: string, quizScore?: number): Promise<ContentCompletion> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('content_completions')
       .upsert([{ 
-        user_id: user.user?.id, 
+        user_id: user.user.id, 
         content_item_id: contentItemId,
         is_completed: true,
         quiz_score: quizScore,
@@ -178,12 +178,12 @@ export const trainingService = {
 
   async getCompletedModules(): Promise<ModuleCompletion[]> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('module_completions')
       .select('*')
-      .eq('user_id', user.user?.id)
+      .eq('user_id', user.user.id)
       .eq('is_completed', true);
     
     if (error) throw error;
@@ -192,12 +192,12 @@ export const trainingService = {
 
   async getCompletedContentItems(): Promise<ContentCompletion[]> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('content_completions')
       .select('*')
-      .eq('user_id', user.user?.id)
+      .eq('user_id', user.user.id)
       .eq('is_completed', true);
     
     if (error) throw error;
@@ -207,12 +207,12 @@ export const trainingService = {
   // Certificates
   async getUserCertificates(): Promise<Certificate[]> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
       .from('certificates')
       .select('*')
-      .eq('user_id', user.user?.id);
+      .eq('user_id', user.user.id);
     
     if (error) throw error;
     return data as Certificate[];
@@ -221,39 +221,60 @@ export const trainingService = {
   // Upload functions for training materials
   async uploadVideo(file: File): Promise<string> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.user?.id}/${Date.now()}.${fileExt}`;
+    // Handle file name and extension safely
+    const fileExt = file.name.split('.').pop() || 'mp4';
+    const fileName = `${user.user.id}/${Date.now()}.${fileExt}`;
     const filePath = `videos/${fileName}`;
 
-    const { error } = await supabase.storage
-      .from('training_materials')
-      .upload(filePath, file);
-    
-    if (error) throw error;
+    console.log("Uploading video to path:", filePath);
 
+    // Upload the file to storage
+    const { error: uploadError } = await supabase.storage
+      .from('training_materials')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (uploadError) {
+      console.error("Video upload error:", uploadError);
+      throw uploadError;
+    }
+
+    console.log("Video upload successful, getting public URL");
+
+    // Get the public URL
     const { data } = supabase.storage
       .from('training_materials')
       .getPublicUrl(filePath);
 
+    console.log("Video public URL:", data.publicUrl);
+    
     return data.publicUrl;
   },
 
   async uploadImage(file: File): Promise<string> {
     const { data: user } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    if (!user.user) throw new Error("User not authenticated");
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.user?.id}/${Date.now()}.${fileExt}`;
+    // Handle file name and extension safely
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${user.user.id}/${Date.now()}.${fileExt}`;
     const filePath = `images/${fileName}`;
 
+    // Upload the file to storage
     const { error } = await supabase.storage
       .from('training_materials')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
     
     if (error) throw error;
 
+    // Get the public URL
     const { data } = supabase.storage
       .from('training_materials')
       .getPublicUrl(filePath);
