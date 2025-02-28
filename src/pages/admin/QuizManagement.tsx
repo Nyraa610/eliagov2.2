@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { contentService } from "@/services/contentService";
 import { ContentItem } from "@/types/training";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ContentQuizManager } from "@/components/training/ContentQuizManager";
+import ContentQuizManager from "@/components/training/ContentQuizManager";
 import QuizEditor from "@/components/training/QuizEditor";
 
 export default function QuizManagement() {

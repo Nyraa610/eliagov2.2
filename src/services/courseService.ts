@@ -26,6 +26,38 @@ export const courseService = {
     return data as Course;
   },
 
+  async createCourse(courseData: Partial<Course>): Promise<Course> {
+    const { data, error } = await supabase
+      .from('courses')
+      .insert([courseData])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Course;
+  },
+
+  async updateCourse(courseId: string, courseData: Partial<Course>): Promise<Course> {
+    const { data, error } = await supabase
+      .from('courses')
+      .update(courseData)
+      .eq('id', courseId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Course;
+  },
+
+  async deleteCourse(courseId: string): Promise<void> {
+    const { error } = await supabase
+      .from('courses')
+      .delete()
+      .eq('id', courseId);
+    
+    if (error) throw error;
+  },
+
   async enrollUserInCourse(courseId: string): Promise<UserEnrollment> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error("User not authenticated");

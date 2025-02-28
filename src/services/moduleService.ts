@@ -16,6 +16,49 @@ export const moduleService = {
     return data as Module[];
   },
 
+  async getModuleById(moduleId: string): Promise<Module> {
+    const { data, error } = await supabase
+      .from('modules')
+      .select('*')
+      .eq('id', moduleId)
+      .single();
+    
+    if (error) throw error;
+    return data as Module;
+  },
+
+  async createModule(moduleData: Partial<Module>): Promise<Module> {
+    const { data, error } = await supabase
+      .from('modules')
+      .insert([moduleData])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Module;
+  },
+
+  async updateModule(moduleId: string, moduleData: Partial<Module>): Promise<Module> {
+    const { data, error } = await supabase
+      .from('modules')
+      .update(moduleData)
+      .eq('id', moduleId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Module;
+  },
+
+  async deleteModule(moduleId: string): Promise<void> {
+    const { error } = await supabase
+      .from('modules')
+      .delete()
+      .eq('id', moduleId);
+    
+    if (error) throw error;
+  },
+
   async markModuleAsCompleted(moduleId: string): Promise<ModuleCompletion> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error("User not authenticated");

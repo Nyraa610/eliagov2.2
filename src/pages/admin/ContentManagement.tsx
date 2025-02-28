@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { moduleService } from "@/services/moduleService";
 import { contentService } from "@/services/contentService";
 import { ContentItem, Module } from "@/types/training";
-import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical, FileText, Video, Quiz } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical, FileText, Video, BookOpen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -63,7 +63,7 @@ export default function ContentManagement() {
       if (!moduleId) throw new Error("Module ID is required");
       
       const [moduleData, contentData] = await Promise.all([
-        moduleService.getModuleById(moduleId),
+        moduleService.getModuleById ? moduleService.getModuleById(moduleId) : fetchModuleById(moduleId),
         contentService.getContentItemsByModuleId(moduleId)
       ]);
       
@@ -78,6 +78,14 @@ export default function ContentManagement() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to fetch module by ID - will be used until moduleService.getModuleById is implemented
+  const fetchModuleById = async (id: string): Promise<Module> => {
+    const modules = await moduleService.getModulesByCourseId(courseId || "");
+    const module = modules.find(m => m.id === id);
+    if (!module) throw new Error("Module not found");
+    return module;
   };
 
   const openCreateDialog = () => {
@@ -206,7 +214,7 @@ export default function ContentManagement() {
       case "video":
         return <Video className="h-5 w-5" />;
       case "quiz":
-        return <Quiz className="h-5 w-5" />;
+        return <BookOpen className="h-5 w-5" />;
       default:
         return <FileText className="h-5 w-5" />;
     }
@@ -342,7 +350,7 @@ export default function ContentManagement() {
                   {content.content_type === "quiz" && (
                     <Link to={`/admin/courses/${courseId}/modules/${moduleId}/content/${content.id}/quiz`}>
                       <Button size="sm">
-                        <Quiz className="h-4 w-4 mr-2" />
+                        <BookOpen className="h-4 w-4 mr-2" />
                         Manage Quiz
                       </Button>
                     </Link>

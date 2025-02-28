@@ -11,12 +11,19 @@ export const trainingService = {
   // Course related functions
   getCourses: courseService.getCourses,
   getCourseById: courseService.getCourseById,
+  createCourse: courseService.createCourse,
+  updateCourse: courseService.updateCourse,
+  deleteCourse: courseService.deleteCourse,
   enrollUserInCourse: courseService.enrollUserInCourse,
   getUserEnrollments: courseService.getUserEnrollments,
   getEnrollmentByCourseId: courseService.getEnrollmentByCourseId,
   
   // Module related functions
   getModulesByCourseId: moduleService.getModulesByCourseId,
+  getModuleById: moduleService.getModuleById,
+  createModule: moduleService.createModule,
+  updateModule: moduleService.updateModule,
+  deleteModule: moduleService.deleteModule,
   markModuleAsCompleted: moduleService.markModuleAsCompleted,
   getCompletedModules: moduleService.getCompletedModules,
   
