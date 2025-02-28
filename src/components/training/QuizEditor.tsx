@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Trash2, Save, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { QuizQuestion, QuizAnswer } from "@/types/training";
+import { QuizQuestion, QuizAnswer, QuestionType } from "@/types/training";
 import { trainingService } from "@/services/trainingService";
 import { 
   Form,
@@ -31,7 +31,7 @@ const answerSchema = z.object({
 const questionSchema = z.object({
   id: z.string().optional(),
   question_text: z.string().min(1, "Question text is required"),
-  question_type: z.string().default("multiple_choice"),
+  question_type: z.enum(["multiple_choice", "true_false"]).default("multiple_choice"),
   points: z.number().int().min(1, "Points must be at least 1").default(1),
   sequence_order: z.number().int().optional(),
   answers: z.array(answerSchema).min(2, "At least 2 answers are required")
@@ -54,7 +54,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
     resolver: zodResolver(questionSchema),
     defaultValues: {
       question_text: "",
-      question_type: "multiple_choice",
+      question_type: "multiple_choice" as QuestionType,
       points: 1,
       answers: [
         { answer_text: "", is_correct: false },
@@ -81,7 +81,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
         setAnswers([]);
         questionForm.reset({
           question_text: "",
-          question_type: "multiple_choice",
+          question_type: "multiple_choice" as QuestionType,
           points: 1,
           answers: [
             { answer_text: "", is_correct: false },
@@ -135,7 +135,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
     // Reset form with empty values for new question
     questionForm.reset({
       question_text: "",
-      question_type: "multiple_choice",
+      question_type: "multiple_choice" as QuestionType,
       points: 1,
       answers: [
         { answer_text: "", is_correct: false },

@@ -31,11 +31,13 @@ export interface ContentItem {
   updated_at: string;
 }
 
+export type QuestionType = 'multiple_choice' | 'true_false';
+
 export interface QuizQuestion {
   id: string;
   content_item_id: string;
   question_text: string;
-  question_type: 'multiple_choice' | 'true_false';
+  question_type: QuestionType;
   points: number;
   sequence_order: number;
   created_at: string;
