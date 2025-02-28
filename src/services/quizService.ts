@@ -6,25 +6,35 @@ const { supabase } = supabaseService;
 
 export const quizService = {
   async getQuizQuestionsByContentItemId(contentItemId: string): Promise<QuizQuestion[]> {
-    const { data, error } = await supabase
-      .from('quiz_questions')
-      .select('*')
-      .eq('content_item_id', contentItemId)
-      .order('sequence_order');
-    
-    if (error) throw error;
-    return data as QuizQuestion[];
+    try {
+      const { data, error } = await supabase
+        .from('quiz_questions')
+        .select('*')
+        .eq('content_item_id', contentItemId)
+        .order('sequence_order');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching quiz questions:", error);
+      return [];
+    }
   },
 
   async getQuizAnswersByQuestionId(questionId: string): Promise<QuizAnswer[]> {
-    const { data, error } = await supabase
-      .from('quiz_answers')
-      .select('*')
-      .eq('question_id', questionId)
-      .order('sequence_order');
-    
-    if (error) throw error;
-    return data as QuizAnswer[];
+    try {
+      const { data, error } = await supabase
+        .from('quiz_answers')
+        .select('*')
+        .eq('question_id', questionId)
+        .order('sequence_order');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching quiz answers:", error);
+      return [];
+    }
   },
 
   async saveQuizQuestion(question: Partial<QuizQuestion>): Promise<QuizQuestion> {
@@ -51,21 +61,26 @@ export const quizService = {
   },
 
   async deleteQuizQuestion(id: string): Promise<void> {
-    // First delete all answers associated with this question
-    const { error: answersError } = await supabase
-      .from('quiz_answers')
-      .delete()
-      .eq('question_id', id);
-    
-    if (answersError) throw answersError;
-    
-    // Then delete the question
-    const { error } = await supabase
-      .from('quiz_questions')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      // First delete all answers associated with this question
+      const { error: answersError } = await supabase
+        .from('quiz_answers')
+        .delete()
+        .eq('question_id', id);
+      
+      if (answersError) throw answersError;
+      
+      // Then delete the question
+      const { error } = await supabase
+        .from('quiz_questions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting quiz question:", error);
+      throw error;
+    }
   },
 
   async saveQuizAnswer(answer: Partial<QuizAnswer>): Promise<QuizAnswer> {
@@ -92,11 +107,16 @@ export const quizService = {
   },
 
   async deleteQuizAnswer(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('quiz_answers')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('quiz_answers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting quiz answer:", error);
+      throw error;
+    }
   }
 };
