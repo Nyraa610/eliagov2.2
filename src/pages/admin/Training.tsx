@@ -38,10 +38,17 @@ export default function AdminTraining() {
 
   useEffect(() => {
     fetchCourses();
-  }, [toast]);
+  }, []);
 
   const handleRefresh = () => {
     fetchCourses();
+  };
+
+  // Function to handle image URL with cache busting
+  const getImageUrl = (url: string | null) => {
+    if (!url) return null;
+    // Add cache-busting timestamp
+    return `${url}?t=${Date.now()}`;
   };
 
   return (
@@ -103,7 +110,7 @@ export default function AdminTraining() {
                       {course.image_url ? (
                         <div className="relative aspect-video mb-4 overflow-hidden rounded-md">
                           <img
-                            src={`${course.image_url}?${new Date().getTime()}`} 
+                            src={getImageUrl(course.image_url)}
                             alt={course.title}
                             className="object-cover w-full h-full rounded-md"
                             onError={(e) => {

@@ -40,7 +40,9 @@ export default function CourseForm() {
           console.log("Fetched course data:", data);
           setCourse(data);
           if (data.image_url) {
-            setImagePreview(data.image_url);
+            // Use cache busting for the image preview
+            setImagePreview(`${data.image_url}?t=${Date.now()}`);
+            console.log("Set image preview to:", `${data.image_url}?t=${Date.now()}`);
           }
         } catch (error: any) {
           console.error("Error fetching course:", error);
@@ -67,7 +69,9 @@ export default function CourseForm() {
       // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        const preview = reader.result as string;
+        setImagePreview(preview);
+        console.log("Image preview generated from selected file");
       };
       reader.readAsDataURL(file);
     }
@@ -104,7 +108,7 @@ export default function CourseForm() {
 
     try {
       // Create a copy of course object to prevent mutation during async operations
-      let courseToSave = { ...course };
+      let courseToSave: Partial<Course> = { ...course };
 
       // Upload the image if a new one was selected
       if (imageFile) {
@@ -117,10 +121,14 @@ export default function CourseForm() {
         
         if (uploadedImageUrl) {
           courseToSave.image_url = uploadedImageUrl;
+          console.log("Image URL set in course data:", uploadedImageUrl);
+          
           toast({
             title: "Image uploaded",
             description: "Your image has been successfully uploaded.",
           });
+        } else {
+          console.error("Failed to get image URL after upload");
         }
       }
       
@@ -145,7 +153,10 @@ export default function CourseForm() {
         description: `Successfully ${isEditing ? "updated" : "created"} the course.`,
       });
 
-      navigate("/admin/training");
+      // Navigate to the training page after a short delay to ensure database updates are synced
+      setTimeout(() => {
+        navigate("/admin/training");
+      }, 500);
     } catch (error: any) {
       console.error("Error in course form submission:", error);
       toast({
@@ -260,11 +271,11 @@ export default function CourseForm() {
                   {imagePreview ? (
                     <div className="relative aspect-video overflow-hidden rounded-lg border border-border">
                       <img
-                        src={`${imagePreview}?${new Date().getTime()}`}
+                        src={imagePreview}
                         alt="Course preview"
                         className="h-full w-full object-cover"
                         onError={(e) => {
-                          console.error("Error loading image preview:", imagePreview);
+                          console.error("Error loading image preview");
                           e.currentTarget.src = "https://placehold.co/600x400/png?text=Preview+Error";
                         }}
                       />
