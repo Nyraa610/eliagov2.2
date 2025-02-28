@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -286,7 +287,7 @@ export default function CourseView() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-24 py-8">
           <div className="flex justify-center items-center h-64">
             <p>Loading course...</p>
           </div>
@@ -299,7 +300,7 @@ export default function CourseView() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-24 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-2">Course Not Found</h2>
@@ -317,7 +318,7 @@ export default function CourseView() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 py-8">
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 

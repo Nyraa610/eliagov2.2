@@ -77,7 +77,7 @@ export default function Training() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <div className="text-center mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">ESG Training Center</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
