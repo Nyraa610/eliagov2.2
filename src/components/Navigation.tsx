@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
 import { Link } from "react-router-dom";
-import { LogIn, Bell, User, Settings, LogOut } from "lucide-react";
+import { LogIn, Bell, User, Settings, LogOut, Shield } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -158,6 +158,19 @@ export const Navigation = () => {
                         Profile Settings
                       </Link>
                     </DropdownMenuItem>
+                    
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/panel">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Admin Panel
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />

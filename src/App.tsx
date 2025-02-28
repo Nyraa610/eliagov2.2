@@ -20,6 +20,7 @@ import CourseView from "@/pages/CourseView";
 import QuizManagement from "@/pages/admin/QuizManagement";
 import Profile from "@/pages/Profile";
 import Unauthorized from "@/pages/Unauthorized";
+import AdminPanel from "@/pages/admin/AdminPanel";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const router = createBrowserRouter([
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
   {
     path: "/unauthorized",
     element: <Unauthorized />,
+  },
+  {
+    path: "/admin/panel",
+    element: <ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>,
   },
   {
     path: "/admin/training",
