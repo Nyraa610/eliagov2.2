@@ -82,6 +82,79 @@ export const trainingService = {
     return data as QuizAnswer[];
   },
 
+  async saveQuizQuestion(question: Partial<QuizQuestion>): Promise<QuizQuestion> {
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .insert([question])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as QuizQuestion;
+  },
+
+  async updateQuizQuestion(id: string, updates: Partial<QuizQuestion>): Promise<QuizQuestion> {
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as QuizQuestion;
+  },
+
+  async deleteQuizQuestion(id: string): Promise<void> {
+    // First delete all answers associated with this question
+    const { error: answersError } = await supabase
+      .from('quiz_answers')
+      .delete()
+      .eq('question_id', id);
+    
+    if (answersError) throw answersError;
+    
+    // Then delete the question
+    const { error } = await supabase
+      .from('quiz_questions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async saveQuizAnswer(answer: Partial<QuizAnswer>): Promise<QuizAnswer> {
+    const { data, error } = await supabase
+      .from('quiz_answers')
+      .insert([answer])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as QuizAnswer;
+  },
+
+  async updateQuizAnswer(id: string, updates: Partial<QuizAnswer>): Promise<QuizAnswer> {
+    const { data, error } = await supabase
+      .from('quiz_answers')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as QuizAnswer;
+  },
+
+  async deleteQuizAnswer(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('quiz_answers')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
   // User Enrollments
   async enrollUserInCourse(courseId: string): Promise<UserEnrollment> {
     const { data: user } = await supabase.auth.getUser();
