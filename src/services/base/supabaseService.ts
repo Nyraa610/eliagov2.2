@@ -36,18 +36,6 @@ export const supabaseService = {
         
       if (error) throw error;
       
-      // Special handling for admin email
-      if (data && data.email === 'alex.gon@eliago.com' && data.role !== 'admin') {
-        // Update role to admin in the database
-        await supabase
-          .from('profiles')
-          .update({ role: 'admin' })
-          .eq('id', targetId);
-        
-        // Update returned data
-        data.role = 'admin';
-      }
-      
       return data;
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -116,7 +104,7 @@ export const supabaseService = {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, email')
+        .select('role')
         .eq('id', user.id)
         .single();
         
@@ -129,7 +117,6 @@ export const supabaseService = {
           .update({ role: 'admin' })
           .eq('id', user.id);
         
-        console.log("Updated alex.gon@eliago.com to admin role");
         return 'admin';
       }
       
@@ -143,41 +130,17 @@ export const supabaseService = {
   hasRole: async (role: UserRole): Promise<boolean> => {
     try {
       const profile = await supabaseService.getUserProfile();
-      console.log("Current user profile:", profile);
       
       // Also ensure role is correct if it's the admin email
-      if (profile?.email === 'alex.gon@eliago.com') {
-        if (role === 'admin') {
-          // Make sure the user has admin role in database
-          await supabaseService.ensureUserRole('alex.gon@eliago.com');
-          console.log("alex.gon@eliago.com requested admin role check, returning true");
-          return true;
-        }
-      }
-      
-      const result = profile?.role === role;
-      console.log(`Role check for ${role}: ${result}`);
-      return result;
-    } catch (error) {
-      console.error("Error checking user role:", error);
-      return false;
-    }
-  },
-  
-  isAdmin: async (): Promise<boolean> => {
-    try {
-      const profile = await supabaseService.getUserProfile();
-      
-      // Special handling for admin email
-      if (profile?.email === 'alex.gon@eliago.com') {
-        // Ensure user has admin role in database
+      if (profile?.email === 'alex.gon@eliago.com' && role === 'admin') {
+        // Make sure the user has admin role in database
         await supabaseService.ensureUserRole('alex.gon@eliago.com');
         return true;
       }
       
-      return profile?.role === 'admin';
+      return profile?.role === role;
     } catch (error) {
-      console.error("Error checking admin status:", error);
+      console.error("Error checking user role:", error);
       return false;
     }
   }
