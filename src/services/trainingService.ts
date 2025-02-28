@@ -241,8 +241,8 @@ export const trainingService = {
           public: true
         });
         
-        // Set bucket to public
-        await supabase.storage.from('training_materials').setPublic(true);
+        // Note: The setPublic method doesn't exist, the bucket is already set to public
+        // during creation by setting { public: true }
       }
 
       // Upload the file to storage
@@ -294,8 +294,8 @@ export const trainingService = {
           public: true
         });
         
-        // Set bucket to public
-        await supabase.storage.from('training_materials').setPublic(true);
+        // Note: The setPublic method doesn't exist, the bucket is already set to public
+        // during creation by setting { public: true }
       }
 
       // Upload the file to storage
