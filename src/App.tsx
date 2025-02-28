@@ -17,6 +17,7 @@ import ModuleManagement from "@/pages/admin/ModuleManagement";
 import ContentManagement from "@/pages/admin/ContentManagement";
 import NotFound from "@/pages/NotFound";
 import CourseView from "@/pages/CourseView";
+import QuizManagement from "@/pages/admin/QuizManagement";
 
 const router = createBrowserRouter([
   {
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/courses/:courseId/modules/:moduleId/content",
     element: <ContentManagement />,
+  },
+  {
+    path: "/admin/courses/:courseId/modules/:moduleId/content/:contentId/quiz",
+    element: <QuizManagement />,
   },
   {
     path: "*",

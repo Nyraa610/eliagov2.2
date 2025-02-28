@@ -1,52 +1,83 @@
 
 import { supabaseService } from "./base/supabaseService";
-import { ContentItem, ContentCompletion } from "@/types/training";
+import { ContentItem } from "@/types/training";
 
 const { supabase } = supabaseService;
 
 export const contentService = {
   async getContentItemsByModuleId(moduleId: string): Promise<ContentItem[]> {
-    const { data, error } = await supabase
-      .from('content_items')
-      .select('*')
-      .eq('module_id', moduleId)
-      .order('sequence_order');
-    
-    if (error) throw error;
-    return data as ContentItem[];
+    try {
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('module_id', moduleId)
+        .order('sequence_order');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching content items:", error);
+      return [];
+    }
   },
 
-  async markContentAsCompleted(contentItemId: string, quizScore?: number): Promise<ContentCompletion> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error("User not authenticated");
+  async getContentItemById(id: string): Promise<ContentItem | null> {
+    try {
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error fetching content item:", error);
+      return null;
+    }
+  },
 
+  async createContentItem(contentItem: Partial<ContentItem>): Promise<ContentItem> {
     const { data, error } = await supabase
-      .from('content_completions')
-      .upsert([{ 
-        user_id: user.user.id, 
-        content_item_id: contentItemId,
-        is_completed: true,
-        quiz_score: quizScore,
-        completed_at: new Date().toISOString()
-      }])
+      .from('content_items')
+      .insert([contentItem])
       .select()
       .single();
     
     if (error) throw error;
-    return data as ContentCompletion;
+    return data as ContentItem;
   },
 
-  async getCompletedContentItems(): Promise<ContentCompletion[]> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error("User not authenticated");
-
+  async updateContentItem(id: string, updates: Partial<ContentItem>): Promise<ContentItem> {
     const { data, error } = await supabase
-      .from('content_completions')
-      .select('*')
-      .eq('user_id', user.user.id)
-      .eq('is_completed', true);
+      .from('content_items')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
     
     if (error) throw error;
-    return data as ContentCompletion[];
+    return data as ContentItem;
+  },
+
+  async deleteContentItem(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('content_items')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async reorderContentItems(items: { id: string, sequence_order: number }[]): Promise<void> {
+    // Perform updates in a transaction if possible
+    for (const item of items) {
+      const { error } = await supabase
+        .from('content_items')
+        .update({ sequence_order: item.sequence_order })
+        .eq('id', item.id);
+      
+      if (error) throw error;
+    }
   }
 };
