@@ -5,6 +5,7 @@ import { contentService } from "./contentService";
 import { quizService } from "./quizService";
 import { certificateService } from "./certificateService";
 import { storageService } from "./storageService";
+import { contentCompletionService } from "./contentCompletionService";
 
 export const trainingService = {
   // Course related functions
@@ -21,6 +22,11 @@ export const trainingService = {
   
   // Content related functions
   getContentItemsByModuleId: contentService.getContentItemsByModuleId,
+  getContentItemById: contentService.getContentItemById,
+  
+  // Content completion functions
+  markContentAsCompleted: contentCompletionService.markContentAsCompleted,
+  getCompletedContentItems: contentCompletionService.getCompletedContentItems,
   
   // Quiz related functions
   getQuizQuestionsByContentItemId: quizService.getQuizQuestionsByContentItemId,
