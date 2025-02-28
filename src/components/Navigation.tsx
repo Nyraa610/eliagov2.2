@@ -57,14 +57,7 @@ export const Navigation = () => {
     try {
       const profile = await supabaseService.getUserProfile(userId);
       setProfile(profile);
-      
-      // If email is alex.gon@eliago.com, ensure they have admin role
-      if (profile?.email === 'alex.gon@eliago.com') {
-        await supabaseService.ensureUserRole('alex.gon@eliago.com');
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(profile?.role === 'admin');
-      }
+      setIsAdmin(profile?.role === 'admin');
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
@@ -145,7 +138,7 @@ export const Navigation = () => {
                       <User className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                  <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuItem className="text-xs text-muted-foreground">
                       {profile?.full_name || userEmail}
