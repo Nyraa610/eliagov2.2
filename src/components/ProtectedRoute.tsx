@@ -12,16 +12,25 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [hasRequiredRole, setHasRequiredRole] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       const user = await supabaseService.getCurrentUser();
       setIsAuthenticated(!!user);
+      setUserEmail(user?.email || null);
       
       if (user && requiredRole) {
-        const hasRole = await supabaseService.hasRole(requiredRole);
-        setHasRequiredRole(hasRole);
+        // Special case for alex.gon@eliago.com admin
+        if (user.email === 'alex.gon@eliago.com' && requiredRole === 'admin') {
+          // Ensure they have admin role in the database
+          await supabaseService.ensureUserRole('alex.gon@eliago.com');
+          setHasRequiredRole(true);
+        } else {
+          const hasRole = await supabaseService.hasRole(requiredRole);
+          setHasRequiredRole(hasRole);
+        }
       } else {
         setHasRequiredRole(true); // No specific role required
       }
@@ -42,6 +51,12 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   if (!isAuthenticated) {
     // Not authenticated, redirect to login
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Special case for alex.gon@eliago.com
+  if (userEmail === 'alex.gon@eliago.com' && requiredRole === 'admin') {
+    // Allow access to admin pages for this specific email
+    return <>{children}</>;
   }
 
   if (!hasRequiredRole) {

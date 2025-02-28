@@ -96,9 +96,48 @@ export const supabaseService = {
     }
   },
   
+  ensureUserRole: async (email: string): Promise<UserRole> => {
+    try {
+      // First check if the user exists in the profiles table
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+        
+      if (error) throw error;
+      
+      // For alex.gon@eliago.com, ensure the role is admin
+      if (email === 'alex.gon@eliago.com' && data.role !== 'admin') {
+        await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('id', user.id);
+        
+        return 'admin';
+      }
+      
+      return data.role;
+    } catch (error) {
+      console.error("Error ensuring user role:", error);
+      return 'user'; // Default to user role in case of error
+    }
+  },
+  
   hasRole: async (role: UserRole): Promise<boolean> => {
     try {
       const profile = await supabaseService.getUserProfile();
+      
+      // Also ensure role is correct if it's the admin email
+      if (profile?.email === 'alex.gon@eliago.com' && role === 'admin') {
+        // Make sure the user has admin role in database
+        await supabaseService.ensureUserRole('alex.gon@eliago.com');
+        return true;
+      }
+      
       return profile?.role === role;
     } catch (error) {
       console.error("Error checking user role:", error);

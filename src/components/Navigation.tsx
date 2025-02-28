@@ -57,7 +57,14 @@ export const Navigation = () => {
     try {
       const profile = await supabaseService.getUserProfile(userId);
       setProfile(profile);
-      setIsAdmin(profile?.role === 'admin');
+      
+      // If email is alex.gon@eliago.com, ensure they have admin role
+      if (profile?.email === 'alex.gon@eliago.com') {
+        await supabaseService.ensureUserRole('alex.gon@eliago.com');
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(profile?.role === 'admin');
+      }
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
