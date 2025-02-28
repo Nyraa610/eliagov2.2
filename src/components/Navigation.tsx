@@ -60,9 +60,6 @@ const Navigation = () => {
           <DropdownMenuItem asChild>
             <Link to="/help">Help</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/ai-analysis">AI Analysis</Link>
-          </DropdownMenuItem>
           {/* Admin panel link - only visible to admins */}
           {isAdmin && (
             <DropdownMenuItem asChild>
