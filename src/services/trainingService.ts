@@ -273,15 +273,12 @@ export const trainingService = {
       console.log("Video upload successful, getting public URL");
 
       // Get the public URL
-      const { data, error: urlError } = supabase.storage
+      const { data } = supabase.storage
         .from('training_materials')
         .getPublicUrl(filePath);
       
-      if (urlError) {
-        console.error("Error getting public URL:", urlError);
-        throw urlError;
-      }
-
+      // Fixed: Removed the error check since getPublicUrl doesn't return an error object
+      
       if (!data || !data.publicUrl) {
         throw new Error("Failed to get public URL");
       }
@@ -349,15 +346,12 @@ export const trainingService = {
       console.log("Image upload successful, getting public URL");
 
       // Get the public URL
-      const { data, error: urlError } = supabase.storage
+      const { data } = supabase.storage
         .from('training_materials')
         .getPublicUrl(filePath);
       
-      if (urlError) {
-        console.error("Error getting public URL:", urlError);
-        throw urlError;
-      }
-
+      // Fixed: Removed the error check since getPublicUrl doesn't return an error object
+      
       if (!data || !data.publicUrl) {
         throw new Error("Failed to get public URL");
       }
