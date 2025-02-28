@@ -44,7 +44,7 @@ const Navigation = () => {
     <nav className="flex justify-between items-center p-4 bg-white shadow">
       <Link to="/" className="text-lg font-bold">MyApp</Link>
       <DropdownMenu>
-        <DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="p-2 bg-gray-200 rounded">Menu</Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -60,10 +60,13 @@ const Navigation = () => {
           <DropdownMenuItem asChild>
             <Link to="/help">Help</Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/ai-analysis">AI Analysis</Link>
+          </DropdownMenuItem>
           {/* Admin panel link - only visible to admins */}
           {isAdmin && (
             <DropdownMenuItem asChild>
-              <Link to="/admin">Admin Panel</Link>
+              <Link to="/admin/panel">Admin Panel</Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>

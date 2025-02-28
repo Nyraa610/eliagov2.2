@@ -22,6 +22,7 @@ import Profile from "@/pages/Profile";
 import Unauthorized from "@/pages/Unauthorized";
 import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
+import AIAnalysis from "@/pages/AIAnalysis";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const router = createBrowserRouter([
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
   {
     path: "/profile",
     element: <ProtectedRoute><Profile /></ProtectedRoute>,
+  },
+  {
+    path: "/ai-analysis",
+    element: <ProtectedRoute><AIAnalysis /></ProtectedRoute>,
   },
   {
     path: "/unauthorized",
