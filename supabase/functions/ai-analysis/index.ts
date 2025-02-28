@@ -1,103 +1,128 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "https://esm.sh/openai@3.2.1";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Type definitions for our request
+interface AIAnalysisRequest {
+  type: 'course-summary' | 'esg-assessment';
+  content: string;
+  additionalParams?: Record<string, any>;
+}
+
+// Initialize Supabase client
+const supabaseClient = createClient(
+  Deno.env.get("SUPABASE_URL") as string,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string
+);
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
   try {
-    // Get the OpenAI API key from the environment
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+    // Handle CORS for preflight requests
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        },
+      });
     }
-
-    // Parse the request body
-    const { type, content, additionalParams } = await req.json();
-
-    // Generate the prompt based on the analysis type
-    let systemPrompt = '';
-    let userPrompt = '';
-
-    switch (type) {
-      case 'course-summary':
-        systemPrompt = 'You are an expert educator and content summarizer. Your task is to create a concise yet comprehensive summary of a training course.';
-        userPrompt = `Please provide a summary of the following course content. Include the main topics covered, key learning objectives, and structure of the course. The summary should be well-organized and informative.\n\nCourse Content:\n${content}`;
-        break;
-      
-      case 'esg-assessment':
-        systemPrompt = 'You are an expert in Environmental, Social, and Governance (ESG) analysis. Your task is to provide insightful analysis and recommendations based on a company\'s ESG information.';
-        userPrompt = `Please analyze the following ESG information and provide a comprehensive assessment. Include strengths, areas for improvement, and specific recommendations. Break down your analysis into Environmental, Social, and Governance sections.\n\nCompany ESG Information:\n${content}`;
-        break;
-      
-      default:
-        throw new Error(`Unsupported analysis type: ${type}`);
-    }
-
-    console.log(`Running ${type} analysis...`);
-
-    // Call the OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1500,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
-    const generatedText = data.choices[0].message.content;
-
-    console.log('Analysis completed successfully');
-
-    return new Response(
-      JSON.stringify({ 
-        result: generatedText,
-        metadata: {
-          type,
-          timestamp: new Date().toISOString(),
-          model: 'gpt-4o-mini'
-        }
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
-  } catch (error) {
-    console.error('Error in ai-analysis function:', error);
     
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
-    );
+    // Verify JWT token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'No authorization header' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Get OpenAI API key from environment
+    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openAIApiKey) {
+      return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Parse request body
+    const requestData: AIAnalysisRequest = await req.json();
+    const { type, content } = requestData;
+    
+    if (!type || !content) {
+      return new Response(JSON.stringify({ error: "Missing required fields: type or content" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Configure OpenAI
+    const configuration = new Configuration({ apiKey: openAIApiKey });
+    const openai = new OpenAIApi(configuration);
+    
+    // Prepare messages based on analysis type
+    let systemPrompt: string;
+    let userPrompt: string = content;
+    
+    if (type === 'course-summary') {
+      systemPrompt = "You are an educational expert that creates concise and engaging summaries of course content. Your summaries should highlight key learning objectives, main topics, and the value the course offers to students.";
+    } else if (type === 'esg-assessment') {
+      systemPrompt = "You are an ESG (Environmental, Social, Governance) expert consultant analyzing corporate sustainability practices. Provide a structured assessment that includes strengths, areas for improvement, and actionable recommendations.";
+    } else {
+      return new Response(JSON.stringify({ error: "Invalid analysis type" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Define messages for OpenAI chat completion
+    const messages: ChatCompletionRequestMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ];
+    
+    // Call OpenAI API
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o-mini", // Using a cost-effective model
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1500,
+    });
+    
+    const result = completion.data.choices[0]?.message?.content || "No result generated";
+    
+    // Return the analysis result
+    return new Response(JSON.stringify({ result }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+      },
+    });
+    
+  } catch (error) {
+    console.error("Error processing request:", error);
+    
+    return new Response(JSON.stringify({ error: error.message || "An unexpected error occurred" }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 });

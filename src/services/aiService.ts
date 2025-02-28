@@ -1,5 +1,5 @@
 
-import { supabaseService } from "./base/supabaseService";
+import { supabase } from "@/lib/supabase";
 
 export type AIAnalysisType = 'course-summary' | 'esg-assessment';
 
@@ -22,7 +22,7 @@ export const aiService = {
    */
   analyzeContent: async (request: AIAnalysisRequest): Promise<AIAnalysisResponse> => {
     try {
-      const { data, error } = await supabaseService.supabase.functions.invoke('ai-analysis', {
+      const { data, error } = await supabase.functions.invoke('ai-analysis', {
         body: request
       });
       
