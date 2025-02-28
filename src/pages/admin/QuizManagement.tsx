@@ -146,8 +146,8 @@ export default function QuizManagement() {
               </CardHeader>
               <CardContent>
                 <ContentQuizManager 
-                  contentId={contentId} 
-                  previewMode={true}
+                  contentItemId={contentId} 
+                  isInstructorView={true}
                 />
               </CardContent>
             </Card>
