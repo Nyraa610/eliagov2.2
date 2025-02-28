@@ -14,8 +14,8 @@ export const Navigation = () => {
           </Link>
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/features" className="text-gray-600 hover:text-primary transition-colors">Features</Link>
-            <a href="#assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</a>
-            <a href="#training" className="text-gray-600 hover:text-primary transition-colors">Training</a>
+            <Link to="/assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</Link>
+            <Link to="/training" className="text-gray-600 hover:text-primary transition-colors">Training</Link>
             <Link to="/login">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                 <LogIn className="w-4 h-4 mr-2" />
