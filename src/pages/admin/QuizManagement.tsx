@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { QuizEditor } from "@/components/training/QuizEditor";
+import QuizEditor from "@/components/training/QuizEditor";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { contentService } from "@/services/contentService";

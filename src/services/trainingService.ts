@@ -21,8 +21,6 @@ export const trainingService = {
   
   // Content related functions
   getContentItemsByModuleId: contentService.getContentItemsByModuleId,
-  markContentAsCompleted: contentService.markContentAsCompleted,
-  getCompletedContentItems: contentService.getCompletedContentItems,
   
   // Quiz related functions
   getQuizQuestionsByContentItemId: quizService.getQuizQuestionsByContentItemId,

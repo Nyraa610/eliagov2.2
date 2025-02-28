@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,10 +39,10 @@ const questionSchema = z.object({
 
 interface QuizEditorProps {
   contentItemId: string;
-  onSave: () => void;
+  onSave?: () => void; // Changed to optional
 }
 
-const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
+const QuizEditor = ({ contentItemId, onSave }: QuizEditorProps) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
@@ -174,10 +174,8 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
   const handleDeleteQuestion = async () => {
     if (!currentQuestion?.id) return;
     
-    // This would need to be implemented in trainingService
     try {
-      // Placeholder for delete functionality
-      // await trainingService.deleteQuizQuestion(currentQuestion.id);
+      await trainingService.deleteQuizQuestion(currentQuestion.id);
       toast({
         title: "Question Deleted",
         description: "The question has been successfully deleted."
@@ -202,7 +200,6 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
         data.sequence_order = currentQuestion?.sequence_order || questions.length + 1;
       }
 
-      // This would need to be implemented in trainingService
       // For new questions
       if (!data.id) {
         const newQuestion: Partial<QuizQuestion> = {
@@ -214,58 +211,58 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
         };
         
         // Save question and get generated ID
-        // const savedQuestion = await trainingService.saveQuizQuestion(newQuestion);
+        const savedQuestion = await trainingService.saveQuizQuestion(newQuestion);
         
         // Save answers
-        // for (let i = 0; i < data.answers.length; i++) {
-        //   const answer = data.answers[i];
-        //   await trainingService.saveQuizAnswer({
-        //     question_id: savedQuestion.id,
-        //     answer_text: answer.answer_text,
-        //     is_correct: answer.is_correct,
-        //     sequence_order: i + 1
-        //   });
-        // }
+        for (let i = 0; i < data.answers.length; i++) {
+          const answer = data.answers[i];
+          await trainingService.saveQuizAnswer({
+            question_id: savedQuestion.id,
+            answer_text: answer.answer_text,
+            is_correct: answer.is_correct,
+            sequence_order: i + 1
+          });
+        }
       } 
       // For existing questions
       else {
         // Update question
-        // await trainingService.updateQuizQuestion(data.id, {
-        //   question_text: data.question_text,
-        //   question_type: data.question_type,
-        //   points: data.points,
-        //   sequence_order: data.sequence_order
-        // });
+        await trainingService.updateQuizQuestion(data.id, {
+          question_text: data.question_text,
+          question_type: data.question_type,
+          points: data.points,
+          sequence_order: data.sequence_order
+        });
         
         // Handle answers (update existing, delete removed, add new)
-        // const currentAnswerIds = answers.map(a => a.id);
-        // const dataAnswerIds = data.answers.filter(a => a.id).map(a => a.id);
+        const currentAnswerIds = answers.map(a => a.id);
+        const dataAnswerIds = data.answers.filter(a => a.id).map(a => a.id as string);
         
         // Delete answers that are no longer present
-        // for (const answerId of currentAnswerIds) {
-        //   if (dataAnswerIds.indexOf(answerId) === -1) {
-        //     await trainingService.deleteQuizAnswer(answerId);
-        //   }
-        // }
+        for (const answerId of currentAnswerIds) {
+          if (dataAnswerIds.indexOf(answerId) === -1) {
+            await trainingService.deleteQuizAnswer(answerId);
+          }
+        }
         
         // Update or create answers
-        // for (let i = 0; i < data.answers.length; i++) {
-        //   const answer = data.answers[i];
-        //   if (answer.id) {
-        //     await trainingService.updateQuizAnswer(answer.id, {
-        //       answer_text: answer.answer_text,
-        //       is_correct: answer.is_correct,
-        //       sequence_order: i + 1
-        //     });
-        //   } else {
-        //     await trainingService.saveQuizAnswer({
-        //       question_id: data.id,
-        //       answer_text: answer.answer_text,
-        //       is_correct: answer.is_correct,
-        //       sequence_order: i + 1
-        //     });
-        //   }
-        // }
+        for (let i = 0; i < data.answers.length; i++) {
+          const answer = data.answers[i];
+          if (answer.id) {
+            await trainingService.updateQuizAnswer(answer.id, {
+              answer_text: answer.answer_text,
+              is_correct: answer.is_correct,
+              sequence_order: i + 1
+            });
+          } else {
+            await trainingService.saveQuizAnswer({
+              question_id: data.id,
+              answer_text: answer.answer_text,
+              is_correct: answer.is_correct,
+              sequence_order: i + 1
+            });
+          }
+        }
       }
       
       toast({
@@ -276,8 +273,10 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
       // Refresh data
       fetchQuizData();
       
-      // Notify parent component
-      onSave();
+      // Notify parent component if callback exists
+      if (onSave) {
+        onSave();
+      }
     } catch (error) {
       console.error("Error saving quiz question:", error);
       toast({
@@ -325,7 +324,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ contentItemId, onSave }) => {
                   <CardContent className="p-3">
                     <div className="text-sm font-medium line-clamp-2">{question.question_text}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Points: {question.points} | Answers: {answers.length}
+                      Points: {question.points} | Type: {question.question_type}
                     </div>
                   </CardContent>
                 </Card>
