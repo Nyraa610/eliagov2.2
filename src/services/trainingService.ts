@@ -232,20 +232,32 @@ export const trainingService = {
       console.log("Starting video upload to path:", filePath);
 
       // Ensure the training_materials bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      let trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      const { data: buckets, error: listBucketsError } = await supabase.storage.listBuckets();
+      if (listBucketsError) {
+        console.error("Error listing buckets:", listBucketsError);
+        throw listBucketsError;
+      }
+      
+      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
       
       if (!trainingBucket) {
         console.log("Creating training_materials bucket");
-        await supabase.storage.createBucket('training_materials', {
+        const { error: createBucketError } = await supabase.storage.createBucket('training_materials', {
           public: true
         });
         
-        // Note: The setPublic method doesn't exist, the bucket is already set to public
-        // during creation by setting { public: true }
+        if (createBucketError) {
+          console.error("Error creating bucket:", createBucketError);
+          throw createBucketError;
+        }
+        
+        console.log("Bucket created successfully");
+      } else {
+        console.log("Bucket already exists");
       }
 
       // Upload the file to storage
+      console.log("Uploading video file...");
       const { error: uploadError } = await supabase.storage
         .from('training_materials')
         .upload(filePath, file, {
@@ -261,9 +273,18 @@ export const trainingService = {
       console.log("Video upload successful, getting public URL");
 
       // Get the public URL
-      const { data } = supabase.storage
+      const { data, error: urlError } = supabase.storage
         .from('training_materials')
         .getPublicUrl(filePath);
+      
+      if (urlError) {
+        console.error("Error getting public URL:", urlError);
+        throw urlError;
+      }
+
+      if (!data || !data.publicUrl) {
+        throw new Error("Failed to get public URL");
+      }
 
       console.log("Video public URL:", data.publicUrl);
       
@@ -283,22 +304,36 @@ export const trainingService = {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${user.user.id}-${Date.now()}.${fileExt}`;
       const filePath = `images/${fileName}`;
+      
+      console.log("Starting image upload to path:", filePath);
 
       // Ensure the training_materials bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      let trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      const { data: buckets, error: listBucketsError } = await supabase.storage.listBuckets();
+      if (listBucketsError) {
+        console.error("Error listing buckets:", listBucketsError);
+        throw listBucketsError;
+      }
+      
+      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
       
       if (!trainingBucket) {
         console.log("Creating training_materials bucket");
-        await supabase.storage.createBucket('training_materials', {
+        const { error: createBucketError } = await supabase.storage.createBucket('training_materials', {
           public: true
         });
         
-        // Note: The setPublic method doesn't exist, the bucket is already set to public
-        // during creation by setting { public: true }
+        if (createBucketError) {
+          console.error("Error creating bucket:", createBucketError);
+          throw createBucketError;
+        }
+        
+        console.log("Bucket created successfully");
+      } else {
+        console.log("Bucket already exists");
       }
 
       // Upload the file to storage
+      console.log("Uploading image file...");
       const { error: uploadError } = await supabase.storage
         .from('training_materials')
         .upload(filePath, file, {
@@ -311,10 +346,21 @@ export const trainingService = {
         throw uploadError;
       }
 
+      console.log("Image upload successful, getting public URL");
+
       // Get the public URL
-      const { data } = supabase.storage
+      const { data, error: urlError } = supabase.storage
         .from('training_materials')
         .getPublicUrl(filePath);
+      
+      if (urlError) {
+        console.error("Error getting public URL:", urlError);
+        throw urlError;
+      }
+
+      if (!data || !data.publicUrl) {
+        throw new Error("Failed to get public URL");
+      }
 
       console.log("Image public URL:", data.publicUrl);
       

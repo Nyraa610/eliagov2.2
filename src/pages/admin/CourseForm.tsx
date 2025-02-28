@@ -83,13 +83,83 @@ export default function CourseForm() {
 
       // Upload the image if a new one was selected
       if (imageFile) {
-        imageUrl = await trainingService.uploadImage(imageFile);
+        console.log("Uploading course image:", imageFile.name);
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) {
+            throw new Error("User not authenticated for upload");
+          }
+          
+          console.log("Checking for training_materials bucket");
+          const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+          
+          if (bucketsError) {
+            console.error("Error listing buckets:", bucketsError);
+            throw bucketsError;
+          }
+          
+          const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+          
+          if (!trainingBucket) {
+            console.log("Creating training_materials bucket");
+            const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+              public: true
+            });
+            
+            if (bucketError) {
+              console.error("Error creating bucket:", bucketError);
+              throw bucketError;
+            }
+          }
+          
+          // Prepare file path
+          const fileExt = imageFile.name.split('.').pop() || 'jpg';
+          const fileName = `${userData.user.id}-${Date.now()}.${fileExt}`;
+          const filePath = `images/${fileName}`;
+          
+          console.log("Uploading to path:", filePath);
+          
+          // Upload the file
+          const { error: uploadError } = await supabase.storage
+            .from('training_materials')
+            .upload(filePath, imageFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (uploadError) {
+            console.error("Image upload error:", uploadError);
+            throw uploadError;
+          }
+          
+          // Get public URL
+          const { data } = supabase.storage
+            .from('training_materials')
+            .getPublicUrl(filePath);
+          
+          if (!data || !data.publicUrl) {
+            throw new Error("Failed to get public URL for uploaded image");
+          }
+          
+          console.log("Image public URL:", data.publicUrl);
+          imageUrl = data.publicUrl;
+        } catch (uploadError: any) {
+          console.error("Image upload failed:", uploadError);
+          toast({
+            variant: "destructive",
+            title: "Image upload failed",
+            description: uploadError.message || "Unknown error during image upload",
+          });
+          // Continue with saving the course even if image upload fails
+        }
       }
 
       const courseData = {
         ...course,
         image_url: imageUrl,
       };
+      
+      console.log("Saving course with data:", courseData);
 
       // Insert or update the course
       const { data, error } = await supabase
@@ -98,7 +168,12 @@ export default function CourseForm() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving course:", error);
+        throw error;
+      }
+
+      console.log("Course saved successfully:", data);
 
       toast({
         title: isEditing ? "Course updated" : "Course created",
@@ -107,10 +182,11 @@ export default function CourseForm() {
 
       navigate("/admin/training");
     } catch (error: any) {
+      console.error("Error in course form submission:", error);
       toast({
         variant: "destructive",
         title: "Error saving course",
-        description: error.message,
+        description: error.message || "An unknown error occurred",
       });
     } finally {
       setIsSaving(false);

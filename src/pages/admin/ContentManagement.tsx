@@ -124,8 +124,26 @@ export default function ContentManagement() {
             description: "Please wait while your video is being uploaded...",
           });
           
+          console.log("Starting video upload process");
+          
+          // Check if user is authenticated
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) {
+            throw new Error("User not authenticated for upload");
+          }
+          
+          console.log("User authenticated:", userData.user.id);
+          
           // First check if the bucket exists and create it if needed
-          const { data: buckets } = await supabase.storage.listBuckets();
+          console.log("Checking for training_materials bucket");
+          const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+          
+          if (bucketsError) {
+            console.error("Error listing buckets:", bucketsError);
+            throw bucketsError;
+          }
+          
+          console.log("Available buckets:", buckets);
           const trainingBucket = buckets?.find(b => b.name === 'training_materials');
           
           if (!trainingBucket) {
@@ -138,13 +156,18 @@ export default function ContentManagement() {
               console.error("Error creating bucket:", bucketError);
               throw bucketError;
             }
+            console.log("Bucket created successfully");
+          } else {
+            console.log("Bucket already exists");
           }
           
-          // Upload the video directly here instead of using the service
+          // Upload the video
+          console.log("Preparing to upload video:", videoFile.name);
           const fileExt = videoFile.name.split('.').pop() || 'mp4';
-          const { data: userData } = await supabase.auth.getUser();
-          const fileName = `${userData.user?.id || 'user'}-${Date.now()}.${fileExt}`;
+          const fileName = `${userData.user.id}-${Date.now()}.${fileExt}`;
           const filePath = `videos/${fileName}`;
+          
+          console.log("Uploading to path:", filePath);
           
           const { error: uploadError } = await supabase.storage
             .from('training_materials')
@@ -152,17 +175,24 @@ export default function ContentManagement() {
               cacheControl: '3600',
               upsert: true
             });
-          
+        
           if (uploadError) {
             console.error("Video upload error:", uploadError);
             throw uploadError;
           }
           
+          console.log("Video upload successful");
+          
           // Get the public URL
           const { data } = supabase.storage
             .from('training_materials')
             .getPublicUrl(filePath);
+        
+          if (!data || !data.publicUrl) {
+            throw new Error("Failed to get public URL for uploaded video");
+          }
           
+          console.log("Video public URL:", data.publicUrl);
           videoUrl = data.publicUrl;
           
           toast({
@@ -170,10 +200,11 @@ export default function ContentManagement() {
             description: "Your video has been successfully uploaded.",
           });
         } catch (uploadError: any) {
+          console.error("Video upload failed:", uploadError);
           toast({
             variant: "destructive",
             title: "Video upload failed",
-            description: uploadError.message,
+            description: uploadError.message || "Unknown error occurred during upload",
           });
           setIsSubmitting(false);
           return;
@@ -190,6 +221,8 @@ export default function ContentManagement() {
             ? Math.max(...contentItems.map(item => item.sequence_order || 0)) + 1 
             : 1
       };
+      
+      console.log("Saving content item with data:", contentData);
 
       const { data, error } = await supabase
         .from("content_items")
@@ -197,7 +230,12 @@ export default function ContentManagement() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving content item:", error);
+        throw error;
+      }
+
+      console.log("Content item saved successfully:", data);
 
       toast({
         title: currentContentItem.id ? "Content updated" : "Content added",
@@ -220,12 +258,12 @@ export default function ContentManagement() {
       });
       setVideoFile(null);
     } catch (error: any) {
+      console.error("Error in handleAddOrUpdateContent:", error);
       toast({
         variant: "destructive",
         title: "Error saving content",
-        description: error.message,
+        description: error.message || "An unknown error occurred",
       });
-      console.error("Error saving content:", error);
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);
