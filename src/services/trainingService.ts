@@ -220,65 +220,112 @@ export const trainingService = {
 
   // Upload functions for training materials
   async uploadVideo(file: File): Promise<string> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error("User not authenticated");
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("User not authenticated");
 
-    // Handle file name and extension safely
-    const fileExt = file.name.split('.').pop() || 'mp4';
-    const fileName = `${user.user.id}/${Date.now()}.${fileExt}`;
-    const filePath = `videos/${fileName}`;
+      // Handle file name and extension safely
+      const fileExt = file.name.split('.').pop() || 'mp4';
+      const fileName = `${user.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `videos/${fileName}`;
 
-    console.log("Uploading video to path:", filePath);
+      console.log("Starting video upload to path:", filePath);
 
-    // Upload the file to storage
-    const { error: uploadError } = await supabase.storage
-      .from('training_materials')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
-    if (uploadError) {
-      console.error("Video upload error:", uploadError);
-      throw uploadError;
+      // Check if training_materials bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      
+      if (!trainingBucket) {
+        console.log("Creating training_materials bucket");
+        const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+          public: true
+        });
+        
+        if (bucketError) {
+          console.error("Error creating bucket:", bucketError);
+          throw bucketError;
+        }
+      }
+
+      // Upload the file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('training_materials')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) {
+        console.error("Video upload error:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("Video upload successful, getting public URL");
+
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('training_materials')
+        .getPublicUrl(filePath);
+
+      console.log("Video public URL:", data.publicUrl);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Upload video error:", error);
+      throw error;
     }
-
-    console.log("Video upload successful, getting public URL");
-
-    // Get the public URL
-    const { data } = supabase.storage
-      .from('training_materials')
-      .getPublicUrl(filePath);
-
-    console.log("Video public URL:", data.publicUrl);
-    
-    return data.publicUrl;
   },
 
   async uploadImage(file: File): Promise<string> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error("User not authenticated");
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("User not authenticated");
 
-    // Handle file name and extension safely
-    const fileExt = file.name.split('.').pop() || 'jpg';
-    const fileName = `${user.user.id}/${Date.now()}.${fileExt}`;
-    const filePath = `images/${fileName}`;
+      // Handle file name and extension safely
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${user.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `images/${fileName}`;
 
-    // Upload the file to storage
-    const { error } = await supabase.storage
-      .from('training_materials')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
-    if (error) throw error;
+      // Check if training_materials bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      
+      if (!trainingBucket) {
+        console.log("Creating training_materials bucket");
+        const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+          public: true
+        });
+        
+        if (bucketError) {
+          console.error("Error creating bucket:", bucketError);
+          throw bucketError;
+        }
+      }
 
-    // Get the public URL
-    const { data } = supabase.storage
-      .from('training_materials')
-      .getPublicUrl(filePath);
+      // Upload the file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('training_materials')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) {
+        console.error("Image upload error:", uploadError);
+        throw uploadError;
+      }
 
-    return data.publicUrl;
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('training_materials')
+        .getPublicUrl(filePath);
+
+      console.log("Image public URL:", data.publicUrl);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Upload image error:", error);
+      throw error;
+    }
   }
 };
