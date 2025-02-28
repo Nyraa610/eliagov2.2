@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
 import { Link } from "react-router-dom";
-import { LogIn, Bell, User } from "lucide-react";
+import { LogIn, Bell, User, Settings, LogOut } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { supabaseService, UserProfile } from "@/services/base/supabaseService";
 
 export const Navigation = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,6 +31,10 @@ export const Navigation = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       setUserEmail(session?.user?.email || null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
     });
 
     // Cleanup
@@ -40,6 +47,20 @@ export const Navigation = () => {
     const { data: { session } } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
     setUserEmail(session?.user?.email || null);
+    
+    if (session?.user) {
+      fetchUserProfile(session.user.id);
+    }
+  };
+  
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const profile = await supabaseService.getUserProfile(userId);
+      setProfile(profile);
+      setIsAdmin(profile?.role === 'admin');
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
   };
 
   const handleSignOut = async () => {
@@ -70,9 +91,12 @@ export const Navigation = () => {
             <Link to="/features" className="text-gray-600 hover:text-primary transition-colors">Features</Link>
             <Link to="/assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</Link>
             <Link to="/training" className="text-gray-600 hover:text-primary transition-colors">Training</Link>
-            <Link to="/admin/training" className="text-gray-600 hover:text-primary transition-colors">
-              Instructor Panel
-            </Link>
+            
+            {isAdmin && (
+              <Link to="/admin/training" className="text-gray-600 hover:text-primary transition-colors">
+                Instructor Panel
+              </Link>
+            )}
             
             {!isAuthenticated ? (
               <>
@@ -117,17 +141,26 @@ export const Navigation = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuItem className="text-xs text-muted-foreground">
-                      {userEmail}
+                      {profile?.full_name || userEmail}
+                      {isAdmin && (
+                        <span className="ml-2 bg-primary/10 text-primary rounded px-1.5 py-0.5 text-xs">
+                          Admin
+                        </span>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/training">My Courses</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/profile">Profile Settings</Link>
+                      <Link to="/profile">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Profile Settings
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>

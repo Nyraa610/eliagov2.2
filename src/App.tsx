@@ -18,6 +18,9 @@ import ContentManagement from "@/pages/admin/ContentManagement";
 import NotFound from "@/pages/NotFound";
 import CourseView from "@/pages/CourseView";
 import QuizManagement from "@/pages/admin/QuizManagement";
+import Profile from "@/pages/Profile";
+import Unauthorized from "@/pages/Unauthorized";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -50,31 +53,39 @@ const router = createBrowserRouter([
   },
   {
     path: "/training",
-    element: <Training />,
+    element: <ProtectedRoute><Training /></ProtectedRoute>,
   },
   {
     path: "/training/courses/:courseId",
-    element: <CourseView />,
+    element: <ProtectedRoute><CourseView /></ProtectedRoute>,
+  },
+  {
+    path: "/profile",
+    element: <ProtectedRoute><Profile /></ProtectedRoute>,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
   },
   {
     path: "/admin/training",
-    element: <AdminTraining />,
+    element: <ProtectedRoute requiredRole="admin"><AdminTraining /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:id?",
-    element: <CourseForm />,
+    element: <ProtectedRoute requiredRole="admin"><CourseForm /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:courseId/modules",
-    element: <ModuleManagement />,
+    element: <ProtectedRoute requiredRole="admin"><ModuleManagement /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:courseId/modules/:moduleId/content",
-    element: <ContentManagement />,
+    element: <ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:courseId/modules/:moduleId/content/:contentId/quiz",
-    element: <QuizManagement />,
+    element: <ProtectedRoute requiredRole="admin"><QuizManagement /></ProtectedRoute>,
   },
   {
     path: "*",
