@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, Trophy, CheckCircle2, Certificate, Download } from "lucide-react";
+import { Award, Trophy, CheckCircle2, Download, GraduationCap } from "lucide-react";
 import { trainingService } from "@/services/trainingService";
 import { useToast } from "@/components/ui/use-toast";
 import confetti from 'canvas-confetti';
@@ -188,7 +188,7 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
                     disabled={loading}
                     className="gap-2"
                   >
-                    <Certificate className="h-4 w-4" />
+                    <GraduationCap className="h-4 w-4" />
                     {loading ? "Generating..." : "Get Certificate"}
                   </Button>
                 )}
