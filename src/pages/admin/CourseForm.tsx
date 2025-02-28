@@ -29,6 +29,7 @@ export default function CourseForm() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -36,11 +37,13 @@ export default function CourseForm() {
         setIsLoading(true);
         try {
           const data = await trainingService.getCourseById(id);
+          console.log("Fetched course data:", data);
           setCourse(data);
           if (data.image_url) {
             setImagePreview(data.image_url);
           }
         } catch (error: any) {
+          console.error("Error fetching course:", error);
           toast({
             variant: "destructive",
             title: "Error fetching course",
@@ -58,6 +61,7 @@ export default function CourseForm() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log("New image file selected:", file.name);
       setImageFile(file);
 
       // Create a preview
@@ -74,50 +78,58 @@ export default function CourseForm() {
     setCourse((prev) => ({ ...prev, [name]: name === "points" ? parseInt(value) || 0 : value }));
   };
 
+  const uploadImage = async (file: File): Promise<string | null> => {
+    setIsImageUploading(true);
+    try {
+      console.log("Starting image upload process for:", file.name);
+      const uploadedUrl = await trainingService.uploadImage(file);
+      console.log("Image uploaded successfully, URL:", uploadedUrl);
+      return uploadedUrl;
+    } catch (error: any) {
+      console.error("Image upload failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Image upload failed",
+        description: error.message || "Unknown error during image upload",
+      });
+      return null;
+    } finally {
+      setIsImageUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
     try {
-      let imageUrl = course.image_url;
+      // Create a copy of course object to prevent mutation during async operations
+      let courseToSave = { ...course };
 
       // Upload the image if a new one was selected
       if (imageFile) {
-        console.log("Uploading course image:", imageFile.name);
-        try {
-          // Use the trainingService to upload the image instead of direct Supabase calls
-          imageUrl = await trainingService.uploadImage(imageFile);
-          console.log("Image uploaded successfully:", imageUrl);
-          
+        toast({
+          title: "Uploading image",
+          description: "Please wait while your image is being uploaded...",
+        });
+
+        const uploadedImageUrl = await uploadImage(imageFile);
+        
+        if (uploadedImageUrl) {
+          courseToSave.image_url = uploadedImageUrl;
           toast({
             title: "Image uploaded",
             description: "Your image has been successfully uploaded.",
           });
-        } catch (uploadError: any) {
-          console.error("Image upload failed:", uploadError);
-          toast({
-            variant: "destructive",
-            title: "Image upload failed",
-            description: uploadError.message || "Unknown error during image upload",
-          });
-          // Continue with saving the course even if image upload fails
         }
-      } else {
-        console.log("No new image file selected, keeping existing image URL:", imageUrl);
       }
-
-      // Prepare the course data with the image URL
-      const courseData: Partial<Course> = {
-        ...course,
-        image_url: imageUrl,
-      };
       
-      console.log("Saving course with data:", courseData);
+      console.log("Saving course with data:", courseToSave);
 
       // Insert or update the course
       const { data, error } = await supabase
         .from("courses")
-        .upsert([courseData], { onConflict: "id" })
+        .upsert([courseToSave], { onConflict: "id" })
         .select()
         .single();
 
@@ -220,7 +232,11 @@ export default function CourseForm() {
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isSaving}>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isSaving || isImageUploading}
+                    >
                       {isSaving ? "Saving..." : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
@@ -244,9 +260,13 @@ export default function CourseForm() {
                   {imagePreview ? (
                     <div className="relative aspect-video overflow-hidden rounded-lg border border-border">
                       <img
-                        src={imagePreview}
+                        src={`${imagePreview}?${new Date().getTime()}`}
                         alt="Course preview"
                         className="h-full w-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading image preview:", imagePreview);
+                          e.currentTarget.src = "https://placehold.co/600x400/png?text=Preview+Error";
+                        }}
                       />
                     </div>
                   ) : (
@@ -270,11 +290,17 @@ export default function CourseForm() {
                         variant="outline"
                         onClick={() => document.getElementById("picture")?.click()}
                         className="w-full"
+                        disabled={isImageUploading}
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        Choose Image
+                        {isImageUploading ? "Uploading..." : "Choose Image"}
                       </Button>
                     </div>
+                    {course.image_url && (
+                      <p className="text-xs mt-1">
+                        Current image: <span className="font-mono text-xs break-all">{course.image_url}</span>
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Recommended size: 1280x720 pixels (16:9 ratio)
                     </p>
