@@ -1,9 +1,11 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useQuiz } from "@/hooks/useQuiz";
 import QuizQuestion from "./quiz/QuizQuestion";
 import QuizResults from "./quiz/QuizResults";
+import { Button } from "@/components/ui/button";
+import { Play, ArrowRight } from "lucide-react";
 
 interface QuizPlayerProps {
   contentItemId: string;
@@ -11,6 +13,8 @@ interface QuizPlayerProps {
 }
 
 const QuizPlayer: React.FC<QuizPlayerProps> = ({ contentItemId, onComplete }) => {
+  const [quizStarted, setQuizStarted] = useState(false);
+  
   const {
     questions,
     currentQuestionIndex,
@@ -44,6 +48,30 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({ contentItemId, onComplete }) =>
     );
   }
 
+  if (!quizStarted) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center space-y-4">
+          <h2 className="text-xl font-semibold">Ready to Start Quiz?</h2>
+          <p className="text-muted-foreground">
+            This quiz contains {questions.length} questions and is worth a total of{" "}
+            {questions.reduce((total, q) => total + q.points, 0)} points.
+          </p>
+        </CardContent>
+        <CardFooter className="justify-center pb-6">
+          <Button 
+            onClick={() => setQuizStarted(true)}
+            size="lg"
+            className="gap-2"
+          >
+            <Play className="h-4 w-4" />
+            Start Quiz
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   if (isCompleted) {
     return (
       <QuizResults
@@ -51,7 +79,10 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({ contentItemId, onComplete }) =>
         answers={answers}
         selectedAnswers={selectedAnswers}
         results={results}
-        onRestart={restartQuiz}
+        onRestart={() => {
+          restartQuiz();
+          setQuizStarted(true);
+        }}
         onComplete={onComplete}
       />
     );
