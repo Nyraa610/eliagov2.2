@@ -85,64 +85,14 @@ export default function CourseForm() {
       if (imageFile) {
         console.log("Uploading course image:", imageFile.name);
         try {
-          const { data: userData } = await supabase.auth.getUser();
-          if (!userData.user) {
-            throw new Error("User not authenticated for upload");
-          }
+          // Use the trainingService to upload the image instead of direct Supabase calls
+          imageUrl = await trainingService.uploadImage(imageFile);
+          console.log("Image uploaded successfully:", imageUrl);
           
-          console.log("Checking for training_materials bucket");
-          const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-          
-          if (bucketsError) {
-            console.error("Error listing buckets:", bucketsError);
-            throw bucketsError;
-          }
-          
-          const trainingBucket = buckets?.find(b => b.name === 'training_materials');
-          
-          if (!trainingBucket) {
-            console.log("Creating training_materials bucket");
-            const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
-              public: true
-            });
-            
-            if (bucketError) {
-              console.error("Error creating bucket:", bucketError);
-              throw bucketError;
-            }
-          }
-          
-          // Prepare file path
-          const fileExt = imageFile.name.split('.').pop() || 'jpg';
-          const fileName = `${userData.user.id}-${Date.now()}.${fileExt}`;
-          const filePath = `images/${fileName}`;
-          
-          console.log("Uploading to path:", filePath);
-          
-          // Upload the file
-          const { error: uploadError } = await supabase.storage
-            .from('training_materials')
-            .upload(filePath, imageFile, {
-              cacheControl: '3600',
-              upsert: true
-            });
-          
-          if (uploadError) {
-            console.error("Image upload error:", uploadError);
-            throw uploadError;
-          }
-          
-          // Get public URL
-          const { data } = supabase.storage
-            .from('training_materials')
-            .getPublicUrl(filePath);
-          
-          if (!data || !data.publicUrl) {
-            throw new Error("Failed to get public URL for uploaded image");
-          }
-          
-          console.log("Image public URL:", data.publicUrl);
-          imageUrl = data.publicUrl;
+          toast({
+            title: "Image uploaded",
+            description: "Your image has been successfully uploaded.",
+          });
         } catch (uploadError: any) {
           console.error("Image upload failed:", uploadError);
           toast({
@@ -152,9 +102,12 @@ export default function CourseForm() {
           });
           // Continue with saving the course even if image upload fails
         }
+      } else {
+        console.log("No new image file selected, keeping existing image URL:", imageUrl);
       }
 
-      const courseData = {
+      // Prepare the course data with the image URL
+      const courseData: Partial<Course> = {
         ...course,
         image_url: imageUrl,
       };
