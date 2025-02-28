@@ -6,6 +6,8 @@ import { trainingService } from "@/services/trainingService";
 import { Course, UserEnrollment, Certificate } from "@/types/training";
 import CertificatesSection from "@/components/training/CertificatesSection";
 import AvailableCoursesSection from "@/components/training/AvailableCoursesSection";
+import { motion } from "framer-motion";
+import { Award } from "lucide-react";
 
 export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -21,7 +23,7 @@ export default function Training() {
         const [coursesData, enrollmentsData, certificatesData] = await Promise.all([
           trainingService.getCourses(),
           trainingService.getUserEnrollments(),
-          trainingService.getCertificates() // Fixed method name
+          trainingService.getCertificates()
         ]);
 
         setCourses(coursesData);
@@ -62,16 +64,49 @@ export default function Training() {
     }
   };
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
-      <div className="container mx-auto px-4 page-header-spacing pb-8">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">ESG Training Center</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+      <motion.div 
+        className="container mx-auto px-4 page-header-spacing pb-8"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div 
+          className="text-center mb-10"
+          variants={item}
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="inline-block mb-4"
+          >
+            <Award className="h-16 w-16 text-primary mx-auto" />
+          </motion.div>
+          <motion.h1 variants={item} className="text-3xl sm:text-4xl font-bold text-primary mb-4">
+            ESG Training Center
+          </motion.h1>
+          <motion.p variants={item} className="text-lg text-gray-600 max-w-2xl mx-auto">
             Enhance your knowledge and earn certificates in sustainability and ESG practices
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -79,16 +114,20 @@ export default function Training() {
           </div>
         ) : (
           <>
-            <CertificatesSection certificates={certificates} courses={courses} />
-            <AvailableCoursesSection 
-              courses={courses} 
-              enrollments={enrollments} 
-              certificates={certificates}
-              onEnroll={enrollInCourse}
-            />
+            <motion.div variants={item}>
+              <CertificatesSection certificates={certificates} courses={courses} />
+            </motion.div>
+            <motion.div variants={item}>
+              <AvailableCoursesSection 
+                courses={courses} 
+                enrollments={enrollments} 
+                certificates={certificates}
+                onEnroll={enrollInCourse}
+              />
+            </motion.div>
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

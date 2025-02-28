@@ -11,6 +11,7 @@ import { CourseHeader } from "@/components/training/course-view/CourseHeader";
 import { CourseOverview } from "@/components/training/course-view/CourseOverview";
 import { ModuleSidebar } from "@/components/training/course-view/ModuleSidebar";
 import { ContentDisplay } from "@/components/training/course-view/ContentDisplay";
+import { motion } from "framer-motion";
 
 export default function CourseView() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -27,6 +28,7 @@ export default function CourseView() {
   const [currentContent, setCurrentContent] = useState<ContentItem | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
+  const [totalCoursePoints, setTotalCoursePoints] = useState(0);
 
   useEffect(() => {
     if (!courseId) return;
@@ -52,6 +54,19 @@ export default function CourseView() {
         
         setCompletedModules(completedModulesData.map(m => m.module_id));
         setCompletedContent(completedContentData.map(c => c.content_item_id));
+
+        // Calculate total course points from quizzes
+        let totalPoints = 0;
+        for (const module of modulesData) {
+          const contentItems = await trainingService.getContentItemsByModuleId(module.id);
+          for (const item of contentItems) {
+            if (item.content_type === "quiz") {
+              const questions = await trainingService.getQuizQuestionsByContentItemId(item.id);
+              totalPoints += questions.reduce((sum, q) => sum + q.points, 0);
+            }
+          }
+        }
+        setTotalCoursePoints(totalPoints);
 
         // Set first module as current if available
         if (modulesData.length > 0) {
@@ -200,6 +215,31 @@ export default function CourseView() {
         title: "Quiz completed",
         description: `You scored ${score} points!`,
       });
+      
+      // Check if this was the last content item in the module
+      const currentIndex = contentItems.findIndex(item => item.id === currentContent.id);
+      if (currentIndex === contentItems.length - 1) {
+        // Mark module as completed
+        if (currentModule) {
+          trainingService.markModuleAsCompleted(currentModule.id)
+            .then(() => {
+              setCompletedModules([...completedModules, currentModule.id]);
+              
+              // Move to next module if available
+              const currentModuleIndex = modules.findIndex(module => module.id === currentModule.id);
+              if (currentModuleIndex < modules.length - 1) {
+                const nextModule = modules[currentModuleIndex + 1];
+                handleModuleSelect(nextModule);
+              }
+            })
+            .catch(error => {
+              console.error("Error marking module as completed:", error);
+            });
+        }
+      } else if (currentIndex < contentItems.length - 1) {
+        // Move to next content item
+        setCurrentContent(contentItems[currentIndex + 1]);
+      }
     }
   };
 
@@ -230,6 +270,16 @@ export default function CourseView() {
     if (currentIndex < contentItems.length - 1) {
       setCurrentContent(contentItems[currentIndex + 1]);
     }
+  };
+
+  // Check if this is the last content item in the last module
+  const isLastContentInCourse = () => {
+    if (!currentContent || !currentModule) return false;
+    
+    const isLastModule = modules.findIndex(m => m.id === currentModule.id) === modules.length - 1;
+    const isLastContent = contentItems.findIndex(c => c.id === currentContent.id) === contentItems.length - 1;
+    
+    return isLastModule && isLastContent;
   };
 
   if (isLoading) {
@@ -315,6 +365,10 @@ export default function CourseView() {
                   onQuizComplete={handleQuizComplete}
                   getYouTubeVideoId={getYouTubeVideoId}
                   isYouTubeUrl={isYouTubeUrl}
+                  isLastContentInCourse={isLastContentInCourse()}
+                  courseTitle={course.title}
+                  courseId={course.id}
+                  totalCoursePoints={totalCoursePoints}
                 />
               </div>
             </div>
