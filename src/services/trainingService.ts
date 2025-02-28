@@ -231,20 +231,18 @@ export const trainingService = {
 
       console.log("Starting video upload to path:", filePath);
 
-      // Check if training_materials bucket exists
+      // Ensure the training_materials bucket exists
       const { data: buckets } = await supabase.storage.listBuckets();
-      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      let trainingBucket = buckets?.find(b => b.name === 'training_materials');
       
       if (!trainingBucket) {
         console.log("Creating training_materials bucket");
-        const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+        await supabase.storage.createBucket('training_materials', {
           public: true
         });
         
-        if (bucketError) {
-          console.error("Error creating bucket:", bucketError);
-          throw bucketError;
-        }
+        // Set bucket to public
+        await supabase.storage.from('training_materials').setPublic(true);
       }
 
       // Upload the file to storage
@@ -286,20 +284,18 @@ export const trainingService = {
       const fileName = `${user.user.id}-${Date.now()}.${fileExt}`;
       const filePath = `images/${fileName}`;
 
-      // Check if training_materials bucket exists
+      // Ensure the training_materials bucket exists
       const { data: buckets } = await supabase.storage.listBuckets();
-      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+      let trainingBucket = buckets?.find(b => b.name === 'training_materials');
       
       if (!trainingBucket) {
         console.log("Creating training_materials bucket");
-        const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+        await supabase.storage.createBucket('training_materials', {
           public: true
         });
         
-        if (bucketError) {
-          console.error("Error creating bucket:", bucketError);
-          throw bucketError;
-        }
+        // Set bucket to public
+        await supabase.storage.from('training_materials').setPublic(true);
       }
 
       // Upload the file to storage

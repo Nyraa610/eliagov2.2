@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -125,7 +124,46 @@ export default function ContentManagement() {
             description: "Please wait while your video is being uploaded...",
           });
           
-          videoUrl = await trainingService.uploadVideo(videoFile);
+          // First check if the bucket exists and create it if needed
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const trainingBucket = buckets?.find(b => b.name === 'training_materials');
+          
+          if (!trainingBucket) {
+            console.log("Creating training_materials bucket");
+            const { error: bucketError } = await supabase.storage.createBucket('training_materials', {
+              public: true
+            });
+            
+            if (bucketError) {
+              console.error("Error creating bucket:", bucketError);
+              throw bucketError;
+            }
+          }
+          
+          // Upload the video directly here instead of using the service
+          const fileExt = videoFile.name.split('.').pop() || 'mp4';
+          const { data: userData } = await supabase.auth.getUser();
+          const fileName = `${userData.user?.id || 'user'}-${Date.now()}.${fileExt}`;
+          const filePath = `videos/${fileName}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('training_materials')
+            .upload(filePath, videoFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (uploadError) {
+            console.error("Video upload error:", uploadError);
+            throw uploadError;
+          }
+          
+          // Get the public URL
+          const { data } = supabase.storage
+            .from('training_materials')
+            .getPublicUrl(filePath);
+          
+          videoUrl = data.publicUrl;
           
           toast({
             title: "Video uploaded",

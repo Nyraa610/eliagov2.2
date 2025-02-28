@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -172,6 +171,25 @@ export default function CourseView() {
     }
   };
 
+  const getYouTubeVideoId = (url: string) => {
+    if (!url) return null;
+    
+    // Regular YouTube URLs
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    
+    if (match && match[2].length === 11) {
+      return match[2];
+    }
+    
+    return null;
+  };
+  
+  const isYouTubeUrl = (url: string) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
   const renderContentItem = () => {
     if (!currentContent) return null;
 
@@ -183,22 +201,56 @@ export default function CourseView() {
           </div>
         );
       case "video":
-        return (
-          <div className="space-y-4">
-            <div className="aspect-video bg-black rounded-md overflow-hidden">
-              {currentContent.video_url && (
+        if (currentContent.video_url) {
+          // Check if it's a YouTube video
+          if (isYouTubeUrl(currentContent.video_url)) {
+            const videoId = getYouTubeVideoId(currentContent.video_url);
+            if (videoId) {
+              return (
+                <div className="space-y-4">
+                  <div className="aspect-video bg-black rounded-md overflow-hidden">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    ></iframe>
+                  </div>
+                  {currentContent.content && (
+                    <div className="prose max-w-none dark:prose-invert">
+                      <div dangerouslySetInnerHTML={{ __html: currentContent.content }} />
+                    </div>
+                  )}
+                </div>
+              );
+            }
+          }
+          
+          // Otherwise, it's a direct video URL
+          return (
+            <div className="space-y-4">
+              <div className="aspect-video bg-black rounded-md overflow-hidden">
                 <video 
                   src={currentContent.video_url} 
                   controls 
                   className="w-full h-full" 
                 />
+              </div>
+              {currentContent.content && (
+                <div className="prose max-w-none dark:prose-invert">
+                  <div dangerouslySetInnerHTML={{ __html: currentContent.content }} />
+                </div>
               )}
             </div>
-            {currentContent.content && (
-              <div className="prose max-w-none dark:prose-invert">
-                <div dangerouslySetInnerHTML={{ __html: currentContent.content }} />
-              </div>
-            )}
+          );
+        }
+        return (
+          <div className="flex items-center justify-center h-64 bg-muted rounded-md">
+            <p className="text-muted-foreground">No video available</p>
           </div>
         );
       case "quiz":
