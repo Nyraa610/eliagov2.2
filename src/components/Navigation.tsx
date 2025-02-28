@@ -16,6 +16,9 @@ export const Navigation = () => {
             <Link to="/features" className="text-gray-600 hover:text-primary transition-colors">Features</Link>
             <Link to="/assessment" className="text-gray-600 hover:text-primary transition-colors">Assessment</Link>
             <Link to="/training" className="text-gray-600 hover:text-primary transition-colors">Training</Link>
+            <Link to="/admin/training" className="text-gray-600 hover:text-primary transition-colors">
+              Instructor Panel
+            </Link>
             <Link to="/login">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                 <LogIn className="w-4 h-4 mr-2" />
