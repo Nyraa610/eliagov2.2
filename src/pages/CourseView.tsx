@@ -11,6 +11,7 @@ import { ArrowLeft, BookOpen, CheckCircle2, Play, FileText, Video, ListChecks } 
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
 import { Course, Module, ContentItem, UserEnrollment } from "@/types/training";
+import QuizPlayer from "@/components/training/QuizPlayer";
 
 export default function CourseView() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -191,6 +192,18 @@ export default function CourseView() {
     return url.includes('youtube.com') || url.includes('youtu.be');
   };
 
+  const handleQuizComplete = (score: number) => {
+    // Update local state
+    if (currentContent) {
+      setCompletedContent([...completedContent, currentContent.id]);
+      
+      toast({
+        title: "Quiz completed",
+        description: `You scored ${score} points!`,
+      });
+    }
+  };
+
   const renderContentItem = () => {
     if (!currentContent) return null;
 
@@ -257,12 +270,15 @@ export default function CourseView() {
       case "quiz":
         return (
           <div className="space-y-4">
-            <div className="prose max-w-none dark:prose-invert">
-              <div dangerouslySetInnerHTML={{ __html: currentContent.content || "" }} />
-            </div>
-            <Button onClick={() => alert("Quiz functionality not yet implemented")}>
-              Start Quiz
-            </Button>
+            {currentContent.content && (
+              <div className="prose max-w-none dark:prose-invert mb-4">
+                <div dangerouslySetInnerHTML={{ __html: currentContent.content || "" }} />
+              </div>
+            )}
+            <QuizPlayer 
+              contentItemId={currentContent.id} 
+              onComplete={handleQuizComplete} 
+            />
           </div>
         );
       default:
@@ -479,44 +495,46 @@ export default function CourseView() {
                       <div className="space-y-6">
                         {renderContentItem()}
                         
-                        <div className="flex justify-between items-center pt-4">
-                          <Button
-                            variant="outline"
-                            disabled={!contentItems.length || contentItems[0].id === currentContent.id}
-                            onClick={() => {
-                              const currentIndex = contentItems.findIndex(item => item.id === currentContent.id);
-                              if (currentIndex > 0) {
-                                setCurrentContent(contentItems[currentIndex - 1]);
-                              }
-                            }}
-                          >
-                            Previous
-                          </Button>
-                          
-                          {completedContent.includes(currentContent.id) ? (
-                            <Button variant="outline" disabled>
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Completed
+                        {currentContent.content_type !== "quiz" && (
+                          <div className="flex justify-between items-center pt-4">
+                            <Button
+                              variant="outline"
+                              disabled={!contentItems.length || contentItems[0].id === currentContent.id}
+                              onClick={() => {
+                                const currentIndex = contentItems.findIndex(item => item.id === currentContent.id);
+                                if (currentIndex > 0) {
+                                  setCurrentContent(contentItems[currentIndex - 1]);
+                                }
+                              }}
+                            >
+                              Previous
                             </Button>
-                          ) : (
-                            <Button onClick={markContentAsCompleted}>
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Mark as Complete
+                            
+                            {completedContent.includes(currentContent.id) ? (
+                              <Button variant="outline" disabled>
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Completed
+                              </Button>
+                            ) : (
+                              <Button onClick={markContentAsCompleted}>
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Mark as Complete
+                              </Button>
+                            )}
+                            
+                            <Button
+                              disabled={!contentItems.length || contentItems[contentItems.length - 1].id === currentContent.id}
+                              onClick={() => {
+                                const currentIndex = contentItems.findIndex(item => item.id === currentContent.id);
+                                if (currentIndex < contentItems.length - 1) {
+                                  setCurrentContent(contentItems[currentIndex + 1]);
+                                }
+                              }}
+                            >
+                              Next
                             </Button>
-                          )}
-                          
-                          <Button
-                            disabled={!contentItems.length || contentItems[contentItems.length - 1].id === currentContent.id}
-                            onClick={() => {
-                              const currentIndex = contentItems.findIndex(item => item.id === currentContent.id);
-                              if (currentIndex < contentItems.length - 1) {
-                                setCurrentContent(contentItems[currentIndex + 1]);
-                              }
-                            }}
-                          >
-                            Next
-                          </Button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-64">
