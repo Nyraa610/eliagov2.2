@@ -12,6 +12,7 @@ import {
   Certificate
 } from "@/types/training";
 import { contentCompletionService } from "./contentCompletionService";
+import { quizService } from "./quizService";
 
 const { supabase } = supabaseService;
 
@@ -228,35 +229,36 @@ export const trainingService = {
   
   // Quiz methods
   async getQuizQuestionsByContentItemId(contentItemId: string): Promise<QuizQuestion[]> {
-    try {
-      const { data, error } = await supabase
-        .from('quiz_questions')
-        .select('*')
-        .eq('content_item_id', contentItemId)
-        .order('sequence_order', { ascending: true });
-        
-      if (error) throw error;
-      return data as QuizQuestion[];
-    } catch (error) {
-      console.error(`Error fetching quiz questions for content ${contentItemId}:`, error);
-      throw error;
-    }
+    return quizService.getQuizQuestionsByContentItemId(contentItemId);
   },
   
   async getQuizAnswersByQuestionId(questionId: string): Promise<QuizAnswer[]> {
-    try {
-      const { data, error } = await supabase
-        .from('quiz_answers')
-        .select('*')
-        .eq('question_id', questionId)
-        .order('sequence_order', { ascending: true });
-        
-      if (error) throw error;
-      return data as QuizAnswer[];
-    } catch (error) {
-      console.error(`Error fetching quiz answers for question ${questionId}:`, error);
-      throw error;
-    }
+    return quizService.getQuizAnswersByQuestionId(questionId);
+  },
+  
+  // Quiz editing methods for QuizEditor
+  async deleteQuizQuestion(questionId: string): Promise<void> {
+    return quizService.deleteQuizQuestion(questionId);
+  },
+  
+  async saveQuizQuestion(question: Partial<QuizQuestion>): Promise<QuizQuestion> {
+    return quizService.saveQuizQuestion(question);
+  },
+  
+  async updateQuizQuestion(questionId: string, questionData: Partial<QuizQuestion>): Promise<QuizQuestion> {
+    return quizService.updateQuizQuestion(questionId, questionData);
+  },
+  
+  async saveQuizAnswer(answer: Partial<QuizAnswer>): Promise<QuizAnswer> {
+    return quizService.saveQuizAnswer(answer);
+  },
+  
+  async updateQuizAnswer(answerId: string, answerData: Partial<QuizAnswer>): Promise<QuizAnswer> {
+    return quizService.updateQuizAnswer(answerId, answerData);
+  },
+  
+  async deleteQuizAnswer(answerId: string): Promise<void> {
+    return quizService.deleteQuizAnswer(answerId);
   },
   
   // Certificate methods

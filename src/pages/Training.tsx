@@ -21,7 +21,7 @@ export default function Training() {
         const [coursesData, enrollmentsData, certificatesData] = await Promise.all([
           trainingService.getCourses(),
           trainingService.getUserEnrollments(),
-          trainingService.getUserCertificates()
+          trainingService.getCertificates() // Fixed method name
         ]);
 
         setCourses(coursesData);
