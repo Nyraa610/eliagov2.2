@@ -1,12 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, Trash2, LayoutGrid, BookOpen, Video, ListTodo, Sparkles } from "lucide-react";
+import { PlusCircle, FileEdit, Trash2, LayoutGrid, BookOpen, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { trainingService } from "@/services/trainingService";
+import { courseService } from "@/services/courseService";
 import { Course } from "@/types/training";
 import { CourseSummary } from "@/components/ai/CourseSummary";
 
@@ -18,7 +19,7 @@ export default function AdminTraining() {
   const navigate = useNavigate();
 
   // Load courses on component mount
-  useState(() => {
+  useEffect(() => {
     const loadCourses = async () => {
       setIsLoading(true);
       try {
@@ -37,7 +38,7 @@ export default function AdminTraining() {
     };
 
     loadCourses();
-  });
+  }, [toast]);
 
   const handleCreateCourse = () => {
     navigate("/admin/courses/new");
@@ -50,7 +51,7 @@ export default function AdminTraining() {
   const handleDeleteCourse = async (courseId: string) => {
     if (window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
       try {
-        await trainingService.deleteCourse(courseId);
+        await courseService.deleteCourse(courseId);
         setCourses(courses.filter(course => course.id !== courseId));
         toast({
           title: "Course deleted",
