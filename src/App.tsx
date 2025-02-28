@@ -1,3 +1,4 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -10,7 +11,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Features from "@/pages/Features";
 import Assessment from "@/pages/Assessment";
 import Training from "@/pages/Training";
-import AdminTraining from "@/pages/admin/AdminTraining";
+import AdminTraining from "@/pages/admin/Training";
 import CourseForm from "@/pages/admin/CourseForm";
 import ModuleManagement from "@/pages/admin/ModuleManagement";
 import ContentManagement from "@/pages/admin/ContentManagement";
