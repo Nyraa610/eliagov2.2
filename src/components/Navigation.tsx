@@ -145,7 +145,7 @@ export const Navigation = () => {
                       <User className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuItem className="text-xs text-muted-foreground">
                       {profile?.full_name || userEmail}
