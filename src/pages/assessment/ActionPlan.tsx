@@ -3,19 +3,22 @@ import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FeatureStatus } from "@/types/training";
 import { actionPlanSchema, ActionPlanFormValues } from "@/components/assessment/action-plan/formSchema";
 import { ActionPlanTabs } from "@/components/assessment/action-plan/ActionPlanTabs";
+import { assessmentService } from "@/services/assessmentService";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ActionPlan() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("goals");
   const [actionPlanStatus, setActionPlanStatus] = useState<FeatureStatus>("not-started");
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
   
   // Define tabs to track progress
   const tabs = ["goals", "initiatives", "timeline", "review"];
@@ -38,6 +41,32 @@ export default function ActionPlan() {
       timeline: "",
     },
   });
+
+  // Load saved progress when component mounts
+  useEffect(() => {
+    const loadSavedProgress = async () => {
+      const savedProgress = await assessmentService.getAssessmentProgress('action_plan');
+      
+      if (savedProgress) {
+        setActionPlanStatus(savedProgress.status as FeatureStatus);
+        setProgress(savedProgress.progress);
+        
+        // If there's saved form data, populate the form
+        if (savedProgress.form_data) {
+          form.reset(savedProgress.form_data);
+        }
+      }
+    };
+    
+    loadSavedProgress().catch(error => {
+      console.error("Error loading action plan progress:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load saved progress",
+        variant: "destructive"
+      });
+    });
+  }, [form, toast]);
 
   // Track form values to update progress
   useEffect(() => {
@@ -68,7 +97,12 @@ export default function ActionPlan() {
     const formCompletion = Object.values(values).filter(Boolean).length / Object.keys(values).length;
     completedWeight += tabWeights.review * formCompletion;
     
-    setProgress(completedWeight);
+    const newProgress = completedWeight;
+    setProgress(newProgress);
+    
+    // Save current form data and progress
+    assessmentService.saveAssessmentProgress('action_plan', actionPlanStatus, newProgress, values)
+      .catch(error => console.error("Error saving progress:", error));
   };
   
   // Calculate completion percentage for each tab
@@ -90,7 +124,10 @@ export default function ActionPlan() {
   const handleTabChange = (tab: string) => {
     // If this is the first tab and status is not-started, change to in-progress
     if (tab === tabs[0] && actionPlanStatus === "not-started") {
-      setActionPlanStatus("in-progress");
+      const newStatus: FeatureStatus = "in-progress";
+      setActionPlanStatus(newStatus);
+      assessmentService.saveAssessmentProgress('action_plan', newStatus, progress, form.getValues())
+        .catch(error => console.error("Error saving status change:", error));
     }
     
     setActiveTab(tab);
@@ -98,9 +135,26 @@ export default function ActionPlan() {
 
   function onSubmit(values: ActionPlanFormValues) {
     console.log(values);
-    // Here we would save the data and potentially navigate to the next step
-    setActionPlanStatus("waiting-for-approval");
+    const newStatus: FeatureStatus = "waiting-for-approval";
+    setActionPlanStatus(newStatus);
     setProgress(100); // Set to 100% on submission
+    
+    // Save completed form
+    assessmentService.saveAssessmentProgress('action_plan', newStatus, 100, values)
+      .then(() => {
+        toast({
+          title: "Success",
+          description: "Your action plan has been submitted for approval.",
+        });
+      })
+      .catch(error => {
+        console.error("Error saving completed form:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save your action plan",
+          variant: "destructive"
+        });
+      });
   }
 
   return (

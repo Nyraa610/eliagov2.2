@@ -1,16 +1,54 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { FeatureStatus } from "@/types/training";
 import { MaterialityAnalysisForm } from "@/components/assessment/materiality-analysis/MaterialityAnalysisForm";
+import { assessmentService } from "@/services/assessmentService";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function MaterialityAnalysis() {
   const { t } = useTranslation();
   const [analysisStatus, setAnalysisStatus] = useState<FeatureStatus>("not-started");
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
+
+  // Load saved progress when component mounts
+  useEffect(() => {
+    const loadSavedProgress = async () => {
+      const savedProgress = await assessmentService.getAssessmentProgress('materiality_analysis');
+      
+      if (savedProgress) {
+        setAnalysisStatus(savedProgress.status as FeatureStatus);
+        setProgress(savedProgress.progress);
+      }
+    };
+    
+    loadSavedProgress().catch(error => {
+      console.error("Error loading materiality analysis progress:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load saved progress",
+        variant: "destructive"
+      });
+    });
+  }, [toast]);
+
+  // Handler to update status with persistence
+  const handleStatusChange = (status: FeatureStatus) => {
+    setAnalysisStatus(status);
+    assessmentService.saveAssessmentProgress('materiality_analysis', status, progress)
+      .catch(error => console.error("Error saving status:", error));
+  };
+
+  // Handler to update progress with persistence
+  const handleProgressChange = (newProgress: number) => {
+    setProgress(newProgress);
+    assessmentService.saveAssessmentProgress('materiality_analysis', analysisStatus, newProgress)
+      .catch(error => console.error("Error saving progress:", error));
+  };
 
   return (
     <UserLayout title={t("assessment.materialityAnalysis.title")}>
@@ -25,9 +63,9 @@ export default function MaterialityAnalysis() {
       
       <MaterialityAnalysisForm
         analysisStatus={analysisStatus}
-        setAnalysisStatus={setAnalysisStatus}
+        setAnalysisStatus={handleStatusChange}
         progress={progress}
-        setProgress={setProgress}
+        setProgress={handleProgressChange}
       />
     </UserLayout>
   );
