@@ -1,43 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CompanyList } from "@/components/company/CompanyList";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Building, Check, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { companyService } from "@/services/companyService";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase"; // Import supabase directly
 
 export default function Companies() {
   const [showSubsidiaryDialog, setShowSubsidiaryDialog] = useState(false);
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        setLoading(true);
-        const data = await companyService.getUserCompanies();
-        console.log("Fetched companies:", data);
-        setCompanies(data);
-      } catch (error) {
-        console.error("Error fetching companies:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load companies. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompanies();
-  }, [toast]);
 
   const handleContactSales = async () => {
     try {
@@ -58,7 +33,7 @@ export default function Companies() {
         body: JSON.stringify({
           name: user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name || 'User',
           email: user?.email || '',
-          company: companies[0]?.name || 'Unknown',
+          company: 'Unknown', // We no longer need to access companies state
           message: 'Interested in adding subsidiaries to my account'
         })
       });
