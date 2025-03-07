@@ -3,10 +3,9 @@ import { supabaseClient, useSupabase } from "./supabaseClient";
 import { authService } from "./authService";
 import { profileService } from "./profileService";
 import { roleService } from "./roleService";
-import { UserProfile, UserRole } from "./profileTypes";
 
 // Re-export all types and services for backward compatibility
-export { UserProfile, UserRole };
+export type { UserProfile, UserRole } from "./profileTypes";
 export { useSupabase };
 
 // Combine all services into the main supabaseService for backward compatibility
