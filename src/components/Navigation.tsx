@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HamburgerMenuIcon, Cross1Icon, BellIcon, UserRoundIcon } from "@radix-ui/react-icons";
+import { HamburgerMenuIcon, Cross1Icon, BellIcon } from "@radix-ui/react-icons";
+import { UserRound } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
@@ -93,7 +93,7 @@ export const Navigation = () => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">
-            <UserRoundIcon className="h-5 w-5" />
+            <UserRound className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -109,7 +109,7 @@ export const Navigation = () => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
-            Logout
+            {t('auth.logout')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -236,7 +236,7 @@ export const Navigation = () => {
                     </Button>
                   </Link>
                   <Button onClick={handleLogout} variant="outline" className="w-full">
-                    Logout
+                    {t('auth.logout')}
                   </Button>
                 </div>
               ) : (
