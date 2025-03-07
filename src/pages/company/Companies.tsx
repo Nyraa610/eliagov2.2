@@ -1,25 +1,79 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CompanyList } from "@/components/company/CompanyList";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Building, Check, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { companyService } from "@/services/companyService";
+import { useNavigate } from "react-router-dom";
 
 export default function Companies() {
   const [showSubsidiaryDialog, setShowSubsidiaryDialog] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleContactSales = () => {
-    // Here we'd typically trigger an API call to send an email
-    // For now, we'll just simulate success with a toast
-    toast({
-      title: "Request sent successfully",
-      description: "Our sales team will contact you soon about adding subsidiaries.",
-      variant: "default",
-    });
-    setShowSubsidiaryDialog(false);
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        const data = await companyService.getUserCompanies();
+        setCompanies(data);
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load companies. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, [toast]);
+
+  const handleContactSales = async () => {
+    try {
+      const { user } = (await companyService.supabase.auth.getUser()).data;
+      
+      // Make request to the Edge Function
+      const response = await fetch('https://tqvylbkavunzlckhqxcl.supabase.co/functions/v1/contact-sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await companyService.supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          name: user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name || 'User',
+          email: user?.email || '',
+          company: companies[0]?.name || 'Unknown',
+          message: 'Interested in adding subsidiaries to my account'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to contact sales');
+      }
+      
+      toast({
+        title: "Request sent successfully",
+        description: "Our sales team will contact you soon about adding subsidiaries.",
+        variant: "default",
+      });
+      setShowSubsidiaryDialog(false);
+    } catch (error) {
+      console.error("Error contacting sales:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send your request. Please try again or email sales@eliago.com directly.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

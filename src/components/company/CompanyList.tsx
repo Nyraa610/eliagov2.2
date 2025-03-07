@@ -55,12 +55,12 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
             <PlusCircle className="mr-2 h-4 w-4" />
             New Company
           </Button>
-        ) : (
+        ) : onAddSubsidiary ? (
           <Button variant="outline" onClick={onAddSubsidiary}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Subsidiary
           </Button>
-        )}
+        ) : null}
       </div>
 
       {loading ? (

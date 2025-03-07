@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { companyMemberService } from "./companyMemberService";
 
@@ -49,48 +50,58 @@ export const companyService = {
   },
   
   async getUserCompanies() {
-    const { data, error } = await supabase
-      .from('company_members')
-      .select(`
-        company_id,
-        is_admin,
-        companies:company_id (*)
-      `)
-      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+    try {
+      const { data, error } = await supabase
+        .from('company_members')
+        .select(`
+          company_id,
+          is_admin,
+          companies:company_id (*)
+        `)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        
+      if (error) {
+        console.error("Error fetching user companies:", error);
+        throw error;
+      }
       
-    if (error) {
-      console.error("Error fetching user companies:", error);
+      // Transform the data to fix the type issue
+      return data.map(item => {
+        return {
+          ...((item.companies as unknown) as Company),
+          is_admin: item.is_admin
+        } as CompanyWithRole;
+      });
+    } catch (error) {
+      console.error("Error in getUserCompanies:", error);
       throw error;
     }
-    
-    // Transform the data to fix the type issue
-    return data.map(item => {
-      return {
-        ...(item.companies as unknown as Company),
-        is_admin: item.is_admin
-      } as CompanyWithRole;
-    });
   },
   
   async createCompany(company: Partial<Company>) {
-    const { data, error } = await supabase
-      .from('companies')
-      .insert([company])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([company])
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error creating company:", error);
+        throw error;
+      }
       
-    if (error) {
-      console.error("Error creating company:", error);
+      // Add current user as an admin member
+      const user = (await supabase.auth.getUser()).data.user;
+      if (user) {
+        await companyMemberService.addMember(data.id, user.id, true);
+      }
+      
+      return data as Company;
+    } catch (error) {
+      console.error("Error in createCompany:", error);
       throw error;
     }
-    
-    // Add current user as an admin member
-    const user = (await supabase.auth.getUser()).data.user;
-    if (user) {
-      await companyMemberService.addMember(data.id, user.id, true);
-    }
-    
-    return data as Company;
   },
   
   async updateCompany(id: string, updates: Partial<Company>) {
