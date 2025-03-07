@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface AssessmentBaseProps {
   title: string;
@@ -19,7 +20,8 @@ export function AssessmentBase({ title, description, children, status = "not-sta
       case "in-progress":
         return <Badge variant="secondary" className="ml-2">In Progress</Badge>;
       case "completed":
-        return <Badge variant="success" className="ml-2 bg-green-500 hover:bg-green-600">Completed</Badge>;
+        // Use default variant with custom styling instead of non-existent "success" variant
+        return <Badge variant="default" className="ml-2 bg-green-500 hover:bg-green-600">Completed</Badge>;
       default:
         return null;
     }
