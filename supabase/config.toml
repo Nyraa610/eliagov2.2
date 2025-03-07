@@ -1,10 +1,13 @@
 
 # A string used as a secret for the Edge Functions JWT.
-[global.config]
-app_dir = "dist"
 project_id = "tqvylbkavunzlckhqxcl"
 
-[global.secrets]
+[functions]
+[functions.app_dir]
+app_dir = "dist"
+
+[functions.env]
+# Keys are accessible from Edge Functions as they run
 SUPABASE_URL = "***"
 SUPABASE_ANON_KEY = "***"
 SUPABASE_SERVICE_ROLE_KEY = "***"
