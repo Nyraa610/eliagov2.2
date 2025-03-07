@@ -1,17 +1,10 @@
+
 import { supabaseService } from "./base/supabaseService";
-import { 
-  Course, 
-  Module, 
-  ContentItem, 
-  UserEnrollment, 
-  ContentCompletion, 
-  ModuleCompletion,
-  QuizQuestion,
-  QuizAnswer,
-  Certificate
-} from "@/types/training";
+import { Course, Module, ContentItem } from "@/types/training";
 import { contentCompletionService } from "./contentCompletionService";
 import { quizService } from "./quizService";
+import { enrollmentService } from "./enrollmentService";
+import { certificateService } from "./certificateService";
 
 const { supabase } = supabaseService;
 
@@ -48,149 +41,6 @@ export const trainingService = {
     }
   },
   
-  // Enrollment methods
-  async enrollUserInCourse(courseId: string): Promise<UserEnrollment> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      const data = {
-        user_id: userId,
-        course_id: courseId,
-        started_at: new Date().toISOString(),
-        is_completed: false,
-        progress_percentage: 0,
-        points_earned: 0
-      };
-      
-      const { data: result, error } = await supabase
-        .from('user_enrollments')
-        .upsert(data)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return result as UserEnrollment;
-    } catch (error) {
-      console.error("Error enrolling user in course:", error);
-      throw error;
-    }
-  },
-  
-  async getUserEnrollments(): Promise<UserEnrollment[]> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from('user_enrollments')
-        .select('*, courses(*)')
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error("Error fetching user enrollments:", error);
-      return [];
-    }
-  },
-  
-  async getEnrollmentByCourseId(courseId: string): Promise<UserEnrollment | null> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        return null;
-      }
-      
-      const { data, error } = await supabase
-        .from('user_enrollments')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('course_id', courseId)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-      
-      return data || null;
-    } catch (error) {
-      console.error("Error fetching enrollment by course id:", error);
-      return null;
-    }
-  },
-  
-  async updateCourseProgress(courseId: string, progressPercentage: number): Promise<UserEnrollment> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('user_enrollments')
-        .update({ progress_percentage: progressPercentage })
-        .eq('user_id', userId)
-        .eq('course_id', courseId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data as UserEnrollment;
-    } catch (error) {
-      console.error("Error updating course progress:", error);
-      throw error;
-    }
-  },
-  
-  async calculateCourseProgress(courseId: string): Promise<number> {
-    try {
-      const modules = await this.getModulesByCourseId(courseId);
-      if (modules.length === 0) return 0;
-      
-      const completedModulesData = await this.getCompletedModules();
-      const completedContentData = await this.getCompletedContentItems();
-      
-      let totalContentItems = 0;
-      let completedContentItems = 0;
-      
-      for (const module of modules) {
-        const contentItems = await this.getContentItemsByModuleId(module.id);
-        totalContentItems += contentItems.length;
-        
-        for (const item of contentItems) {
-          if (completedContentData.some(c => c.content_item_id === item.id)) {
-            completedContentItems++;
-          }
-        }
-      }
-      
-      let progressPercentage = 0;
-      if (totalContentItems > 0) {
-        progressPercentage = Math.round((completedContentItems / totalContentItems) * 100);
-      }
-      
-      await this.updateCourseProgress(courseId, progressPercentage);
-      
-      return progressPercentage;
-    } catch (error) {
-      console.error("Error calculating course progress:", error);
-      return 0;
-    }
-  },
-  
   // Module methods
   async getModulesByCourseId(courseId: string): Promise<Module[]> {
     try {
@@ -208,68 +58,12 @@ export const trainingService = {
     }
   },
   
-  async markModuleAsCompleted(moduleId: string): Promise<ModuleCompletion> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      const data = {
-        user_id: userId,
-        module_id: moduleId,
-        is_completed: true,
-        completed_at: new Date().toISOString()
-      };
-      
-      const { data: result, error } = await supabase
-        .from('module_completions')
-        .upsert(data)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      const module = await supabase
-        .from('modules')
-        .select('course_id')
-        .eq('id', moduleId)
-        .single();
-      
-      if (module.data && module.data.course_id) {
-        await this.calculateCourseProgress(module.data.course_id);
-      }
-      
-      return result as ModuleCompletion;
-    } catch (error) {
-      console.error("Error marking module as completed:", error);
-      throw error;
-    }
+  async markModuleAsCompleted(moduleId: string) {
+    return contentCompletionService.markModuleAsCompleted(moduleId);
   },
   
-  async getCompletedModules(): Promise<ModuleCompletion[]> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from('module_completions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_completed', true);
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error("Error fetching completed modules:", error);
-      return [];
-    }
+  async getCompletedModules() {
+    return contentCompletionService.getCompletedModules();
   },
   
   // Content methods
@@ -289,159 +83,38 @@ export const trainingService = {
     }
   },
   
-  async markContentAsCompleted(contentItemId: string, quizScore?: number): Promise<ContentCompletion> {
-    const result = await contentCompletionService.markContentAsCompleted(contentItemId, quizScore);
-    
-    try {
-      const { data, error } = await supabase
-        .from('content_items')
-        .select('module_id')
-        .eq('id', contentItemId)
-        .single();
-      
-      if (!error && data && data.module_id) {
-        const moduleData = await supabase
-          .from('modules')
-          .select('course_id')
-          .eq('id', data.module_id)
-          .single();
-        
-        if (!moduleData.error && moduleData.data && moduleData.data.course_id) {
-          await this.calculateCourseProgress(moduleData.data.course_id);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating course progress after content completion:", error);
-    }
-    
-    return result;
+  // Delegate to other services
+  async markContentAsCompleted(contentItemId: string, quizScore?: number) {
+    return contentCompletionService.markContentAsCompleted(contentItemId, quizScore);
   },
   
-  async getCompletedContentItems(): Promise<ContentCompletion[]> {
+  async getCompletedContentItems() {
     return contentCompletionService.getCompletedContentItems();
   },
   
-  // Quiz methods
-  async getQuizQuestionsByContentItemId(contentItemId: string): Promise<QuizQuestion[]> {
+  async getQuizQuestionsByContentItemId(contentItemId: string) {
     return quizService.getQuizQuestionsByContentItemId(contentItemId);
   },
   
-  async getQuizAnswersByQuestionId(questionId: string): Promise<QuizAnswer[]> {
+  async getQuizAnswersByQuestionId(questionId: string) {
     return quizService.getQuizAnswersByQuestionId(questionId);
   },
   
-  // Quiz editing methods for QuizEditor
-  async deleteQuizQuestion(questionId: string): Promise<void> {
-    return quizService.deleteQuizQuestion(questionId);
-  },
+  // Re-export enrollment methods
+  enrollUserInCourse: enrollmentService.enrollUserInCourse,
+  getUserEnrollments: enrollmentService.getUserEnrollments,
+  getEnrollmentByCourseId: enrollmentService.getEnrollmentByCourseId,
+  updateCourseProgress: enrollmentService.updateCourseProgress,
   
-  async saveQuizQuestion(question: Partial<QuizQuestion>): Promise<QuizQuestion> {
-    return quizService.saveQuizQuestion(question);
-  },
+  // Re-export certificate methods
+  getCertificates: certificateService.getCertificates,
+  generateCertificate: certificateService.generateCertificate,
   
-  async updateQuizQuestion(questionId: string, questionData: Partial<QuizQuestion>): Promise<QuizQuestion> {
-    return quizService.updateQuizQuestion(questionId, questionData);
-  },
-  
-  async saveQuizAnswer(answer: Partial<QuizAnswer>): Promise<QuizAnswer> {
-    return quizService.saveQuizAnswer(answer);
-  },
-  
-  async updateQuizAnswer(answerId: string, answerData: Partial<QuizAnswer>): Promise<QuizAnswer> {
-    return quizService.updateQuizAnswer(answerId, answerData);
-  },
-  
-  async deleteQuizAnswer(answerId: string): Promise<void> {
-    return quizService.deleteQuizAnswer(answerId);
-  },
-  
-  // Certificate methods
-  async getCertificates(): Promise<Certificate[]> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from('certificates')
-        .select('*, courses(*)')
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error("Error fetching certificates:", error);
-      return [];
-    }
-  },
-
-  async generateCertificate(courseId: string): Promise<{ id: string; certificate_url: string }> {
-    try {
-      const user = supabase.auth.getUser();
-      const userId = (await user).data.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      const { data: existingCert, error: certError } = await supabase
-        .from('certificates')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('course_id', courseId)
-        .single();
-      
-      if (existingCert) {
-        return existingCert as { id: string; certificate_url: string };
-      }
-      
-      const course = await this.getCourseById(courseId);
-      
-      const { data: contentCompletions, error: completionsError } = await supabase
-        .from('content_completions')
-        .select('quiz_score')
-        .eq('user_id', userId)
-        .not('quiz_score', 'is', null);
-      
-      if (completionsError) throw completionsError;
-      
-      const pointsEarned = contentCompletions
-        ? contentCompletions.reduce((sum, item) => sum + (item.quiz_score || 0), 0)
-        : 0;
-      
-      const certificateUrl = `https://example.com/certificates/${courseId}-${userId}`;
-      
-      const { data, error } = await supabase
-        .from('certificates')
-        .insert({
-          user_id: userId,
-          course_id: courseId,
-          points_earned: pointsEarned,
-          certificate_url: certificateUrl,
-          issued_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      await supabase
-        .from('user_enrollments')
-        .update({
-          is_completed: true,
-          completed_at: new Date().toISOString(),
-          points_earned: pointsEarned
-        })
-        .eq('user_id', userId)
-        .eq('course_id', courseId);
-      
-      return data as { id: string; certificate_url: string };
-    } catch (error) {
-      console.error("Error generating certificate:", error);
-      throw error;
-    }
-  }
+  // Quiz editing methods
+  deleteQuizQuestion: quizService.deleteQuizQuestion,
+  saveQuizQuestion: quizService.saveQuizQuestion,
+  updateQuizQuestion: quizService.updateQuizQuestion,
+  saveQuizAnswer: quizService.saveQuizAnswer,
+  updateQuizAnswer: quizService.updateQuizAnswer,
+  deleteQuizAnswer: quizService.deleteQuizAnswer
 };
