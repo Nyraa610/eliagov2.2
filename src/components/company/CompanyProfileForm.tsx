@@ -50,7 +50,8 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       
       console.log("Form submission started with values:", values);
       
-      // Create a minimal company object with only the name and other fields if present
+      // Create a minimal company object with only the name
+      // This is crucial - we want to ensure minimal data is required for creation
       const companyData: Partial<Company> = {
         name: values.name.trim(),
       };
@@ -66,16 +67,20 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       
       if (company) {
         // Update existing company
+        console.log(`Updating company ${company.id} with data:`, companyData);
         result = await companyService.updateCompany(company.id, companyData);
+        console.log("Company updated successfully:", result);
+        
         toast({
           title: "Company updated",
           description: "Company profile has been updated successfully.",
         });
       } else {
         // Create new company with minimal data
-        console.log("Creating company with data:", companyData);
+        console.log("Creating new company with data:", companyData);
         result = await companyService.createCompany(companyData);
         console.log("Company created successfully:", result);
+        
         toast({
           title: "Company created",
           description: "New company has been created successfully.",

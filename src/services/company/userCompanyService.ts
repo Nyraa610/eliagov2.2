@@ -75,6 +75,9 @@ export const userCompanyService = {
         throw new Error("Company name is required");
       }
       
+      // Create company with a direct database insert
+      console.log("Creating company via direct insert with name:", company.name);
+      
       // Simplify the company data to minimize errors
       const companyData = {
         name: company.name.trim(),
@@ -86,8 +89,6 @@ export const userCompanyService = {
         ...(company.registry_city && { registry_city: company.registry_city })
       };
       
-      console.log("Simplified company data for creation:", companyData);
-      
       // First create the company
       console.log("Inserting company into database:", companyData);
       const { data, error } = await supabase
@@ -98,16 +99,6 @@ export const userCompanyService = {
         
       if (error) {
         console.error("Error creating company:", error);
-        
-        // Check for specific database errors
-        if (error.message && (
-            error.message.includes("infinite recursion") || 
-            error.message.includes("policy for relation") ||
-            error.message.includes("violates row-level security")
-        )) {
-          throw new Error("Database policy error. This might be due to an issue with user permissions. Please refresh and try again.");
-        }
-        
         throw error;
       }
       
@@ -118,15 +109,27 @@ export const userCompanyService = {
       
       console.log("Company created successfully:", data);
       
-      // Then add the user as a company admin
+      // Then add the user as a company admin with a direct insert
       try {
-        console.log("Adding user as company admin. User ID:", userData.user.id, "Company ID:", data.id);
-        await companyMemberService.addMember(data.id, userData.user.id, true);
-        console.log("User added as company admin successfully");
+        console.log("Adding user as company admin via direct insert. User ID:", userData.user.id, "Company ID:", data.id);
+        
+        const { error: memberError } = await supabase
+          .from('company_members')
+          .insert([{
+            company_id: data.id,
+            user_id: userData.user.id,
+            is_admin: true
+          }]);
+          
+        if (memberError) {
+          console.error("Error adding user as company admin:", memberError);
+          // We don't throw here since the company was created successfully
+        } else {
+          console.log("User added as company admin successfully");
+        }
       } catch (memberError) {
-        console.error("Error adding user as company admin:", memberError);
+        console.error("Exception adding user as company admin:", memberError);
         // We don't throw here since the company was created successfully
-        // Just log the error and continue
       }
       
       return data;
