@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import { companyService } from "@/services/companyService";
-import { companyMemberService } from "@/services/companyMemberService";
 import { useToast } from "@/hooks/use-toast";
 
 // Registration form schema
@@ -76,62 +74,48 @@ export const useRegistration = () => {
         throw new Error("User registration failed");
       }
 
-      // Step 2: Create the company separately using the basic service
-      // This avoids relying on the profile for company creation
+      // Step 2: Create the company
       try {
-        console.log("Creating company directly via base service:", values.company);
+        console.log("Creating company:", values.company);
         
-        // Create minimal company data
+        // First, wait a moment to ensure the user profile has been created
+        // This is important because the trigger needs to run first
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Create company with minimal data
         const companyData = {
           name: values.company,
           country: values.country
         };
         
-        // Use the base service directly to create the company without user association
-        const { data: createCompanyResponse, error: companyError } = await supabase
+        const { data: company, error: companyError } = await supabase
           .from('companies')
           .insert([companyData])
           .select()
           .single();
           
         if (companyError) {
-          console.error("Error creating company directly:", companyError);
+          console.error("Error creating company:", companyError);
           throw companyError;
         }
         
-        if (!createCompanyResponse) {
-          throw new Error("Failed to create company: No data returned");
-        }
-        
-        const company = createCompanyResponse;
         console.log("Company created successfully:", company);
         
         // Step 3: Add the user as a company admin
-        try {
-          console.log("Adding user as company member:", {
-            companyId: company.id,
-            userId: data.user.id,
-            isAdmin: true
-          });
+        const { error: memberError } = await supabase
+          .from('company_members')
+          .insert([{
+            company_id: company.id,
+            user_id: data.user.id,
+            is_admin: true
+          }]);
           
-          const { error: memberError } = await supabase
-            .from('company_members')
-            .insert([{
-              company_id: company.id,
-              user_id: data.user.id,
-              is_admin: true
-            }]);
-            
-          if (memberError) {
-            console.error("Error adding user as company member:", memberError);
-            // Continue anyway since company was created
-          } else {
-            console.log("User added as company admin successfully");
-          }
-        } catch (memberError: any) {
-          console.error("Exception adding user as company member:", memberError);
-          // Continue anyway since company was created
+        if (memberError) {
+          console.error("Error adding user as company member:", memberError);
+          throw memberError;
         }
+        
+        console.log("User added as company admin successfully");
         
         toast({
           title: "Registration successful!",
@@ -140,16 +124,15 @@ export const useRegistration = () => {
         
         navigate("/register/confirmation");
       } catch (companyError: any) {
-        console.error("Error in company creation process:", companyError);
+        console.error("Error in company/member creation:", companyError);
         
+        // Even if company creation fails, the user account was created
         toast({
           variant: "destructive",
           title: "Registration issue",
           description: "Your account was created, but there was an issue with company setup. Please try logging in.",
         });
         
-        // Try to sign the user out, so they can log in again properly
-        await supabase.auth.signOut();
         navigate("/login");
       }
     } catch (error: any) {
