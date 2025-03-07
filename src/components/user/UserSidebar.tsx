@@ -1,5 +1,5 @@
 
-import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Globe, Home, Layers, LineChart, Target, User } from "lucide-react";
+import { BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, Globe, Home, Layers, LineChart, Settings, Target, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,10 +40,23 @@ export const UserSidebar = () => {
       icon: <Target className="h-5 w-5" />,
       path: "/action-plan",
     },
+  ];
+  
+  const companyHubItems = [
     {
-      title: "Profile",
+      title: "Company Profile",
+      icon: <Building className="h-5 w-5" />,
+      path: "/companies",
+    },
+    {
+      title: "Personal Profile",
       icon: <User className="h-5 w-5" />,
       path: "/profile",
+    },
+    {
+      title: "Company Settings",
+      icon: <Settings className="h-5 w-5" />,
+      path: "/company-settings",
     },
   ];
 
@@ -78,6 +91,34 @@ export const UserSidebar = () => {
       <div className="py-4 flex-1">
         <ul className="space-y-1 px-2">
           {menuItems.map((item) => (
+            <li key={item.path}>
+              <Link 
+                to={item.path}
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                  location.pathname === item.path
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-gray-600 hover:bg-gray-100",
+                  collapsed ? "justify-center" : "justify-start"
+                )}
+              >
+                {item.icon}
+                {!collapsed && <span className="ml-3">{item.title}</span>}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        
+        {/* Company Hub Section */}
+        {!collapsed && (
+          <div className="mt-6 mb-2 px-3">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Company Hub
+            </h3>
+          </div>
+        )}
+        <ul className="space-y-1 px-2">
+          {companyHubItems.map((item) => (
             <li key={item.path}>
               <Link 
                 to={item.path}

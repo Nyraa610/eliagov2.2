@@ -64,11 +64,15 @@ export const companyService = {
       throw error;
     }
     
-    // Fix the type issue by mapping properly
-    return data.map(item => ({
-      ...item.companies,
-      is_admin: item.is_admin
-    })) as CompanyWithRole[];
+    // Transform the data to fix the type issue
+    return data.map(item => {
+      // Ensure we have all required Company properties
+      const company = item.companies as Company;
+      return {
+        ...company,
+        is_admin: item.is_admin
+      } as CompanyWithRole;
+    });
   },
   
   async createCompany(company: Partial<Company>) {
