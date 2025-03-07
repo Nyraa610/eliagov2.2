@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,17 @@ import { CarbonEvaluationTabs } from "@/components/assessment/carbon-evaluation/
 export default function CarbonEvaluation() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("company-info");
-  const [evalStatus, setEvalStatus] = useState<FeatureStatus>("completed");
+  const [evalStatus, setEvalStatus] = useState<FeatureStatus>("not-started");
+  const [progress, setProgress] = useState(0);
+  
+  // Define tabs to track progress
+  const tabs = ["company-info", "direct-emissions", "indirect-emissions", "transportation"];
+  const tabWeights = {
+    "company-info": 25,
+    "direct-emissions": 25,
+    "indirect-emissions": 25,
+    "transportation": 25
+  };
   
   // Form definition
   const form = useForm<CarbonEvaluationFormValues>({
@@ -29,9 +39,56 @@ export default function CarbonEvaluation() {
     },
   });
 
+  // Track form values to update progress
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      calculateProgress(value as CarbonEvaluationFormValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  // Calculate progress based on form completion
+  const calculateProgress = (values: CarbonEvaluationFormValues) => {
+    let completedWeight = 0;
+    
+    // Company info
+    if (values.companyName && values.yearOfEvaluation) {
+      completedWeight += tabWeights["company-info"];
+    }
+    
+    // Direct emissions
+    if (values.scope1Emissions) {
+      completedWeight += tabWeights["direct-emissions"];
+    }
+    
+    // Indirect emissions
+    if (values.scope2Emissions && values.scope3Emissions) {
+      completedWeight += tabWeights["indirect-emissions"];
+    }
+    
+    // Transportation
+    if (values.transportationUsage) {
+      completedWeight += tabWeights["transportation"];
+    }
+    
+    setProgress(completedWeight);
+  };
+
+  // Handler for tab changes to update status
+  const handleTabChange = (tab: string) => {
+    // If this is the first tab and status is not-started, change to in-progress
+    if (tab === tabs[0] && evalStatus === "not-started") {
+      setEvalStatus("in-progress");
+    }
+    
+    setActiveTab(tab);
+  };
+
   function onSubmit(values: CarbonEvaluationFormValues) {
     console.log(values);
     // Here we would save the data and potentially navigate to the next step
+    setEvalStatus("completed");
+    setProgress(100); // Set to 100% on submission
   }
 
   return (
@@ -49,11 +106,12 @@ export default function CarbonEvaluation() {
         title={t("assessment.carbonEvaluation.title")} 
         description={t("assessment.carbonEvaluation.description")}
         status={evalStatus}
+        progress={progress}
       >
         <CarbonEvaluationTabs
           form={form}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           onSubmit={onSubmit}
         />
       </AssessmentBase>

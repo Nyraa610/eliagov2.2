@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,17 @@ import { materialitySchema, MaterialityFormValues } from "@/components/assessmen
 export default function MaterialityAnalysis() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("identify");
-  const [analysisStatus, setAnalysisStatus] = useState<FeatureStatus>("blocked");
+  const [analysisStatus, setAnalysisStatus] = useState<FeatureStatus>("not-started");
+  const [progress, setProgress] = useState(0);
+  
+  // Define tabs to track progress
+  const tabs = ["identify", "assess", "stakeholder", "prioritize"];
+  const tabWeights = {
+    identify: 25,
+    assess: 25,
+    stakeholder: 25,
+    prioritize: 25
+  };
   
   // Form definition
   const form = useForm<MaterialityFormValues>({
@@ -28,10 +38,55 @@ export default function MaterialityAnalysis() {
     },
   });
 
+  // Track form values to update progress
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      calculateProgress(value as MaterialityFormValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  // Calculate progress based on form completion
+  const calculateProgress = (values: MaterialityFormValues) => {
+    let completedWeight = 0;
+    
+    // Check which sections have data
+    if (values.companyName && values.materialIssues) {
+      completedWeight += tabWeights.identify;
+    }
+    
+    if (values.impactOnBusiness !== undefined && values.impactOnStakeholders !== undefined) {
+      completedWeight += tabWeights.assess;
+    }
+    
+    if (values.stakeholderFeedback) {
+      completedWeight += tabWeights.stakeholder;
+    }
+    
+    // Prioritize tab is considered if the other tabs are complete
+    const otherTabsComplete = completedWeight >= 75;
+    if (otherTabsComplete) {
+      completedWeight += tabWeights.prioritize / 2; // Partially complete until submission
+    }
+    
+    setProgress(completedWeight);
+  };
+
+  // Handler for tab changes to update status
+  const handleTabChange = (tab: string) => {
+    // If this is the first tab and status is not-started, change to in-progress
+    if (tab === tabs[0] && analysisStatus === "not-started") {
+      setAnalysisStatus("in-progress");
+    }
+    
+    setActiveTab(tab);
+  };
+
   function onSubmit(values: MaterialityFormValues) {
     console.log(values);
     // Here we would save the data and potentially navigate to the next step
     setAnalysisStatus("waiting-for-approval");
+    setProgress(100); // Set to 100% on submission
   }
 
   return (
@@ -49,11 +104,12 @@ export default function MaterialityAnalysis() {
         title={t("assessment.materialityAnalysis.title")} 
         description={t("assessment.materialityAnalysis.description")}
         status={analysisStatus}
+        progress={progress}
       >
         <MaterialityAnalysisTabs
           form={form}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           onSubmit={onSubmit}
         />
       </AssessmentBase>
