@@ -4,6 +4,7 @@ import { BookOpen, Award, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Course, UserEnrollment, Certificate } from "@/types/training";
+import { Progress } from "@/components/ui/progress";
 
 interface CourseCardProps {
   course: Course;
@@ -13,6 +14,16 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, enrollment, certificate, onEnroll }: CourseCardProps) => {
+  // Determine progress color based on completion percentage
+  const getProgressColor = (percentage: number) => {
+    if (percentage < 25) return "bg-red-500";
+    if (percentage < 50) return "bg-orange-500";
+    if (percentage < 75) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+
+  const progressColor = enrollment ? getProgressColor(enrollment.progress_percentage) : "bg-primary";
+
   return (
     <Card key={course.id} className="overflow-hidden">
       <div className="relative">
@@ -52,15 +63,15 @@ const CourseCard = ({ course, enrollment, certificate, onEnroll }: CourseCardPro
         
         {enrollment && (
           <div className="mt-2">
-            <div className="w-full bg-muted rounded-full h-2 mt-1">
-              <div 
-                className="bg-primary h-2 rounded-full" 
-                style={{ width: `${enrollment.progress_percentage}%` }}
-              ></div>
+            <Progress 
+              value={enrollment.progress_percentage} 
+              className="h-2 mt-2" 
+              indicatorColor={progressColor}
+            />
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-xs text-muted-foreground">Progress</span>
+              <span className="text-xs font-medium">{enrollment.progress_percentage}%</span>
             </div>
-            <p className="text-xs text-right mt-1">
-              {enrollment.progress_percentage}% complete
-            </p>
           </div>
         )}
       </CardContent>

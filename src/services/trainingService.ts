@@ -1,4 +1,3 @@
-
 import { supabaseService } from "./base/supabaseService";
 import { 
   Course, 
@@ -121,7 +120,6 @@ export const trainingService = {
         .single();
       
       if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "No rows returned" which we handle as null
         throw error;
       }
       
@@ -129,6 +127,57 @@ export const trainingService = {
     } catch (error) {
       console.error("Error fetching enrollment by course id:", error);
       return null;
+    }
+  },
+  
+  async updateCourseProgress(courseId: string, progressPercentage: number): Promise<UserEnrollment> {
+    try {
+      const user = supabase.auth.getUser();
+      const userId = (await user).data.user?.id;
+      
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+      
+      const { data, error } = await supabase
+        .from('user_enrollments')
+        .update({ progress_percentage: progressPercentage })
+        .eq('user_id', userId)
+        .eq('course_id', courseId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as UserEnrollment;
+    } catch (error) {
+      console.error("Error updating course progress:", error);
+      throw error;
+    }
+  },
+  
+  async calculateCourseProgress(courseId: string): Promise<number> {
+    try {
+      const modules = await this.getModulesByCourseId(courseId);
+      if (modules.length === 0) return 0;
+      
+      const completedModulesData = await this.getCompletedModules();
+      const completedModuleIds = completedModulesData.map(m => m.module_id);
+      
+      const courseModuleIds = modules.map(m => m.id);
+      const completedCourseModules = completedModuleIds.filter(id => 
+        courseModuleIds.includes(id)
+      );
+      
+      const progressPercentage = Math.round(
+        (completedCourseModules.length / modules.length) * 100
+      );
+      
+      await this.updateCourseProgress(courseId, progressPercentage);
+      
+      return progressPercentage;
+    } catch (error) {
+      console.error("Error calculating course progress:", error);
+      return 0;
     }
   },
   
@@ -172,6 +221,17 @@ export const trainingService = {
         .single();
       
       if (error) throw error;
+      
+      const module = await supabase
+        .from('modules')
+        .select('course_id')
+        .eq('id', moduleId)
+        .single();
+      
+      if (module.data && module.data.course_id) {
+        await this.calculateCourseProgress(module.data.course_id);
+      }
+      
       return result as ModuleCompletion;
     } catch (error) {
       console.error("Error marking module as completed:", error);
@@ -220,7 +280,31 @@ export const trainingService = {
   },
   
   async markContentAsCompleted(contentItemId: string, quizScore?: number): Promise<ContentCompletion> {
-    return contentCompletionService.markContentAsCompleted(contentItemId, quizScore);
+    const result = await contentCompletionService.markContentAsCompleted(contentItemId, quizScore);
+    
+    try {
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('module_id')
+        .eq('id', contentItemId)
+        .single();
+      
+      if (!error && data && data.module_id) {
+        const moduleData = await supabase
+          .from('modules')
+          .select('course_id')
+          .eq('id', data.module_id)
+          .single();
+        
+        if (!moduleData.error && moduleData.data && moduleData.data.course_id) {
+          await this.calculateCourseProgress(moduleData.data.course_id);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating course progress after content completion:", error);
+    }
+    
+    return result;
   },
   
   async getCompletedContentItems(): Promise<ContentCompletion[]> {
@@ -293,7 +377,6 @@ export const trainingService = {
         throw new Error("User not authenticated");
       }
       
-      // Check if a certificate already exists
       const { data: existingCert, error: certError } = await supabase
         .from('certificates')
         .select('*')
@@ -305,10 +388,8 @@ export const trainingService = {
         return existingCert as { id: string; certificate_url: string };
       }
       
-      // Get course details
       const course = await this.getCourseById(courseId);
       
-      // Calculate total points earned
       const { data: contentCompletions, error: completionsError } = await supabase
         .from('content_completions')
         .select('quiz_score')
@@ -321,10 +402,8 @@ export const trainingService = {
         ? contentCompletions.reduce((sum, item) => sum + (item.quiz_score || 0), 0)
         : 0;
       
-      // Generate a certificate URL (in a real app, you might generate a PDF or image)
       const certificateUrl = `https://example.com/certificates/${courseId}-${userId}`;
       
-      // Save the certificate
       const { data, error } = await supabase
         .from('certificates')
         .insert({
@@ -339,7 +418,6 @@ export const trainingService = {
       
       if (error) throw error;
       
-      // Update enrollment to mark course as completed
       await supabase
         .from('user_enrollments')
         .update({
