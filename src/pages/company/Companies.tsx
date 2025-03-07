@@ -8,7 +8,7 @@ import { Building, Check, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { companyService } from "@/services/companyService";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase"; // Import supabase directly
 
 export default function Companies() {
   const [showSubsidiaryDialog, setShowSubsidiaryDialog] = useState(false);
@@ -22,6 +22,7 @@ export default function Companies() {
       try {
         setLoading(true);
         const data = await companyService.getUserCompanies();
+        console.log("Fetched companies:", data);
         setCompanies(data);
       } catch (error) {
         console.error("Error fetching companies:", error);
@@ -40,7 +41,12 @@ export default function Companies() {
 
   const handleContactSales = async () => {
     try {
+      // Get current user directly from supabase
       const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
       
       // Make request to the Edge Function
       const response = await fetch('https://tqvylbkavunzlckhqxcl.supabase.co/functions/v1/contact-sales', {

@@ -80,6 +80,14 @@ export const companyService = {
   
   async createCompany(company: Partial<Company>) {
     try {
+      console.log("Creating company:", company);
+      
+      // Check for required fields
+      if (!company.name || company.name.trim() === '') {
+        throw new Error("Company name is required");
+      }
+      
+      // Attempt to insert the company
       const { data, error } = await supabase
         .from('companies')
         .insert([company])
@@ -91,11 +99,23 @@ export const companyService = {
         throw error;
       }
       
+      if (!data) {
+        console.error("No data returned after company creation");
+        throw new Error("Failed to create company: No data returned");
+      }
+      
+      console.log("Company created successfully:", data);
+      
       // Add current user as an admin member
       const user = (await supabase.auth.getUser()).data.user;
-      if (user) {
-        await companyMemberService.addMember(data.id, user.id, true);
+      if (!user) {
+        console.error("No authenticated user found when adding company member");
+        throw new Error("Authentication required");
       }
+      
+      console.log("Adding user as company admin:", user.id);
+      await companyMemberService.addMember(data.id, user.id, true);
+      console.log("User added as company admin successfully");
       
       return data as Company;
     } catch (error) {

@@ -13,6 +13,7 @@ import { Company, companyService } from "@/services/companyService";
 import { companyStorageService } from "@/services/companyStorageService";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -34,6 +35,7 @@ interface CompanyProfileFormProps {
 
 export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(company?.logo_url || null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -52,7 +54,10 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
   
   const onSubmit = async (values: CompanyFormValues) => {
     try {
+      setIsSubmitting(true);
       let result: Company;
+      
+      console.log("Form submission started:", values);
       
       if (company) {
         // Update existing company
@@ -70,6 +75,8 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
         });
       }
       
+      console.log("Form submission completed:", result);
+      
       if (onSuccess) {
         onSuccess(result);
       } else {
@@ -79,9 +86,11 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       console.error("Error saving company:", error);
       toast({
         title: "Error",
-        description: "There was an error saving the company profile.",
+        description: error instanceof Error ? error.message : "There was an error saving the company profile.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -141,7 +150,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                     type="file"
                     accept="image/*"
                     onChange={handleLogoUpload}
-                    disabled={isUploading}
+                    disabled={isUploading || isSubmitting}
                   />
                   <p className="text-sm text-muted-foreground">Recommended size: 256x256px</p>
                 </div>
@@ -155,7 +164,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                 <FormItem>
                   <FormLabel>Company Name*</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter company name" {...field} />
+                    <Input placeholder="Enter company name" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -170,7 +179,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                   <FormItem>
                     <FormLabel>Industry</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Technology, Manufacturing" {...field} />
+                      <Input placeholder="e.g. Technology, Manufacturing" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -184,7 +193,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                   <FormItem>
                     <FormLabel>Country</FormLabel>
                     <FormControl>
-                      <Input placeholder="Country" {...field} />
+                      <Input placeholder="Country" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,7 +208,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                 <FormItem>
                   <FormLabel>Website</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://www.example.com" {...field} />
+                    <Input placeholder="https://www.example.com" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -214,7 +223,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                   <FormItem>
                     <FormLabel>Registry Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Company registration number" {...field} />
+                      <Input placeholder="Company registration number" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -228,7 +237,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                   <FormItem>
                     <FormLabel>Registry City</FormLabel>
                     <FormControl>
-                      <Input placeholder="City of registration" {...field} />
+                      <Input placeholder="City of registration" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,7 +246,12 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
             </div>
             
             <CardFooter className="px-0 pb-0 pt-4">
-              <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || isUploading}
+                className="flex items-center gap-2"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {company ? "Save Changes" : "Create Company"}
               </Button>
             </CardFooter>
