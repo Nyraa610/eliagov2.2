@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 export type UserRole = 'admin' | 'user';
@@ -17,8 +16,21 @@ export const supabaseService = {
   
   // Auth methods
   getCurrentUser: async () => {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.user || null;
+    try {
+      console.log("supabaseService: Getting current user");
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("supabaseService: Error getting session:", error.message);
+        throw error;
+      }
+      
+      console.log("supabaseService: Session data:", data);
+      return data.session?.user || null;
+    } catch (error) {
+      console.error("supabaseService: Exception getting current user:", error);
+      throw error;
+    }
   },
   
   getUserProfile: async (userId?: string): Promise<UserProfile | null> => {
@@ -27,13 +39,23 @@ export const supabaseService = {
       let targetId = userId;
       
       if (!targetId) {
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("supabaseService: Error getting session in getUserProfile:", error.message);
+          throw error;
+        }
+        
         targetId = data.session?.user?.id;
+        console.log("supabaseService: Got user ID from session:", targetId);
       }
       
-      if (!targetId) return null;
+      if (!targetId) {
+        console.log("supabaseService: No user ID available, returning null profile");
+        return null;
+      }
       
-      console.log(`Getting profile for user ID: ${targetId}`);
+      console.log(`supabaseService: Getting profile for user ID: ${targetId}`);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -42,15 +64,20 @@ export const supabaseService = {
         .single();
         
       if (error) {
-        console.error("Error fetching profile:", error.message);
+        if (error.code === 'PGRST116') {
+          console.log(`supabaseService: No profile found for user ID: ${targetId}`);
+          return null;
+        }
+        
+        console.error("supabaseService: Error fetching profile:", error.message);
         throw error;
       }
       
-      console.log("Profile data retrieved:", data);
+      console.log("supabaseService: Profile data retrieved:", data);
       
       return data;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error("supabaseService: Exception fetching user profile:", error);
       return null;
     }
   },
@@ -66,7 +93,7 @@ export const supabaseService = {
       
       return { data, error: null };
     } catch (error) {
-      console.error("Error fetching user profiles:", error);
+      console.error("supabaseService: Error fetching user profiles:", error);
       return { data: null, error };
     }
   },
@@ -87,7 +114,7 @@ export const supabaseService = {
       
       return data;
     } catch (error) {
-      console.error("Error updating user profile:", error);
+      console.error("supabaseService: Error updating user profile:", error);
       return null;
     }
   },
@@ -103,28 +130,41 @@ export const supabaseService = {
       
       return true;
     } catch (error) {
-      console.error("Error updating user role:", error);
+      console.error("supabaseService: Error updating user role:", error);
       return false;
     }
   },
   
   hasRole: async (role: UserRole): Promise<boolean> => {
     try {
-      console.log(`Checking if user has role: ${role}`);
-      const profile = await supabaseService.getUserProfile();
-      console.log(`User profile:`, profile);
+      console.log(`supabaseService: Checking if user has role: ${role}`);
+      
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("supabaseService: Error getting session in hasRole:", sessionError.message);
+        throw sessionError;
+      }
+      
+      if (!session || !session.session || !session.session.user) {
+        console.log("supabaseService: No active session found in hasRole check");
+        return false;
+      }
+      
+      const profile = await supabaseService.getUserProfile(session.session.user.id);
+      console.log(`supabaseService: User profile for role check:`, profile);
       
       if (!profile) {
-        console.log("No profile found, user does not have required role");
+        console.log("supabaseService: No profile found, user does not have required role");
         return false;
       }
       
       const hasRole = profile.role === role;
-      console.log(`User has role ${role}: ${hasRole}`);
+      console.log(`supabaseService: User has role ${role}: ${hasRole}`);
       return hasRole;
     } catch (error) {
-      console.error("Error checking user role:", error);
-      return false;
+      console.error("supabaseService: Error checking user role:", error);
+      throw error;
     }
   }
 };

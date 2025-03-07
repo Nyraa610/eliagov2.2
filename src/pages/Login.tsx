@@ -14,6 +14,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -25,15 +26,19 @@ export default function Login() {
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error checking authentication:", error.message);
-        return;
-      }
-      
-      if (data.session) {
-        console.log("User already logged in, redirecting to dashboard");
-        navigate("/dashboard");
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error checking authentication:", error.message);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("User already logged in, redirecting to dashboard");
+          navigate("/dashboard");
+        }
+      } catch (checkError) {
+        console.error("Exception during auth check:", checkError);
       }
     };
     
@@ -43,6 +48,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       console.log("Attempting to log in with email:", email);
@@ -53,27 +59,36 @@ export default function Login() {
       });
       
       if (error) {
+        console.error("Supabase login error:", error);
         throw error;
       }
       
-      if (data.user) {
-        console.log("Login successful, user:", data.user.id);
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        
-        // Navigate to the protected route the user was trying to access, or dashboard
-        navigate(from, { replace: true });
+      if (!data || !data.user) {
+        console.error("Login succeeded but no user data returned");
+        throw new Error("No user data returned from login");
       }
+      
+      console.log("Login successful, user:", data.user.id);
+      console.log("Session:", data.session);
+      
+      // Set auth cookie or local storage if needed
+      localStorage.setItem('sb-auth-token', data.session?.access_token || '');
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
+      // Navigate to the protected route the user was trying to access, or dashboard
+      navigate(from, { replace: true });
     } catch (error: any) {
-      console.error("Login error:", error.message);
+      console.error("Login error:", error);
+      setLoginError(error.message || "An unknown error occurred during login");
       
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Failed to log in. Please check your credentials and try again.",
       });
     } finally {
       setIsLoading(false);
@@ -121,6 +136,13 @@ export default function Login() {
                     required
                   />
                 </div>
+                
+                {loginError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                    {loginError}
+                  </div>
+                )}
+                
                 <Button className="w-full" type="submit" disabled={isLoading}>
                   {isLoading ? "Logging in..." : t('auth.login')}
                 </Button>
