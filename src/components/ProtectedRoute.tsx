@@ -17,16 +17,26 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      
-      setIsAuthenticated(!!user);
-      
-      if (user && requiredRole) {
-        const hasRole = await supabaseService.hasRole(requiredRole);
-        setHasRequiredRole(hasRole);
-      } else {
-        setHasRequiredRole(true); // No specific role required
+      try {
+        console.log("ProtectedRoute: Checking authentication...");
+        const { data } = await supabase.auth.getSession();
+        const user = data.session?.user;
+        
+        console.log("ProtectedRoute: Session user:", user ? user.id : "No user");
+        setIsAuthenticated(!!user);
+        
+        if (user && requiredRole) {
+          console.log(`ProtectedRoute: Checking if user has role: ${requiredRole}`);
+          const hasRole = await supabaseService.hasRole(requiredRole);
+          console.log(`ProtectedRoute: User has required role: ${hasRole}`);
+          setHasRequiredRole(hasRole);
+        } else {
+          setHasRequiredRole(true); // No specific role required
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticated(false);
+        setHasRequiredRole(false);
       }
     };
     
@@ -35,6 +45,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`ProtectedRoute: Auth state changed - Event: ${event}`);
         setIsAuthenticated(!!session?.user);
         
         if (session?.user && requiredRole) {

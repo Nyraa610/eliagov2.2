@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,28 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  // Get the redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || "/dashboard";
 
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error checking authentication:", error.message);
+        return;
+      }
+      
       if (data.session) {
+        console.log("User already logged in, redirecting to dashboard");
         navigate("/dashboard");
       }
     };
+    
     checkAuth();
   }, [navigate]);
 
@@ -34,6 +45,8 @@ export default function Login() {
     setIsLoading(true);
     
     try {
+      console.log("Attempting to log in with email:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -44,13 +57,19 @@ export default function Login() {
       }
       
       if (data.user) {
+        console.log("Login successful, user:", data.user.id);
+        
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
-        navigate("/dashboard");
+        
+        // Navigate to the protected route the user was trying to access, or dashboard
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
+      console.error("Login error:", error.message);
+      
       toast({
         variant: "destructive",
         title: "Login failed",

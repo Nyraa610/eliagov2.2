@@ -33,13 +33,20 @@ export const supabaseService = {
       
       if (!targetId) return null;
       
+      console.log(`Getting profile for user ID: ${targetId}`);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', targetId)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error.message);
+        throw error;
+      }
+      
+      console.log("Profile data retrieved:", data);
       
       return data;
     } catch (error) {
@@ -103,8 +110,18 @@ export const supabaseService = {
   
   hasRole: async (role: UserRole): Promise<boolean> => {
     try {
+      console.log(`Checking if user has role: ${role}`);
       const profile = await supabaseService.getUserProfile();
-      return profile?.role === role;
+      console.log(`User profile:`, profile);
+      
+      if (!profile) {
+        console.log("No profile found, user does not have required role");
+        return false;
+      }
+      
+      const hasRole = profile.role === role;
+      console.log(`User has role ${role}: ${hasRole}`);
+      return hasRole;
     } catch (error) {
       console.error("Error checking user role:", error);
       return false;
