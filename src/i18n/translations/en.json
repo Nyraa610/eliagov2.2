@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Language",
@@ -33,7 +32,8 @@
     "trackProgress": "Track your progress through all courses",
     "noEnrollments": "You haven't enrolled in any courses yet.",
     "browseAvailable": "Browse available courses",
-    "loading": "Loading progress data..."
+    "loading": "Loading progress data...",
+    "companyESGProgress": "Company ESG Progress"
   },
   "news": {
     "title": "ESG News & Updates",

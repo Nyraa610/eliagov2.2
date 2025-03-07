@@ -32,7 +32,8 @@
     "trackProgress": "Suivez votre progression à travers tous les cours",
     "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment.",
     "browseAvailable": "Parcourir les cours disponibles",
-    "loading": "Chargement des données de progression..."
+    "loading": "Chargement des données de progression...",
+    "companyESGProgress": "Progression ESG de l'Entreprise"
   },
   "news": {
     "title": "Actualités & Mises à jour ESG",

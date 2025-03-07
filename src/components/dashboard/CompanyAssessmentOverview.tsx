@@ -56,7 +56,7 @@ export function CompanyAssessmentOverview() {
       <Card className="col-span-2">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl">
-            {t('assessment.overview.title')}
+            {t('dashboard.companyESGProgress')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -72,7 +72,7 @@ export function CompanyAssessmentOverview() {
     <Card className="col-span-2">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl">
-          {t('assessment.overview.title')}
+          {t('dashboard.companyESGProgress')}
         </CardTitle>
       </CardHeader>
       <CardContent>
