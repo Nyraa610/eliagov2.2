@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { supabaseService } from "@/services/base/supabaseService";
@@ -63,9 +62,19 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         if (user && requiredRole) {
           console.log(`useAuthProtection: Checking if user has role: ${requiredRole}`);
           try {
-            const hasRole = await supabaseService.hasRole(requiredRole);
-            console.log(`useAuthProtection: User has required role: ${hasRole}`);
-            setHasRequiredRole(hasRole);
+            // Get user profile to check if they're an admin
+            const profile = await supabaseService.getUserProfile();
+            
+            if (profile && profile.role === 'admin') {
+              // Admins have access to everything
+              console.log("useAuthProtection: User is admin, granting access");
+              setHasRequiredRole(true);
+            } else {
+              // Check specific role requirements for non-admins
+              const hasRole = await supabaseService.hasRole(requiredRole);
+              console.log(`useAuthProtection: User has required role: ${hasRole}`);
+              setHasRequiredRole(hasRole);
+            }
           } catch (roleError: any) {
             console.error("useAuthProtection: Error checking role:", roleError);
             setAuthError(`Error checking role: ${roleError.message}`);

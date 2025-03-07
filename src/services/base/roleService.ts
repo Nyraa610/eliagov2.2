@@ -1,4 +1,3 @@
-
 import { supabaseClient } from "./supabaseClient";
 import { UserRole } from "./profileTypes";
 
@@ -21,25 +20,31 @@ export const roleService = {
       
       console.log(`roleService: Session user ID for role check: ${session.session.user.id}`);
       
-      const { data, error } = await supabaseClient
+      // First check if the user is admin - admins should have access to everything
+      const { data: profileData, error: profileError } = await supabaseClient
         .from('profiles')
         .select('role')
         .eq('id', session.session.user.id)
         .single();
       
-      console.log(`roleService: User profile for role check:`, data);
-      
-      if (error) {
-        console.error("roleService: Error fetching profile in hasRole:", error.message);
+      if (profileError) {
+        console.error("roleService: Error fetching profile in hasRole:", profileError.message);
         return false;
       }
       
-      if (!data) {
+      if (!profileData) {
         console.log("roleService: No profile found, user does not have required role");
         return false;
       }
       
-      const hasRole = data.role === role;
+      // If user is admin, return true for any role check
+      if (profileData.role === 'admin') {
+        console.log(`roleService: User is admin, granting access to ${role} role`);
+        return true;
+      }
+      
+      // Otherwise check for the specific requested role
+      const hasRole = profileData.role === role;
       console.log(`roleService: User has role ${role}: ${hasRole}`);
       return hasRole;
     } catch (error) {
