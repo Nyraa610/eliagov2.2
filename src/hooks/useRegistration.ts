@@ -76,41 +76,42 @@ export const useRegistration = () => {
       }
       
       // Step 2: Wait longer to ensure the database trigger has time to create the profile
-      // Increased wait time to ensure proper profile creation
-      console.log("Waiting for profile creation (client_admin role should be assigned)...");
+      console.log("Waiting for profile creation...");
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Before proceeding to company creation, verify the profile exists
+      // Manually insert profile if the trigger might have failed due to user_role type
       try {
-        const { data: profileData, error: profileError } = await supabase
+        // Check if profile already exists
+        const { data: existingProfile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .single();
-        
-        if (profileError) {
-          console.error("Error checking for profile:", profileError);
-          // If we couldn't find the profile, wait a bit longer and try again
-          console.log("Profile not found, waiting longer and trying again...");
-          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          const { data: retryProfileData, error: retryProfileError } = await supabase
+        if (!existingProfile) {
+          console.log("No profile found, attempting to create one manually...");
+          // Try to create profile manually with role as text
+          const { error: profileInsertError } = await supabase
             .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
+            .insert({
+              id: data.user.id,
+              email: values.email,
+              role: 'client_admin',
+              full_name: `${values.firstName} ${values.lastName}`
+            });
             
-          if (retryProfileError) {
-            console.error("Error checking for profile on retry:", retryProfileError);
+          if (profileInsertError) {
+            console.error("Error creating profile manually:", profileInsertError);
+            // Continue anyway, might not be crucial for company creation
           } else {
-            console.log("Profile retry successful:", retryProfileData ? `Profile exists with role: ${retryProfileData.role}` : "No profile found");
+            console.log("Profile created manually successfully");
           }
         } else {
-          console.log("Profile verification successful:", profileData ? `Profile exists with role: ${profileData.role}` : "No profile found");
+          console.log("Profile already exists:", existingProfile);
         }
-      } catch (profileCheckError) {
-        console.error("Exception checking profile:", profileCheckError);
-        // Don't throw here, try to proceed with company creation
+      } catch (profileError) {
+        console.error("Error checking/creating profile:", profileError);
+        // Continue anyway, trying to create company
       }
 
       // Step 3: Create company - this will only work if the profile was successfully created
