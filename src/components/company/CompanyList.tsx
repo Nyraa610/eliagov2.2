@@ -4,11 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Building, User, Settings, Users } from "lucide-react";
+import { PlusCircle, Building, User, Settings, Users, ChevronRight } from "lucide-react";
 import { companyService, CompanyWithRole } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
 
-export function CompanyList() {
+interface CompanyListProps {
+  maxCompanies?: number;
+  onAddSubsidiary?: () => void;
+}
+
+export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps) {
   const [companies, setCompanies] = useState<CompanyWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -39,14 +44,23 @@ export function CompanyList() {
     navigate("/company/new");
   };
 
+  const canAddCompany = maxCompanies ? companies.length < maxCompanies : true;
+
   return (
-    <div className="container py-8">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Your Companies</h1>
-        <Button onClick={handleCreateCompany}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Company
-        </Button>
+        <h2 className="text-2xl font-semibold">Your Companies</h2>
+        {canAddCompany ? (
+          <Button onClick={handleCreateCompany}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Company
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={onAddSubsidiary}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Subsidiary
+          </Button>
+        )}
       </div>
 
       {loading ? (

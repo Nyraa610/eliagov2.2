@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { companyMemberService } from "./companyMemberService";
 
@@ -66,10 +65,8 @@ export const companyService = {
     
     // Transform the data to fix the type issue
     return data.map(item => {
-      // Ensure the company data is correctly typed by explicit casting
-      const companyData = item.companies as unknown as Company;
       return {
-        ...companyData,
+        ...(item.companies as unknown as Company),
         is_admin: item.is_admin
       } as CompanyWithRole;
     });
