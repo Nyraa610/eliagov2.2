@@ -61,7 +61,10 @@ export const useRegistration = () => {
         },
       });
 
-      console.log("Supabase response received:", { data, error });
+      console.log("Supabase response received:", { 
+        user: data.user?.id ? `User ID: ${data.user.id}` : "No user created", 
+        error: error ? error.message : "No error"
+      });
 
       if (error) {
         console.error("Supabase error:", error);
@@ -72,8 +75,29 @@ export const useRegistration = () => {
         throw new Error("User registration failed");
       }
       
-      // Step 2: Wait a moment to ensure the database trigger has time to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Step 2: Wait longer to ensure the database trigger has time to create the profile
+      // Increased from 1000ms to 2000ms
+      console.log("Waiting for profile creation...");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Before proceeding to company creation, verify the profile exists
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error("Error checking for profile:", profileError);
+          // Don't throw here, try to proceed with company creation
+        } else {
+          console.log("Profile verification successful:", profileData ? "Profile exists" : "No profile found");
+        }
+      } catch (profileCheckError) {
+        console.error("Exception checking profile:", profileCheckError);
+        // Don't throw here, try to proceed with company creation
+      }
 
       // Step 3: Create company - this will only work if the profile was successfully created
       console.log("User registered, now creating company:", values.company);
@@ -84,14 +108,34 @@ export const useRegistration = () => {
         });
         
         console.log("Company created successfully:", company);
-      } catch (companyError) {
+      } catch (companyError: any) {
         console.error("Error creating company:", companyError);
-        toast({
-          variant: "destructive",
-          title: "Company creation issue",
-          description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
-          selectable: true,
-        });
+        
+        // Check if this is related to profile creation failure
+        if (companyError.message && (
+            companyError.message.includes("policy") || 
+            companyError.message.includes("security") ||
+            companyError.message.includes("permission")
+        )) {
+          toast({
+            variant: "destructive",
+            title: "Registration issue",
+            description: "Your account was created, but there was an issue with company setup. Please try logging in.",
+            selectable: true,
+          });
+          
+          // Try to sign the user out, so they can log in again properly
+          await supabase.auth.signOut();
+          navigate("/login");
+          return;
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Company creation issue",
+            description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
+            selectable: true,
+          });
+        }
       }
 
       toast({
