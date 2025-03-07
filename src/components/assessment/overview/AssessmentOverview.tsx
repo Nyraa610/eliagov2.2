@@ -49,11 +49,11 @@ export function AssessmentOverview({
   const getStatusBadge = (status: FeatureStatus) => {
     switch(status) {
       case "completed":
-        return <span className="text-sm font-medium text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">Completed</span>;
+        return <span className="text-sm font-medium text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">{t("assessment.status.completed")}</span>;
       case "in-progress":
-        return <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">In Progress</span>;
+        return <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">{t("assessment.status.inProgress")}</span>;
       default:
-        return <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">Not Started</span>;
+        return <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">{t("assessment.status.notStarted")}</span>;
     }
   };
 
@@ -95,9 +95,9 @@ export function AssessmentOverview({
       </Card>
       
       <div className="bg-muted p-4 rounded-lg">
-        <h3 className="font-medium">{t("assessment.overview.disclaimer")}</h3>
+        <h3 className="font-medium">{t("assessment.disclaimer.title")}</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {t("assessment.overview.disclaimerDescription")}
+          {t("assessment.disclaimer.description")}
         </p>
       </div>
     </div>

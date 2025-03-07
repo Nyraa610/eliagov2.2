@@ -1,3 +1,4 @@
+
 {
   "common": {
     "language": "Langue",
@@ -62,32 +63,50 @@
   "assessment": {
     "title": "Évaluation ESG",
     "subtitle": "Commencez votre parcours de durabilité en complétant notre évaluation ESG complète",
+    "overview": {
+      "title": "Aperçu des évaluations"
+    },
+    "status": {
+      "completed": "Terminé",
+      "inProgress": "En cours",
+      "notStarted": "Non commencé"
+    },
     "diagnosticRSE": {
       "title": "Diagnostic RSE",
       "description": "Évaluation approfondie pour évaluer les pratiques actuelles et identifier les opportunités",
+      "longDescription": "Ce diagnostic aide à analyser les pratiques actuelles de durabilité de votre entreprise à travers les dimensions environnementales, sociales et de gouvernance pour identifier les forces et les domaines à améliorer.",
       "steps": "Collecte de données, entretiens et analyse",
       "start": "Commencer le diagnostic"
     },
     "carbonEvaluation": {
       "title": "Évaluation de l'empreinte carbone",
       "description": "Un bilan carbone simplifié pour mesurer l'empreinte carbone actuelle de votre entreprise",
+      "shortDescription": "Mesurez l'empreinte carbone de votre entreprise",
       "steps": "Collecte de données, calcul des émissions et rapports",
       "start": "Commencer l'évaluation"
     },
     "materialityAnalysis": {
       "title": "Analyse de double matérialité",
       "description": "Identifier les enjeux environnementaux et sociaux ayant un impact significatif sur l'entreprise",
+      "shortDescription": "Identifiez les zones d'impact environnemental et social clés",
       "steps": "Consultation des parties prenantes, évaluation d'impact et priorisation",
       "start": "Commencer l'analyse"
     },
     "actionPlan": {
       "title": "Plan d'action et trajectoire",
       "description": "Élaborer un plan d'action concret avec des objectifs clairs et une trajectoire de durabilité",
+      "shortDescription": "Créez votre plan d'action de durabilité",
       "steps": "Définition d'objectifs, développement de stratégie et feuille de route de mise en œuvre",
       "start": "Créer un plan"
     },
+    "disclaimer": {
+      "title": "Informations sur l'évaluation",
+      "description": "Toutes les évaluations sont confidentielles et conçues pour fournir des insights actionnables pour votre parcours de durabilité. Vos données seront uniquement utilisées pour générer des recommandations personnalisées."
+    },
     "aiAnalysis": "Analyse IA",
     "form": "Formulaire d'évaluation",
-    "getStarted": "Commencer"
+    "getStarted": "Commencer",
+    "startAssessment": "Commencer l'évaluation",
+    "continueAssessment": "Continuer l'évaluation"
   }
 }

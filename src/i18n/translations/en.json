@@ -65,32 +65,50 @@
   "assessment": {
     "title": "ESG Assessment",
     "subtitle": "Start your sustainability journey by completing our comprehensive ESG assessment",
+    "overview": {
+      "title": "Assessment Overview"
+    },
+    "status": {
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "notStarted": "Not Started"
+    },
     "diagnosticRSE": {
       "title": "RSE Diagnostic",
       "description": "In-depth assessment to evaluate current practices and identify opportunities",
+      "longDescription": "This diagnostic helps analyze your company's current sustainability practices across environmental, social, and governance dimensions to identify strengths and areas for improvement.",
       "steps": "Data collection, interviews, and analysis",
       "start": "Start Diagnostic"
     },
     "carbonEvaluation": {
       "title": "Carbon Footprint Evaluation",
       "description": "A simplified carbon assessment to measure your company's current carbon footprint",
+      "shortDescription": "Measure your company's carbon footprint",
       "steps": "Data collection, emissions calculation, and reporting",
       "start": "Start Evaluation"
     },
     "materialityAnalysis": {
       "title": "Double Materiality Analysis",
       "description": "Identify environmental and social issues with significant business impact",
+      "shortDescription": "Identify key environmental and social impact areas",
       "steps": "Stakeholder consultation, impact assessment, and prioritization",
       "start": "Start Analysis"
     },
     "actionPlan": {
       "title": "Action Plan & Trajectory",
       "description": "Develop a concrete action plan with clear objectives and sustainability trajectory",
+      "shortDescription": "Create your sustainability action plan",
       "steps": "Goal setting, strategy development, and implementation roadmap",
       "start": "Create Plan"
     },
+    "disclaimer": {
+      "title": "Assessment Information",
+      "description": "All assessments are confidential and designed to provide actionable insights for your sustainability journey. Your data will only be used to generate personalized recommendations."
+    },
     "aiAnalysis": "AI Analysis",
     "form": "Assessment Form",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "startAssessment": "Start Assessment",
+    "continueAssessment": "Continue Assessment"
   }
 }

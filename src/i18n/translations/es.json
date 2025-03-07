@@ -1,3 +1,4 @@
+
 {
   "common": {
     "language": "Idioma",
@@ -64,32 +65,50 @@
   "assessment": {
     "title": "Evaluación ESG",
     "subtitle": "Inicie su viaje de sostenibilidad completando nuestra evaluación ESG integral",
+    "overview": {
+      "title": "Resumen de evaluaciones"
+    },
+    "status": {
+      "completed": "Completado",
+      "inProgress": "En progreso",
+      "notStarted": "No iniciado"
+    },
     "diagnosticRSE": {
       "title": "Diagnóstico RSE",
       "description": "Evaluación en profundidad para valorar prácticas actuales e identificar oportunidades",
+      "longDescription": "Este diagnóstico ayuda a analizar las prácticas actuales de sostenibilidad de su empresa en las dimensiones ambientales, sociales y de gobernanza para identificar fortalezas y áreas de mejora.",
       "steps": "Recopilación de datos, entrevistas y análisis",
       "start": "Iniciar diagnóstico"
     },
     "carbonEvaluation": {
       "title": "Evaluación de huella de carbono",
       "description": "Una evaluación de carbono simplificada para medir la huella de carbono actual de su empresa",
+      "shortDescription": "Mida la huella de carbono de su empresa",
       "steps": "Recopilación de datos, cálculo de emisiones e informes",
       "start": "Iniciar evaluación"
     },
     "materialityAnalysis": {
       "title": "Análisis de doble materialidad",
       "description": "Identificar problemas ambientales y sociales con impacto empresarial significativo",
+      "shortDescription": "Identifique áreas clave de impacto ambiental y social",
       "steps": "Consulta con las partes interesadas, evaluación de impacto y priorización",
       "start": "Iniciar análisis"
     },
     "actionPlan": {
       "title": "Plan de acción y trayectoria",
       "description": "Desarrollar un plan de acción concreto con objetivos claros y trayectoria de sostenibilidad",
+      "shortDescription": "Cree su plan de acción de sostenibilidad",
       "steps": "Establecimiento de objetivos, desarrollo de estrategia y hoja de ruta de implementación",
       "start": "Crear plan"
     },
+    "disclaimer": {
+      "title": "Información de evaluación",
+      "description": "Todas las evaluaciones son confidenciales y están diseñadas para proporcionar perspectivas accionables para su viaje de sostenibilidad. Sus datos solo se utilizarán para generar recomendaciones personalizadas."
+    },
     "aiAnalysis": "Análisis de IA",
     "form": "Formulario de evaluación",
-    "getStarted": "Comenzar"
+    "getStarted": "Comenzar",
+    "startAssessment": "Iniciar evaluación",
+    "continueAssessment": "Continuar evaluación"
   }
 }
