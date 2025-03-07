@@ -25,6 +25,10 @@ import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import RSEDiagnostic from "@/pages/assessment/RSEDiagnostic";
+import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
+import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
+import ActionPlan from "@/pages/assessment/ActionPlan";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -60,7 +64,23 @@ const router = createBrowserRouter([
   },
   {
     path: "/assessment",
-    element: <Assessment />,
+    element: <ProtectedRoute><Assessment /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/rse-diagnostic",
+    element: <ProtectedRoute><RSEDiagnostic /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/carbon-evaluation",
+    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/materiality-analysis",
+    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/action-plan",
+    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
   },
   {
     path: "/training",

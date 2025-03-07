@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Idioma",
@@ -59,5 +58,36 @@
     "saveProfile": "Guardar perfil",
     "languageSettings": "Configuración de idioma",
     "changeLanguage": "Cambiar el idioma de la aplicación"
+  },
+  "assessment": {
+    "title": "Evaluación ESG",
+    "subtitle": "Inicie su viaje de sostenibilidad completando nuestra evaluación ESG integral",
+    "diagnosticRSE": {
+      "title": "Diagnóstico RSE",
+      "description": "Evaluación en profundidad para valorar prácticas actuales e identificar oportunidades",
+      "steps": "Recopilación de datos, entrevistas y análisis",
+      "start": "Iniciar diagnóstico"
+    },
+    "carbonEvaluation": {
+      "title": "Evaluación de huella de carbono",
+      "description": "Una evaluación de carbono simplificada para medir la huella de carbono actual de su empresa",
+      "steps": "Recopilación de datos, cálculo de emisiones e informes",
+      "start": "Iniciar evaluación"
+    },
+    "materialityAnalysis": {
+      "title": "Análisis de doble materialidad",
+      "description": "Identificar problemas ambientales y sociales con impacto empresarial significativo",
+      "steps": "Consulta con las partes interesadas, evaluación de impacto y priorización",
+      "start": "Iniciar análisis"
+    },
+    "actionPlan": {
+      "title": "Plan de acción y trayectoria",
+      "description": "Desarrollar un plan de acción concreto con objetivos claros y trayectoria de sostenibilidad",
+      "steps": "Establecimiento de objetivos, desarrollo de estrategia y hoja de ruta de implementación",
+      "start": "Crear plan"
+    },
+    "aiAnalysis": "Análisis de IA",
+    "form": "Formulario de evaluación",
+    "getStarted": "Comenzar"
   }
 }

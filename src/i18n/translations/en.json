@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Language",
@@ -59,5 +58,36 @@
     "saveProfile": "Save Profile",
     "languageSettings": "Language Settings",
     "changeLanguage": "Change the language of the application"
+  },
+  "assessment": {
+    "title": "ESG Assessment",
+    "subtitle": "Start your sustainability journey by completing our comprehensive ESG assessment",
+    "diagnosticRSE": {
+      "title": "RSE Diagnostic",
+      "description": "In-depth assessment to evaluate current practices and identify opportunities",
+      "steps": "Data collection, interviews, and analysis",
+      "start": "Start Diagnostic"
+    },
+    "carbonEvaluation": {
+      "title": "Carbon Footprint Evaluation",
+      "description": "A simplified carbon assessment to measure your company's current carbon footprint",
+      "steps": "Data collection, emissions calculation, and reporting",
+      "start": "Start Evaluation"
+    },
+    "materialityAnalysis": {
+      "title": "Double Materiality Analysis",
+      "description": "Identify environmental and social issues with significant business impact",
+      "steps": "Stakeholder consultation, impact assessment, and prioritization",
+      "start": "Start Analysis"
+    },
+    "actionPlan": {
+      "title": "Action Plan & Trajectory",
+      "description": "Develop a concrete action plan with clear objectives and sustainability trajectory",
+      "steps": "Goal setting, strategy development, and implementation roadmap",
+      "start": "Create Plan"
+    },
+    "aiAnalysis": "AI Analysis",
+    "form": "Assessment Form",
+    "getStarted": "Get Started"
   }
 }
