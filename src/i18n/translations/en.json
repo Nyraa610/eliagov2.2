@@ -1,0 +1,50 @@
+
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "french": "French",
+    "greek": "Greek",
+    "spanish": "Spanish"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "alreadyAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalPoints": "Total Points",
+    "pointsEarned": "Points earned across all courses",
+    "coursesCompleted": "Courses Completed",
+    "outOf": "Out of {{count}} enrolled courses",
+    "avgProgress": "Avg. Progress",
+    "avgProgressDesc": "Average progress across all courses",
+    "esgImpact": "ESG Impact",
+    "esgImpactDesc": "Based on your training progress",
+    "learningProgress": "Your Learning Progress",
+    "trackProgress": "Track your progress through all courses",
+    "noEnrollments": "You haven't enrolled in any courses yet.",
+    "browseAvailable": "Browse available courses",
+    "loading": "Loading progress data..."
+  },
+  "news": {
+    "title": "ESG News & Updates",
+    "subtitle": "Latest insights from the sustainability world",
+    "noNews": "No news items available."
+  },
+  "navigation": {
+    "home": "Home",
+    "features": "Features",
+    "assessment": "Assessment",
+    "training": "Training",
+    "dashboard": "Dashboard",
+    "profile": "Profile"
+  }
+}

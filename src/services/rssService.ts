@@ -8,11 +8,28 @@ interface RSSItem {
 }
 
 export const rssService = {
-  async fetchESGNews(language: 'en' | 'fr' = 'en'): Promise<RSSItem[]> {
+  async fetchESGNews(language: 'en' | 'fr' | 'el' | 'es' = 'en'): Promise<RSSItem[]> {
     try {
-      const url = language === 'en' 
-        ? 'https://esgnews.com/feed/'
-        : 'https://www.esresponsable.org/spip.php?page=backend';
+      // Select RSS feed URL based on language
+      let url = '';
+      
+      switch (language) {
+        case 'fr':
+          url = 'https://www.esresponsable.org/spip.php?page=backend';
+          break;
+        case 'el':
+          // Fallback to English for Greek as we don't have a Greek source
+          url = 'https://esgnews.com/feed/';
+          break;
+        case 'es':
+          // Fallback to English for Spanish as we don't have a Spanish source
+          url = 'https://esgnews.com/feed/';
+          break;
+        case 'en':
+        default:
+          url = 'https://esgnews.com/feed/';
+          break;
+      }
       
       // We need to use a CORS proxy since these RSS feeds don't have CORS headers
       const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
@@ -48,8 +65,15 @@ export const rssService = {
         const link = linkElement?.textContent || 
                     linkElement?.getAttribute('href') || '';
         
-        // Get source name
-        const source = language === 'en' ? 'ESG News' : 'ESResponsable';
+        // Get source name based on language
+        let source = 'ESG News';
+        if (language === 'fr') {
+          source = 'ESResponsable';
+        } else if (language === 'el') {
+          source = 'ESG News (EN)';
+        } else if (language === 'es') {
+          source = 'ESG News (EN)';
+        }
         
         return {
           id: `${index}-${formattedDate}`,

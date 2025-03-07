@@ -1,0 +1,50 @@
+
+{
+  "common": {
+    "language": "Idioma",
+    "english": "Inglés",
+    "french": "Francés",
+    "greek": "Griego",
+    "spanish": "Español"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "noAccount": "¿No tiene cuenta?",
+    "signUp": "Registrarse",
+    "alreadyAccount": "¿Ya tiene una cuenta?",
+    "signIn": "Iniciar sesión"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "totalPoints": "Puntos Totales",
+    "pointsEarned": "Puntos ganados en todos los cursos",
+    "coursesCompleted": "Cursos Completados",
+    "outOf": "De {{count}} cursos inscritos",
+    "avgProgress": "Progreso Promedio",
+    "avgProgressDesc": "Progreso promedio en todos los cursos",
+    "esgImpact": "Impacto ESG",
+    "esgImpactDesc": "Basado en su progreso de formación",
+    "learningProgress": "Su Progreso de Aprendizaje",
+    "trackProgress": "Siga su progreso a través de todos los cursos",
+    "noEnrollments": "Aún no se ha inscrito en ningún curso.",
+    "browseAvailable": "Explorar cursos disponibles",
+    "loading": "Cargando datos de progreso..."
+  },
+  "news": {
+    "title": "Noticias y Actualizaciones ESG",
+    "subtitle": "Últimas perspectivas del mundo de la sostenibilidad",
+    "noNews": "No hay noticias disponibles."
+  },
+  "navigation": {
+    "home": "Inicio",
+    "features": "Características",
+    "assessment": "Evaluación",
+    "training": "Formación",
+    "dashboard": "Panel de Control",
+    "profile": "Perfil"
+  }
+}

@@ -1,0 +1,50 @@
+
+{
+  "common": {
+    "language": "Langue",
+    "english": "Anglais",
+    "french": "Français",
+    "greek": "Grec",
+    "spanish": "Espagnol"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "noAccount": "Vous n'avez pas de compte?",
+    "signUp": "S'inscrire",
+    "alreadyAccount": "Vous avez déjà un compte?",
+    "signIn": "Se connecter"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "totalPoints": "Points totaux",
+    "pointsEarned": "Points gagnés dans tous les cours",
+    "coursesCompleted": "Cours terminés",
+    "outOf": "Sur {{count}} cours inscrits",
+    "avgProgress": "Progression moyenne",
+    "avgProgressDesc": "Progression moyenne sur tous les cours",
+    "esgImpact": "Impact ESG",
+    "esgImpactDesc": "Basé sur votre progression de formation",
+    "learningProgress": "Votre progression d'apprentissage",
+    "trackProgress": "Suivez votre progression à travers tous les cours",
+    "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment.",
+    "browseAvailable": "Parcourir les cours disponibles",
+    "loading": "Chargement des données de progression..."
+  },
+  "news": {
+    "title": "Actualités & Mises à jour ESG",
+    "subtitle": "Dernières perspectives du monde de la durabilité",
+    "noNews": "Aucune actualité disponible."
+  },
+  "navigation": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "assessment": "Évaluation",
+    "training": "Formation",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil"
+  }
+}

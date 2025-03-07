@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { rssService } from "@/services/rssService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface NewsItem {
   id: string;
@@ -15,17 +17,19 @@ interface NewsItem {
 }
 
 export const ESGNewsFeed = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [language, setLanguage] = useState<'en' | 'fr'>('en');
+  const [feedLanguage, setFeedLanguage] = useState<'en' | 'fr' | 'el' | 'es'>(language as 'en' | 'fr' | 'el' | 'es');
   
   useEffect(() => {
     const fetchNews = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const items = await rssService.fetchESGNews(language);
+        const items = await rssService.fetchESGNews(feedLanguage);
         setNewsItems(items);
       } catch (err) {
         setError("Failed to load ESG news. Please try again later.");
@@ -36,21 +40,33 @@ export const ESGNewsFeed = () => {
     };
     
     fetchNews();
+  }, [feedLanguage]);
+  
+  // Update feed language when app language changes, but allow user to override
+  useEffect(() => {
+    setFeedLanguage(language as 'en' | 'fr' | 'el' | 'es');
   }, [language]);
   
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-xl flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" /> ESG News & Updates
+          <BarChart3 className="h-5 w-5 text-primary" /> {t('news.title')}
         </CardTitle>
         <CardDescription>
-          Latest insights from the sustainability world
+          {t('news.subtitle')}
         </CardDescription>
-        <Tabs defaultValue="en" className="mt-2" onValueChange={(value) => setLanguage(value as 'en' | 'fr')}>
-          <TabsList className="grid w-[200px] grid-cols-2">
-            <TabsTrigger value="en">English</TabsTrigger>
-            <TabsTrigger value="fr">French</TabsTrigger>
+        <Tabs 
+          defaultValue={feedLanguage} 
+          value={feedLanguage}
+          className="mt-2" 
+          onValueChange={(value) => setFeedLanguage(value as 'en' | 'fr' | 'el' | 'es')}
+        >
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="en">{t('common.english')}</TabsTrigger>
+            <TabsTrigger value="fr">{t('common.french')}</TabsTrigger>
+            <TabsTrigger value="el">{t('common.greek')}</TabsTrigger>
+            <TabsTrigger value="es">{t('common.spanish')}</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
@@ -90,7 +106,7 @@ export const ESGNewsFeed = () => {
             ))
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              <p>No news items available.</p>
+              <p>{t('news.noNews')}</p>
             </div>
           )}
         </div>

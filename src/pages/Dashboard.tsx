@@ -8,8 +8,10 @@ import { UserEnrollment, Course } from "@/types/training";
 import { Award, Book, Target, TrendingUp, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ESGNewsFeed } from "@/components/dashboard/ESGNewsFeed";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [enrollments, setEnrollments] = useState<(UserEnrollment & { courses: Course })[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [completedCourses, setCompletedCourses] = useState(0);
@@ -44,30 +46,30 @@ const Dashboard = () => {
   }, []);
   
   return (
-    <UserLayout title="Dashboard">
+    <UserLayout title={t('dashboard.title')}>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard 
-          title="Total Points" 
+          title={t('dashboard.totalPoints')}
           value={totalPoints}
-          description="Points earned across all courses"
+          description={t('dashboard.pointsEarned')}
           icon={<Award className="h-5 w-5 text-primary" />}
         />
         <MetricCard 
-          title="Courses Completed" 
+          title={t('dashboard.coursesCompleted')}
           value={completedCourses}
-          description={`Out of ${enrollments.length} enrolled courses`}
+          description={t('dashboard.outOf', { count: enrollments.length })}
           icon={<Book className="h-5 w-5 text-primary" />}
         />
         <MetricCard 
-          title="Avg. Progress" 
+          title={t('dashboard.avgProgress')}
           value={`${Math.round(avgProgress)}%`}
-          description="Average progress across all courses"
+          description={t('dashboard.avgProgressDesc')}
           icon={<TrendingUp className="h-5 w-5 text-primary" />}
         />
         <MetricCard 
-          title="ESG Impact" 
+          title={t('dashboard.esgImpact')}
           value="Positive"
-          description="Based on your training progress"
+          description={t('dashboard.esgImpactDesc')}
           icon={<Globe className="h-5 w-5 text-primary" />}
         />
       </div>
@@ -76,17 +78,17 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" /> Your Learning Progress
+              <Target className="h-5 w-5 text-primary" /> {t('dashboard.learningProgress')}
             </CardTitle>
             <CardDescription>
-              Track your progress through all courses
+              {t('dashboard.trackProgress')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {isLoading ? (
                 <div className="h-[120px] flex items-center justify-center">
-                  <p className="text-muted-foreground">Loading progress data...</p>
+                  <p className="text-muted-foreground">{t('dashboard.loading')}</p>
                 </div>
               ) : enrollments.length > 0 ? (
                 enrollments.map((enrollment) => (
@@ -104,9 +106,9 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet.</p>
+                  <p className="text-muted-foreground mb-4">{t('dashboard.noEnrollments')}</p>
                   <Link to="/training" className="text-primary hover:underline">
-                    Browse available courses
+                    {t('dashboard.browseAvailable')}
                   </Link>
                 </div>
               )}

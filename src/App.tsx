@@ -24,6 +24,10 @@ import Unauthorized from "@/pages/Unauthorized";
 import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+
+// Initialize i18n
+import './i18n/i18n';
 
 const router = createBrowserRouter([
   {
@@ -110,7 +114,9 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <LanguageProvider>
+      <RouterProvider router={router} />
+    </LanguageProvider>
   );
 }
 
