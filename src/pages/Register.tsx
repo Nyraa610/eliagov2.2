@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { Navigation } from "@/components/Navigation";
+import { companyService } from "@/services/companyService";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -87,6 +88,29 @@ export default function Register() {
       if (error) {
         console.error("Supabase error:", error);
         throw error;
+      }
+      
+      if (data.user) {
+        console.log("User registered, now creating company:", values.company);
+        
+        // Create company for the new user
+        try {
+          const company = await companyService.createCompany({
+            name: values.company,
+            country: values.country
+          });
+          
+          console.log("Company created successfully:", company);
+        } catch (companyError) {
+          console.error("Error creating company:", companyError);
+          // We don't throw here as the user was created successfully
+          // Just notify the user there was an issue with company creation
+          toast({
+            variant: "destructive",
+            title: "Company creation issue",
+            description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
+          });
+        }
       }
 
       toast({

@@ -27,6 +27,12 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
       console.log("Fetching user companies");
       const data = await companyService.getUserCompanies();
       setCompanies(data);
+      
+      // If user has exactly one company, redirect to that company's page
+      if (data.length === 1) {
+        console.log("User has one company, redirecting to company page");
+        navigate(`/company/${data[0].id}`);
+      }
     } catch (error) {
       console.error("Error fetching companies:", error);
       
@@ -54,7 +60,7 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
 
   useEffect(() => {
     fetchCompanies();
-  }, [toast]);
+  }, [toast, navigate]);
 
   const handleCreateCompany = () => {
     navigate("/company/new");

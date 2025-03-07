@@ -1,5 +1,11 @@
 
+# A string used as a secret for the Edge Functions JWT.
+[global.config]
+app_dir = "dist"
 project_id = "tqvylbkavunzlckhqxcl"
 
-[functions.ai-analysis]
-verify_jwt = true
+[global.secrets]
+SUPABASE_URL = "***"
+SUPABASE_ANON_KEY = "***"
+SUPABASE_SERVICE_ROLE_KEY = "***"
+OPENAI_API_KEY = "***"
