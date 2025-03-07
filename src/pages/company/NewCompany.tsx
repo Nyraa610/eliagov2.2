@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { Company } from "@/services/companyService";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function NewCompany() {
   const navigate = useNavigate();
@@ -13,16 +14,21 @@ export default function NewCompany() {
   };
   
   return (
-    <div className="container py-8">
-      <div className="flex items-center mb-6">
-        <Button variant="outline" onClick={() => navigate("/companies")} className="mr-4">
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Companies
-        </Button>
-        <h1 className="text-3xl font-bold">Create New Company</h1>
+    <UserLayout title="Create New Company">
+      <div className="flex flex-col space-y-6">
+        <div className="flex items-center">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/companies")} 
+            className="mr-4"
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Companies
+          </Button>
+        </div>
+        
+        <CompanyProfileForm onSuccess={handleSuccess} />
       </div>
-      
-      <CompanyProfileForm onSuccess={handleSuccess} />
-    </div>
+    </UserLayout>
   );
 }
