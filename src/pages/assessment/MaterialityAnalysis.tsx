@@ -7,12 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { FeatureStatus } from "@/types/training";
 import { MaterialityAnalysisTabs } from "@/components/assessment/materiality-analysis/MaterialityAnalysisTabs";
 import { materialitySchema, MaterialityFormValues } from "@/components/assessment/materiality-analysis/formSchema";
 
 export default function MaterialityAnalysis() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("identify");
+  const [analysisStatus, setAnalysisStatus] = useState<FeatureStatus>("blocked");
   
   // Form definition
   const form = useForm<MaterialityFormValues>({
@@ -29,6 +31,7 @@ export default function MaterialityAnalysis() {
   function onSubmit(values: MaterialityFormValues) {
     console.log(values);
     // Here we would save the data and potentially navigate to the next step
+    setAnalysisStatus("waiting-for-approval");
   }
 
   return (
@@ -45,7 +48,7 @@ export default function MaterialityAnalysis() {
       <AssessmentBase 
         title={t("assessment.materialityAnalysis.title")} 
         description={t("assessment.materialityAnalysis.description")}
-        status="in-progress"
+        status={analysisStatus}
       >
         <MaterialityAnalysisTabs
           form={form}

@@ -88,3 +88,18 @@ export interface Certificate {
   points_earned: number;
   issued_at: string;
 }
+
+// Feature status tracking types
+export type FeatureStatus = 
+  | 'not-started' 
+  | 'in-progress' 
+  | 'waiting-for-approval' 
+  | 'blocked' 
+  | 'completed';
+
+export interface FeatureStatusInfo {
+  status: FeatureStatus;
+  label: string;
+  color: string;
+  description: string;
+}

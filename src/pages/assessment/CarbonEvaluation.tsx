@@ -7,12 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { FeatureStatus } from "@/types/training";
 import { carbonEvaluationSchema, CarbonEvaluationFormValues } from "@/components/assessment/carbon-evaluation/formSchema";
 import { CarbonEvaluationTabs } from "@/components/assessment/carbon-evaluation/CarbonEvaluationTabs";
 
 export default function CarbonEvaluation() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("company-info");
+  const [evalStatus, setEvalStatus] = useState<FeatureStatus>("completed");
   
   // Form definition
   const form = useForm<CarbonEvaluationFormValues>({
@@ -46,7 +48,7 @@ export default function CarbonEvaluation() {
       <AssessmentBase 
         title={t("assessment.carbonEvaluation.title")} 
         description={t("assessment.carbonEvaluation.description")}
-        status="in-progress"
+        status={evalStatus}
       >
         <CarbonEvaluationTabs
           form={form}

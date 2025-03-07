@@ -22,6 +22,7 @@ import { CurrentPracticesForm } from "@/components/assessment/rse-diagnostic/Cur
 import { StakeholdersForm } from "@/components/assessment/rse-diagnostic/StakeholdersForm";
 import { ChallengesForm } from "@/components/assessment/rse-diagnostic/ChallengesForm";
 import { formSchema, FormValues } from "@/components/assessment/rse-diagnostic/formSchema";
+import { FeatureStatus } from "@/types/training";
 
 export default function Assessment() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function Assessment() {
   const [activeTab, setActiveTab] = useState("overview");
   const [activeAssessmentTab, setActiveAssessmentTab] = useState("company-info");
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
 
   // Form definition for RSE diagnostic
   const form = useForm<FormValues>({
@@ -66,6 +68,7 @@ export default function Assessment() {
     });
     // Reset the form and go back to overview
     form.reset();
+    setDiagStatus("completed");
     setShowDiagnostic(false);
     setActiveTab("overview");
   }
@@ -166,7 +169,7 @@ export default function Assessment() {
             <AssessmentBase 
               title={t("assessment.diagnosticRSE.title")} 
               description={t("assessment.diagnosticRSE.description")}
-              status="not-started"
+              status={diagStatus}
             >
               <div className="p-4">
                 <p className="text-muted-foreground mb-6">
@@ -176,6 +179,7 @@ export default function Assessment() {
                   className="w-full" 
                   onClick={() => {
                     setShowDiagnostic(true);
+                    setDiagStatus("in-progress");
                     setActiveAssessmentTab("company-info");
                   }}
                 >
