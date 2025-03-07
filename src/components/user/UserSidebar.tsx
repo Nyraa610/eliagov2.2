@@ -1,5 +1,5 @@
 
-import { AssessmentIcon, BarChart3, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Home, LineChart, Settings, Target, User } from "lucide-react";
+import { BarChart3, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Home, LineChart, Settings, Target, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
