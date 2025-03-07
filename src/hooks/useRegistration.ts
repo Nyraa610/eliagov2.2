@@ -73,7 +73,7 @@ export const useRegistration = () => {
       }
       
       // Step 2: Wait a moment to ensure the database trigger has time to create the profile
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Step 3: Create company - this will only work if the profile was successfully created
       console.log("User registered, now creating company:", values.company);
