@@ -8,6 +8,7 @@ import { NavigationLink } from "./NavigationLink";
 import { UserProfile } from "@/services/base/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Rocket } from "lucide-react";
 
 interface DesktopNavigationProps {
   isAuthenticated: boolean | null;
@@ -42,7 +43,8 @@ export const DesktopNavigation = ({
         
         <Link to="/assessment" className="mr-2">
           <Button className="bg-green-600 hover:bg-green-700 text-white font-medium">
-            {t('navigation.startAssessment')}
+            <Rocket size={18} />
+            {t('assessment.getStarted')}
           </Button>
         </Link>
         

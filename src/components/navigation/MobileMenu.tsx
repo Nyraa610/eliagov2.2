@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { NavigationLink } from "./NavigationLink";
+import { Rocket } from "lucide-react";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -47,7 +48,8 @@ export const MobileMenu = ({
           
           <Link to="/assessment" onClick={onToggle} className="mt-2">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
-              {t('navigation.startAssessment')}
+              <Rocket size={18} />
+              {t('assessment.getStarted')}
             </Button>
           </Link>
           
