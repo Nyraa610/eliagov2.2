@@ -1,3 +1,4 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -24,7 +25,6 @@ import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import RSEDiagnostic from "@/pages/assessment/RSEDiagnostic";
 import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
 import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
 import ActionPlan from "@/pages/assessment/ActionPlan";
@@ -66,10 +66,6 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><Assessment /></ProtectedRoute>,
   },
   {
-    path: "/rse-diagnostic",
-    element: <ProtectedRoute><RSEDiagnostic /></ProtectedRoute>,
-  },
-  {
     path: "/carbon-footprint",
     element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
   },
@@ -80,10 +76,6 @@ const router = createBrowserRouter([
   {
     path: "/action-plan",
     element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/rse-diagnostic",
-    element: <ProtectedRoute><RSEDiagnostic /></ProtectedRoute>,
   },
   {
     path: "/assessment/carbon-evaluation",

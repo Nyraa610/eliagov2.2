@@ -1,5 +1,5 @@
 
-import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Footprints, GraduationCap, Globe, Home, Layers, Route, Target, User } from "lucide-react";
+import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Globe, Home, Layers, LineChart, Target, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,18 +17,13 @@ export const UserSidebar = () => {
     },
     {
       title: "Training",
-      icon: <GraduationCap className="h-5 w-5" />,
+      icon: <BookOpen className="h-5 w-5" />,
       path: "/training",
     },
     {
       title: "Assessment",
       icon: <BarChart3 className="h-5 w-5" />,
       path: "/assessment",
-    },
-    {
-      title: "RSE Diagnostic",
-      icon: <BookOpen className="h-5 w-5" />,
-      path: "/rse-diagnostic",
     },
     {
       title: "Carbon Footprint",
