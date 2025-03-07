@@ -76,9 +76,9 @@ export const useRegistration = () => {
       }
       
       // Step 2: Wait longer to ensure the database trigger has time to create the profile
-      // Increased from 1000ms to 2500ms after fixing the user_role type
-      console.log("Waiting for profile creation...");
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Increased wait time to ensure proper profile creation
+      console.log("Waiting for profile creation (client_admin role should be assigned)...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Before proceeding to company creation, verify the profile exists
       try {
@@ -92,7 +92,7 @@ export const useRegistration = () => {
           console.error("Error checking for profile:", profileError);
           // If we couldn't find the profile, wait a bit longer and try again
           console.log("Profile not found, waiting longer and trying again...");
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
           const { data: retryProfileData, error: retryProfileError } = await supabase
             .from('profiles')
@@ -103,10 +103,10 @@ export const useRegistration = () => {
           if (retryProfileError) {
             console.error("Error checking for profile on retry:", retryProfileError);
           } else {
-            console.log("Profile retry successful:", retryProfileData ? "Profile exists" : "No profile found");
+            console.log("Profile retry successful:", retryProfileData ? `Profile exists with role: ${retryProfileData.role}` : "No profile found");
           }
         } else {
-          console.log("Profile verification successful:", profileData ? "Profile exists" : "No profile found");
+          console.log("Profile verification successful:", profileData ? `Profile exists with role: ${profileData.role}` : "No profile found");
         }
       } catch (profileCheckError) {
         console.error("Exception checking profile:", profileCheckError);
