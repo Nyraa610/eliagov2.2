@@ -8,6 +8,7 @@ import { Building, Check, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { companyService } from "@/services/companyService";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 export default function Companies() {
   const [showSubsidiaryDialog, setShowSubsidiaryDialog] = useState(false);
@@ -39,14 +40,14 @@ export default function Companies() {
 
   const handleContactSales = async () => {
     try {
-      const { user } = (await companyService.supabase.auth.getUser()).data;
+      const { data: { user } } = await supabase.auth.getUser();
       
       // Make request to the Edge Function
       const response = await fetch('https://tqvylbkavunzlckhqxcl.supabase.co/functions/v1/contact-sales', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await companyService.supabase.auth.getSession()).data.session?.access_token}`
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({
           name: user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name || 'User',
