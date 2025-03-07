@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
 import { Course, UserEnrollment, Certificate } from "@/types/training";
@@ -8,6 +7,7 @@ import CertificatesSection from "@/components/training/CertificatesSection";
 import AvailableCoursesSection from "@/components/training/AvailableCoursesSection";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -80,10 +80,8 @@ export default function Training() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
-      <Navigation />
+    <UserLayout title="ESG Training Center">
       <motion.div 
-        className="container mx-auto px-4 page-header-spacing pb-8"
         variants={container}
         initial="hidden"
         animate="show"
@@ -100,9 +98,6 @@ export default function Training() {
           >
             <Award className="h-16 w-16 text-primary mx-auto" />
           </motion.div>
-          <motion.h1 variants={item} className="text-3xl sm:text-4xl font-bold text-primary mb-4">
-            ESG Training Center
-          </motion.h1>
           <motion.p variants={item} className="text-lg text-gray-600 max-w-2xl mx-auto">
             Enhance your knowledge and earn certificates in sustainability and ESG practices
           </motion.p>
@@ -128,6 +123,6 @@ export default function Training() {
           </>
         )}
       </motion.div>
-    </div>
+    </UserLayout>
   );
 }

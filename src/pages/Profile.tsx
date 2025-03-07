@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabaseService, UserProfile } from "@/services/base/supabaseService";
 import { Loader2, Save, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -97,26 +97,22 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
-        <Navigation />
-        <div className="container mx-auto px-4 py-20 flex justify-center items-center">
+      <UserLayout title="Profile Settings">
+        <div className="flex justify-center items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
+      </UserLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
-      <Navigation />
+    <UserLayout title="Profile Settings">
       <motion.div 
-        className="container mx-auto px-4 page-header-spacing pb-8"
         initial="hidden"
         animate="show"
         variants={container}
       >
         <motion.div 
-          className="max-w-3xl mx-auto"
           variants={item}
         >
           <Card>
@@ -126,7 +122,6 @@ export default function Profile() {
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Profile Settings</CardTitle>
                   <CardDescription>
                     Manage your account settings and profile information
                   </CardDescription>
@@ -194,6 +189,6 @@ export default function Profile() {
           </Card>
         </motion.div>
       </motion.div>
-    </div>
+    </UserLayout>
   );
 }
