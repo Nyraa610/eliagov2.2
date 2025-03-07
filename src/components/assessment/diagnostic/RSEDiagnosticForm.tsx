@@ -1,52 +1,46 @@
 
 import { useState } from "react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LineChart } from "lucide-react";
 import { Form } from "@/components/ui/form";
-
-// Import form schema
-import { formSchema, FormValues } from "@/components/assessment/rse-diagnostic/formSchema";
-
-// Import the new components
+import { UseFormReturn } from "react-hook-form";
+import { FormValues } from "@/components/assessment/rse-diagnostic/formSchema";
 import { DiagnosticTabs } from "@/components/assessment/rse-diagnostic/DiagnosticTabs";
 import { CompanyInfoForm } from "@/components/assessment/rse-diagnostic/CompanyInfoForm";
 import { CurrentPracticesForm } from "@/components/assessment/rse-diagnostic/CurrentPracticesForm";
 import { StakeholdersForm } from "@/components/assessment/rse-diagnostic/StakeholdersForm";
 import { ChallengesForm } from "@/components/assessment/rse-diagnostic/ChallengesForm";
 
-export default function RSEDiagnostic() {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("company-info");
-  
-  // Form definition
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      companyName: "",
-      industry: "",
-      employeeCount: "",
-      currentRSEPractices: "",
-      mainChallenges: "",
-    },
-  });
+interface RSEDiagnosticFormProps {
+  form: UseFormReturn<FormValues>;
+  activeAssessmentTab: string;
+  setActiveAssessmentTab: (tab: string) => void;
+  onSubmit: (values: FormValues) => void;
+  setShowDiagnostic: (show: boolean) => void;
+}
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
-    // Here we would save the data and potentially navigate to the next step
-  }
+export function RSEDiagnosticForm({
+  form,
+  activeAssessmentTab,
+  setActiveAssessmentTab,
+  onSubmit,
+  setShowDiagnostic
+}: RSEDiagnosticFormProps) {
+  const { t } = useTranslation();
 
   return (
-    <UserLayout title={t("assessment.diagnosticRSE.title")}>
+    <>
       <div className="mb-6">
-        <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
-        </Link>
+        <Button 
+          variant="link" 
+          className="text-primary hover:underline flex items-center p-0 mb-4" 
+          onClick={() => setShowDiagnostic(false)}
+        >
+          <LineChart className="h-4 w-4 mr-1" /> {t("assessment.backToOptions")}
+        </Button>
         <p className="text-gray-600">
           {t("assessment.diagnosticRSE.description")}
         </p>
@@ -57,15 +51,15 @@ export default function RSEDiagnostic() {
         description={t("assessment.diagnosticRSE.description")}
         status="in-progress"
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <DiagnosticTabs activeTab={activeTab} />
+        <Tabs value={activeAssessmentTab} onValueChange={setActiveAssessmentTab} className="w-full">
+          <DiagnosticTabs activeTab={activeAssessmentTab} />
           
           <TabsContent value="company-info" className="space-y-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CompanyInfoForm 
                   form={form} 
-                  onNext={() => setActiveTab("practices")} 
+                  onNext={() => setActiveAssessmentTab("practices")} 
                 />
               </form>
             </Form>
@@ -76,8 +70,8 @@ export default function RSEDiagnostic() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CurrentPracticesForm 
                   form={form} 
-                  onNext={() => setActiveTab("stakeholders")}
-                  onPrev={() => setActiveTab("company-info")}
+                  onNext={() => setActiveAssessmentTab("stakeholders")}
+                  onPrev={() => setActiveAssessmentTab("company-info")}
                 />
               </form>
             </Form>
@@ -85,8 +79,8 @@ export default function RSEDiagnostic() {
           
           <TabsContent value="stakeholders" className="space-y-4">
             <StakeholdersForm 
-              onNext={() => setActiveTab("challenges")}
-              onPrev={() => setActiveTab("practices")}
+              onNext={() => setActiveAssessmentTab("challenges")}
+              onPrev={() => setActiveAssessmentTab("practices")}
             />
           </TabsContent>
           
@@ -95,7 +89,7 @@ export default function RSEDiagnostic() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <ChallengesForm 
                   form={form} 
-                  onPrev={() => setActiveTab("stakeholders")}
+                  onPrev={() => setActiveAssessmentTab("stakeholders")}
                   onSubmit={form.handleSubmit(onSubmit)}
                 />
               </form>
@@ -103,6 +97,6 @@ export default function RSEDiagnostic() {
           </TabsContent>
         </Tabs>
       </AssessmentBase>
-    </UserLayout>
+    </>
   );
 }
