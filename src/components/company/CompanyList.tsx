@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Building, User, Settings, Users, ChevronRight } from "lucide-react";
+import { PlusCircle, Building, User, Settings, Users, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { companyService, CompanyWithRole } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,32 +16,52 @@ interface CompanyListProps {
 export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps) {
   const [companies, setCompanies] = useState<CompanyWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        setLoading(true);
-        const data = await companyService.getUserCompanies();
-        setCompanies(data);
-      } catch (error) {
-        console.error("Error fetching companies:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load companies. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("Fetching user companies");
+      const data = await companyService.getUserCompanies();
+      setCompanies(data);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      
+      let errorMessage = "Failed to load companies. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("infinite recursion") || 
+            error.message.includes("policy for relation")) {
+          errorMessage = "Database policy error. Please refresh the page and try again.";
+        } else {
+          errorMessage = error.message;
+        }
       }
-    };
+      
+      setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCompanies();
   }, [toast]);
 
   const handleCreateCompany = () => {
     navigate("/company/new");
+  };
+
+  const handleRefresh = () => {
+    fetchCompanies();
   };
 
   const canAddCompany = maxCompanies ? companies.length < maxCompanies : true;
@@ -50,23 +70,54 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Your Companies</h2>
-        {canAddCompany ? (
-          <Button onClick={handleCreateCompany}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Company
-          </Button>
-        ) : onAddSubsidiary ? (
-          <Button variant="outline" onClick={onAddSubsidiary}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Subsidiary
-          </Button>
-        ) : null}
+        <div className="flex space-x-2">
+          {error && (
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleRefresh}
+              title="Refresh companies"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+          {canAddCompany ? (
+            <Button onClick={handleCreateCompany}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Company
+            </Button>
+          ) : onAddSubsidiary ? (
+            <Button variant="outline" onClick={onAddSubsidiary}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Subsidiary
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-8">
-          <p>Loading companies...</p>
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+              <Building className="h-6 w-6 text-primary/50" />
+            </div>
+            <p className="text-muted-foreground">Loading companies...</p>
+          </div>
         </div>
+      ) : error ? (
+        <Card className="text-center p-6">
+          <CardContent className="pt-6">
+            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+            <h3 className="mt-4 text-lg font-semibold">Error Loading Companies</h3>
+            <p className="mt-2 text-muted-foreground">
+              {error}
+            </p>
+            <Button className="mt-4" onClick={handleRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       ) : companies.length === 0 ? (
         <Card className="text-center p-8">
           <CardContent className="pt-6">

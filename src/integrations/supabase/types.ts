@@ -479,7 +479,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      user_is_company_admin: {
+        Args: {
+          company_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "user"

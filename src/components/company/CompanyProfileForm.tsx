@@ -8,7 +8,7 @@ import { Form } from "@/components/ui/form";
 import { Company, companyService } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { companyFormSchema, CompanyFormValues } from "./companyFormSchema";
 import { CompanyLogoUpload } from "./CompanyLogoUpload";
 import { CompanyFormFields } from "./CompanyFormFields";
@@ -35,6 +35,12 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       registry_city: company?.registry_city || "",
     },
   });
+  
+  const resetError = () => {
+    if (errorMessage) {
+      setErrorMessage(null);
+    }
+  };
   
   const onSubmit = async (values: CompanyFormValues) => {
     try {
@@ -74,7 +80,9 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       
       // Handle specific database errors
       if (error instanceof Error) {
-        if (error.message.includes("infinite recursion") || error.message.includes("policy for relation")) {
+        if (error.message.includes("infinite recursion") || 
+            error.message.includes("policy for relation") ||
+            error.message.includes("violates row-level security")) {
           errorDesc = "Database policy error. This might be due to an issue with user permissions. Please try again or contact support.";
         } else {
           errorDesc = error.message;
@@ -106,13 +114,22 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       <CardContent>
         {errorMessage && (
           <div className="bg-destructive/15 text-destructive rounded-md p-3 mb-4">
-            <p className="text-sm font-medium">{errorMessage}</p>
-            <p className="text-xs mt-1">If this issue persists, please refresh the page or contact support.</p>
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">{errorMessage}</p>
+                <p className="text-xs mt-1">If this issue persists, please refresh the page or contact support.</p>
+              </div>
+            </div>
           </div>
         )}
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form 
+            onSubmit={form.handleSubmit(onSubmit)} 
+            onChange={resetError}
+            className="space-y-6"
+          >
             {company && (
               <CompanyLogoUpload 
                 company={company} 
