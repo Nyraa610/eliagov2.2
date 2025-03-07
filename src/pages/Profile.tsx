@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService, UserProfile } from "@/services/base/supabaseService";
-import { Loader2, Save, User } from "lucide-react";
+import { Loader2, Save, User, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { UserLayout } from "@/components/user/UserLayout";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -21,6 +23,7 @@ export default function Profile() {
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -111,10 +114,9 @@ export default function Profile() {
         initial="hidden"
         animate="show"
         variants={container}
+        className="space-y-6"
       >
-        <motion.div 
-          variants={item}
-        >
+        <motion.div variants={item}>
           <Card>
             <CardHeader>
               <div className="flex items-center space-x-4 mb-2">
@@ -123,20 +125,20 @@ export default function Profile() {
                 </div>
                 <div>
                   <CardDescription>
-                    Manage your account settings and profile information
+                    {t("profile.manageAccount")}
                   </CardDescription>
                 </div>
               </div>
               {isAdmin && (
                 <div className="bg-primary/10 text-primary rounded-md px-3 py-1 text-sm inline-block ml-16">
-                  Administrator
+                  {t("profile.administrator")}
                 </div>
               )}
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("profile.email")}</Label>
                   <Input 
                     id="email" 
                     type="email" 
@@ -147,22 +149,22 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">{t("profile.fullName")}</Label>
                   <Input 
                     id="fullName" 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder={t("profile.enterFullName")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">{t("profile.bio")}</Label>
                   <Textarea 
                     id="bio" 
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell us a little about yourself"
+                    placeholder={t("profile.enterBio")}
                     rows={4}
                   />
                 </div>
@@ -176,15 +178,41 @@ export default function Profile() {
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {t("profile.saving")}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save Profile
+                    {t("profile.saveProfile")}
                   </>
                 )}
               </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-4 mb-2">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Globe className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">{t("profile.languageSettings")}</CardTitle>
+                  <CardDescription>
+                    {t("profile.changeLanguage")}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+                <Label htmlFor="language" className="md:w-1/4">{t("common.language")}</Label>
+                <div className="flex-1">
+                  <LanguageSelector />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>

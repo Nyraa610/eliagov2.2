@@ -46,5 +46,18 @@
     "training": "Formation",
     "dashboard": "Tableau de bord",
     "profile": "Profil"
+  },
+  "profile": {
+    "manageAccount": "Gérez vos paramètres de compte et vos informations de profil",
+    "administrator": "Administrateur",
+    "email": "Email",
+    "fullName": "Nom complet",
+    "enterFullName": "Entrez votre nom complet",
+    "bio": "Bio",
+    "enterBio": "Parlez-nous un peu de vous",
+    "saving": "Enregistrement...",
+    "saveProfile": "Enregistrer le profil",
+    "languageSettings": "Paramètres de langue",
+    "changeLanguage": "Changer la langue de l'application"
   }
 }

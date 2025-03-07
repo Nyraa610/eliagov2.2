@@ -46,5 +46,18 @@
     "training": "Training",
     "dashboard": "Dashboard",
     "profile": "Profile"
+  },
+  "profile": {
+    "manageAccount": "Manage your account settings and profile information",
+    "administrator": "Administrator",
+    "email": "Email",
+    "fullName": "Full Name",
+    "enterFullName": "Enter your full name",
+    "bio": "Bio",
+    "enterBio": "Tell us a little about yourself",
+    "saving": "Saving...",
+    "saveProfile": "Save Profile",
+    "languageSettings": "Language Settings",
+    "changeLanguage": "Change the language of the application"
   }
 }
