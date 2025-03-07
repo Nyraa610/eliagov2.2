@@ -68,6 +68,7 @@ export default function Register() {
     console.log("Starting registration process...");
     
     try {
+      // Step 1: Sign up the user with Supabase Auth
       console.log("Attempting to sign up with Supabase...");
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -90,27 +91,29 @@ export default function Register() {
         throw error;
       }
       
-      if (data.user) {
-        console.log("User registered, now creating company:", values.company);
+      if (!data.user) {
+        throw new Error("User registration failed");
+      }
+      
+      // Step 2: Wait a moment to ensure the database trigger has time to create the profile
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 3: Create company - this will only work if the profile was successfully created
+      console.log("User registered, now creating company:", values.company);
+      try {
+        const company = await companyService.createCompany({
+          name: values.company,
+          country: values.country
+        });
         
-        // Create company for the new user
-        try {
-          const company = await companyService.createCompany({
-            name: values.company,
-            country: values.country
-          });
-          
-          console.log("Company created successfully:", company);
-        } catch (companyError) {
-          console.error("Error creating company:", companyError);
-          // We don't throw here as the user was created successfully
-          // Just notify the user there was an issue with company creation
-          toast({
-            variant: "destructive",
-            title: "Company creation issue",
-            description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
-          });
-        }
+        console.log("Company created successfully:", company);
+      } catch (companyError) {
+        console.error("Error creating company:", companyError);
+        toast({
+          variant: "destructive",
+          title: "Company creation issue",
+          description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
+        });
       }
 
       toast({

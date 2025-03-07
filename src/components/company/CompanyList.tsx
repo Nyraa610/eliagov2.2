@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { companyService, CompanyWithRole } from "@/services/companyService";
-import { useToast } from "@/hooks/use-toast";
+import { supabaseService } from "@/services/base/supabaseService";
+import { companyService } from "@/services/companyService";
+import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "./CompanyListHeader";
 import { CompanyListContent } from "./CompanyListContent";
 
@@ -12,43 +13,60 @@ interface CompanyListProps {
 }
 
 export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps) {
-  const [companies, setCompanies] = useState<CompanyWithRole[]>([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const fetchCompanies = async () => {
+  // Get companies when component mounts
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Check if we have an authenticated session first
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          throw new Error("You must be logged in to view companies");
+        }
+        
+        const data = await companyService.getUserCompanies();
+        console.log("Fetched companies:", data);
+        setCompanies(data);
+        
+        // Check if user is admin to enable additional features
+        const hasAdminRole = await supabaseService.hasRole('admin');
+        setIsAdmin(hasAdminRole);
+      } catch (error: any) {
+        console.error("Error fetching companies:", error);
+        setError(error.message || "Failed to load companies");
+        
+        toast({
+          title: "Error",
+          description: "Failed to load companies. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, [toast]);
+
+  const refreshCompanies = async () => {
     try {
       setLoading(true);
-      setError(null);
-      console.log("Fetching user companies");
       const data = await companyService.getUserCompanies();
       setCompanies(data);
-      
-      // If user has exactly one company, redirect to that company's page
-      if (data.length === 1) {
-        console.log("User has one company, redirecting to company page");
-        navigate(`/company/${data[0].id}`);
-      }
     } catch (error) {
-      console.error("Error fetching companies:", error);
-      
-      let errorMessage = "Failed to load companies. Please try again.";
-      if (error instanceof Error) {
-        if (error.message.includes("infinite recursion") || 
-            error.message.includes("policy for relation")) {
-          errorMessage = "Database policy error. Please refresh the page and try again.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      setError(errorMessage);
-      
+      console.error("Error refreshing companies:", error);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to refresh companies. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -56,37 +74,24 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
     }
   };
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [toast, navigate]);
-
-  const handleCreateCompany = () => {
-    navigate("/company/new");
-  };
-
-  const handleRefresh = () => {
-    fetchCompanies();
-  };
-
-  const canAddCompany = maxCompanies ? companies.length < maxCompanies : true;
+  // User can create company if they have no companies or are admin
+  const canCreateCompany = companies.length < (maxCompanies || Infinity) || isAdmin;
 
   return (
-    <div>
-      <CompanyListHeader
-        title="Your Companies"
-        onRefresh={handleRefresh}
-        onCreateCompany={handleCreateCompany}
+    <div className="space-y-4">
+      <CompanyListHeader 
+        title="My Companies"
+        onRefresh={refreshCompanies}
+        onCreateCompany={() => navigate("/company/new")}
         onAddSubsidiary={onAddSubsidiary}
-        canAddCompany={canAddCompany}
-        showRefresh={!!error}
+        canAddCompany={canCreateCompany}
+        showRefresh={true}
       />
-
-      <CompanyListContent
-        loading={loading}
-        error={error}
-        companies={companies}
-        onRefresh={handleRefresh}
-        onCreateCompany={handleCreateCompany}
+      
+      <CompanyListContent 
+        companies={companies} 
+        loading={loading} 
+        error={error} 
       />
     </div>
   );
