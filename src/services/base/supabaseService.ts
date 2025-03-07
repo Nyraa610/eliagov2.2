@@ -151,6 +151,8 @@ export const supabaseService = {
         return false;
       }
       
+      console.log(`supabaseService: Session user ID for role check: ${session.session.user.id}`);
+      
       const profile = await supabaseService.getUserProfile(session.session.user.id);
       console.log(`supabaseService: User profile for role check:`, profile);
       
@@ -164,6 +166,24 @@ export const supabaseService = {
       return hasRole;
     } catch (error) {
       console.error("supabaseService: Error checking user role:", error);
+      throw error;
+    }
+  },
+  
+  refreshSession: async () => {
+    try {
+      console.log("supabaseService: Refreshing session");
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error("supabaseService: Error refreshing session:", error.message);
+        throw error;
+      }
+      
+      console.log("supabaseService: Session refreshed successfully");
+      return data.session;
+    } catch (error) {
+      console.error("supabaseService: Exception refreshing session:", error);
       throw error;
     }
   }

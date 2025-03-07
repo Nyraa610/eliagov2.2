@@ -4,94 +4,58 @@ import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { ArrowLeft, Truck, Building2, Factory, Lightbulb, Activity } from "lucide-react";
+import { ArrowLeft, Building, Car, Factory, Footprints, Leaf } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
 
 const formSchema = z.object({
-  electricityConsumption: z.string().min(1, {
-    message: "Please enter your electricity consumption.",
+  companyName: z.string().min(2, {
+    message: "Company name must be at least 2 characters.",
   }),
-  electricityUnit: z.string().min(1, {
-    message: "Please select a unit.",
+  yearOfEvaluation: z.string().min(4, {
+    message: "Please enter a valid year.",
   }),
-  heatingConsumption: z.string().min(1, {
-    message: "Please enter your heating consumption.",
-  }),
-  heatingUnit: z.string().min(1, {
-    message: "Please select a unit.",
-  }),
-  vehicleFuel: z.string().min(1, {
-    message: "Please enter your vehicle fuel consumption.",
-  }),
-  vehicleFuelUnit: z.string().min(1, {
-    message: "Please select a unit.",
-  }),
-  businessTravel: z.string().min(1, {
-    message: "Please enter your business travel distance.",
-  }),
-  businessTravelUnit: z.string().min(1, {
-    message: "Please select a unit.",
-  }),
+  scope1Emissions: z.string().optional(),
+  scope2Emissions: z.string().optional(),
+  scope3Emissions: z.string().optional(),
+  transportationUsage: z.string().optional(),
 });
 
 export default function CarbonEvaluation() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("scope1");
+  const [activeTab, setActiveTab] = useState("company-info");
   
   // Form definition
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      electricityConsumption: "",
-      electricityUnit: "kWh",
-      heatingConsumption: "",
-      heatingUnit: "kWh",
-      vehicleFuel: "",
-      vehicleFuelUnit: "liters",
-      businessTravel: "",
-      businessTravelUnit: "km",
+      companyName: "",
+      yearOfEvaluation: new Date().getFullYear().toString(),
+      scope1Emissions: "",
+      scope2Emissions: "",
+      scope3Emissions: "",
+      transportationUsage: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    // Here we would calculate carbon footprint and display results
+    // Here we would save the data and potentially navigate to the next step
   }
   
   const tabs = [
-    { 
-      id: "scope1", 
-      label: "Scope 1 (Direct)", 
-      icon: <Factory className="h-4 w-4 mr-2" />,
-      description: "Direct emissions from owned or controlled sources"
-    },
-    { 
-      id: "scope2", 
-      label: "Scope 2 (Indirect)", 
-      icon: <Lightbulb className="h-4 w-4 mr-2" />,
-      description: "Indirect emissions from purchased electricity, steam, heating and cooling"
-    },
-    { 
-      id: "scope3", 
-      label: "Scope 3 (Value Chain)", 
-      icon: <Truck className="h-4 w-4 mr-2" />,
-      description: "All other indirect emissions in a company's value chain"
-    },
-    { 
-      id: "results", 
-      label: "Results", 
-      icon: <Activity className="h-4 w-4 mr-2" />,
-      description: "Carbon footprint calculation results"
-    }
+    { id: "company-info", label: "Company Information", icon: <Building className="h-4 w-4 mr-2" /> },
+    { id: "direct-emissions", label: "Direct Emissions", icon: <Factory className="h-4 w-4 mr-2" /> },
+    { id: "indirect-emissions", label: "Indirect Emissions", icon: <Leaf className="h-4 w-4 mr-2" /> },
+    { id: "transportation", label: "Transportation", icon: <Car className="h-4 w-4 mr-2" /> }
   ];
 
   return (
@@ -111,14 +75,6 @@ export default function CarbonEvaluation() {
         status="in-progress"
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="mb-6">
-            <Progress value={
-              activeTab === "scope1" ? 25 : 
-              activeTab === "scope2" ? 50 : 
-              activeTab === "scope3" ? 75 : 100
-            } className="h-2" />
-          </div>
-          
           <TabsList className="grid grid-cols-2 lg:grid-cols-4 mb-6">
             {tabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id} className="flex items-center">
@@ -127,232 +83,161 @@ export default function CarbonEvaluation() {
             ))}
           </TabsList>
           
-          <TabsContent value="scope1" className="space-y-4">
+          <TabsContent value="company-info" className="space-y-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="heatingConsumption"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Heating Consumption</FormLabel>
-                        <FormDescription>
-                          Natural gas, fuel oil, or other heating fuel used
-                        </FormDescription>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input type="number" placeholder="Amount" {...field} />
-                          </FormControl>
-                          <FormField
-                            control={form.control}
-                            name="heatingUnit"
-                            render={({ field }) => (
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-[120px]">
-                                    <SelectValue placeholder="Unit" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="kWh">kWh</SelectItem>
-                                  <SelectItem value="m3">m³</SelectItem>
-                                  <SelectItem value="liters">Liters</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="vehicleFuel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company Vehicle Fuel</FormLabel>
-                        <FormDescription>
-                          Fuel used by company-owned vehicles
-                        </FormDescription>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input type="number" placeholder="Amount" {...field} />
-                          </FormControl>
-                          <FormField
-                            control={form.control}
-                            name="vehicleFuelUnit"
-                            render={({ field }) => (
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-[120px]">
-                                    <SelectValue placeholder="Unit" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="liters">Liters</SelectItem>
-                                  <SelectItem value="gallons">Gallons</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your company name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="yearOfEvaluation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Year of Evaluation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 2023" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="flex justify-end">
-                  <Button type="button" onClick={() => setActiveTab("scope2")}>
-                    Next: Scope 2 Emissions
+                  <Button type="button" onClick={() => setActiveTab("direct-emissions")}>
+                    Next: Direct Emissions
                   </Button>
                 </div>
               </form>
             </Form>
           </TabsContent>
           
-          <TabsContent value="scope2" className="space-y-4">
+          <TabsContent value="direct-emissions" className="space-y-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="electricityConsumption"
+                  name="scope1Emissions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Electricity Consumption</FormLabel>
+                      <FormLabel>Scope 1 Emissions (Direct)</FormLabel>
                       <FormDescription>
-                        Total electricity used in your facilities
+                        Direct emissions from owned or controlled sources (in tCO2e)
                       </FormDescription>
-                      <div className="flex gap-2">
-                        <FormControl>
-                          <Input type="number" placeholder="Amount" {...field} />
-                        </FormControl>
-                        <FormField
-                          control={form.control}
-                          name="electricityUnit"
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-[120px]">
-                                  <SelectValue placeholder="Unit" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="kWh">kWh</SelectItem>
-                                <SelectItem value="MWh">MWh</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
+                      <FormControl>
+                        <Input placeholder="Enter amount in tCO2e" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
                 <div className="flex justify-between">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("scope1")}>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("company-info")}>
                     Previous
                   </Button>
-                  <Button type="button" onClick={() => setActiveTab("scope3")}>
-                    Next: Scope 3 Emissions
+                  <Button type="button" onClick={() => setActiveTab("indirect-emissions")}>
+                    Next: Indirect Emissions
                   </Button>
                 </div>
               </form>
             </Form>
           </TabsContent>
           
-          <TabsContent value="scope3" className="space-y-4">
+          <TabsContent value="indirect-emissions" className="space-y-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="businessTravel"
+                  name="scope2Emissions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Travel</FormLabel>
+                      <FormLabel>Scope 2 Emissions (Indirect)</FormLabel>
                       <FormDescription>
-                        Distance traveled for business purposes (flights, trains, etc.)
+                        Indirect emissions from generation of purchased energy (in tCO2e)
                       </FormDescription>
-                      <div className="flex gap-2">
-                        <FormControl>
-                          <Input type="number" placeholder="Amount" {...field} />
-                        </FormControl>
-                        <FormField
-                          control={form.control}
-                          name="businessTravelUnit"
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-[120px]">
-                                  <SelectValue placeholder="Unit" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="km">km</SelectItem>
-                                <SelectItem value="miles">miles</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
+                      <FormControl>
+                        <Input placeholder="Enter amount in tCO2e" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="scope3Emissions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Scope 3 Emissions (Value Chain)</FormLabel>
+                      <FormDescription>
+                        All other indirect emissions in the value chain (in tCO2e)
+                      </FormDescription>
+                      <FormControl>
+                        <Input placeholder="Enter amount in tCO2e" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
                 <div className="flex justify-between">
-                  <Button type="button" variant="outline" onClick={() => setActiveTab("scope2")}>
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("direct-emissions")}>
                     Previous
                   </Button>
-                  <Button type="submit" onClick={() => setActiveTab("results")}>
-                    Calculate Footprint
+                  <Button type="button" onClick={() => setActiveTab("transportation")}>
+                    Next: Transportation
                   </Button>
                 </div>
               </form>
             </Form>
           </TabsContent>
           
-          <TabsContent value="results" className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center p-8">
-                  <Building2 className="h-12 w-12 mx-auto text-primary mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Your Carbon Footprint</h3>
-                  <p className="text-muted-foreground mb-4">Complete all sections to see your results</p>
-                  
-                  <div className="flex justify-center mb-8">
-                    <div className="text-center p-4 border rounded-lg bg-muted/20">
-                      <div className="text-4xl font-bold text-primary">--</div>
-                      <div className="text-sm text-muted-foreground">tonnes CO2e/year</div>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setActiveTab("scope1")}
-                    className="mx-auto"
-                  >
-                    Edit Inputs
+          <TabsContent value="transportation" className="space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="transportationUsage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Transportation Usage</FormLabel>
+                      <FormDescription>
+                        Describe your company's transportation usage and related emissions
+                      </FormDescription>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe company vehicles, employee commuting, business travel..." 
+                          className="min-h-[150px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("indirect-emissions")}>
+                    Previous
+                  </Button>
+                  <Button type="submit">
+                    Submit Carbon Evaluation
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </form>
+            </Form>
           </TabsContent>
         </Tabs>
       </AssessmentBase>
