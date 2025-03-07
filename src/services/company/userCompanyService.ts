@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { CompanyWithRole } from "./types";
 import { companyMemberService } from "../companyMemberService";
@@ -21,29 +20,7 @@ export const userCompanyService = {
       
       console.log(`Fetching companies for user ID: ${userData.user.id}`);
       
-      // Use a direct query that avoids the RLS recursion issue
-      const { data, error } = await supabase
-        .from('companies')
-        .select(`
-          id,
-          name,
-          logo_url,
-          industry,
-          country,
-          website,
-          registry_number,
-          registry_city,
-          created_at,
-          updated_at
-        `)
-        .order('name');
-        
-      if (error) {
-        console.error("Error fetching user companies:", error);
-        throw error;
-      }
-      
-      // Get admin status for each company in a separate query
+      // First get the list of company IDs the user belongs to
       const { data: memberships, error: membershipError } = await supabase
         .from('company_members')
         .select('company_id, is_admin')
@@ -54,20 +31,38 @@ export const userCompanyService = {
         throw membershipError;
       }
       
+      if (!memberships || memberships.length === 0) {
+        console.log("User is not a member of any companies");
+        return [];
+      }
+      
+      // Extract the company IDs
+      const companyIds = memberships.map(m => m.company_id);
+      console.log(`User belongs to ${companyIds.length} companies:`, companyIds);
+      
       // Create a map of company_id to is_admin status
       const adminStatusMap = {};
-      memberships?.forEach(membership => {
+      memberships.forEach(membership => {
         adminStatusMap[membership.company_id] = membership.is_admin;
       });
       
-      // Filter companies to only include those the user is a member of
-      // and add the is_admin status
-      const userCompanies = data
-        .filter(company => Object.keys(adminStatusMap).includes(company.id))
-        .map(company => ({
-          ...company,
-          is_admin: adminStatusMap[company.id] || false
-        }));
+      // Fetch the companies by their IDs (no RLS recursion here)
+      const { data: companies, error: companiesError } = await supabase
+        .from('companies')
+        .select('*')
+        .in('id', companyIds)
+        .order('name');
+        
+      if (companiesError) {
+        console.error("Error fetching companies by IDs:", companiesError);
+        throw companiesError;
+      }
+      
+      // Combine the company data with the admin status
+      const userCompanies = companies.map(company => ({
+        ...company,
+        is_admin: adminStatusMap[company.id] || false
+      }));
       
       console.log(`Retrieved ${userCompanies.length} companies for user`);
       return userCompanies as CompanyWithRole[];
