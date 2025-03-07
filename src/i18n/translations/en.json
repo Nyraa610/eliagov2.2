@@ -1,3 +1,4 @@
+
 {
   "common": {
     "language": "Language",
@@ -15,7 +16,8 @@
     "noAccount": "Don't have an account?",
     "signUp": "Sign up",
     "alreadyAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "logout": "Logout"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -47,6 +49,7 @@
     "profile": "Profile"
   },
   "profile": {
+    "profile": "Profile",
     "manageAccount": "Manage your account settings and profile information",
     "administrator": "Administrator",
     "email": "Email",

@@ -15,7 +15,8 @@
     "noAccount": "¿No tiene cuenta?",
     "signUp": "Registrarse",
     "alreadyAccount": "¿Ya tiene una cuenta?",
-    "signIn": "Iniciar sesión"
+    "signIn": "Iniciar sesión",
+    "logout": "Cerrar sesión"
   },
   "dashboard": {
     "title": "Panel de Control",
@@ -47,6 +48,7 @@
     "profile": "Perfil"
   },
   "profile": {
+    "profile": "Perfil",
     "manageAccount": "Administre la configuración de su cuenta e información de perfil",
     "administrator": "Administrador",
     "email": "Correo electrónico",
