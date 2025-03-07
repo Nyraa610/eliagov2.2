@@ -21,29 +21,56 @@ export const userCompanyService = {
       
       console.log(`Fetching companies for user ID: ${userData.user.id}`);
       
+      // Use a direct query that avoids the RLS recursion issue
       const { data, error } = await supabase
-        .from('company_members')
+        .from('companies')
         .select(`
-          company_id,
-          is_admin,
-          companies:company_id (*)
+          id,
+          name,
+          logo_url,
+          industry,
+          country,
+          website,
+          registry_number,
+          registry_city,
+          created_at,
+          updated_at
         `)
-        .eq('user_id', userData.user.id);
+        .order('name');
         
       if (error) {
         console.error("Error fetching user companies:", error);
         throw error;
       }
       
-      console.log(`Retrieved ${data?.length || 0} companies for user`);
+      // Get admin status for each company in a separate query
+      const { data: memberships, error: membershipError } = await supabase
+        .from('company_members')
+        .select('company_id, is_admin')
+        .eq('user_id', userData.user.id);
+        
+      if (membershipError) {
+        console.error("Error fetching company memberships:", membershipError);
+        throw membershipError;
+      }
       
-      // Transform the data to fix the type issue
-      return data.map(item => {
-        return {
-          ...((item.companies as unknown) as CompanyWithRole),
-          is_admin: item.is_admin
-        } as CompanyWithRole;
+      // Create a map of company_id to is_admin status
+      const adminStatusMap = {};
+      memberships?.forEach(membership => {
+        adminStatusMap[membership.company_id] = membership.is_admin;
       });
+      
+      // Filter companies to only include those the user is a member of
+      // and add the is_admin status
+      const userCompanies = data
+        .filter(company => Object.keys(adminStatusMap).includes(company.id))
+        .map(company => ({
+          ...company,
+          is_admin: adminStatusMap[company.id] || false
+        }));
+      
+      console.log(`Retrieved ${userCompanies.length} companies for user`);
+      return userCompanies as CompanyWithRole[];
     } catch (error) {
       console.error("Exception in getUserCompanies:", error);
       throw error;
