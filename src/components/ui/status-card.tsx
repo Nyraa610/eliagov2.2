@@ -3,29 +3,37 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { StatusBadge, statusConfig } from "@/components/ui/status-badge";
 import { FeatureStatus } from "@/types/training";
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 
 interface StatusCardProps {
   title: string;
   description: string;
   initialStatus?: FeatureStatus;
+  status?: FeatureStatus; // Added to support direct status prop
   onStatusChange?: (status: FeatureStatus) => void;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: ReactNode; // Added to support icon prop
+  action?: ReactNode; // Added to support direct action element
 }
 
 export function StatusCard({
   title,
   description,
   initialStatus = "not-started",
+  status: externalStatus, // Renamed to avoid conflict with internal state
   onStatusChange,
   actionLabel,
-  onAction
+  onAction,
+  icon,
+  action
 }: StatusCardProps) {
-  const [status, setStatus] = useState<FeatureStatus>(initialStatus);
+  // Use external status if provided, otherwise use internal state
+  const [internalStatus, setInternalStatus] = useState<FeatureStatus>(initialStatus);
+  const currentStatus = externalStatus !== undefined ? externalStatus : internalStatus;
   
   const handleStatusChange = (newStatus: FeatureStatus) => {
-    setStatus(newStatus);
+    setInternalStatus(newStatus);
     if (onStatusChange) {
       onStatusChange(newStatus);
     }
@@ -50,29 +58,38 @@ export function StatusCard({
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <StatusBadge status={status} />
+          <div className="flex items-center">
+            {icon && <div className="mr-2">{icon}</div>}
+            <CardTitle className="text-lg">{title}</CardTitle>
+          </div>
+          <StatusBadge status={currentStatus} />
         </div>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            {statusConfig[status].description}
+            {statusConfig[currentStatus].description}
           </p>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
-          onClick={() => handleStatusChange(getNextStatus(status))}
-        >
-          Change Status
-        </Button>
-        {actionLabel && onAction && (
-          <Button onClick={onAction}>
-            {actionLabel}
-          </Button>
+        {!action ? (
+          <>
+            <Button 
+              variant="outline" 
+              onClick={() => handleStatusChange(getNextStatus(currentStatus))}
+            >
+              Change Status
+            </Button>
+            {actionLabel && onAction && (
+              <Button onClick={onAction}>
+                {actionLabel}
+              </Button>
+            )}
+          </>
+        ) : (
+          action
         )}
       </CardFooter>
     </Card>
