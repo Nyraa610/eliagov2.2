@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,7 +73,9 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
         });
       } else {
         // Create new company with minimal data
+        console.log("Creating company with data:", companyData);
         result = await companyService.createCompany(companyData);
+        console.log("Company created successfully:", result);
         toast({
           title: "Company created",
           description: "New company has been created successfully.",

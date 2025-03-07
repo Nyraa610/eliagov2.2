@@ -63,6 +63,7 @@ export const userCompanyService = {
       }
       
       if (!userData.user) {
+        console.error("Authentication required - no user found");
         throw new Error("Authentication required");
       }
       
@@ -70,6 +71,7 @@ export const userCompanyService = {
       
       // Ensure we have at least a company name
       if (!company.name || company.name.trim() === '') {
+        console.error("Company name is required but was empty");
         throw new Error("Company name is required");
       }
       
@@ -86,48 +88,40 @@ export const userCompanyService = {
       
       console.log("Simplified company data for creation:", companyData);
       
-      // First try to insert the company with minimal data
-      let companyResult;
-      try {
-        const { data, error } = await supabase
-          .from('companies')
-          .insert([companyData])
-          .select()
-          .single();
-          
-        if (error) {
-          console.error("Error creating company:", error);
-          
-          // Check for specific database errors
-          if (error.message && (
-              error.message.includes("infinite recursion") || 
-              error.message.includes("policy for relation") ||
-              error.message.includes("violates row-level security")
-          )) {
-            throw new Error("Database policy error. This might be due to an issue with user permissions. Please refresh and try again.");
-          }
-          
-          throw error;
+      // First create the company
+      console.log("Inserting company into database:", companyData);
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([companyData])
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error creating company:", error);
+        
+        // Check for specific database errors
+        if (error.message && (
+            error.message.includes("infinite recursion") || 
+            error.message.includes("policy for relation") ||
+            error.message.includes("violates row-level security")
+        )) {
+          throw new Error("Database policy error. This might be due to an issue with user permissions. Please refresh and try again.");
         }
         
-        if (!data) {
-          console.error("No data returned after company creation");
-          throw new Error("Failed to create company: No data returned");
-        }
-        
-        companyResult = data;
-        console.log("Company created successfully:", data);
-      } catch (companyError) {
-        console.error("Company creation failed:", companyError);
-        throw companyError;
+        throw error;
       }
       
-      // Then try to add the user as a company admin in a separate try/catch
-      // This way if the company was created but adding the member fails,
-      // we still return the company
+      if (!data) {
+        console.error("No data returned after company creation");
+        throw new Error("Failed to create company: No data returned");
+      }
+      
+      console.log("Company created successfully:", data);
+      
+      // Then add the user as a company admin
       try {
-        console.log("Adding user as company admin:", userData.user.id);
-        await companyMemberService.addMember(companyResult.id, userData.user.id, true);
+        console.log("Adding user as company admin. User ID:", userData.user.id, "Company ID:", data.id);
+        await companyMemberService.addMember(data.id, userData.user.id, true);
         console.log("User added as company admin successfully");
       } catch (memberError) {
         console.error("Error adding user as company admin:", memberError);
@@ -135,7 +129,7 @@ export const userCompanyService = {
         // Just log the error and continue
       }
       
-      return companyResult;
+      return data;
     } catch (error) {
       console.error("Exception in createUserCompany:", error);
       throw error;

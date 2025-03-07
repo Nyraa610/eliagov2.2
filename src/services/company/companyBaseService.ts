@@ -52,6 +52,7 @@ export const companyBaseService = {
       
       // Check for required fields
       if (!company.name || company.name.trim() === '') {
+        console.error("Company name is required but was empty");
         throw new Error("Company name is required");
       }
       
