@@ -30,8 +30,14 @@ export const DesktopNavigation = ({
       <NavigationLink to="/features" isActive={isActive("/features")}>
         {t('navigation.features')}
       </NavigationLink>
-      <NavigationLink to="/assessment" isActive={isActive("/assessment")}>
-        {t('navigation.assessment')}
+      <NavigationLink to="/rse-diagnostic" isActive={isActive("/rse-diagnostic")}>
+        {t('navigation.rse')}
+      </NavigationLink>
+      <NavigationLink to="/carbon-footprint" isActive={isActive("/carbon-footprint")}>
+        {t('navigation.carbon')}
+      </NavigationLink>
+      <NavigationLink to="/materiality-analysis" isActive={isActive("/materiality-analysis")}>
+        {t('navigation.materiality')}
       </NavigationLink>
       <NavigationLink to="/training" isActive={isActive("/training")}>
         {t('navigation.training')}

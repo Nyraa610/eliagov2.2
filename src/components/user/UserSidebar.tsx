@@ -1,5 +1,5 @@
 
-import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Footprints, GraduationCap, Home, Layers, Route, User } from "lucide-react";
+import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Footprints, GraduationCap, Globe, Home, Layers, Route, Target, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,26 +28,22 @@ export const UserSidebar = () => {
     {
       title: "RSE Diagnostic",
       icon: <BookOpen className="h-5 w-5" />,
-      path: "/assessment/rse-diagnostic",
-      indent: true
+      path: "/rse-diagnostic",
     },
     {
       title: "Carbon Footprint",
-      icon: <Footprints className="h-5 w-5" />,
-      path: "/assessment/carbon-evaluation",
-      indent: true
+      icon: <Globe className="h-5 w-5" />,
+      path: "/carbon-footprint",
     },
     {
       title: "Materiality Analysis",
       icon: <Layers className="h-5 w-5" />,
-      path: "/assessment/materiality-analysis",
-      indent: true
+      path: "/materiality-analysis",
     },
     {
       title: "Action Plan",
-      icon: <Route className="h-5 w-5" />,
-      path: "/assessment/action-plan",
-      indent: true
+      icon: <Target className="h-5 w-5" />,
+      path: "/action-plan",
     },
     {
       title: "Profile",
@@ -95,8 +91,7 @@ export const UserSidebar = () => {
                   location.pathname === item.path
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-gray-600 hover:bg-gray-100",
-                  collapsed ? "justify-center" : "justify-start",
-                  item.indent && !collapsed ? "pl-8" : ""
+                  collapsed ? "justify-center" : "justify-start"
                 )}
               >
                 {item.icon}

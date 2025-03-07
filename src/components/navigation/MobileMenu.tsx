@@ -43,12 +43,28 @@ export const MobileMenu = ({
           {t('navigation.features')}
         </NavigationLink>
         <NavigationLink 
-          to="/assessment" 
-          isActive={isActive("/assessment")} 
+          to="/rse-diagnostic" 
+          isActive={isActive("/rse-diagnostic")} 
           onClick={onToggle}
           className="w-full text-left justify-start"
         >
-          {t('navigation.assessment')}
+          {t('navigation.rse')}
+        </NavigationLink>
+        <NavigationLink 
+          to="/carbon-footprint" 
+          isActive={isActive("/carbon-footprint")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.carbon')}
+        </NavigationLink>
+        <NavigationLink 
+          to="/materiality-analysis" 
+          isActive={isActive("/materiality-analysis")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.materiality')}
         </NavigationLink>
         <NavigationLink 
           to="/training" 

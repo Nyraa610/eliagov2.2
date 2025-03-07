@@ -1,4 +1,3 @@
-
 import {
   createBrowserRouter,
   RouterProvider,
@@ -65,6 +64,22 @@ const router = createBrowserRouter([
   {
     path: "/assessment",
     element: <ProtectedRoute><Assessment /></ProtectedRoute>,
+  },
+  {
+    path: "/rse-diagnostic",
+    element: <ProtectedRoute><RSEDiagnostic /></ProtectedRoute>,
+  },
+  {
+    path: "/carbon-footprint",
+    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
+  },
+  {
+    path: "/materiality-analysis",
+    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
+  },
+  {
+    path: "/action-plan",
+    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
   },
   {
     path: "/assessment/rse-diagnostic",
