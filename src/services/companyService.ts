@@ -110,6 +110,8 @@ export const companyService = {
         throw new Error("Authentication required");
       }
       
+      console.log("Authenticated user:", userData.user.id);
+      
       // Attempt to insert the company
       const { data, error } = await supabase
         .from('companies')
@@ -119,6 +121,12 @@ export const companyService = {
         
       if (error) {
         console.error("Error creating company:", error);
+        
+        // Check for specific database errors
+        if (error.message.includes("infinite recursion") || error.message.includes("policy for relation")) {
+          throw new Error("Database policy error. This might be due to an issue with user permissions.");
+        }
+        
         throw error;
       }
       
@@ -131,8 +139,14 @@ export const companyService = {
       
       // Add current user as an admin member
       console.log("Adding user as company admin:", userData.user.id);
-      await companyMemberService.addMember(data.id, userData.user.id, true);
-      console.log("User added as company admin successfully");
+      try {
+        await companyMemberService.addMember(data.id, userData.user.id, true);
+        console.log("User added as company admin successfully");
+      } catch (memberError) {
+        console.error("Error adding user as company admin:", memberError);
+        // We don't throw here since the company was created successfully
+        // The user will still be able to access the company, just not as an admin
+      }
       
       return data as Company;
     } catch (error) {

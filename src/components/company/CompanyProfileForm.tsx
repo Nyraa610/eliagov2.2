@@ -20,6 +20,7 @@ interface CompanyProfileFormProps {
 
 export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -38,6 +39,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
   const onSubmit = async (values: CompanyFormValues) => {
     try {
       setIsSubmitting(true);
+      setErrorMessage(null);
       let result: Company;
       
       console.log("Form submission started:", values);
@@ -67,9 +69,23 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       }
     } catch (error) {
       console.error("Error saving company:", error);
+      
+      let errorDesc = "There was an error saving the company profile.";
+      
+      // Handle specific database errors
+      if (error instanceof Error) {
+        if (error.message.includes("infinite recursion") || error.message.includes("policy for relation")) {
+          errorDesc = "Database policy error. This might be due to an issue with user permissions. Please try again or contact support.";
+        } else {
+          errorDesc = error.message;
+        }
+      }
+      
+      setErrorMessage(errorDesc);
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "There was an error saving the company profile.",
+        description: errorDesc,
         variant: "destructive",
       });
     } finally {
@@ -88,6 +104,13 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {errorMessage && (
+          <div className="bg-destructive/15 text-destructive rounded-md p-3 mb-4">
+            <p className="text-sm font-medium">{errorMessage}</p>
+            <p className="text-xs mt-1">If this issue persists, please refresh the page or contact support.</p>
+          </div>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {company && (
