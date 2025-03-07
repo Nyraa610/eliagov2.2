@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { companyMemberService } from "./companyMemberService";
 
@@ -66,10 +65,9 @@ export const companyService = {
     
     // Transform the data to fix the type issue
     return data.map(item => {
-      // The companies field contains the Company data, not an array
-      const company = item.companies as Company;
+      // Access the company data correctly from the nested object
       return {
-        ...company,
+        ...item.companies,
         is_admin: item.is_admin
       } as CompanyWithRole;
     });
