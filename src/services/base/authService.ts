@@ -1,0 +1,60 @@
+
+import { supabaseClient } from "./supabaseClient";
+
+export const authService = {
+  getCurrentUser: async () => {
+    try {
+      console.log("authService: Getting current user");
+      const { data, error } = await supabaseClient.auth.getSession();
+      
+      if (error) {
+        console.error("authService: Error getting session:", error.message);
+        throw error;
+      }
+      
+      console.log("authService: Session data:", JSON.stringify(data));
+      return data.session?.user || null;
+    } catch (error) {
+      console.error("authService: Exception getting current user:", error);
+      throw error;
+    }
+  },
+  
+  signOut: async () => {
+    try {
+      console.log("authService: Signing out user");
+      const { error } = await supabaseClient.auth.signOut();
+      
+      if (error) {
+        console.error("authService: Error signing out:", error.message);
+        throw error;
+      }
+      
+      console.log("authService: User signed out successfully");
+      // Clear any cached user data
+      localStorage.removeItem('sb-auth-token');
+      return true;
+    } catch (error) {
+      console.error("authService: Exception signing out:", error);
+      throw error;
+    }
+  },
+  
+  refreshSession: async () => {
+    try {
+      console.log("authService: Refreshing session");
+      const { data, error } = await supabaseClient.auth.refreshSession();
+      
+      if (error) {
+        console.error("authService: Error refreshing session:", error.message);
+        throw error;
+      }
+      
+      console.log("authService: Session refreshed successfully");
+      return data.session;
+    } catch (error) {
+      console.error("authService: Exception refreshing session:", error);
+      throw error;
+    }
+  }
+};
