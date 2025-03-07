@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { trainingService } from "@/services/trainingService";
 import { UserEnrollment, Course } from "@/types/training";
-import { BarChart3, Book, Target, TrendingUp, Award, Globe } from "lucide-react";
+import { Award, Book, Target, TrendingUp, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ESGNewsFeed } from "@/components/dashboard/ESGNewsFeed";
 
 const Dashboard = () => {
   const [enrollments, setEnrollments] = useState<(UserEnrollment & { courses: Course })[]>([]);
@@ -136,62 +137,6 @@ const MetricCard = ({ title, value, description, icon }: MetricCardProps) => {
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         <p className="text-xs text-muted-foreground mt-1">{description}</p>
-      </CardContent>
-    </Card>
-  );
-};
-
-const ESGNewsFeed = () => {
-  // This would ideally come from an actual news API
-  const newsItems = [
-    {
-      id: 1,
-      title: "New EU sustainability reporting standards coming into effect",
-      date: "2023-10-15",
-      source: "ESG Today"
-    },
-    {
-      id: 2,
-      title: "Major corporations pledge carbon neutrality by 2030",
-      date: "2023-10-12",
-      source: "Bloomberg Green"
-    },
-    {
-      id: 3,
-      title: "Investors increasingly focused on social aspects of ESG",
-      date: "2023-10-10",
-      source: "Financial Times"
-    },
-    {
-      id: 4,
-      title: "Biodiversity focus becomes key metric in environmental assessments",
-      date: "2023-10-05",
-      source: "Reuters"
-    }
-  ];
-  
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" /> ESG News & Updates
-        </CardTitle>
-        <CardDescription>
-          Latest insights from the sustainability world
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {newsItems.map((item) => (
-            <div key={item.id} className="border-b pb-3 last:border-b-0 last:pb-0">
-              <h3 className="font-medium text-sm">{item.title}</h3>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-muted-foreground">{item.date}</span>
-                <span className="text-xs text-primary">{item.source}</span>
-              </div>
-            </div>
-          ))}
-        </div>
       </CardContent>
     </Card>
   );
