@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Company, companyService } from "@/services/companyService";
+import { companyStorageService } from "@/services/companyStorageService";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -96,7 +97,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       setLogoPreview(previewUrl);
       
       // Upload to storage
-      const logoUrl = await companyService.uploadLogo(company.id, file);
+      const logoUrl = await companyStorageService.uploadLogo(company.id, file);
       
       toast({
         title: "Logo uploaded",

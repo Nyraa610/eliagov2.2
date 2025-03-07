@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Card, 
@@ -28,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PlusCircle, MoreVertical, UserPlus, Shield, ShieldAlert, UserMinus } from "lucide-react";
-import { companyService } from "@/services/companyService";
+import { companyMemberService } from "@/services/companyMemberService";
 import { useToast } from "@/hooks/use-toast";
 
 interface CompanyMembersProps {
@@ -45,7 +44,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const data = await companyService.getMembers(companyId);
+      const data = await companyMemberService.getMembers(companyId);
       setMembers(data);
     } catch (error) {
       console.error("Error fetching members:", error);
@@ -64,8 +63,6 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
   }, [companyId, toast]);
 
   const handleInvite = async () => {
-    // This would need to be implemented with a proper invitation system
-    // For now, we'll just show a notification
     toast({
       title: "Invitation Feature",
       description: "User invitation feature will be implemented soon.",
@@ -76,7 +73,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
 
   const handlePromoteToAdmin = async (memberId: string) => {
     try {
-      await companyService.updateMember(memberId, true);
+      await companyMemberService.updateMember(memberId, true);
       toast({
         title: "Member promoted",
         description: "User has been promoted to admin.",
@@ -94,7 +91,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
 
   const handleRemoveAdmin = async (memberId: string) => {
     try {
-      await companyService.updateMember(memberId, false);
+      await companyMemberService.updateMember(memberId, false);
       toast({
         title: "Admin rights removed",
         description: "Admin rights have been removed from this user.",
@@ -112,7 +109,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
 
   const handleRemoveMember = async (memberId: string) => {
     try {
-      await companyService.removeMember(memberId);
+      await companyMemberService.removeMember(memberId);
       toast({
         title: "Member removed",
         description: "User has been removed from the company.",

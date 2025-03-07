@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { storageService } from "./storageService";
+import { companyMemberService } from "./companyMemberService";
 
 export interface Company {
   id: string;
@@ -15,13 +15,8 @@ export interface Company {
   updated_at: string;
 }
 
-export interface CompanyMember {
-  id: string;
-  company_id: string;
-  user_id: string;
-  role: string;
+export interface CompanyWithRole extends Company {
   is_admin: boolean;
-  created_at: string;
 }
 
 export const companyService = {
@@ -69,10 +64,11 @@ export const companyService = {
       throw error;
     }
     
+    // Fix the type issue by mapping properly
     return data.map(item => ({
       ...item.companies,
       is_admin: item.is_admin
-    })) as (Company & { is_admin: boolean })[];
+    })) as CompanyWithRole[];
   },
   
   async createCompany(company: Partial<Company>) {
@@ -90,7 +86,7 @@ export const companyService = {
     // Add current user as an admin member
     const user = (await supabase.auth.getUser()).data.user;
     if (user) {
-      await this.addMember(data.id, user.id, true);
+      await companyMemberService.addMember(data.id, user.id, true);
     }
     
     return data as Company;
@@ -125,103 +121,4 @@ export const companyService = {
     
     return true;
   },
-  
-  async getMembers(companyId: string) {
-    const { data, error } = await supabase
-      .from('company_members')
-      .select(`
-        *,
-        profiles:user_id (*)
-      `)
-      .eq('company_id', companyId);
-      
-    if (error) {
-      console.error("Error fetching company members:", error);
-      throw error;
-    }
-    
-    return data.map(item => ({
-      ...item,
-      user: item.profiles
-    }));
-  },
-  
-  async addMember(companyId: string, userId: string, isAdmin: boolean = false) {
-    const { data, error } = await supabase
-      .from('company_members')
-      .insert([{
-        company_id: companyId,
-        user_id: userId,
-        is_admin: isAdmin
-      }])
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error adding company member:", error);
-      throw error;
-    }
-    
-    return data as CompanyMember;
-  },
-  
-  async updateMember(id: string, isAdmin: boolean) {
-    const { data, error } = await supabase
-      .from('company_members')
-      .update({ is_admin: isAdmin })
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error updating company member:", error);
-      throw error;
-    }
-    
-    return data as CompanyMember;
-  },
-  
-  async removeMember(id: string) {
-    const { error } = await supabase
-      .from('company_members')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error("Error removing company member:", error);
-      throw error;
-    }
-    
-    return true;
-  },
-  
-  async uploadLogo(companyId: string, file: File) {
-    try {
-      // First create a folder with the company ID
-      const filePath = `${companyId}/${Date.now()}-${file.name}`;
-      
-      // Upload to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('company_logos')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data } = supabase.storage
-        .from('company_logos')
-        .getPublicUrl(filePath);
-        
-      // Update company with new logo URL
-      await this.updateCompany(companyId, { logo_url: data.publicUrl });
-      
-      return data.publicUrl;
-    } catch (error) {
-      console.error("Error uploading company logo:", error);
-      throw error;
-    }
-  }
 };

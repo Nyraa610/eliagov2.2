@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, Building, User, Settings, Users } from "lucide-react";
-import { companyService } from "@/services/companyService";
+import { companyService, CompanyWithRole } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
 
 export function CompanyList() {
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<CompanyWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
