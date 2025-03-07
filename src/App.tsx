@@ -11,6 +11,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Features from "@/pages/Features";
 import Assessment from "@/pages/Assessment";
 import Training from "@/pages/Training";
+import Dashboard from "@/pages/Dashboard";
 import AdminTraining from "@/pages/admin/Training";
 import CourseForm from "@/pages/admin/CourseForm";
 import ModuleManagement from "@/pages/admin/ModuleManagement";
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
   {
     path: "/features",
     element: <Features />,
+  },
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
   },
   {
     path: "/assessment",
