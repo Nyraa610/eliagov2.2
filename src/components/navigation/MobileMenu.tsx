@@ -23,81 +23,34 @@ export const MobileMenu = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="md:hidden pb-4">
-      <div className="flex flex-col space-y-2">
-        <NavigationLink 
-          to="/" 
-          isActive={isActive("/")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.home')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/features" 
-          isActive={isActive("/features")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.features')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/rse-diagnostic" 
-          isActive={isActive("/rse-diagnostic")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.rse')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/carbon-footprint" 
-          isActive={isActive("/carbon-footprint")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.carbon')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/materiality-analysis" 
-          isActive={isActive("/materiality-analysis")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.materiality')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/training" 
-          isActive={isActive("/training")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.training')}
-        </NavigationLink>
-        
-        {isAuthenticated ? (
-          <div className="flex flex-col space-y-2 pt-2">
-            <NavigationLink 
-              to="/dashboard" 
-              isActive={isActive("/dashboard")} 
-              onClick={onToggle}
-              className="w-full text-left justify-start"
-            >
-              {t('navigation.dashboard')}
-            </NavigationLink>
-            <NavigationLink 
-              to="/profile" 
-              isActive={isActive("/profile")} 
-              onClick={onToggle}
-              className="w-full text-left justify-start"
-            >
-              {t('navigation.profile')}
-            </NavigationLink>
-            <Button onClick={onLogout} variant="outline" className="w-full">
-              {t('auth.logout')}
+  // Pre-authentication mobile menu
+  if (!isAuthenticated) {
+    return (
+      <div className="md:hidden pb-4">
+        <div className="flex flex-col space-y-2">
+          <NavigationLink 
+            to="/" 
+            isActive={isActive("/")} 
+            onClick={onToggle}
+            className="w-full text-left justify-start"
+          >
+            {t('navigation.home')}
+          </NavigationLink>
+          <NavigationLink 
+            to="/features" 
+            isActive={isActive("/features")} 
+            onClick={onToggle}
+            className="w-full text-left justify-start"
+          >
+            {t('navigation.features')}
+          </NavigationLink>
+          
+          <Link to="/assessment" onClick={onToggle} className="mt-2">
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
+              {t('navigation.startAssessment')}
             </Button>
-          </div>
-        ) : (
+          </Link>
+          
           <div className="pt-2 flex space-x-2">
             <Link to="/login" onClick={onToggle} className="w-1/2">
               <Button variant="outline" className="w-full">
@@ -110,7 +63,34 @@ export const MobileMenu = ({
               </Button>
             </Link>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  // Post-authentication mobile menu
+  return (
+    <div className="md:hidden pb-4">
+      <div className="flex flex-col space-y-2">
+        <NavigationLink 
+          to="/dashboard" 
+          isActive={isActive("/dashboard")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.dashboard')}
+        </NavigationLink>
+        <NavigationLink 
+          to="/profile" 
+          isActive={isActive("/profile")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.profile')}
+        </NavigationLink>
+        <Button onClick={onLogout} variant="outline" className="w-full">
+          {t('auth.logout')}
+        </Button>
       </div>
     </div>
   );

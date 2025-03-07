@@ -6,6 +6,8 @@ import { UserMenu } from "./UserMenu";
 import { AuthButtons } from "./AuthButtons";
 import { NavigationLink } from "./NavigationLink";
 import { UserProfile } from "@/services/base/supabaseService";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface DesktopNavigationProps {
   isAuthenticated: boolean | null;
@@ -22,39 +24,43 @@ export const DesktopNavigation = ({
 }: DesktopNavigationProps) => {
   const { t } = useTranslation();
 
+  // Pre-authentication navigation
+  if (!isAuthenticated) {
+    return (
+      <nav className="hidden md:flex items-center space-x-1">
+        <NavigationLink to="/" isActive={isActive("/")}>
+          {t('navigation.home')}
+        </NavigationLink>
+        <NavigationLink to="/features" isActive={isActive("/features")}>
+          {t('navigation.features')}
+        </NavigationLink>
+        
+        <div className="ml-2">
+          <LanguageSelector />
+        </div>
+        <div className="border-l border-gray-200 h-8 mx-1"></div>
+        
+        <Link to="/assessment" className="mr-2">
+          <Button className="bg-green-600 hover:bg-green-700 text-white font-medium">
+            {t('navigation.startAssessment')}
+          </Button>
+        </Link>
+        
+        <AuthButtons />
+      </nav>
+    );
+  }
+
+  // Post-authentication navigation
   return (
     <nav className="hidden md:flex items-center space-x-1">
-      <NavigationLink to="/" isActive={isActive("/")}>
-        {t('navigation.home')}
-      </NavigationLink>
-      <NavigationLink to="/features" isActive={isActive("/features")}>
-        {t('navigation.features')}
-      </NavigationLink>
-      <NavigationLink to="/rse-diagnostic" isActive={isActive("/rse-diagnostic")}>
-        {t('navigation.rse')}
-      </NavigationLink>
-      <NavigationLink to="/carbon-footprint" isActive={isActive("/carbon-footprint")}>
-        {t('navigation.carbon')}
-      </NavigationLink>
-      <NavigationLink to="/materiality-analysis" isActive={isActive("/materiality-analysis")}>
-        {t('navigation.materiality')}
-      </NavigationLink>
-      <NavigationLink to="/training" isActive={isActive("/training")}>
-        {t('navigation.training')}
-      </NavigationLink>
       <div className="ml-2">
         <LanguageSelector />
       </div>
       <div className="border-l border-gray-200 h-8 mx-1"></div>
       
-      {isAuthenticated ? (
-        <>
-          <NotificationButton />
-          <UserMenu userProfile={userProfile} onLogout={onLogout} />
-        </>
-      ) : (
-        <AuthButtons />
-      )}
+      <NotificationButton />
+      <UserMenu userProfile={userProfile} onLogout={onLogout} />
     </nav>
   );
 };
