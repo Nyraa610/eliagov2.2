@@ -17,14 +17,19 @@ export const supabaseService = {
   
   // Auth methods
   getCurrentUser: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user || null;
   },
   
   getUserProfile: async (userId?: string): Promise<UserProfile | null> => {
     try {
       // If no userId provided, get current user
-      const targetId = userId || (await supabase.auth.getUser()).data.user?.id;
+      let targetId = userId;
+      
+      if (!targetId) {
+        const { data } = await supabase.auth.getSession();
+        targetId = data.session?.user?.id;
+      }
       
       if (!targetId) return null;
       

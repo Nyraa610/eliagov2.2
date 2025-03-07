@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import { supabaseService, UserRole } from "@/services/base/supabaseService";
 import { Loader2 } from "lucide-react";
 
@@ -16,7 +17,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
 
   useEffect(() => {
     const checkAuth = async () => {
-      const user = await supabaseService.getCurrentUser();
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      
       setIsAuthenticated(!!user);
       
       if (user && requiredRole) {
@@ -28,6 +31,26 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     };
     
     checkAuth();
+
+    // Set up auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setIsAuthenticated(!!session?.user);
+        
+        if (session?.user && requiredRole) {
+          const hasRole = await supabaseService.hasRole(requiredRole);
+          setHasRequiredRole(hasRole);
+        } else if (!session?.user) {
+          setHasRequiredRole(null);
+        } else {
+          setHasRequiredRole(true);
+        }
+      }
+    );
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [requiredRole]);
 
   if (isAuthenticated === null || hasRequiredRole === null) {
