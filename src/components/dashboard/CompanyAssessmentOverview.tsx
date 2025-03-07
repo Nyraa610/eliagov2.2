@@ -8,6 +8,7 @@ import { FeatureStatus } from "@/types/training";
 import { HelpCircle, ClipboardPenLine, Activity, LineChart, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { assessmentService } from "@/services/assessmentService";
+import { Progress } from "@/components/ui/progress";
 
 export function CompanyAssessmentOverview() {
   const { t } = useTranslation();
@@ -51,6 +52,24 @@ export function CompanyAssessmentOverview() {
     loadSavedStatuses();
   }, []);
 
+  // Calculate overall progress
+  const getOverallProgress = () => {
+    const statusValues = {
+      "not-started": 0,
+      "in-progress": 0.5,
+      "waiting-for-approval": 0.75,
+      "blocked": 0.25,
+      "completed": 1
+    };
+    
+    const total = statusValues[diagStatus] + 
+                  statusValues[carbonEvalStatus] + 
+                  statusValues[materialityStatus] + 
+                  statusValues[actionPlanStatus];
+    
+    return Math.round((total / 4) * 100);
+  };
+
   if (loading) {
     return (
       <Card className="col-span-2">
@@ -76,68 +95,111 @@ export function CompanyAssessmentOverview() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-          <StatusCard
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium">Overall Progress</span>
+            <span className="text-sm text-muted-foreground">{getOverallProgress()}%</span>
+          </div>
+          <Progress value={getOverallProgress()} className="h-2" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CompactStatusCard 
             title={t("assessment.diagnosticRSE.title")}
-            description={t("assessment.diagnosticRSE.shortDescription")}
             status={diagStatus}
-            icon={<HelpCircle className="h-5 w-5" />}
-            action={
-              <Button onClick={() => navigate("/assessment")} size="sm">
-                {diagStatus === "not-started" 
-                  ? t("assessment.startAssessment") 
-                  : t("assessment.continueAssessment")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            }
+            icon={<HelpCircle className="h-4 w-4" />}
+            onNavigate={() => navigate("/assessment")}
           />
           
-          <StatusCard
+          <CompactStatusCard 
             title={t("assessment.carbonEvaluation.title")}
-            description={t("assessment.carbonEvaluation.shortDescription")}
             status={carbonEvalStatus}
-            icon={<ClipboardPenLine className="h-5 w-5" />}
-            action={
-              <Button onClick={() => navigate("/assessment/carbon-evaluation")} size="sm">
-                {carbonEvalStatus === "not-started" 
-                  ? t("assessment.startAssessment") 
-                  : t("assessment.continueAssessment")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            }
+            icon={<ClipboardPenLine className="h-4 w-4" />}
+            onNavigate={() => navigate("/assessment/carbon-evaluation")}
           />
           
-          <StatusCard
+          <CompactStatusCard 
             title={t("assessment.materialityAnalysis.title")}
-            description={t("assessment.materialityAnalysis.shortDescription")}
             status={materialityStatus}
-            icon={<Activity className="h-5 w-5" />}
-            action={
-              <Button onClick={() => navigate("/assessment/materiality-analysis")} size="sm">
-                {materialityStatus === "not-started" 
-                  ? t("assessment.startAssessment") 
-                  : t("assessment.continueAssessment")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            }
+            icon={<Activity className="h-4 w-4" />}
+            onNavigate={() => navigate("/assessment/materiality-analysis")}
           />
           
-          <StatusCard
+          <CompactStatusCard 
             title={t("assessment.actionPlan.title")}
-            description={t("assessment.actionPlan.shortDescription")}
             status={actionPlanStatus}
-            icon={<LineChart className="h-5 w-5" />}
-            action={
-              <Button onClick={() => navigate("/assessment/action-plan")} size="sm">
-                {actionPlanStatus === "not-started" 
-                  ? t("assessment.startAssessment") 
-                  : t("assessment.continueAssessment")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            }
+            icon={<LineChart className="h-4 w-4" />}
+            onNavigate={() => navigate("/assessment/action-plan")}
           />
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+interface CompactStatusCardProps {
+  title: string;
+  status: FeatureStatus;
+  icon: React.ReactNode;
+  onNavigate: () => void;
+}
+
+function CompactStatusCard({ title, status, icon, onNavigate }: CompactStatusCardProps) {
+  const { t } = useTranslation();
+  
+  // Get status color
+  const getStatusColor = (status: FeatureStatus) => {
+    switch (status) {
+      case "completed": return "bg-green-500";
+      case "in-progress": return "bg-blue-500";
+      case "waiting-for-approval": return "bg-yellow-500";
+      case "blocked": return "bg-red-500";
+      case "not-started": 
+      default: return "bg-gray-300";
+    }
+  };
+  
+  // Get progress percentage
+  const getProgressValue = (status: FeatureStatus) => {
+    switch (status) {
+      case "completed": return 100;
+      case "in-progress": return 50;
+      case "waiting-for-approval": return 75;
+      case "blocked": return 25;
+      case "not-started": 
+      default: return 0;
+    }
+  };
+  
+  return (
+    <div className="border rounded-lg p-3 shadow-sm bg-card">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="text-sm font-medium truncate">{title}</h3>
+        </div>
+        <div className={`h-2 w-2 rounded-full ${getStatusColor(status)}`}></div>
+      </div>
+      
+      <Progress 
+        value={getProgressValue(status)} 
+        className="h-1.5 mb-3" 
+        indicatorColor={getStatusColor(status)}
+      />
+      
+      <div className="flex justify-end">
+        <Button 
+          onClick={onNavigate} 
+          size="sm" 
+          variant="ghost" 
+          className="h-7 px-2 text-xs"
+        >
+          {status === "not-started" 
+            ? t("assessment.getStarted") 
+            : t("assessment.continueAssessment").split(' ')[1]} 
+          <ArrowRight className="ml-1 h-3 w-3" />
+        </Button>
+      </div>
+    </div>
   );
 }
