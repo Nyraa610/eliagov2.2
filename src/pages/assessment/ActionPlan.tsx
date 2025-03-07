@@ -35,8 +35,8 @@ export default function ActionPlan() {
   return (
     <UserLayout title={t("assessment.actionPlan.title")}>
       <div className="mb-6">
-        <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
+        <Link to="/action-plan" className="text-primary hover:underline flex items-center mb-4">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Action Plan
         </Link>
         <p className="text-gray-600">
           {t("assessment.actionPlan.description")}
