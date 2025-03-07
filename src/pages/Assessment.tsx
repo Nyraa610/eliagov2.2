@@ -3,12 +3,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ESGAnalysis } from "@/components/ai/ESGAnalysis";
 import { Button } from "@/components/ui/button";
 import { 
-  Clipboard, FileText, Sparkles, BarChart3, 
+  Clipboard, Sparkles, BarChart3, 
   LineChart, Target, AreaChart, Globe 
 } from "lucide-react";
 import { UserLayout } from "@/components/user/UserLayout";
@@ -70,48 +69,6 @@ export default function Assessment() {
     setShowDiagnostic(false);
     setActiveTab("overview");
   }
-
-  const assessmentOptions = [
-    {
-      id: "rse-diagnostic",
-      title: t("assessment.diagnosticRSE.title"),
-      description: t("assessment.diagnosticRSE.description"),
-      steps: t("assessment.diagnosticRSE.steps"),
-      icon: <BarChart3 className="h-12 w-12 text-primary" />,
-      buttonText: t("assessment.diagnosticRSE.start"),
-      action: () => {
-        setShowDiagnostic(true);
-        setActiveAssessmentTab("company-info");
-      }
-    },
-    {
-      id: "carbon-evaluation",
-      title: t("assessment.carbonEvaluation.title"),
-      description: t("assessment.carbonEvaluation.description"),
-      steps: t("assessment.carbonEvaluation.steps"),
-      icon: <Globe className="h-12 w-12 text-primary" />,
-      buttonText: t("assessment.carbonEvaluation.start"),
-      path: "/assessment/carbon-evaluation"
-    },
-    {
-      id: "materiality-analysis",
-      title: t("assessment.materialityAnalysis.title"),
-      description: t("assessment.materialityAnalysis.description"),
-      steps: t("assessment.materialityAnalysis.steps"),
-      icon: <AreaChart className="h-12 w-12 text-primary" />,
-      buttonText: t("assessment.materialityAnalysis.start"),
-      path: "/assessment/materiality-analysis"
-    },
-    {
-      id: "action-plan",
-      title: t("assessment.actionPlan.title"),
-      description: t("assessment.actionPlan.description"),
-      steps: t("assessment.actionPlan.steps"),
-      icon: <Target className="h-12 w-12 text-primary" />,
-      buttonText: t("assessment.actionPlan.start"),
-      path: "/assessment/action-plan"
-    }
-  ];
 
   // If we're showing the diagnostic form
   if (showDiagnostic) {
@@ -185,7 +142,7 @@ export default function Assessment() {
     );
   }
 
-  // Default assessment options view
+  // Default assessment options view - we'll show only the RSE Diagnostic option
   return (
     <UserLayout title={t("assessment.title")}>
       <p className="text-gray-600 mb-6">
@@ -205,37 +162,28 @@ export default function Assessment() {
         </TabsList>
         
         <TabsContent value="overview" className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {assessmentOptions.map((option) => (
-              <Card key={option.id} className="border-l-4 border-l-primary">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-xl">{option.title}</CardTitle>
-                      <CardDescription className="mt-2">{option.description}</CardDescription>
-                    </div>
-                    <div className="p-2">{option.icon}</div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    <p className="font-semibold mb-1">Process:</p>
-                    <p>{option.steps}</p>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {option.action ? (
-                    <Button className="w-full" onClick={option.action}>
-                      {option.buttonText}
-                    </Button>
-                  ) : (
-                    <Button className="w-full" onClick={() => navigate(option.path!)}>
-                      {option.buttonText}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+            <AssessmentBase 
+              title={t("assessment.diagnosticRSE.title")} 
+              description={t("assessment.diagnosticRSE.description")}
+              status="not-started"
+            >
+              <div className="p-4">
+                <p className="text-muted-foreground mb-6">
+                  {t("assessment.diagnosticRSE.steps")}
+                </p>
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setShowDiagnostic(true);
+                    setActiveAssessmentTab("company-info");
+                  }}
+                >
+                  <BarChart3 className="mr-2 h-5 w-5" />
+                  {t("assessment.diagnosticRSE.start")}
+                </Button>
+              </div>
+            </AssessmentBase>
           </div>
         </TabsContent>
         
