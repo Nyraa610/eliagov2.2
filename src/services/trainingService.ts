@@ -161,16 +161,26 @@ export const trainingService = {
       if (modules.length === 0) return 0;
       
       const completedModulesData = await this.getCompletedModules();
-      const completedModuleIds = completedModulesData.map(m => m.module_id);
+      const completedContentData = await this.getCompletedContentItems();
       
-      const courseModuleIds = modules.map(m => m.id);
-      const completedCourseModules = completedModuleIds.filter(id => 
-        courseModuleIds.includes(id)
-      );
+      let totalContentItems = 0;
+      let completedContentItems = 0;
       
-      const progressPercentage = Math.round(
-        (completedCourseModules.length / modules.length) * 100
-      );
+      for (const module of modules) {
+        const contentItems = await this.getContentItemsByModuleId(module.id);
+        totalContentItems += contentItems.length;
+        
+        for (const item of contentItems) {
+          if (completedContentData.some(c => c.content_item_id === item.id)) {
+            completedContentItems++;
+          }
+        }
+      }
+      
+      let progressPercentage = 0;
+      if (totalContentItems > 0) {
+        progressPercentage = Math.round((completedContentItems / totalContentItems) * 100);
+      }
       
       await this.updateCourseProgress(courseId, progressPercentage);
       
