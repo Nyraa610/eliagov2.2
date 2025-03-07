@@ -6,3 +6,4 @@ export * from './MobileMenuButton';
 export * from './NavigationLink';
 export * from './NotificationButton';
 export * from './UserMenu';
+export * from './LanguageSelectorButton';
