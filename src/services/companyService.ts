@@ -66,7 +66,7 @@ export const companyService = {
     
     // Transform the data to fix the type issue
     return data.map(item => {
-      // Ensure we have all required Company properties
+      // The companies field contains the Company data, not an array
       const company = item.companies as Company;
       return {
         ...company,
