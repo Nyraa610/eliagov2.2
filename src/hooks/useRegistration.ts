@@ -76,9 +76,9 @@ export const useRegistration = () => {
       }
       
       // Step 2: Wait longer to ensure the database trigger has time to create the profile
-      // Increased from 1000ms to 2000ms
+      // Increased from 1000ms to 2500ms after fixing the user_role type
       console.log("Waiting for profile creation...");
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2500));
       
       // Before proceeding to company creation, verify the profile exists
       try {
@@ -90,7 +90,21 @@ export const useRegistration = () => {
         
         if (profileError) {
           console.error("Error checking for profile:", profileError);
-          // Don't throw here, try to proceed with company creation
+          // If we couldn't find the profile, wait a bit longer and try again
+          console.log("Profile not found, waiting longer and trying again...");
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          const { data: retryProfileData, error: retryProfileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (retryProfileError) {
+            console.error("Error checking for profile on retry:", retryProfileError);
+          } else {
+            console.log("Profile retry successful:", retryProfileData ? "Profile exists" : "No profile found");
+          }
         } else {
           console.log("Profile verification successful:", profileData ? "Profile exists" : "No profile found");
         }
@@ -108,6 +122,13 @@ export const useRegistration = () => {
         });
         
         console.log("Company created successfully:", company);
+        
+        toast({
+          title: "Registration successful!",
+          description: "Please check your email to confirm your account.",
+        });
+        
+        navigate("/register/confirmation");
       } catch (companyError: any) {
         console.error("Error creating company:", companyError);
         
@@ -115,8 +136,11 @@ export const useRegistration = () => {
         if (companyError.message && (
             companyError.message.includes("policy") || 
             companyError.message.includes("security") ||
-            companyError.message.includes("permission")
+            companyError.message.includes("permission") ||
+            companyError.message.includes("recursion")
         )) {
+          console.log("Profile-related company creation error detected");
+          
           toast({
             variant: "destructive",
             title: "Registration issue",
@@ -135,15 +159,9 @@ export const useRegistration = () => {
             description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
             selectable: true,
           });
+          navigate("/register/confirmation");
         }
       }
-
-      toast({
-        title: "Registration successful!",
-        description: "Please check your email to confirm your account.",
-      });
-      
-      navigate("/register/confirmation");
     } catch (error: any) {
       console.error("Registration error:", error);
       
