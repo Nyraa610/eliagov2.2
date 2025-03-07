@@ -51,6 +51,17 @@ export const companyService = {
   
   async getUserCompanies() {
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting authenticated user:", userError);
+        throw userError;
+      }
+      
+      if (!userData.user) {
+        throw new Error("No authenticated user found");
+      }
+      
       const { data, error } = await supabase
         .from('company_members')
         .select(`
@@ -58,7 +69,7 @@ export const companyService = {
           is_admin,
           companies:company_id (*)
         `)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', userData.user.id);
         
       if (error) {
         console.error("Error fetching user companies:", error);
@@ -87,6 +98,18 @@ export const companyService = {
         throw new Error("Company name is required");
       }
       
+      // Get authenticated user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting authenticated user:", userError);
+        throw userError;
+      }
+      
+      if (!userData.user) {
+        throw new Error("Authentication required");
+      }
+      
       // Attempt to insert the company
       const { data, error } = await supabase
         .from('companies')
@@ -107,14 +130,8 @@ export const companyService = {
       console.log("Company created successfully:", data);
       
       // Add current user as an admin member
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        console.error("No authenticated user found when adding company member");
-        throw new Error("Authentication required");
-      }
-      
-      console.log("Adding user as company admin:", user.id);
-      await companyMemberService.addMember(data.id, user.id, true);
+      console.log("Adding user as company admin:", userData.user.id);
+      await companyMemberService.addMember(data.id, userData.user.id, true);
       console.log("User added as company admin successfully");
       
       return data as Company;
@@ -125,32 +142,42 @@ export const companyService = {
   },
   
   async updateCompany(id: string, updates: Partial<Company>) {
-    const { data, error } = await supabase
-      .from('companies')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error updating company:", error);
+        throw error;
+      }
       
-    if (error) {
-      console.error("Error updating company:", error);
+      return data as Company;
+    } catch (error) {
+      console.error("Error in updateCompany:", error);
       throw error;
     }
-    
-    return data as Company;
   },
   
   async deleteCompany(id: string) {
-    const { error } = await supabase
-      .from('companies')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error("Error deleting company:", error);
+        throw error;
+      }
       
-    if (error) {
-      console.error("Error deleting company:", error);
+      return true;
+    } catch (error) {
+      console.error("Error in deleteCompany:", error);
       throw error;
     }
-    
-    return true;
   },
 };
