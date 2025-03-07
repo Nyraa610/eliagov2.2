@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Award, Book, Target, TrendingUp, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ESGNewsFeed } from "@/components/dashboard/ESGNewsFeed";
 import { useTranslation } from "react-i18next";
+import { CompanyAssessmentOverview } from "@/components/dashboard/CompanyAssessmentOverview";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -72,6 +72,10 @@ const Dashboard = () => {
           description={t('dashboard.esgImpactDesc')}
           icon={<Globe className="h-5 w-5 text-primary" />}
         />
+      </div>
+      
+      <div className="grid gap-6 mt-6">
+        <CompanyAssessmentOverview />
       </div>
       
       <div className="grid gap-6 mt-6 md:grid-cols-2">
