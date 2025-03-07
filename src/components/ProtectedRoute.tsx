@@ -41,8 +41,38 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         
         const user = data.session?.user;
         
-        console.log("ProtectedRoute: Session user:", user ? user.id : "No user");
-        console.log("ProtectedRoute: Full session data:", JSON.stringify(data));
+        if (user) {
+          console.log("ProtectedRoute: Session found for user:", user.id);
+          console.log("ProtectedRoute: Session access token:", data.session?.access_token.substring(0, 20) + "...");
+          
+          // Store token in localStorage as backup strategy
+          if (data.session?.access_token) {
+            localStorage.setItem('sb-auth-token', data.session.access_token);
+          }
+        } else {
+          console.log("ProtectedRoute: No session found");
+          
+          // Try to recover session from localStorage if available
+          const localToken = localStorage.getItem('sb-auth-token');
+          if (localToken) {
+            console.log("ProtectedRoute: Found token in localStorage, attempting to restore session");
+            try {
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token: localToken,
+                refresh_token: "",
+              });
+              
+              if (sessionError) {
+                console.error("ProtectedRoute: Error restoring session:", sessionError);
+                localStorage.removeItem('sb-auth-token');
+              } else if (sessionData.session) {
+                console.log("ProtectedRoute: Successfully restored session for user:", sessionData.user?.id);
+              }
+            } catch (e) {
+              console.error("ProtectedRoute: Exception restoring session:", e);
+            }
+          }
+        }
         
         setIsAuthenticated(!!user);
         
@@ -83,6 +113,17 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         console.log("ProtectedRoute: Session data:", session ? "Session exists" : "No session");
         
         try {
+          if (session?.user) {
+            console.log("ProtectedRoute: New session detected for user:", session.user.id);
+            console.log("ProtectedRoute: Token (first 20 chars):", session.access_token.substring(0, 20) + "...");
+            
+            // Store token in localStorage as backup strategy
+            localStorage.setItem('sb-auth-token', session.access_token);
+          } else if (event === 'SIGNED_OUT') {
+            console.log("ProtectedRoute: User signed out, removing token");
+            localStorage.removeItem('sb-auth-token');
+          }
+          
           setIsAuthenticated(!!session?.user);
           
           if (session?.user && requiredRole) {

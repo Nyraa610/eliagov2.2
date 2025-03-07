@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 export type UserRole = 'admin' | 'user';
@@ -25,10 +26,30 @@ export const supabaseService = {
         throw error;
       }
       
-      console.log("supabaseService: Session data:", data);
+      console.log("supabaseService: Session data:", JSON.stringify(data));
       return data.session?.user || null;
     } catch (error) {
       console.error("supabaseService: Exception getting current user:", error);
+      throw error;
+    }
+  },
+  
+  signOut: async () => {
+    try {
+      console.log("supabaseService: Signing out user");
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("supabaseService: Error signing out:", error.message);
+        throw error;
+      }
+      
+      console.log("supabaseService: User signed out successfully");
+      // Clear any cached user data
+      localStorage.removeItem('sb-auth-token');
+      return true;
+    } catch (error) {
+      console.error("supabaseService: Exception signing out:", error);
       throw error;
     }
   },
