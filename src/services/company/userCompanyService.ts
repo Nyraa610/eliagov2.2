@@ -68,12 +68,30 @@ export const userCompanyService = {
       
       console.log("Authenticated user:", userData.user.id);
       
-      // First try to insert the company
+      // Ensure we have at least a company name
+      if (!company.name || company.name.trim() === '') {
+        throw new Error("Company name is required");
+      }
+      
+      // Simplify the company data to minimize errors
+      const companyData = {
+        name: company.name.trim(),
+        // Only include optional fields if they have values
+        ...(company.country && { country: company.country }),
+        ...(company.industry && { industry: company.industry }),
+        ...(company.website && { website: company.website }),
+        ...(company.registry_number && { registry_number: company.registry_number }),
+        ...(company.registry_city && { registry_city: company.registry_city })
+      };
+      
+      console.log("Simplified company data for creation:", companyData);
+      
+      // First try to insert the company with minimal data
       let companyResult;
       try {
         const { data, error } = await supabase
           .from('companies')
-          .insert([company])
+          .insert([companyData])
           .select()
           .single();
           

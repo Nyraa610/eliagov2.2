@@ -55,10 +55,23 @@ export const companyBaseService = {
         throw new Error("Company name is required");
       }
       
+      // Create the company with only essential fields
+      const companyData = {
+        name: company.name.trim(),
+        // Only include optional fields if they exist and are not empty
+        ...(company.country && { country: company.country }),
+        ...(company.industry && { industry: company.industry }),
+        ...(company.website && { website: company.website }),
+        ...(company.registry_number && { registry_number: company.registry_number }),
+        ...(company.registry_city && { registry_city: company.registry_city })
+      };
+      
+      console.log("Simplified company data for creation:", companyData);
+      
       // Create the company
       const { data, error } = await supabase
         .from('companies')
-        .insert([company])
+        .insert([companyData])
         .select()
         .single();
           

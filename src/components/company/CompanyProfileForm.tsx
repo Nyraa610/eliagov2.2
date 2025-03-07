@@ -48,25 +48,39 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       setErrorMessage(null);
       let result: Company;
       
-      console.log("Form submission started:", values);
+      console.log("Form submission started with values:", values);
+      
+      // Create a minimal company object with only the name and other fields if present
+      const companyData: Partial<Company> = {
+        name: values.name.trim(),
+      };
+      
+      // Only add other fields if they have values
+      if (values.industry) companyData.industry = values.industry;
+      if (values.country) companyData.country = values.country;
+      if (values.website) companyData.website = values.website;
+      if (values.registry_number) companyData.registry_number = values.registry_number;
+      if (values.registry_city) companyData.registry_city = values.registry_city;
+      
+      console.log("Simplified company data for submission:", companyData);
       
       if (company) {
         // Update existing company
-        result = await companyService.updateCompany(company.id, values);
+        result = await companyService.updateCompany(company.id, companyData);
         toast({
           title: "Company updated",
           description: "Company profile has been updated successfully.",
         });
       } else {
-        // Create new company
-        result = await companyService.createCompany(values);
+        // Create new company with minimal data
+        result = await companyService.createCompany(companyData);
         toast({
           title: "Company created",
           description: "New company has been created successfully.",
         });
       }
       
-      console.log("Form submission completed:", result);
+      console.log("Form submission completed successfully:", result);
       
       if (onSuccess) {
         onSuccess(result);
@@ -92,6 +106,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       setErrorMessage(errorDesc);
       
       toast({
+        variant: "destructive",
         title: "Error",
         description: errorDesc,
         variant: "destructive",
