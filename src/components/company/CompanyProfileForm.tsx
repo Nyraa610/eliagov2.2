@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -108,8 +107,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
       toast({
         variant: "destructive",
         title: "Error",
-        description: errorDesc,
-        variant: "destructive",
+        description: errorDesc
       });
     } finally {
       setIsSubmitting(false);
