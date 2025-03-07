@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabaseService } from "@/services/base/supabaseService";
@@ -6,7 +5,7 @@ import { companyService } from "@/services/companyService";
 import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "./CompanyListHeader";
 import { CompanyListContent } from "./CompanyListContent";
-import { supabase } from "@/lib/supabase"; // Add import for supabase
+import { supabase } from "@/lib/supabase";
 
 interface CompanyListProps {
   maxCompanies?: number;
@@ -49,6 +48,7 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
           title: "Error",
           description: "Failed to load companies. Please try again.",
           variant: "destructive",
+          selectable: true,
         });
       } finally {
         setLoading(false);
@@ -69,6 +69,7 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
         title: "Error",
         description: "Failed to refresh companies. Please try again.",
         variant: "destructive",
+        selectable: true,
       });
     } finally {
       setLoading(false);

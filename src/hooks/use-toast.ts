@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -13,6 +14,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  selectable?: boolean
 }
 
 const actionTypes = {
@@ -158,6 +160,8 @@ function toast({ ...props }: Toast) {
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
+      // Make error toasts selectable by default
+      selectable: props.variant === "destructive" ? true : props.selectable,
     },
   })
 

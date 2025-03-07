@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -113,6 +112,7 @@ export default function Register() {
           variant: "destructive",
           title: "Company creation issue",
           description: "Your account was created, but there was an issue creating your company. Please log in and try again.",
+          selectable: true,
         });
       }
 
@@ -136,6 +136,7 @@ export default function Register() {
         variant: "destructive",
         title: "Registration failed",
         description: errorMessage,
+        selectable: true,
       });
     } finally {
       setIsLoading(false);
