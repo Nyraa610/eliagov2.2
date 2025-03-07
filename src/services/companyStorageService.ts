@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { companyService } from "./companyService";
+import { companyService } from "./company";
 
 export const companyStorageService = {
   async uploadLogo(companyId: string, file: File) {
