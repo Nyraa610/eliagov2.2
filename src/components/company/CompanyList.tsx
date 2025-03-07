@@ -6,6 +6,7 @@ import { companyService } from "@/services/companyService";
 import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "./CompanyListHeader";
 import { CompanyListContent } from "./CompanyListContent";
+import { supabase } from "@/lib/supabase"; // Add import for supabase
 
 interface CompanyListProps {
   maxCompanies?: number;
@@ -92,6 +93,8 @@ export function CompanyList({ maxCompanies, onAddSubsidiary }: CompanyListProps)
         companies={companies} 
         loading={loading} 
         error={error} 
+        onRefresh={refreshCompanies}
+        onCreateCompany={() => navigate("/company/new")}
       />
     </div>
   );
