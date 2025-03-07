@@ -1,4 +1,3 @@
-
 import {
   createBrowserRouter,
   RouterProvider,
@@ -28,6 +27,9 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
 import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
 import ActionPlan from "@/pages/assessment/ActionPlan";
+import Companies from "@/pages/company/Companies";
+import CompanyProfile from "@/pages/company/CompanyProfile";
+import NewCompany from "@/pages/company/NewCompany";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -132,6 +134,18 @@ const router = createBrowserRouter([
   {
     path: "/admin/courses/:courseId/modules/:moduleId/content/:contentId/quiz",
     element: <ProtectedRoute requiredRole="admin"><QuizManagement /></ProtectedRoute>,
+  },
+  {
+    path: "/companies",
+    element: <ProtectedRoute><Companies /></ProtectedRoute>,
+  },
+  {
+    path: "/company/new",
+    element: <ProtectedRoute><NewCompany /></ProtectedRoute>,
+  },
+  {
+    path: "/company/:id",
+    element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
   },
   {
     path: "*",
