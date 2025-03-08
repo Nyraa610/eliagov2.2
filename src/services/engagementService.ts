@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { authService } from "./base/authService";
 import { profileService } from "./base/profileService";
@@ -298,12 +299,12 @@ class EngagementService {
           user_id,
           total_points,
           level,
-          profiles (
+          profiles:user_id (
             full_name,
             avatar_url,
             company_id
           ),
-          companies (
+          companies:profiles.company_id (
             name
           )
         `)
