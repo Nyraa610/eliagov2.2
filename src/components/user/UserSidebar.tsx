@@ -3,11 +3,32 @@ import { BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, Globe, Home, 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export const UserSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
   const location = useLocation();
+  
+  useEffect(() => {
+    const fetchUserCompany = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+          
+        if (data && data.company_id) {
+          setUserCompanyId(data.company_id);
+        }
+      }
+    };
+    
+    fetchUserCompany();
+  }, []);
   
   const menuItems = [
     {
@@ -49,14 +70,15 @@ export const UserSidebar = () => {
       path: "/companies",
     },
     {
+      title: "Company Settings",
+      icon: <Settings className="h-5 w-5" />,
+      path: userCompanyId ? `/company/${userCompanyId}/settings` : "/companies",
+      disabled: !userCompanyId,
+    },
+    {
       title: "Personal Profile",
       icon: <User className="h-5 w-5" />,
       path: "/profile",
-    },
-    {
-      title: "Company Settings",
-      icon: <Settings className="h-5 w-5" />,
-      path: "/company-settings",
     },
   ];
 
@@ -127,6 +149,7 @@ export const UserSidebar = () => {
                   location.pathname === item.path
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-gray-600 hover:bg-gray-100",
+                  item.disabled ? "opacity-50 pointer-events-none" : "",
                   collapsed ? "justify-center" : "justify-start"
                 )}
               >

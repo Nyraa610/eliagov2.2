@@ -1,3 +1,4 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -30,6 +31,7 @@ import ActionPlan from "@/pages/assessment/ActionPlan";
 import Companies from "@/pages/company/Companies";
 import CompanyProfile from "@/pages/company/CompanyProfile";
 import NewCompany from "@/pages/company/NewCompany";
+import CompanySettings from "@/pages/company/CompanySettings";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -146,6 +148,10 @@ const router = createBrowserRouter([
   {
     path: "/company/:id",
     element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
+  },
+  {
+    path: "/company/:id/settings",
+    element: <ProtectedRoute><CompanySettings /></ProtectedRoute>,
   },
   {
     path: "*",

@@ -97,12 +97,21 @@ export default function CompanyProfile() {
 
   return (
     <div className="container py-8">
-      <div className="flex items-center mb-6">
-        <Button variant="outline" onClick={() => navigate("/companies")} className="mr-4">
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Companies
-        </Button>
-        <h1 className="text-3xl font-bold">{company.name}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button variant="outline" onClick={() => navigate("/companies")} className="mr-4">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Companies
+          </Button>
+          <h1 className="text-3xl font-bold">{company.name}</h1>
+        </div>
+        
+        {isAdmin && (
+          <Button onClick={() => navigate(`/company/${company.id}/settings`)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
