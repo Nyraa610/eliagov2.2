@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { CompanyWithRole } from "./types";
+import { Company, CompanyWithRole } from "./types";
 
 export const userCompanyService = {
   async getUserCompanies() {
@@ -92,7 +92,7 @@ export const userCompanyService = {
       console.log("Creating company via direct insert with name:", company.name);
       
       // Simplify the company data to minimize errors
-      const companyData = {
+      const companyInsertData = {
         name: company.name.trim(),
         // Only include optional fields if they have values
         ...(company.country && { country: company.country }),
@@ -103,10 +103,10 @@ export const userCompanyService = {
       };
       
       // First create the company
-      console.log("Inserting company into database:", companyData);
-      const { data: companyData, error: companyError } = await supabase
+      console.log("Inserting company into database:", companyInsertData);
+      const { data: createdCompany, error: companyError } = await supabase
         .from('companies')
-        .insert([companyData])
+        .insert([companyInsertData])
         .select()
         .single();
         
@@ -115,18 +115,18 @@ export const userCompanyService = {
         throw companyError;
       }
       
-      if (!companyData) {
+      if (!createdCompany) {
         console.error("No data returned after company creation");
         throw new Error("Failed to create company: No data returned");
       }
       
-      console.log("Company created successfully:", companyData);
+      console.log("Company created successfully:", createdCompany);
       
       // Update the user's profile with the company information
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
-          company_id: companyData.id,
+          company_id: createdCompany.id,
           is_company_admin: true
         })
         .eq('id', userData.user.id);
@@ -138,7 +138,7 @@ export const userCompanyService = {
         console.log("User profile updated with company info successfully");
       }
       
-      return companyData;
+      return createdCompany as Company;
     } catch (error) {
       console.error("Exception in createUserCompany:", error);
       throw error;
