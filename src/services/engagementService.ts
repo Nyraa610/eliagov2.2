@@ -72,7 +72,6 @@ export interface LeaderboardEntry {
 }
 
 class EngagementService {
-  // Track a user activity
   async trackActivity(activity: UserActivity): Promise<boolean> {
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -100,7 +99,6 @@ class EngagementService {
     }
   }
 
-  // Track time spent on the application
   async trackTimeSpent(seconds: number): Promise<boolean> {
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -126,7 +124,6 @@ class EngagementService {
     }
   }
 
-  // Get a user's engagement stats
   async getUserStats(userId?: string): Promise<UserEngagementStats | null> {
     try {
       const targetId = userId || (await authService.getCurrentUser())?.id;
@@ -150,7 +147,6 @@ class EngagementService {
     }
   }
 
-  // Get user's earned badges
   async getUserBadges(userId?: string): Promise<UserBadge[]> {
     try {
       const targetId = userId || (await authService.getCurrentUser())?.id;
@@ -173,7 +169,6 @@ class EngagementService {
     }
   }
 
-  // Get user's redeemed rewards
   async getUserRewards(userId?: string): Promise<UserReward[]> {
     try {
       const targetId = userId || (await authService.getCurrentUser())?.id;
@@ -196,7 +191,6 @@ class EngagementService {
     }
   }
 
-  // Get available rewards
   async getAvailableRewards(): Promise<Reward[]> {
     try {
       const { data, error } = await supabase
@@ -217,17 +211,14 @@ class EngagementService {
     }
   }
 
-  // Redeem a reward
   async redeemReward(rewardId: string): Promise<boolean> {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return false;
 
-      // Get user stats
       const userStats = await this.getUserStats();
       if (!userStats) return false;
 
-      // Get reward details
       const { data: reward, error: rewardError } = await supabase
         .from('rewards')
         .select('*')
@@ -239,13 +230,10 @@ class EngagementService {
         return false;
       }
 
-      // Check if user has enough points
       if (userStats.total_points < reward.points_required) {
         return false;
       }
 
-      // Begin transaction
-      // 1. Add user_rewards record
       const { error: redeemError } = await supabase
         .from('user_rewards')
         .insert({
@@ -259,7 +247,6 @@ class EngagementService {
         return false;
       }
 
-      // 2. Add point transaction record
       const { error: transactionError } = await supabase
         .from('point_transactions')
         .insert({
@@ -274,7 +261,6 @@ class EngagementService {
         return false;
       }
 
-      // 3. Update user_engagement_stats
       const { error: updateError } = await supabase
         .from('user_engagement_stats')
         .update({ 
@@ -294,13 +280,11 @@ class EngagementService {
     }
   }
 
-  // Get leaderboard data
   async getLeaderboard(scope: LeaderboardScope = 'global', period: LeaderboardPeriod = 'all-time', limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return [];
 
-      // First, get the company ID if scope is 'company'
       let companyId: string | null = null;
       if (scope === 'company') {
         const profile = await profileService.getUserProfile();
@@ -308,15 +292,20 @@ class EngagementService {
         companyId = profile.company_id;
       }
 
-      // Fetch the leaderboard data using a simpler query
       const { data, error } = await supabase
         .from('user_engagement_stats')
         .select(`
           user_id,
           total_points,
           level,
-          profiles!inner(full_name, avatar_url, company_id),
-          companies(name)
+          profiles (
+            full_name,
+            avatar_url,
+            company_id
+          ),
+          companies (
+            name
+          )
         `)
         .order('total_points', { ascending: false })
         .limit(limit);
@@ -326,7 +315,6 @@ class EngagementService {
         return [];
       }
 
-      // Filter by company ID if needed
       let filteredData = data || [];
       if (scope === 'company' && companyId) {
         filteredData = filteredData.filter(
@@ -334,12 +322,11 @@ class EngagementService {
         );
       }
 
-      // Transform the data to match our expected format
       return filteredData.map((entry, index) => ({
         user_id: entry.user_id,
         full_name: entry.profiles?.full_name || 'Anonymous User',
         avatar_url: entry.profiles?.avatar_url,
-        company_name: entry.companies?.length > 0 ? entry.companies[0].name : null,
+        company_name: entry.companies?.[0]?.name || null,
         total_points: entry.total_points,
         level: entry.level,
         rank: index + 1
@@ -350,10 +337,8 @@ class EngagementService {
     }
   }
 
-  // Check for new badges
   private async checkForBadges(userId: string): Promise<void> {
     try {
-      // Get all badges
       const { data: badges, error: badgesError } = await supabase
         .from('badges')
         .select('*');
@@ -363,7 +348,6 @@ class EngagementService {
         return;
       }
 
-      // Get user's current stats and existing badges
       const userStats = await this.getUserStats(userId);
       const userBadges = await this.getUserBadges(userId);
       
@@ -372,25 +356,18 @@ class EngagementService {
       const earnedBadgeIds = userBadges.map(ub => ub.badge_id);
       const newBadges: Badge[] = [];
 
-      // Check each badge criteria
       for (const badge of badges) {
-        // Skip already earned badges
         if (earnedBadgeIds.includes(badge.id)) continue;
 
         let isEarned = false;
 
-        // Check different badge criteria types
         const criteria = badge.criteria;
         
-        // Points threshold badge
         if (criteria.points_threshold && userStats.total_points >= criteria.points_threshold) {
           isEarned = true;
         }
-        
-        // Other criteria checks would go here...
 
         if (isEarned) {
-          // Award the badge
           await supabase
             .from('user_badges')
             .insert({
@@ -402,7 +379,6 @@ class EngagementService {
         }
       }
 
-      // If new badges were earned, we could trigger notifications here
       if (newBadges.length > 0) {
         console.log(`User ${userId} earned new badges:`, newBadges);
       }
