@@ -329,11 +329,15 @@ class EngagementService {
         filteredProfiles = filteredProfiles.filter(
           profile => profile.company_id === companyId
         );
-        
-        // Re-filter stats to match the filtered profiles
-        const filteredUserIds = filteredProfiles.map(profile => profile.id);
-        statsData = statsData.filter(stat => filteredUserIds.includes(stat.user_id));
       }
+      
+      // Get filtered user IDs for filtering stats data
+      const filteredUserIds = filteredProfiles.map(profile => profile.id);
+      
+      // Filter stats data based on filtered profiles instead of reassigning
+      const filteredStatsData = scope === 'company' && companyId
+        ? statsData.filter(stat => filteredUserIds.includes(stat.user_id))
+        : statsData;
 
       // Get company IDs from profiles for company name lookup
       const companyIds = filteredProfiles
@@ -354,7 +358,7 @@ class EngagementService {
       }
 
       // Combine the data
-      return statsData.map((stat, index) => {
+      return filteredStatsData.map((stat, index) => {
         const profile = filteredProfiles.find(p => p.id === stat.user_id);
         const company = profile?.company_id 
           ? companiesData.find(c => c.id === profile.company_id) 
