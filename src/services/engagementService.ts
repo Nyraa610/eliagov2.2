@@ -300,37 +300,42 @@ class EngagementService {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return [];
 
-      let query = supabase
+      // First, get the company ID if scope is 'company'
+      let companyId: string | null = null;
+      if (scope === 'company') {
+        const profile = await profileService.getUserProfile();
+        if (!profile || !profile.company_id) return [];
+        companyId = profile.company_id;
+      }
+
+      // Fetch the leaderboard data using a simpler query
+      const { data, error } = await supabase
         .from('user_engagement_stats')
         .select(`
           user_id,
           total_points,
           level,
-          profiles!inner(full_name, avatar_url),
-          companies:profiles.companies(name)
+          profiles!inner(full_name, avatar_url, company_id),
+          companies(name)
         `)
         .order('total_points', { ascending: false })
         .limit(limit);
-
-      // Apply company filter if company scope
-      if (scope === 'company') {
-        const profile = await profileService.getUserProfile();
-        if (!profile || !profile.company_id) return [];
-        
-        query = query.eq('company_id', profile.company_id);
-      }
-
-      // Apply time period filter (for a real implementation, this would use a more complex query)
-      // For simplicity, we're just using the all-time points here
-
-      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching leaderboard:", error);
         return [];
       }
 
-      return (data || []).map((entry, index) => ({
+      // Filter by company ID if needed
+      let filteredData = data || [];
+      if (scope === 'company' && companyId) {
+        filteredData = filteredData.filter(
+          item => item.profiles?.company_id === companyId
+        );
+      }
+
+      // Transform the data to match our expected format
+      return filteredData.map((entry, index) => ({
         user_id: entry.user_id,
         full_name: entry.profiles?.full_name || 'Anonymous User',
         avatar_url: entry.profiles?.avatar_url,

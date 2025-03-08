@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Sheet,
@@ -23,9 +23,49 @@ import { isAuthenticated } from '@/lib/supabase';
 import { PointsDisplay } from './engagement/PointsDisplay';
 import { BadgeDisplay } from './engagement/BadgeDisplay';
 import { EngagementTracker } from './engagement/EngagementTracker';
+import { supabaseService } from '@/services/base/supabaseService';
+import { UserProfile } from '@/services/base/profileTypes';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [authStatus, setAuthStatus] = useState<boolean | null>(null);
+  const location = useLocation();
+  
+  // Check if a route is active
+  const isActive = (path: string) => location.pathname === path;
+  
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const isAuth = await isAuthenticated();
+        setAuthStatus(isAuth);
+        
+        if (isAuth) {
+          const profile = await supabaseService.getUserProfile();
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await supabaseService.signOut();
+      setAuthStatus(false);
+      setUserProfile(null);
+      // Reload the page to reset all states
+      window.location.href = '/';
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40">
@@ -40,11 +80,18 @@ export function Navigation() {
             <span className="font-bold text-primary hidden md:block">ELIA GO</span>
           </Link>
           
-          {isAuthenticated && <DesktopNavigation />}
+          {authStatus && (
+            <DesktopNavigation 
+              isAuthenticated={authStatus} 
+              userProfile={userProfile} 
+              isActive={isActive}
+              onLogout={handleLogout}
+            />
+          )}
         </div>
         
         <div className="flex items-center">
-          {isAuthenticated && (
+          {authStatus && (
             <>
               <div className="hidden md:flex items-center">
                 <PointsDisplay />
@@ -56,18 +103,29 @@ export function Navigation() {
           
           <LanguageSelector />
           
-          {isAuthenticated ? (
-            <UserMenu />
+          {authStatus ? (
+            <UserMenu userProfile={userProfile} onLogout={handleLogout} />
           ) : (
             <AuthButtons />
           )}
           
-          {isAuthenticated && <MobileMenuButton isOpen={mobileMenuOpen} onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />}
+          {authStatus && (
+            <MobileMenuButton 
+              isOpen={mobileMenuOpen} 
+              onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            />
+          )}
         </div>
       </div>
       
-      {isAuthenticated && (
-        <MobileMenu isOpen={mobileMenuOpen} onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
+      {authStatus && (
+        <MobileMenu 
+          isOpen={mobileMenuOpen} 
+          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          isAuthenticated={authStatus}
+          isActive={isActive}
+          onLogout={handleLogout} 
+        />
       )}
     </div>
   );
