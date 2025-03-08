@@ -13,7 +13,7 @@ import {
   LeaderboardEntry, 
   LeaderboardPeriod, 
   LeaderboardScope 
-} from '@/services/engagementService';
+} from '@/services/engagement';
 import { Trophy, Users, Building, Star, Medal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';

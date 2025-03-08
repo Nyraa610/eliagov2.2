@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Medal } from 'lucide-react';
-import { engagementService, UserEngagementStats } from '@/services/engagementService';
+import { engagementService, UserEngagementStats } from '@/services/engagement';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Progress } from '@/components/ui/progress';

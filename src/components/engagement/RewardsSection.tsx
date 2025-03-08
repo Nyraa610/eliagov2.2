@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { engagementService, Reward, UserEngagementStats } from '@/services/engagementService';
+import { engagementService, Reward, UserEngagementStats } from '@/services/engagement';
 import { Gift, CheckCircle, AlertCircle } from 'lucide-react';
 
 export function RewardsSection() {

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { engagementService } from '@/services/engagementService';
+import { engagementService } from '@/services/engagement';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { engagementService, UserBadge } from '@/services/engagementService';
+import { engagementService, UserBadge } from '@/services/engagement';
 import { Award } from 'lucide-react';
 import { 
   HoverCard, 

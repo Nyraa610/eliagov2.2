@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { engagementService, UserActivity } from '@/services/engagementService';
+import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
 
 export const useEngagement = () => {
