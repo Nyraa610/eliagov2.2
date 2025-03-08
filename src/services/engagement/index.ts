@@ -32,15 +32,15 @@ class EngagementService {
 // Create a singleton instance
 export const engagementService = new EngagementService();
 
-// Re-export types
-export type {
-  types.UserActivity,
-  types.UserEngagementStats,
-  types.Badge,
-  types.UserBadge,
-  types.Reward,
-  types.UserReward,
-  types.LeaderboardPeriod,
-  types.LeaderboardScope,
-  types.LeaderboardEntry
-};
+// Re-export types using the proper syntax
+export type { 
+  UserActivity,
+  UserEngagementStats,
+  Badge,
+  UserBadge,
+  Reward,
+  UserReward,
+  LeaderboardPeriod,
+  LeaderboardScope,
+  LeaderboardEntry 
+} from './types';
