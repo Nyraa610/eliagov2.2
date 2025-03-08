@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +9,7 @@ import { Company, companyService } from "@/services/companyService";
 import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { CompanyMembers } from "@/components/company/CompanyMembers";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
@@ -30,10 +30,26 @@ export default function CompanyProfile() {
         const data = await companyService.getCompany(id);
         setCompany(data);
         
-        // Check if user is admin
-        const userCompanies = await companyService.getUserCompanies();
-        const userCompany = userCompanies.find(c => c.id === id);
-        setIsAdmin(userCompany?.is_admin || false);
+        // Check if user is admin by looking at their profile
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) {
+          navigate("/login");
+          return;
+        }
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_company_admin')
+          .eq('id', user.user.id)
+          .eq('company_id', id)
+          .single();
+        
+        if (profileError) {
+          console.error("Error checking admin status:", profileError);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(profile?.is_company_admin || false);
+        }
       } catch (error) {
         console.error("Error fetching company:", error);
         toast({
@@ -161,8 +177,6 @@ export default function CompanyProfile() {
               </div>
             </CardContent>
           </Card>
-
-          {/* We would add other company overview content here like stats, etc. */}
         </TabsContent>
 
         {isAdmin && (

@@ -341,31 +341,45 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          company_id: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          is_company_admin: boolean | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          company_id?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          is_company_admin?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          is_company_admin?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_answers: {
         Row: {

@@ -74,7 +74,7 @@ export const useRegistration = () => {
         throw new Error("User registration failed");
       }
 
-      // Step 2: Create the company
+      // Step 2: Create the company and update profile
       try {
         console.log("Creating company:", values.company);
         
@@ -101,21 +101,21 @@ export const useRegistration = () => {
         
         console.log("Company created successfully:", company);
         
-        // Step 3: Add the user as a company admin
-        const { error: memberError } = await supabase
-          .from('company_members')
-          .insert([{
+        // Step 3: Update the user's profile with company info
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
             company_id: company.id,
-            user_id: data.user.id,
-            is_admin: true
-          }]);
+            is_company_admin: true
+          })
+          .eq('id', data.user.id);
           
-        if (memberError) {
-          console.error("Error adding user as company member:", memberError);
-          throw memberError;
+        if (profileError) {
+          console.error("Error updating user profile with company:", profileError);
+          throw profileError;
         }
         
-        console.log("User added as company admin successfully");
+        console.log("User profile updated with company info successfully");
         
         toast({
           title: "Registration successful!",
@@ -124,7 +124,7 @@ export const useRegistration = () => {
         
         navigate("/register/confirmation");
       } catch (companyError: any) {
-        console.error("Error in company/member creation:", companyError);
+        console.error("Error in company/profile update:", companyError);
         
         // Even if company creation fails, the user account was created
         toast({

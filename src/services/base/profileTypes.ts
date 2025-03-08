@@ -8,4 +8,6 @@ export interface UserProfile {
   full_name?: string;
   bio?: string;
   avatar_url?: string;
+  company_id?: string;
+  is_company_admin?: boolean;
 }

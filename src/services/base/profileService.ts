@@ -29,7 +29,7 @@ export const profileService = {
       
       const { data, error } = await supabaseClient
         .from('profiles')
-        .select('*')
+        .select('*, companies:company_id(*)')
         .eq('id', targetId)
         .single();
         
@@ -43,9 +43,21 @@ export const profileService = {
         throw error;
       }
       
-      console.log("profileService: Profile data retrieved:", data);
+      // Transform the data to match the UserProfile interface
+      const profileData: UserProfile = {
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        full_name: data.full_name,
+        bio: data.bio,
+        avatar_url: data.avatar_url,
+        company_id: data.company_id,
+        is_company_admin: data.is_company_admin
+      };
       
-      return data;
+      console.log("profileService: Profile data retrieved:", profileData);
+      
+      return profileData;
     } catch (error) {
       console.error("profileService: Exception fetching user profile:", error);
       return null;
@@ -56,7 +68,7 @@ export const profileService = {
     try {
       const { data, error } = await supabaseClient
         .from('profiles')
-        .select('*')
+        .select('*, companies:company_id(*)')
         .order('created_at', { ascending: false });
         
       if (error) throw error;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Card, 
@@ -27,15 +28,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PlusCircle, MoreVertical, UserPlus, Shield, ShieldAlert, UserMinus } from "lucide-react";
-import { companyMemberService } from "@/services/companyMemberService";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 interface CompanyMembersProps {
   companyId: string;
 }
 
+interface CompanyMember {
+  id: string;
+  full_name?: string;
+  email: string;
+  avatar_url?: string;
+  is_company_admin: boolean;
+}
+
 export function CompanyMembers({ companyId }: CompanyMembersProps) {
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<CompanyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -44,8 +53,19 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const data = await companyMemberService.getMembers(companyId);
-      setMembers(data);
+      
+      // Get all profiles associated with this company
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, is_company_admin')
+        .eq('company_id', companyId);
+        
+      if (error) {
+        console.error("Error fetching company members:", error);
+        throw error;
+      }
+      
+      setMembers(data as CompanyMember[]);
     } catch (error) {
       console.error("Error fetching members:", error);
       toast({
@@ -60,7 +80,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
 
   useEffect(() => {
     fetchMembers();
-  }, [companyId, toast]);
+  }, [companyId]);
 
   const handleInvite = async () => {
     toast({
@@ -71,9 +91,17 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
     setEmail("");
   };
 
-  const handlePromoteToAdmin = async (memberId: string) => {
+  const handlePromoteToAdmin = async (userId: string) => {
     try {
-      await companyMemberService.updateMember(memberId, true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_company_admin: true })
+        .eq('id', userId);
+        
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Member promoted",
         description: "User has been promoted to admin.",
@@ -89,9 +117,17 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
     }
   };
 
-  const handleRemoveAdmin = async (memberId: string) => {
+  const handleRemoveAdmin = async (userId: string) => {
     try {
-      await companyMemberService.updateMember(memberId, false);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_company_admin: false })
+        .eq('id', userId);
+        
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Admin rights removed",
         description: "Admin rights have been removed from this user.",
@@ -107,9 +143,17 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
     }
   };
 
-  const handleRemoveMember = async (memberId: string) => {
+  const handleRemoveMember = async (userId: string) => {
     try {
-      await companyMemberService.removeMember(memberId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ company_id: null, is_company_admin: false })
+        .eq('id', userId);
+        
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Member removed",
         description: "User has been removed from the company.",
@@ -181,21 +225,21 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
               <div key={member.id} className="flex items-center justify-between py-2">
                 <div className="flex items-center space-x-4">
                   <Avatar>
-                    <AvatarImage src={member.user?.avatar_url || undefined} />
+                    <AvatarImage src={member.avatar_url || undefined} />
                     <AvatarFallback>
-                      {member.user?.full_name?.substring(0, 2).toUpperCase() || 
-                       member.user?.email.substring(0, 2).toUpperCase()}
+                      {member.full_name?.substring(0, 2).toUpperCase() || 
+                       member.email.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="font-medium">
-                      {member.user?.full_name || member.user?.email.split('@')[0]}
+                      {member.full_name || member.email.split('@')[0]}
                     </div>
-                    <div className="text-sm text-muted-foreground">{member.user?.email}</div>
+                    <div className="text-sm text-muted-foreground">{member.email}</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {member.is_admin && <Badge variant="outline">Admin</Badge>}
+                  {member.is_company_admin && <Badge variant="outline">Admin</Badge>}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -204,7 +248,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {!member.is_admin ? (
+                      {!member.is_company_admin ? (
                         <DropdownMenuItem onClick={() => handlePromoteToAdmin(member.id)}>
                           <Shield className="h-4 w-4 mr-2" />
                           Make Admin
