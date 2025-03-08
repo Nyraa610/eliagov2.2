@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,13 +12,13 @@ import {
 } from "@/components/ui/sheet"
 import { Menu } from "lucide-react";
 
-import { LanguageSelectorButton } from './LanguageSelectorButton';
-import { AuthButtons } from './AuthButtons';
-import { UserMenu } from './UserMenu';
-import { MobileMenu } from './MobileMenu';
-import { MobileMenuButton } from './MobileMenuButton';
-import { DesktopNavigation } from './DesktopNavigation';
-import { NotificationButton } from './NotificationButton';
+import { LanguageSelectorButton } from './navigation/LanguageSelectorButton';
+import { AuthButtons } from './navigation/AuthButtons';
+import { UserMenu } from './navigation/UserMenu';
+import { MobileMenu } from './navigation/MobileMenu';
+import { MobileMenuButton } from './navigation/MobileMenuButton';
+import { DesktopNavigation } from './navigation/DesktopNavigation';
+import { NotificationButton } from './navigation/NotificationButton';
 import { isAuthenticated } from '@/lib/supabase';
 import { PointsDisplay } from './engagement/PointsDisplay';
 import { BadgeDisplay } from './engagement/BadgeDisplay';

@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, Trophy, CheckCircle2, Download, GraduationCap } from "lucide-react";
 import { trainingService } from "@/services/trainingService";
 import { useToast } from "@/components/ui/use-toast";
 import confetti from 'canvas-confetti';
 import { useEngagement } from "@/hooks/useEngagement";
+import { CompletionIcon } from "./course-completion/CompletionIcon";
+import { SuccessRate } from "./course-completion/SuccessRate";
+import { KeyTakeaways } from "./course-completion/KeyTakeaways";
+import { Certificate } from "./course-completion/Certificate";
 
 interface CourseCompletionSummaryProps {
   courseId: string;
@@ -103,22 +107,7 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
     >
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-8 flex flex-col items-center justify-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ 
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-              delay: 0.2 
-            }}
-          >
-            {isSuccessful ? (
-              <Trophy className="h-24 w-24 text-primary" />
-            ) : (
-              <CheckCircle2 className="h-24 w-24 text-primary" />
-            )}
-          </motion.div>
+          <CompletionIcon isSuccessful={isSuccessful} />
           <motion.h1 
             className="text-2xl font-bold mt-4 text-center"
             initial={{ opacity: 0 }}
@@ -136,77 +125,20 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="text-3xl font-bold">
-              {successRate}%
-            </div>
-            <p className="text-muted-foreground">
-              You earned {earnedPoints} out of {totalPoints} points
-            </p>
-          </motion.div>
+          <SuccessRate 
+            earnedPoints={earnedPoints} 
+            totalPoints={totalPoints} 
+            successRate={successRate} 
+          />
           
-          <motion.div
-            className="space-y-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <h3 className="font-medium flex items-center">
-              <CheckCircle2 className="inline-block h-5 w-5 mr-2 text-green-500" />
-              Key Takeaways
-            </h3>
-            <div className="bg-muted/50 p-4 rounded-md">
-              <p className="text-sm">
-                You've successfully completed this course and demonstrated your understanding of the core concepts.
-                The knowledge you've gained will help you implement sustainable practices in your organization.
-              </p>
-            </div>
-          </motion.div>
+          <KeyTakeaways />
           
-          {isSuccessful && (
-            <motion.div
-              className="border-t pt-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.9 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Award className="h-6 w-6 text-primary mr-2" />
-                  <h3 className="font-medium">Course Certificate</h3>
-                </div>
-                
-                {certificate ? (
-                  <a 
-                    href={certificate.certificate_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      Download
-                    </Button>
-                  </a>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleGenerateCertificate}
-                    disabled={loading}
-                    className="gap-2"
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    {loading ? "Generating..." : "Get Certificate"}
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-          )}
+          <Certificate 
+            certificate={certificate}
+            loading={loading}
+            isSuccessful={isSuccessful}
+            onGenerateCertificate={handleGenerateCertificate}
+          />
         </CardContent>
         
         <CardFooter className="justify-center pb-6">
