@@ -19,7 +19,7 @@ import { MobileMenu } from './navigation/MobileMenu';
 import { MobileMenuButton } from './navigation/MobileMenuButton';
 import { DesktopNavigation } from './navigation/DesktopNavigation';
 import { NotificationButton } from './navigation/NotificationButton';
-import { isAuthenticated } from '@/lib/supabase';
+import { supabase, setupAuthListener } from '@/lib/supabase';
 import { PointsDisplay } from './engagement/PointsDisplay';
 import { BadgeDisplay } from './engagement/BadgeDisplay';
 import { EngagementTracker } from './engagement/EngagementTracker';
@@ -30,40 +30,87 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authStatus, setAuthStatus] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   
   // Check if a route is active
   const isActive = (path: string) => location.pathname === path;
   
-  // Fetch user profile
+  // Fetch user profile and set up auth listener
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const isAuth = await isAuthenticated();
+        setIsLoading(true);
+        const { data, error } = await supabase.auth.getSession();
+        const isAuth = !!data.session?.user;
         setAuthStatus(isAuth);
         
         if (isAuth) {
+          console.log("Navigation: User is authenticated, fetching profile");
           const profile = await supabaseService.getUserProfile();
           setUserProfile(profile);
+        } else {
+          console.log("Navigation: User is not authenticated");
+          setUserProfile(null);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchUserData();
+    
+    // Set up auth listener to update auth state in real-time
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log(`Navigation: Auth state changed - Event: ${event}`);
+        
+        try {
+          if (session?.user) {
+            console.log("Navigation: New session detected for user:", session.user.id);
+            setAuthStatus(true);
+            
+            // Fetch updated user profile
+            const profile = await supabaseService.getUserProfile();
+            setUserProfile(profile);
+          } else if (event === 'SIGNED_OUT') {
+            console.log("Navigation: User signed out");
+            setAuthStatus(false);
+            setUserProfile(null);
+          } else {
+            // Handle other auth state changes
+            const { data } = await supabase.auth.getSession();
+            setAuthStatus(!!data.session);
+          }
+        } catch (error: any) {
+          console.error("Navigation: Error in auth change listener:", error);
+        }
+      }
+    );
+    
+    return () => {
+      console.log("Navigation: Cleaning up auth listener");
+      authListener.subscription.unsubscribe();
+    };
   }, []);
   
   // Handle logout
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       await supabaseService.signOut();
       setAuthStatus(false);
       setUserProfile(null);
-      // Reload the page to reset all states
+      console.log("User logged out successfully");
+      
+      // Navigate to the home page using window.location to ensure a full refresh
       window.location.href = '/';
     } catch (error) {
       console.error("Error signing out:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,7 +127,7 @@ export function Navigation() {
             <span className="font-bold text-primary hidden md:block">ELIA GO</span>
           </Link>
           
-          {authStatus && (
+          {!isLoading && authStatus && (
             <DesktopNavigation 
               isAuthenticated={authStatus} 
               userProfile={userProfile} 
@@ -91,7 +138,7 @@ export function Navigation() {
         </div>
         
         <div className="flex items-center">
-          {authStatus && (
+          {!isLoading && authStatus && (
             <>
               <div className="hidden md:flex items-center">
                 <PointsDisplay />
@@ -103,13 +150,15 @@ export function Navigation() {
           
           <LanguageSelector />
           
-          {authStatus ? (
+          {isLoading ? (
+            <div className="animate-pulse h-8 w-8 bg-gray-200 rounded-full ml-2"></div>
+          ) : authStatus ? (
             <UserMenu userProfile={userProfile} onLogout={handleLogout} />
           ) : (
             <AuthButtons />
           )}
           
-          {authStatus && (
+          {!isLoading && authStatus && (
             <MobileMenuButton 
               isOpen={mobileMenuOpen} 
               onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
@@ -118,7 +167,7 @@ export function Navigation() {
         </div>
       </div>
       
-      {authStatus && (
+      {!isLoading && authStatus && (
         <MobileMenu 
           isOpen={mobileMenuOpen} 
           onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}

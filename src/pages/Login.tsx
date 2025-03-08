@@ -14,6 +14,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,7 +28,9 @@ export default function Login() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsCheckingAuth(true);
         const { data, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error("Error checking authentication:", error.message);
           return;
@@ -35,14 +38,31 @@ export default function Login() {
         
         if (data.session) {
           console.log("User already logged in, redirecting to dashboard");
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
         }
       } catch (checkError) {
         console.error("Exception during auth check:", checkError);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
     
     checkAuth();
+    
+    // Set up auth listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth state changed in Login component:", event);
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          console.log("User signed in, redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
+        }
+      }
+    );
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,9 +91,6 @@ export default function Login() {
       console.log("Login successful, user:", data.user.id);
       console.log("Session:", data.session);
       
-      // Set auth cookie or local storage if needed
-      localStorage.setItem('sb-auth-token', data.session?.access_token || '');
-      
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -94,6 +111,17 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+  
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">

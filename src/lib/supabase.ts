@@ -10,7 +10,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     storageKey: 'elia-go-auth',
     autoRefreshToken: true,
-    detectSessionInUrl: true // Enable detecting auth tokens in URL
+    detectSessionInUrl: true, // Enable detecting auth tokens in URL
+    flowType: 'pkce' // Use PKCE flow for more secure auth
   },
   global: {
     headers: {
@@ -28,4 +29,12 @@ export const isAuthenticated = async () => {
   console.log("Auth check - Session data:", data);
   console.log("Auth check - Error:", error);
   return !!data.session?.user;
+};
+
+// Create a global auth state listener
+export const setupAuthListener = (callback: (isAuthenticated: boolean) => void) => {
+  return supabase.auth.onAuthStateChange((event, session) => {
+    console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+    callback(!!session);
+  });
 };

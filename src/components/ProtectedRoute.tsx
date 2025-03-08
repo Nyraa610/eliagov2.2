@@ -22,13 +22,14 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return (
       <div className="min-h-screen flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-gray-600">Verifying authentication...</p>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     // Not authenticated, redirect to login
-    console.log("ProtectedRoute: Not authenticated, redirecting to login");
+    console.log("ProtectedRoute: Not authenticated, redirecting to login with return path:", location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

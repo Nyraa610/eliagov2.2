@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import { supabaseService } from "@/services/base/supabaseService";
 import { UserRole } from "@/services/base/profileTypes";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,72 +18,56 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
     const checkAuth = async () => {
       try {
         console.log("useAuthProtection: Checking authentication...");
-        const user = await supabaseService.getCurrentUser();
+        
+        // First try to get the session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("useAuthProtection: Error getting session:", error.message);
+          setAuthError(`Error checking authentication: ${error.message}`);
+          setIsAuthenticated(false);
+          setHasRequiredRole(false);
+          return;
+        }
+        
+        const user = data.session?.user;
         
         if (user) {
           console.log("useAuthProtection: Session found for user:", user.id);
           setIsAuthenticated(true);
           
-          // Store token in localStorage as backup strategy
-          const { data } = await supabaseService.supabase.auth.getSession();
-          if (data.session?.access_token) {
-            localStorage.setItem('sb-auth-token', data.session.access_token);
+          // If role is required, check if user has the role
+          if (requiredRole) {
+            console.log(`useAuthProtection: Checking if user has role: ${requiredRole}`);
+            try {
+              // Get user profile to check role
+              const profile = await supabaseService.getUserProfile();
+              
+              if (profile && profile.role === 'admin') {
+                // Admins have access to everything
+                console.log("useAuthProtection: User is admin, granting access");
+                setHasRequiredRole(true);
+              } else if (profile) {
+                // Check specific role requirements for non-admins
+                const hasRole = profile.role === requiredRole;
+                console.log(`useAuthProtection: User has required role: ${hasRole}`);
+                setHasRequiredRole(hasRole);
+              } else {
+                console.error("useAuthProtection: Could not fetch user profile");
+                setHasRequiredRole(false);
+              }
+            } catch (roleError: any) {
+              console.error("useAuthProtection: Error checking role:", roleError);
+              setAuthError(`Error checking role: ${roleError.message}`);
+              setHasRequiredRole(false);
+            }
+          } else {
+            // No specific role required
+            setHasRequiredRole(true);
           }
         } else {
           console.log("useAuthProtection: No session found");
-          
-          // Try to recover session from localStorage if available
-          const localToken = localStorage.getItem('sb-auth-token');
-          if (localToken) {
-            console.log("useAuthProtection: Found token in localStorage, attempting to restore session");
-            try {
-              const { data: sessionData, error: sessionError } = await supabaseService.supabase.auth.setSession({
-                access_token: localToken,
-                refresh_token: "",
-              });
-              
-              if (sessionError) {
-                console.error("useAuthProtection: Error restoring session:", sessionError);
-                localStorage.removeItem('sb-auth-token');
-                setIsAuthenticated(false);
-              } else if (sessionData.session) {
-                console.log("useAuthProtection: Successfully restored session for user:", sessionData.user?.id);
-                setIsAuthenticated(true);
-              } else {
-                setIsAuthenticated(false);
-              }
-            } catch (e) {
-              console.error("useAuthProtection: Exception restoring session:", e);
-              setIsAuthenticated(false);
-            }
-          } else {
-            setIsAuthenticated(false);
-          }
-        }
-        
-        if (user && requiredRole) {
-          console.log(`useAuthProtection: Checking if user has role: ${requiredRole}`);
-          try {
-            // Get user profile to check if they're an admin
-            const profile = await supabaseService.getUserProfile();
-            
-            if (profile && profile.role === 'admin') {
-              // Admins have access to everything
-              console.log("useAuthProtection: User is admin, granting access");
-              setHasRequiredRole(true);
-            } else {
-              // Check specific role requirements for non-admins
-              const hasRole = await supabaseService.hasRole(requiredRole);
-              console.log(`useAuthProtection: User has required role: ${hasRole}`);
-              setHasRequiredRole(hasRole);
-            }
-          } catch (roleError: any) {
-            console.error("useAuthProtection: Error checking role:", roleError);
-            setAuthError(`Error checking role: ${roleError.message}`);
-            setHasRequiredRole(false);
-          }
-        } else {
-          // No specific role required or no user
+          setIsAuthenticated(false);
           setHasRequiredRole(!requiredRole);
         }
       } catch (error: any) {
@@ -103,34 +89,42 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
     checkAuth();
 
     // Set up auth state change listener
-    const { data: authListener } = supabaseService.supabase.auth.onAuthStateChange(
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log(`useAuthProtection: Auth state changed - Event: ${event}`);
-        console.log("useAuthProtection: Session data:", session ? "Session exists" : "No session");
         
         try {
           if (session?.user) {
             console.log("useAuthProtection: New session detected for user:", session.user.id);
             setIsAuthenticated(true);
             
-            // Store token in localStorage as backup strategy
-            localStorage.setItem('sb-auth-token', session.access_token);
-            
             if (requiredRole) {
-              const hasRole = await supabaseService.hasRole(requiredRole);
-              console.log(`useAuthProtection: User has required role after auth change: ${hasRole}`);
-              setHasRequiredRole(hasRole);
+              // Get user profile to check role
+              const profile = await supabaseService.getUserProfile();
+              
+              if (profile && profile.role === 'admin') {
+                // Admins have access to everything
+                setHasRequiredRole(true);
+              } else if (profile) {
+                // Check specific role requirements for non-admins
+                const hasRole = profile.role === requiredRole;
+                console.log(`useAuthProtection: User has required role after auth change: ${hasRole}`);
+                setHasRequiredRole(hasRole);
+              } else {
+                setHasRequiredRole(false);
+              }
             } else {
               setHasRequiredRole(true);
             }
           } else if (event === 'SIGNED_OUT') {
-            console.log("useAuthProtection: User signed out, removing token");
-            localStorage.removeItem('sb-auth-token');
+            console.log("useAuthProtection: User signed out");
             setIsAuthenticated(false);
             setHasRequiredRole(false);
           } else {
-            setIsAuthenticated(false);
-            setHasRequiredRole(!requiredRole);
+            // For other events, recheck authentication
+            const { data } = await supabase.auth.getSession();
+            setIsAuthenticated(!!data.session);
+            setHasRequiredRole(!requiredRole || !!data.session);
           }
         } catch (error: any) {
           console.error("useAuthProtection: Error in auth change listener:", error);
