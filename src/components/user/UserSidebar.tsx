@@ -1,5 +1,9 @@
 
-import { BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, Globe, Home, Layers, LineChart, Settings, Target, User } from "lucide-react";
+import { 
+  BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, 
+  Globe, Home, Layers, LineChart, Medal, Settings, 
+  Target, Trophy, User 
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -60,6 +64,11 @@ export const UserSidebar = () => {
       title: "Action Plan",
       icon: <Target className="h-5 w-5" />,
       path: "/action-plan",
+    },
+    {
+      title: "Engagement & Rewards",
+      icon: <Trophy className="h-5 w-5" />,
+      path: "/engagement",
     },
   ];
   

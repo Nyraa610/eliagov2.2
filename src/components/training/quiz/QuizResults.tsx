@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { QuizQuestion, QuizAnswer } from "@/types/training";
 import { CheckCircle2, XCircle, RotateCcw, Trophy, Award, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from 'canvas-confetti';
+import { useEngagement } from "@/hooks/useEngagement";
 
 interface QuizResultsProps {
   questions: QuizQuestion[];
@@ -34,8 +34,20 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   showCelebration = false,
 }) => {
   const scorePercentage = Math.round((results.earnedPoints / results.totalPoints) * 100);
+  const { trackActivity } = useEngagement();
   
   useEffect(() => {
+    // Track quiz completion
+    trackActivity({
+      activity_type: 'complete_quiz',
+      points_earned: Math.round(results.earnedPoints / 10) + (showCelebration ? 5 : 0),
+      metadata: {
+        correct_answers: results.correctAnswers,
+        total_questions: results.totalQuestions,
+        score_percentage: scorePercentage
+      }
+    });
+    
     // Trigger confetti when component mounts and score is good
     if (showCelebration) {
       confetti({
@@ -44,7 +56,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         origin: { y: 0.6 }
       });
     }
-  }, [showCelebration]);
+  }, [showCelebration, trackActivity, results, scorePercentage]);
 
   return (
     <Card>

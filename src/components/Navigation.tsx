@@ -1,100 +1,73 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Menu } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { Logo } from "@/components/Logo";
-import { supabaseService } from "@/services/base/supabaseService";
-import { 
-  DesktopNavigation, 
-  MobileMenu, 
-  MobileMenuButton 
-} from "@/components/navigation";
+import { LanguageSelectorButton } from './LanguageSelectorButton';
+import { AuthButtons } from './AuthButtons';
+import { UserMenu } from './UserMenu';
+import { MobileMenu } from './MobileMenu';
+import { MobileMenuButton } from './MobileMenuButton';
+import { DesktopNavigation } from './DesktopNavigation';
+import { NotificationButton } from './NotificationButton';
+import { isAuthenticated } from '@/lib/supabase';
+import { PointsDisplay } from './engagement/PointsDisplay';
+import { BadgeDisplay } from './engagement/BadgeDisplay';
+import { EngagementTracker } from './engagement/EngagementTracker';
 
-export const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const user = await supabaseService.getCurrentUser();
-      setIsAuthenticated(!!user);
-      
-      if (user) {
-        const profile = await supabaseService.getUserProfile(user.id);
-        setUserProfile(profile);
-      }
-    };
-    
-    checkAuth();
-    
-    // Listen for auth state changes
-    const { data: authListener } = supabaseService.supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setIsAuthenticated(!!session);
-        
-        if (session?.user) {
-          const profile = await supabaseService.getUserProfile(session.user.id);
-          setUserProfile(profile);
-        } else {
-          setUserProfile(null);
-        }
-      }
-    );
-    
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-  
-  const handleLogout = async () => {
-    await supabaseService.supabase.auth.signOut();
-    navigate("/");
-  };
+export function Navigation() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="w-full bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center">
-            <Logo className="h-10 w-auto" />
-            <span className="ml-2 text-xl font-bold text-primary">ELIA GO</span>
+    <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40">
+      <EngagementTracker />
+      <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
+        <div className="flex items-center">
+          <Link
+            to="/"
+            className="flex items-center mr-6"
+          >
+            <img src="/lovable-uploads/bf07f304-1895-4f5e-a378-715282528884.png" alt="Logo" className="h-8 w-8 mr-2" />
+            <span className="font-bold text-primary hidden md:block">ELIA GO</span>
           </Link>
-
-          {/* Desktop Navigation */}
-          <DesktopNavigation 
-            isAuthenticated={isAuthenticated} 
-            userProfile={userProfile} 
-            isActive={isActive}
-            onLogout={handleLogout}
-          />
-
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <LanguageSelector />
-            <MobileMenuButton isOpen={isMenuOpen} onToggle={toggleMenu} />
-          </div>
+          
+          {isAuthenticated && <DesktopNavigation />}
         </div>
-
-        {/* Mobile Navigation */}
-        <MobileMenu 
-          isOpen={isMenuOpen} 
-          isAuthenticated={isAuthenticated} 
-          isActive={isActive} 
-          onToggle={toggleMenu}
-          onLogout={handleLogout}
-        />
+        
+        <div className="flex items-center">
+          {isAuthenticated && (
+            <>
+              <div className="hidden md:flex items-center">
+                <PointsDisplay />
+                <BadgeDisplay />
+              </div>
+              <NotificationButton />
+            </>
+          )}
+          
+          <LanguageSelectorButton />
+          
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <AuthButtons />
+          )}
+          
+          {isAuthenticated && <MobileMenuButton />}
+        </div>
       </div>
-    </header>
+      
+      {isAuthenticated && (
+        <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      )}
+    </div>
   );
-};
+}

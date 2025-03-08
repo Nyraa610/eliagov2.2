@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Award, Trophy, CheckCircle2, Download, GraduationCap } from "lucide-rea
 import { trainingService } from "@/services/trainingService";
 import { useToast } from "@/components/ui/use-toast";
 import confetti from 'canvas-confetti';
+import { useEngagement } from "@/hooks/useEngagement";
 
 interface CourseCompletionSummaryProps {
   courseId: string;
@@ -26,11 +26,23 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
   const [certificate, setCertificate] = useState<{ id: string; certificate_url: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { trackActivity } = useEngagement();
   const successRate = Math.round((earnedPoints / totalPoints) * 100);
   const isSuccessful = successRate >= 75;
 
   useEffect(() => {
-    // Trigger confetti effect when component mounts
+    // Track course completion
+    trackActivity({
+      activity_type: 'complete_course',
+      points_earned: 50,
+      metadata: {
+        course_id: courseId,
+        course_title: courseTitle,
+        earned_points: earnedPoints,
+        success_rate: successRate
+      }
+    }, true);
+    
     if (isSuccessful) {
       const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
@@ -58,7 +70,7 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
       
       return () => clearInterval(interval);
     }
-  }, [isSuccessful]);
+  }, [isSuccessful, trackActivity, courseId, courseTitle, earnedPoints, successRate]);
 
   const handleGenerateCertificate = async () => {
     if (!courseId) return;

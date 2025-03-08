@@ -32,6 +32,7 @@ import Companies from "@/pages/company/Companies";
 import CompanyProfile from "@/pages/company/CompanyProfile";
 import NewCompany from "@/pages/company/NewCompany";
 import CompanySettings from "@/pages/company/CompanySettings";
+import Engagement from "@/pages/Engagement";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -104,6 +105,10 @@ const router = createBrowserRouter([
   {
     path: "/profile",
     element: <ProtectedRoute><Profile /></ProtectedRoute>,
+  },
+  {
+    path: "/engagement",
+    element: <ProtectedRoute><Engagement /></ProtectedRoute>,
   },
   {
     path: "/unauthorized",

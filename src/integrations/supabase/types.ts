@@ -42,6 +42,33 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          created_at: string
+          criteria: Json
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          criteria: Json
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          criteria?: Json
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           certificate_url: string | null
@@ -295,6 +322,36 @@ export type Database = {
           },
         ]
       }
+      point_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -412,6 +469,142 @@ export type Database = {
           },
         ]
       }
+      rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          points_required: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          points_required: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          points_required?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          points_earned: number
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points_earned?: number
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points_earned?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_engagement_stats: {
+        Row: {
+          activity_count: number
+          company_id: string | null
+          last_active_at: string
+          last_login_date: string | null
+          level: number
+          login_streak: number
+          time_spent_seconds: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_count?: number
+          company_id?: string | null
+          last_active_at?: string
+          last_login_date?: string | null
+          level?: number
+          login_streak?: number
+          time_spent_seconds?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_count?: number
+          company_id?: string | null
+          last_active_at?: string
+          last_login_date?: string | null
+          level?: number
+          login_streak?: number
+          time_spent_seconds?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_engagement_stats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_enrollments: {
         Row: {
           completed_at: string | null
@@ -449,6 +642,41 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_rewards: {
+        Row: {
+          id: string
+          points_spent: number
+          redeemed_at: string
+          reward_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          points_spent: number
+          redeemed_at?: string
+          reward_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          points_spent?: number
+          redeemed_at?: string
+          reward_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
             referencedColumns: ["id"]
           },
         ]
