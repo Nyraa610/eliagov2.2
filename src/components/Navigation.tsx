@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet"
 import { Menu } from "lucide-react";
 
-import { LanguageSelectorButton } from './navigation/LanguageSelectorButton';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { AuthButtons } from './navigation/AuthButtons';
 import { UserMenu } from './navigation/UserMenu';
 import { MobileMenu } from './navigation/MobileMenu';
@@ -54,7 +54,7 @@ export function Navigation() {
             </>
           )}
           
-          <LanguageSelectorButton />
+          <LanguageSelector />
           
           {isAuthenticated ? (
             <UserMenu />
@@ -62,12 +62,12 @@ export function Navigation() {
             <AuthButtons />
           )}
           
-          {isAuthenticated && <MobileMenuButton />}
+          {isAuthenticated && <MobileMenuButton isOpen={mobileMenuOpen} onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />}
         </div>
       </div>
       
       {isAuthenticated && (
-        <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+        <MobileMenu isOpen={mobileMenuOpen} onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
       )}
     </div>
   );
