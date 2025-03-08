@@ -116,48 +116,6 @@ export type Database = {
         }
         Relationships: []
       }
-      company_members: {
-        Row: {
-          company_id: string
-          created_at: string
-          id: string
-          is_admin: boolean
-          role: string
-          user_id: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          id?: string
-          is_admin?: boolean
-          role?: string
-          user_id: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          id?: string
-          is_admin?: boolean
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_members_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "company_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       content_completions: {
         Row: {
           completed_at: string | null
@@ -505,6 +463,12 @@ export type Database = {
         Returns: string
       }
       user_is_company_admin: {
+        Args: {
+          company_id: string
+        }
+        Returns: boolean
+      }
+      user_is_company_member: {
         Args: {
           company_id: string
         }
