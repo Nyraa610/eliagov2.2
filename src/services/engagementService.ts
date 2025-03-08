@@ -293,45 +293,83 @@ class EngagementService {
         companyId = profile.company_id;
       }
 
-      const { data, error } = await supabase
+      // Fetch user engagement stats first
+      const { data: statsData, error: statsError } = await supabase
         .from('user_engagement_stats')
-        .select(`
-          user_id,
-          total_points,
-          level,
-          profiles:user_id (
-            full_name,
-            avatar_url,
-            company_id
-          ),
-          companies:profiles.company_id (
-            name
-          )
-        `)
+        .select('user_id, total_points, level')
         .order('total_points', { ascending: false })
         .limit(limit);
 
-      if (error) {
-        console.error("Error fetching leaderboard:", error);
+      if (statsError) {
+        console.error("Error fetching leaderboard stats:", statsError);
         return [];
       }
 
-      let filteredData = data || [];
-      if (scope === 'company' && companyId) {
-        filteredData = filteredData.filter(
-          item => item.profiles?.company_id === companyId
-        );
+      if (!statsData || statsData.length === 0) {
+        return [];
       }
 
-      return filteredData.map((entry, index) => ({
-        user_id: entry.user_id,
-        full_name: entry.profiles?.full_name || 'Anonymous User',
-        avatar_url: entry.profiles?.avatar_url,
-        company_name: entry.companies?.[0]?.name || null,
-        total_points: entry.total_points,
-        level: entry.level,
-        rank: index + 1
-      }));
+      // Get user IDs from the stats
+      const userIds = statsData.map(stat => stat.user_id);
+
+      // Fetch profile data for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, company_id')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profile data:", profilesError);
+        return [];
+      }
+
+      // If company scope, filter profiles by company ID
+      let filteredProfiles = profilesData || [];
+      if (scope === 'company' && companyId) {
+        filteredProfiles = filteredProfiles.filter(
+          profile => profile.company_id === companyId
+        );
+        
+        // Re-filter stats to match the filtered profiles
+        const filteredUserIds = filteredProfiles.map(profile => profile.id);
+        statsData = statsData.filter(stat => filteredUserIds.includes(stat.user_id));
+      }
+
+      // Get company IDs from profiles for company name lookup
+      const companyIds = filteredProfiles
+        .map(profile => profile.company_id)
+        .filter(id => id !== null) as string[];
+
+      // Fetch company data if needed
+      let companiesData: any[] = [];
+      if (companyIds.length > 0) {
+        const { data: companies, error: companiesError } = await supabase
+          .from('companies')
+          .select('id, name')
+          .in('id', companyIds);
+
+        if (!companiesError) {
+          companiesData = companies || [];
+        }
+      }
+
+      // Combine the data
+      return statsData.map((stat, index) => {
+        const profile = filteredProfiles.find(p => p.id === stat.user_id);
+        const company = profile?.company_id 
+          ? companiesData.find(c => c.id === profile.company_id) 
+          : null;
+
+        return {
+          user_id: stat.user_id,
+          full_name: profile?.full_name || 'Anonymous User',
+          avatar_url: profile?.avatar_url,
+          company_name: company?.name || null,
+          total_points: stat.total_points,
+          level: stat.level,
+          rank: index + 1
+        };
+      });
     } catch (error) {
       console.error("Exception fetching leaderboard:", error);
       return [];
