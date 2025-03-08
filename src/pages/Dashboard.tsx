@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,7 @@ import { ESGNewsFeed } from "@/components/dashboard/ESGNewsFeed";
 import { useTranslation } from "react-i18next";
 import { CompanyAssessmentOverview } from "@/components/dashboard/CompanyAssessmentOverview";
 import { useEngagement } from "@/hooks/useEngagement";
-import { engagementService, UserEngagementStats } from "@/services/engagementService";
+import { engagementService, UserEngagementStats } from "@/services/engagement";
 
 const Dashboard = () => {
   const { t } = useTranslation();
