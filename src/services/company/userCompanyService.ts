@@ -63,7 +63,7 @@ export const userCompanyService = {
     }
   },
   
-  async createUserCompany(company: Partial<CompanyWithRole>) {
+  async createUserCompany(company: Partial<Company>) {
     try {
       console.log("Creating company for user:", company);
       
@@ -88,8 +88,8 @@ export const userCompanyService = {
         throw new Error("Company name is required");
       }
       
-      // Create company with a direct database insert
-      console.log("Creating company via direct insert with name:", company.name);
+      // First create the company
+      console.log("Creating company in database with name:", company.name);
       
       // Simplify the company data to minimize errors
       const companyInsertData = {
@@ -102,8 +102,6 @@ export const userCompanyService = {
         ...(company.registry_city && { registry_city: company.registry_city })
       };
       
-      // First create the company
-      console.log("Inserting company into database:", companyInsertData);
       const { data: createdCompany, error: companyError } = await supabase
         .from('companies')
         .insert([companyInsertData])
@@ -133,10 +131,10 @@ export const userCompanyService = {
         
       if (profileError) {
         console.error("Error updating user profile with company:", profileError);
-        // We don't throw here since the company was created successfully
-      } else {
-        console.log("User profile updated with company info successfully");
+        throw profileError;
       }
+      
+      console.log("User profile updated with company info successfully");
       
       return createdCompany as Company;
     } catch (error) {

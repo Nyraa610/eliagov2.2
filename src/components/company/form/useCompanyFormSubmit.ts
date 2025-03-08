@@ -56,7 +56,7 @@ export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmi
           description: "Company profile has been updated successfully.",
         });
       } else {
-        // Create new company with minimal data
+        // Create new company
         console.log("Creating new company with data:", companyData);
         result = await companyService.createCompany(companyData);
         console.log("Company created successfully:", result);
@@ -81,10 +81,10 @@ export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmi
       
       // Handle specific database errors
       if (error instanceof Error) {
-        if (error.message.includes("infinite recursion") || 
-            error.message.includes("policy for relation") ||
-            error.message.includes("violates row-level security")) {
-          errorDesc = "Database policy error. This might be due to an issue with user permissions. Please try again or contact support.";
+        if (error.message.includes("violates row-level security")) {
+          errorDesc = "Permission denied. You don't have access to perform this action.";
+        } else if (error.message.includes("foreignKey constraint")) {
+          errorDesc = "Database constraint error. Some referenced data may be missing.";
         } else {
           errorDesc = error.message;
         }
