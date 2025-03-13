@@ -2,10 +2,8 @@
 import * as z from "zod";
 
 export const esgFormSchema = z.object({
-  // Company Context
-  companyName: z.string().min(2, {
-    message: "Company name must be at least 2 characters.",
-  }),
+  // Company Context (companyName now optional as we'll get it from user profile)
+  companyName: z.string().optional(),
   industry: z.string().min(2, {
     message: "Industry must be at least 2 characters.",
   }),

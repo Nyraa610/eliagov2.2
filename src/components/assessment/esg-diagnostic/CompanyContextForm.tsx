@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { ESGFormValues } from "./ESGFormSchema";
 import { ArrowRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface CompanyContextFormProps {
   form: UseFormReturn<ESGFormValues>;
@@ -13,28 +15,40 @@ interface CompanyContextFormProps {
 }
 
 export function CompanyContextForm({ form, onNext }: CompanyContextFormProps) {
+  useEffect(() => {
+    // Get user's company information when component mounts
+    const getUserCompany = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData.session) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*, companies:company_id(*)')
+            .eq('id', sessionData.session.user.id)
+            .single();
+          
+          if (profileData?.companies?.name) {
+            // Set company name in the form
+            form.setValue('companyName', profileData.companies.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user company:", error);
+      }
+    };
+    
+    getUserCompany();
+  }, [form]);
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Company Context</h3>
         <p className="text-sm text-muted-foreground">
-          Let's start by understanding your company's context to better evaluate your ESG practices.
+          Let's understand your company's context to better evaluate your ESG practices.
         </p>
       </div>
-      
-      <FormField
-        control={form.control}
-        name="companyName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Company Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter your company name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       
       <FormField
         control={form.control}

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export function ESGDiagnosticForm({ onSubmit, onAnalysisComplete }: ESGDiagnosti
   const [activeTab, setActiveTab] = useState("company");
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userCompany, setUserCompany] = useState<string | null>(null);
   
   const form = useForm<ESGFormValues>({
     resolver: zodResolver(esgFormSchema),
@@ -46,6 +47,39 @@ export function ESGDiagnosticForm({ onSubmit, onAnalysisComplete }: ESGDiagnosti
     },
   });
 
+  // Get the user's company when component mounts
+  useEffect(() => {
+    const getUserCompany = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData.session) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*, companies:company_id(*)')
+            .eq('id', sessionData.session.user.id)
+            .single();
+          
+          if (profileData?.companies?.name) {
+            const companyName = profileData.companies.name;
+            setUserCompany(companyName);
+            form.setValue('companyName', companyName);
+          } else {
+            toast({
+              title: "No company found",
+              description: "Please set up your company in your profile before proceeding.",
+              variant: "destructive"
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user company:", error);
+      }
+    };
+    
+    getUserCompany();
+  }, [form, toast]);
+
   const handleTabChange = (value: string) => {
     // Save current form state before changing tabs
     setActiveTab(value);
@@ -56,6 +90,20 @@ export function ESGDiagnosticForm({ onSubmit, onAnalysisComplete }: ESGDiagnosti
   };
 
   const handleFormSubmit = async (values: ESGFormValues) => {
+    // Use company name from user profile if available
+    if (userCompany && !values.companyName) {
+      values.companyName = userCompany;
+    }
+    
+    if (!values.companyName) {
+      toast({
+        title: "Company name required",
+        description: "Please set up your company in your profile before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Save form data to Supabase
@@ -147,6 +195,11 @@ GOVERNANCE:
         <CardTitle>ESG Diagnostic Assessment</CardTitle>
         <CardDescription>
           Complete this assessment to evaluate your company's Environmental, Social, and Governance practices
+          {userCompany && (
+            <div className="mt-2 text-sm font-medium text-primary">
+              Assessment for: {userCompany}
+            </div>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
