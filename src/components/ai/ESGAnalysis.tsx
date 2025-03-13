@@ -1,22 +1,43 @@
 
 import { useState } from "react";
-import { AIAnalysis } from "./AIAnalysis";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { AIAnalysis } from "./AIAnalysis";
 import { useToast } from "@/components/ui/use-toast";
 import { ClipboardCopy, DownloadCloud, FileText, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ESGDiagnosticForm } from "../assessment/esg-diagnostic/ESGDiagnosticForm";
+import { ESGFormValues } from "../assessment/esg-diagnostic/ESGFormSchema";
+import { ESGDiagnosticReport } from "../assessment/esg-diagnostic/ESGDiagnosticReport";
 
 export function ESGAnalysis() {
-  const [activeTab, setActiveTab] = useState("input");
+  const [activeTab, setActiveTab] = useState("diagnostic");
   const [assessmentData, setAssessmentData] = useState("");
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [formData, setFormData] = useState<ESGFormValues | null>(null);
+  const [showReport, setShowReport] = useState(false);
   const { toast } = useToast();
 
   const handleAnalysisComplete = (result: string) => {
     setAnalysisResult(result);
     setActiveTab("result");
+  };
+
+  const handleFormSubmit = (values: ESGFormValues) => {
+    setFormData(values);
+    // The actual analysis is handled in the ESGDiagnosticForm component
+  };
+
+  const handleFormAnalysisComplete = (result: string) => {
+    setAnalysisResult(result);
+    setShowReport(true);
+  };
+
+  const handleStartNewAssessment = () => {
+    setShowReport(false);
+    setFormData(null);
+    setAnalysisResult(null);
   };
 
   const handleCopyResult = () => {
@@ -48,22 +69,37 @@ export function ESGAnalysis() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" /> ESG Analysis Tool
+            <Sparkles className="h-5 w-5 text-primary" /> ESG Diagnostic Assistant
           </CardTitle>
           <CardDescription>
-            Analyze your company's ESG performance using AI
+            Analyze your company's ESG performance and get actionable recommendations
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="input">Input Data</TabsTrigger>
-              <TabsTrigger value="result" disabled={!analysisResult}>
-                Analysis Result
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="diagnostic">Guided Diagnostic</TabsTrigger>
+              <TabsTrigger value="custom">Custom Analysis</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="input" className="space-y-4 pt-4">
+            <TabsContent value="diagnostic" className="space-y-4">
+              {!showReport ? (
+                <ESGDiagnosticForm 
+                  onSubmit={handleFormSubmit}
+                  onAnalysisComplete={handleFormAnalysisComplete}
+                />
+              ) : (
+                formData && analysisResult && (
+                  <ESGDiagnosticReport 
+                    formData={formData}
+                    analysisResult={analysisResult}
+                    onStartNew={handleStartNewAssessment}
+                  />
+                )
+              )}
+            </TabsContent>
+            
+            <TabsContent value="custom" className="space-y-4 pt-4">
               <p className="text-sm text-muted-foreground">
                 Enter information about your company's environmental, social, and governance practices for AI analysis.
               </p>
@@ -83,44 +119,40 @@ export function ESGAnalysis() {
                 onAnalysisComplete={handleAnalysisComplete}
                 showInput={false}
               />
-            </TabsContent>
-            
-            <TabsContent value="result" className="space-y-4 pt-4">
-              {analysisResult && (
-                <>
-                  <div className="bg-muted/50 p-4 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg font-medium flex items-center">
-                        <FileText className="h-5 w-5 mr-2" /> ESG Analysis Report
-                      </h3>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleCopyResult}
-                          className="gap-1"
-                        >
-                          <ClipboardCopy className="h-4 w-4" />
-                          <span className="hidden sm:inline">Copy</span>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleDownloadResult}
-                          className="gap-1"
-                        >
-                          <DownloadCloud className="h-4 w-4" />
-                          <span className="hidden sm:inline">Download</span>
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="prose prose-sm max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm bg-transparent border-0 p-0">
-                        {analysisResult}
-                      </pre>
+              
+              {analysisResult && activeTab === "result" && (
+                <div className="bg-muted/50 p-4 rounded-md mt-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-medium flex items-center">
+                      <FileText className="h-5 w-5 mr-2" /> ESG Analysis Report
+                    </h3>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleCopyResult}
+                        className="gap-1"
+                      >
+                        <ClipboardCopy className="h-4 w-4" />
+                        <span className="hidden sm:inline">Copy</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleDownloadResult}
+                        className="gap-1"
+                      >
+                        <DownloadCloud className="h-4 w-4" />
+                        <span className="hidden sm:inline">Download</span>
+                      </Button>
                     </div>
                   </div>
-                </>
+                  <div className="prose prose-sm max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm bg-transparent border-0 p-0">
+                      {analysisResult}
+                    </pre>
+                  </div>
+                </div>
               )}
             </TabsContent>
           </Tabs>

@@ -16,6 +16,34 @@ const supabaseClient = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string
 );
 
+// Save ESG assessment data
+async function saveESGAssessment(userId: string, content: string, result: string) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('assessment_progress')
+      .insert({
+        user_id: userId,
+        assessment_type: 'esg_diagnostic',
+        status: 'completed',
+        progress: 100,
+        form_data: { 
+          content, 
+          analysis_result: result,
+          completed_at: new Date().toISOString()
+        }
+      });
+
+    if (error) {
+      console.error("Error saving ESG assessment:", error);
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Exception saving ESG assessment:", err);
+    return null;
+  }
+}
+
 serve(async (req) => {
   try {
     // Handle CORS for preflight requests
@@ -79,7 +107,32 @@ serve(async (req) => {
     if (type === 'course-summary') {
       systemPrompt = "You are an educational expert that creates concise and engaging summaries of course content. Your summaries should highlight key learning objectives, main topics, and the value the course offers to students.";
     } else if (type === 'esg-assessment') {
-      systemPrompt = "You are an ESG (Environmental, Social, Governance) expert consultant analyzing corporate sustainability practices. Provide a structured assessment that includes strengths, areas for improvement, and actionable recommendations.";
+      systemPrompt = `You are an ESG (Environmental, Social, Governance) expert consultant analyzing corporate sustainability practices. Based on the information provided, create a comprehensive ESG diagnostic report with these sections:
+
+1. EXECUTIVE SUMMARY
+   - Brief overview of the company's current ESG maturity level
+   - Quick highlights of key strengths and areas for improvement
+
+2. DETAILED ASSESSMENT
+   - Environmental: Evaluate waste management, carbon footprint, energy efficiency
+   - Social: Evaluate employee practices, community engagement, diversity & inclusion
+   - Governance: Evaluate board oversight, transparency, ethical decision-making
+
+3. BENCHMARKING
+   - Compare the company's practices with industry standards and frameworks (ISO 26000, CSRD, etc.)
+   - Identify where the company stands relative to peers
+
+4. RECOMMENDATIONS
+   - High-priority actions (immediate term, 0-6 months)
+   - Medium-priority actions (short term, 6-12 months)
+   - Long-term strategic initiatives (1-3 years)
+
+5. IMPLEMENTATION ROADMAP
+   - Key performance indicators (KPIs) to track progress
+   - Suggested timeline for implementation
+   - Resource requirements
+
+Format your analysis professionally with clear headings and bullet points where appropriate. Provide specific, actionable guidance tailored to the company's industry, size, and current practices.`;
     } else {
       return new Response(JSON.stringify({ error: "Invalid analysis type" }), {
         status: 400,
@@ -98,10 +151,15 @@ serve(async (req) => {
       model: "gpt-4o-mini", // Using a cost-effective model
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: 2000, // Increased token limit for comprehensive reports
     });
     
     const result = completion.data.choices[0]?.message?.content || "No result generated";
+    
+    // Save ESG assessment data if it's an ESG assessment
+    if (type === 'esg-assessment') {
+      await saveESGAssessment(user.id, content, result);
+    }
     
     // Return the analysis result
     return new Response(JSON.stringify({ result }), {
