@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,6 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
       }
       
       if (data.error) {
-        // Handle API error returned in response body
         setError("Error from INSEE API");
         setApiErrorDetails(data.error);
         return;
@@ -121,7 +119,7 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
 
       {results.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Search Results</h3>
+          <h3 className="text-sm font-medium">Search Results {results[0].name.includes("(mock data)") ? "(Mock Data)" : ""}</h3>
           {results.map((company, index) => (
             <Card key={index} className={`cursor-pointer transition ${selectedCompany?.siret === company.siret ? 'border-primary' : 'hover:border-muted-foreground'}`}
               onClick={() => handleSelectCompany(company)}>
