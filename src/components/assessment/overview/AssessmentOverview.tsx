@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { FeatureStatus } from "@/types/training";
-import { HelpCircle } from "lucide-react";
+import { History, HelpCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { assessmentService } from "@/services/assessmentService";
 
@@ -12,13 +12,15 @@ interface AssessmentOverviewProps {
   setDiagStatus: (status: FeatureStatus) => void;
   showDiagnostic: (show: boolean) => void;
   setActiveAssessmentTab: (tab: string) => void;
+  onViewHistory?: () => void;
 }
 
 export function AssessmentOverview({ 
   showDiagnostic, 
   setDiagStatus, 
   setActiveAssessmentTab,
-  diagStatus
+  diagStatus,
+  onViewHistory
 }: AssessmentOverviewProps) {
   const { t } = useTranslation();
 
@@ -59,7 +61,20 @@ export function AssessmentOverview({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">{t("assessment.overview.title")}</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">{t("assessment.overview.title")}</h2>
+        {onViewHistory && diagStatus !== "not-started" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onViewHistory}
+            className="flex items-center gap-1"
+          >
+            <History className="h-4 w-4" />
+            View Assessment History
+          </Button>
+        )}
+      </div>
       
       <Card className="overflow-hidden">
         <CardHeader className="pb-2 space-y-1">
@@ -89,7 +104,9 @@ export function AssessmentOverview({
             >
               {diagStatus === "not-started" 
                 ? t("assessment.startAssessment") 
-                : t("assessment.continueAssessment")}
+                : diagStatus === "completed"
+                  ? t("assessment.startNewAssessment", "Start New Assessment")
+                  : t("assessment.continueAssessment")}
             </Button>
           </div>
         </CardContent>

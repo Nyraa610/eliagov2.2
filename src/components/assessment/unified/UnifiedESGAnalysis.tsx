@@ -11,10 +11,12 @@ const UnifiedESGAnalysisContent = () => {
 
   const handleFormSubmit = (values: ESGFormValues) => {
     // This is handled in the UnifiedAssessmentForm component
+    console.log("Form submitted:", values);
   };
 
   const handleFormAnalysisComplete = (result: string) => {
     // This is handled in the UnifiedAssessmentForm component
+    console.log("Analysis complete:", result);
   };
 
   return (

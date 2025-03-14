@@ -3,9 +3,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Clock, ClipboardCopy, DownloadCloud, Eye, FileText, Loader2 } from "lucide-react";
+import { Clock, ClipboardCopy, DownloadCloud, Eye, FileText, Loader2, PlusCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface ESGAssessmentProps {
+  onStartNew?: () => void;
+}
 
 interface ESGAssessment {
   id: string;
@@ -17,7 +21,7 @@ interface ESGAssessment {
   };
 }
 
-export function ESGAssessmentHistory() {
+export function ESGAssessmentHistory({ onStartNew }: ESGAssessmentProps) {
   const [assessments, setAssessments] = useState<ESGAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAssessment, setSelectedAssessment] = useState<ESGAssessment | null>(null);
@@ -34,7 +38,7 @@ export function ESGAssessmentHistory() {
       const { data, error } = await supabase
         .from('assessment_progress')
         .select('*')
-        .eq('assessment_type', 'esg_diagnostic')
+        .eq('assessment_type', 'rse_diagnostic')
         .eq('status', 'completed')
         .order('created_at', { ascending: false });
 
@@ -102,11 +106,22 @@ export function ESGAssessmentHistory() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" /> ESG Assessment History
-        </CardTitle>
-        <CardDescription>View and manage your past ESG diagnostic assessments</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" /> ESG Assessment History
+          </CardTitle>
+          <CardDescription>View and manage your past ESG diagnostic assessments</CardDescription>
+        </div>
+        {onStartNew && (
+          <Button 
+            onClick={onStartNew}
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Start New Assessment
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (

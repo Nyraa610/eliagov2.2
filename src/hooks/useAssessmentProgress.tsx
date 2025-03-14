@@ -63,9 +63,13 @@ export function useAssessmentProgress() {
 
   return {
     diagStatus,
+    setDiagStatus,
     carbonEvalStatus,
+    setCarbonEvalStatus,
     materialityStatus,
+    setMaterialityStatus,
     actionPlanStatus,
+    setActionPlanStatus,
     loading,
     getOverallProgress
   };

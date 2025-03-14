@@ -10,14 +10,17 @@ import { AssessmentOverview } from "@/components/assessment/overview/AssessmentO
 import { TrainingModuleInvitation } from "@/components/assessment/overview/TrainingModuleInvitation";
 import { EliaAssistant } from "@/components/assessment/unified/EliaAssistant";
 import { UnifiedESGAnalysis } from "@/components/assessment/unified/UnifiedESGAnalysis";
+import { useAssessmentProgress } from "@/hooks/useAssessmentProgress";
+import { ESGAssessmentHistory } from "@/components/assessment/esg-diagnostic/ESGAssessmentHistory";
 
 export default function Assessment() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
+  const { diagStatus, setDiagStatus, loading, getOverallProgress } = useAssessmentProgress();
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [showUnifiedAssessment, setShowUnifiedAssessment] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -39,6 +42,21 @@ export default function Assessment() {
     // When showing the diagnostic, we want to show the unified assessment
     if (show) {
       setShowUnifiedAssessment(true);
+      setShowHistory(false);
+    }
+  };
+
+  const handleShowHistory = () => {
+    setShowHistory(true);
+    setShowUnifiedAssessment(false);
+  };
+
+  const handleStartNewAssessment = () => {
+    setShowUnifiedAssessment(true);
+    setShowHistory(false);
+    // Reset diagnostic status to in-progress for new assessment
+    if (diagStatus === "completed") {
+      setDiagStatus("in-progress");
     }
   };
 
@@ -52,13 +70,18 @@ export default function Assessment() {
         <div className="lg:col-span-2">
           <TrainingModuleInvitation />
           
-          {!showUnifiedAssessment ? (
+          {!showUnifiedAssessment && !showHistory ? (
             <AssessmentOverview 
               diagStatus={diagStatus}
               setDiagStatus={setDiagStatus}
               showDiagnostic={handleShowDiagnostic}
               setActiveAssessmentTab={() => {}}
+              onViewHistory={handleShowHistory}
             />
+          ) : showHistory ? (
+            <>
+              <ESGAssessmentHistory onStartNew={handleStartNewAssessment} />
+            </>
           ) : (
             <UnifiedESGAnalysis />
           )}
