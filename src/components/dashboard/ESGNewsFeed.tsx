@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { BarChart3, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { rssService } from "@/services/rssService";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -22,14 +21,13 @@ export const ESGNewsFeed = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedLanguage, setFeedLanguage] = useState<'en' | 'fr' | 'el' | 'es'>(language as 'en' | 'fr' | 'el' | 'es');
   
   useEffect(() => {
     const fetchNews = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const items = await rssService.fetchESGNews(feedLanguage);
+        const items = await rssService.fetchESGNews(language as 'en' | 'fr' | 'el' | 'es');
         setNewsItems(items);
       } catch (err) {
         setError("Failed to load ESG news. Please try again later.");
@@ -40,11 +38,6 @@ export const ESGNewsFeed = () => {
     };
     
     fetchNews();
-  }, [feedLanguage]);
-  
-  // Update feed language when app language changes, but allow user to override
-  useEffect(() => {
-    setFeedLanguage(language as 'en' | 'fr' | 'el' | 'es');
   }, [language]);
   
   return (
@@ -56,19 +49,6 @@ export const ESGNewsFeed = () => {
         <CardDescription>
           {t('news.subtitle')}
         </CardDescription>
-        <Tabs 
-          defaultValue={feedLanguage} 
-          value={feedLanguage}
-          className="mt-2" 
-          onValueChange={(value) => setFeedLanguage(value as 'en' | 'fr' | 'el' | 'es')}
-        >
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="en">{t('common.english')}</TabsTrigger>
-            <TabsTrigger value="fr">{t('common.french')}</TabsTrigger>
-            <TabsTrigger value="el">{t('common.greek')}</TabsTrigger>
-            <TabsTrigger value="es">{t('common.spanish')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </CardHeader>
       
       <CardContent>
