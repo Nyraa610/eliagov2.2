@@ -57,37 +57,73 @@ export function useCompanyAnalysis() {
         if (companyInfo || isLoadingCompanyInfo) return;
         
         setIsLoadingCompanyInfo(true);
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionData.session) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*, companies:company_id(*)')
-            .eq('id', sessionData.session.user.id)
-            .single();
-          
-          if (profileError) {
-            throw new Error(`Failed to fetch profile: ${profileError.message}`);
-          }
-          
-          if (profileData?.companies?.name) {
-            const companyName = profileData.companies.name;
-            setUserCompany(companyName);
-            
-            // Automatically analyze the company
-            await analyzeCompany(companyName);
-          } else {
-            setIsLoadingCompanyInfo(false);
-            setAnalysisError("No company associated with your profile. Please contact your administrator.");
-          }
-        } else {
-          setIsLoadingCompanyInfo(false);
-          setAnalysisError("You need to be logged in to view company information.");
+        if (sessionError) {
+          throw new Error(`Authentication error: ${sessionError.message}`);
         }
+        
+        if (!sessionData.session) {
+          throw new Error("No active session found. Please log in to continue.");
+        }
+        
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*, companies:company_id(*)')
+          .eq('id', sessionData.session.user.id)
+          .single();
+        
+        if (profileError) {
+          throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+        }
+        
+        if (!profileData) {
+          throw new Error("User profile data not found. Please complete your profile setup.");
+        }
+        
+        if (!profileData.companies?.name) {
+          setIsLoadingCompanyInfo(false);
+          setAnalysisError("No company associated with your profile. Please join or create a company in your profile settings.");
+          toast({
+            title: "Company Information Missing",
+            description: "No company is associated with your profile. Please join or create a company.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        const companyName = profileData.companies.name;
+        setUserCompany(companyName);
+        
+        // Automatically analyze the company
+        await analyzeCompany(companyName);
       } catch (error) {
-        console.error("Error fetching user company:", error);
+        console.error("Error in getUserCompanyAndAnalyze:", error);
+        
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         setIsLoadingCompanyInfo(false);
-        setAnalysisError("Unable to retrieve your company information.");
+        setAnalysisError(errorMessage);
+        
+        // Display appropriate toast based on error type
+        if (errorMessage.includes("Authentication")) {
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again to continue.",
+            variant: "destructive"
+          });
+        } else if (errorMessage.includes("profile")) {
+          toast({
+            title: "Profile Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Unable to retrieve your company information. Please try again later.",
+            variant: "destructive"
+          });
+        }
       }
     };
     
@@ -98,6 +134,11 @@ export function useCompanyAnalysis() {
     if (!companyName.trim()) {
       setIsLoadingCompanyInfo(false);
       setAnalysisError("Company name is required");
+      toast({
+        title: "Missing Information",
+        description: "Company name is required for analysis",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -122,12 +163,42 @@ export function useCompanyAnalysis() {
       
       // Set progress to 100% when complete
       setAnalyzingProgress(100);
+      
+      toast({
+        title: "Analysis Complete",
+        description: "Company information has been successfully analyzed",
+      });
     } catch (error) {
       console.error("Error analyzing company:", error);
-      setAnalysisError(error instanceof Error ? error.message : "Failed to analyze company information");
+      
+      // Enhanced error handling with specific error types
+      let errorMessage = "An unexpected error occurred during company analysis";
+      let errorTitle = "Analysis Failed";
+      
+      if (error instanceof Error) {
+        // Parse different error types for more specific messages
+        const errorText = error.message;
+        
+        if (errorText.includes("Edge function error")) {
+          errorMessage = "The analysis service is currently unavailable. Please try again later.";
+          errorTitle = "Service Unavailable";
+        } else if (errorText.includes("Invalid response format")) {
+          errorMessage = "The analysis service returned an invalid response. Our team has been notified.";
+          errorTitle = "Data Error";
+        } else if (errorText.includes("OpenAI API error")) {
+          errorMessage = "The AI analysis engine encountered an issue. Please try again in a few minutes.";
+          errorTitle = "AI Service Error";
+        } else if (errorText.includes("Failed to analyze company")) {
+          // Use the specific error message as provided
+          errorMessage = errorText;
+        }
+      }
+      
+      setAnalysisError(errorMessage);
+      
       toast({
-        title: "Analysis failed",
-        description: error instanceof Error ? error.message : "Failed to analyze company information",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -139,6 +210,12 @@ export function useCompanyAnalysis() {
     if (userCompany) {
       setIsLoadingCompanyInfo(true);
       analyzeCompany(userCompany);
+    } else {
+      toast({
+        title: "Retry Failed",
+        description: "Cannot retry analysis: Company name is missing",
+        variant: "destructive"
+      });
     }
   };
 

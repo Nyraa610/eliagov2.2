@@ -6,7 +6,7 @@ import { ESGFormValues } from "../esg-diagnostic/ESGFormSchema";
 import { UnifiedAssessmentProvider, useUnifiedAssessment } from "./context/UnifiedAssessmentContext";
 import { UnifiedAssessmentForm } from "./components/UnifiedAssessmentForm";
 import { UnifiedAssessmentReport } from "./components/UnifiedAssessmentReport";
-import { CompanyOverview } from "./components/CompanyOverview";
+import { CompanyOverview } from "./components/company-overview";
 
 const UnifiedESGAnalysisContent = () => {
   const { formData, analysisResult, showReport, companyInfo } = useUnifiedAssessment();
