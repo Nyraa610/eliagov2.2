@@ -1,4 +1,3 @@
-
 /**
  * INSEE API service
  * Handles communicating with the INSEE API for company information
@@ -26,19 +25,16 @@ export async function searchInseeCompany(companyName: string) {
     // Construct search URL using the correct SIREN endpoint format
     const searchUrl = `${INSEE_API_BASE_URL}/siren`;
     
-    // Fix the query parameter syntax according to API documentation
-    // The INSEE API expects the q parameter to be formatted properly 
-    // without quotes for the search term
-    const params = new URLSearchParams({
-      q: `denominationUniteLegale:${companyName}*`,  // Using prefix search with asterisk wildcard
-      nombre: "5" // Limit results
-    });
+    // Fixing the parameter format to match exactly what the API expects
+    // Format should be: denominationUniteLegale="xxx"&nombre=5
+    const encodedCompanyName = encodeURIComponent(`"${companyName}"`);
+    const queryString = `denominationUniteLegale=${encodedCompanyName}&nombre=5`;
     
-    console.log(`Attempting INSEE API search: ${searchUrl}?${params.toString()}`);
+    console.log(`Attempting INSEE API search: ${searchUrl}?${queryString}`);
     console.log(`Using headers: X-INSEE-Api-Key-Integration: [API KEY HIDDEN]`);
     
     // Make request to INSEE API with detailed logging
-    const response = await fetch(`${searchUrl}?${params.toString()}`, {
+    const response = await fetch(`${searchUrl}?${queryString}`, {
       method: "GET",
       headers: {
         "X-INSEE-Api-Key-Integration": apiKey,
@@ -87,3 +83,4 @@ export async function searchInseeCompany(companyName: string) {
     return { etablissements: [getMockCompanyData(companyName)] };
   }
 }
+
