@@ -17,6 +17,7 @@ export default function Assessment() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
   const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,6 +33,10 @@ export default function Assessment() {
 
     checkAuth();
   }, [navigate, toast]);
+
+  const setActiveAssessmentTab = (tab: string) => {
+    setActiveTab(tab);
+  };
 
   return (
     <UserLayout title={t("assessment.title")}>
@@ -54,6 +59,9 @@ export default function Assessment() {
         <TabsContent value="overview" className="pt-6">
           <AssessmentOverview 
             diagStatus={diagStatus}
+            setDiagStatus={setDiagStatus}
+            showDiagnostic={showDiagnostic}
+            setActiveAssessmentTab={setActiveAssessmentTab}
           />
         </TabsContent>
         
