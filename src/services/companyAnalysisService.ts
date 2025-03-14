@@ -22,15 +22,18 @@ export const companyAnalysisService = {
     try {
       console.log(`Requesting analysis for company: ${companyName}`);
       
+      // Make sure we're sending a proper JSON payload
       const { data, error } = await supabase.functions.invoke('company-analysis', {
         body: { companyName }
       });
       
+      // Handle edge function errors
       if (error) {
         console.error("Error from edge function:", error);
         throw new Error(`Edge function error: ${error.message}`);
       }
       
+      // Validate response format
       if (!data || !data.companyInfo) {
         console.error("Invalid response format:", data);
         throw new Error("Invalid response format from analysis service");

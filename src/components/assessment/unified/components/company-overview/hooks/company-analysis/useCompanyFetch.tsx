@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -24,11 +23,9 @@ export function useCompanyFetch({
   const { toast } = useToast();
   const { setFormData } = useUnifiedAssessment();
 
-  // Fetch user's company when component mounts and automatically trigger analysis
   useEffect(() => {
     const getUserCompanyAndAnalyze = async () => {
       try {
-        // Skip if we already have company info or are loading it
         if (userCompany) return;
         
         setIsLoadingCompanyInfo(true);
@@ -70,7 +67,6 @@ export function useCompanyFetch({
         const companyName = profileData.companies.name;
         setUserCompany(companyName);
         
-        // Automatically analyze the company
         await analyzeCompany(companyName);
       } catch (error) {
         console.error("Error in getUserCompanyAndAnalyze:", error);
@@ -79,7 +75,6 @@ export function useCompanyFetch({
         setIsLoadingCompanyInfo(false);
         setAnalysisError(errorMessage);
         
-        // Display appropriate toast based on error type
         if (errorMessage.includes("Authentication")) {
           toast({
             title: "Authentication Error",
@@ -126,7 +121,6 @@ export function useCompanyFetch({
       
       setCompanyInfo(result);
       
-      // Pre-fill form data with company information
       setFormData((prevData: ESGFormValues | null) => {
         return {
           ...(prevData || {}),
@@ -143,12 +137,10 @@ export function useCompanyFetch({
     } catch (error) {
       console.error("Error analyzing company:", error);
       
-      // Enhanced error handling with specific error types
       let errorMessage = "An unexpected error occurred during company analysis";
       let errorTitle = "Analysis Failed";
       
       if (error instanceof Error) {
-        // Parse different error types for more specific messages
         const errorText = error.message;
         
         if (errorText.includes("Edge function error")) {
@@ -161,7 +153,6 @@ export function useCompanyFetch({
           errorMessage = "The AI analysis engine encountered an issue. Please try again in a few minutes.";
           errorTitle = "AI Service Error";
         } else if (errorText.includes("Failed to analyze company")) {
-          // Use the specific error message as provided
           errorMessage = errorText;
         }
       }

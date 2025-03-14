@@ -13,13 +13,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true, // Enable detecting auth tokens in URL
     flowType: 'pkce' // Use PKCE flow for more secure auth
   },
-  global: {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  },
-  db: {
-    schema: 'public'
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
   }
 });
 

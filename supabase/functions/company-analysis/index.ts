@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "./utils/cors.ts";
@@ -7,8 +6,11 @@ import { analyzeCompany } from "./handlers/openai.ts";
 import { processCompanyInfo } from "./services/companyService.ts";
 
 serve(async (req) => {
+  console.log("Edge function invoked: company-analysis");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request with CORS headers");
     return new Response(null, {
       headers: corsHeaders,
     });
@@ -34,9 +36,20 @@ serve(async (req) => {
     // Call OpenAI to get company analysis
     const data = await analyzeCompany(companyName, openaiApiKey);
     
-    // Extract and process company info from OpenAI response
+    // Extract company info from OpenAI response
     const companyInfoText = data.choices[0]?.message?.content;
-    const companyInfo = processCompanyInfo(companyInfoText);
+    
+    // Parse the JSON response
+    let companyInfo;
+    try {
+      // The GPT model returns JSON as a string, we need to parse it
+      companyInfo = JSON.parse(companyInfoText);
+      console.log("Successfully parsed company info:", Object.keys(companyInfo));
+    } catch (error) {
+      console.error("Failed to parse company info JSON:", error);
+      console.log("Raw content received:", companyInfoText);
+      throw new Error("Invalid response format from AI service");
+    }
     
     return new Response(
       JSON.stringify({ companyInfo }),
