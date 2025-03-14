@@ -24,18 +24,23 @@ export async function searchInseeCompany(companyName: string) {
     }
     
     // Construct search URL using the correct SIREN endpoint format
-    const searchUrl = `${INSEE_API_BASE_URL}/siren`;
+    const baseUrl = `${INSEE_API_BASE_URL}/siren`;
     
-    // Format the parameter exactly as expected by INSEE API without URL-encoding the quotes
-    // The API requires the format: denominationUniteLegale="company name"&nombre=5
-    // We'll build this manually to ensure proper formatting
-    const searchQuery = `denominationUniteLegale="${companyName}"&nombre=5`;
+    // Create a URL object to properly handle parameter encoding
+    // The API requires the format: q=denominationUniteLegale:"company name"&nombre=5
+    // This approach lets the browser handle spaces correctly while we control the quotes
+    const url = new URL(baseUrl);
     
-    console.log(`Attempting INSEE API search: ${searchUrl}?${searchQuery}`);
+    // Add query parameter with proper quoting for search term
+    // Use q parameter with proper syntax instead of denominationUniteLegale
+    url.searchParams.append("q", `denominationUniteLegale:"${companyName}"`);
+    url.searchParams.append("nombre", "5");
+    
+    console.log(`Attempting INSEE API search: ${url.toString()}`);
     console.log(`Using headers: X-INSEE-Api-Key-Integration: [API KEY HIDDEN]`);
     
     // Make request to INSEE API with detailed logging
-    const response = await fetch(`${searchUrl}?${searchQuery}`, {
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: {
         "X-INSEE-Api-Key-Integration": apiKey,
