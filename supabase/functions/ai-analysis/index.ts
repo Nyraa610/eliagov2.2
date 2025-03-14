@@ -5,8 +5,10 @@ import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "https://
 
 // Type definitions for our request
 interface AIAnalysisRequest {
-  type: 'course-summary' | 'esg-assessment';
+  type: 'course-summary' | 'esg-assessment' | 'esg-assistant';
   content: string;
+  context?: any[];
+  analysisType?: 'integrated';
   additionalParams?: Record<string, any>;
 }
 
@@ -87,7 +89,7 @@ serve(async (req) => {
     
     // Parse request body
     const requestData: AIAnalysisRequest = await req.json();
-    const { type, content } = requestData;
+    const { type, content, context, analysisType } = requestData;
     
     if (!type || !content) {
       return new Response(JSON.stringify({ error: "Missing required fields: type or content" }), {
@@ -107,7 +109,9 @@ serve(async (req) => {
     if (type === 'course-summary') {
       systemPrompt = "You are an educational expert that creates concise and engaging summaries of course content. Your summaries should highlight key learning objectives, main topics, and the value the course offers to students.";
     } else if (type === 'esg-assessment') {
-      systemPrompt = `You are an ESG (Environmental, Social, Governance) expert consultant analyzing corporate sustainability practices. Based on the information provided, create a comprehensive ESG diagnostic report with these sections:
+      systemPrompt = `You are Elia, an ESG (Environmental, Social, Governance) expert consultant analyzing corporate sustainability practices. ${
+        analysisType === 'integrated' ? "You're part of an integrated ESG/RSE diagnostic journey that helps companies understand and improve their sustainability practices." : ""
+      } Based on the information provided, create a comprehensive ESG diagnostic report with these sections:
 
 1. EXECUTIVE SUMMARY
    - Brief overview of the company's current ESG maturity level
@@ -133,6 +137,34 @@ serve(async (req) => {
    - Resource requirements
 
 Format your analysis professionally with clear headings and bullet points where appropriate. Provide specific, actionable guidance tailored to the company's industry, size, and current practices.`;
+    } else if (type === 'esg-assistant') {
+      systemPrompt = `You are Elia, an AI assistant specializing in ESG (Environmental, Social, Governance) and RSE (Responsabilité Sociétale des Entreprises) assessments. 
+
+Your personality traits:
+- Professional but approachable
+- Patient and educational - you explain complex ESG concepts in simple terms
+- Solutions-oriented - you provide practical advice 
+- Supportive - you encourage companies on their sustainability journey
+
+Your knowledge areas:
+- ESG frameworks and standards (GRI, SASB, TCFD, CSRD, etc.)
+- Sustainability reporting and compliance
+- Carbon accounting and climate strategies
+- Social responsibility best practices
+- Corporate governance structures
+- Industry-specific sustainability challenges
+
+When answering questions:
+- Keep responses concise and focused
+- Provide actionable advice when possible
+- Refer to relevant frameworks or standards when appropriate
+- Use bullet points for clarity when listing multiple points
+- Acknowledge when certain questions might need more specialized expertise
+
+Avoid:
+- Giving overly generic advice
+- Making specific financial predictions
+- Claiming to replace human ESG consultants`;
     } else {
       return new Response(JSON.stringify({ error: "Invalid analysis type" }), {
         status: 400,
@@ -141,17 +173,31 @@ Format your analysis professionally with clear headings and bullet points where 
     }
     
     // Define messages for OpenAI chat completion
-    const messages: ChatCompletionRequestMessage[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
+    let messages: ChatCompletionRequestMessage[] = [
+      { role: "system", content: systemPrompt }
     ];
+    
+    // For chat assistant, include context from previous messages if available
+    if (type === 'esg-assistant' && context && Array.isArray(context)) {
+      for (const msg of context) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          messages.push({ 
+            role: msg.role, 
+            content: msg.content 
+          });
+        }
+      }
+    }
+    
+    // Add the current user message
+    messages.push({ role: "user", content: userPrompt });
     
     // Call OpenAI API
     const completion = await openai.createChatCompletion({
       model: "gpt-4o-mini", // Using a cost-effective model
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 2000, // Increased token limit for comprehensive reports
+      temperature: type === 'esg-assistant' ? 0.8 : 0.7, // Slightly higher temp for chat
+      max_tokens: type === 'esg-assistant' ? 800 : 2000, // Shorter responses for chat
     });
     
     const result = completion.data.choices[0]?.message?.content || "No result generated";

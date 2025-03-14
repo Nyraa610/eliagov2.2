@@ -7,11 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clipboard, Sparkles } from "lucide-react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { formSchema, FormValues } from "@/components/assessment/rse-diagnostic/formSchema";
 import { FeatureStatus } from "@/types/training";
-import { RSEDiagnosticForm } from "@/components/assessment/diagnostic/RSEDiagnosticForm";
 import { AssessmentOverview } from "@/components/assessment/overview/AssessmentOverview";
 import { AIAssessmentTab } from "@/components/assessment/ai/AIAssessmentTab";
 
@@ -20,21 +16,7 @@ export default function Assessment() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
-  const [activeAssessmentTab, setActiveAssessmentTab] = useState("company-info");
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
-
-  // Form definition for RSE diagnostic
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      companyName: "",
-      industry: "",
-      employeeCount: "",
-      currentRSEPractices: "",
-      mainChallenges: "",
-    },
-  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,39 +33,10 @@ export default function Assessment() {
     checkAuth();
   }, [navigate, toast]);
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
-    toast({
-      title: "Assessment submitted",
-      description: "Your RSE diagnostic has been successfully submitted.",
-    });
-    // Reset the form and go back to overview
-    form.reset();
-    setDiagStatus("completed");
-    setShowDiagnostic(false);
-    setActiveTab("overview");
-  }
-
-  // If we're showing the diagnostic form
-  if (showDiagnostic) {
-    return (
-      <UserLayout title={t("assessment.diagnosticRSE.title")}>
-        <RSEDiagnosticForm
-          form={form}
-          activeAssessmentTab={activeAssessmentTab}
-          setActiveAssessmentTab={setActiveAssessmentTab}
-          onSubmit={onSubmit}
-          setShowDiagnostic={setShowDiagnostic}
-        />
-      </UserLayout>
-    );
-  }
-
-  // Default assessment options view
   return (
     <UserLayout title={t("assessment.title")}>
       <p className="text-gray-600 mb-6">
-        {t("assessment.subtitle")}
+        Complete your company's ESG/RSE diagnostic with the help of Elia, our AI assistant.
       </p>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -100,9 +53,6 @@ export default function Assessment() {
         
         <TabsContent value="overview" className="pt-6">
           <AssessmentOverview 
-            showDiagnostic={setShowDiagnostic}
-            setDiagStatus={setDiagStatus}
-            setActiveAssessmentTab={setActiveAssessmentTab}
             diagStatus={diagStatus}
           />
         </TabsContent>
