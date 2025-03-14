@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ESGFormValues, esgFormSchema } from "../../esg-diagnostic/ESGFormSchema";
 import { supabase } from "@/lib/supabase";
 import { assessmentService } from "@/services/assessmentService";
+import { useUnifiedAssessment } from "../context/UnifiedAssessmentContext";
 
 export const useUnifiedFormSubmission = (
   onSubmit: (values: ESGFormValues) => void,
@@ -15,13 +16,14 @@ export const useUnifiedFormSubmission = (
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCompany, setUserCompany] = useState<string | null>(null);
+  const { companyInfo } = useUnifiedAssessment();
   
   const form = useForm<ESGFormValues>({
     resolver: zodResolver(esgFormSchema),
     defaultValues: {
       companyName: "",
-      industry: "",
-      employeeCount: "",
+      industry: companyInfo?.industry || "",
+      employeeCount: companyInfo?.employeeCount || "",
       wasteManagement: "",
       carbonFootprint: "",
       renewableEnergy: "",
@@ -77,11 +79,23 @@ export const useUnifiedFormSubmission = (
           title: "Progress loaded",
           description: "Your previous assessment progress has been restored."
         });
+      } else if (companyInfo) {
+        // Pre-fill form with analyzed company info
+        form.setValue('industry', companyInfo.industry);
+        form.setValue('employeeCount', companyInfo.employeeCount);
       }
     };
     
     loadSavedProgress();
-  }, [form, toast]);
+  }, [form, toast, companyInfo]);
+
+  // Also update when company info changes
+  useEffect(() => {
+    if (companyInfo) {
+      form.setValue('industry', companyInfo.industry);
+      form.setValue('employeeCount', companyInfo.employeeCount);
+    }
+  }, [companyInfo, form]);
 
   const handleTabChange = (value: string) => {
     // Save current progress before changing tabs

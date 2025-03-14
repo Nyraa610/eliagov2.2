@@ -1,13 +1,16 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import { ESGFormValues } from "../esg-diagnostic/ESGFormSchema";
 import { UnifiedAssessmentProvider, useUnifiedAssessment } from "./context/UnifiedAssessmentContext";
 import { UnifiedAssessmentForm } from "./components/UnifiedAssessmentForm";
 import { UnifiedAssessmentReport } from "./components/UnifiedAssessmentReport";
+import { CompanyOverview } from "./components/CompanyOverview";
 
 const UnifiedESGAnalysisContent = () => {
-  const { formData, analysisResult, showReport } = useUnifiedAssessment();
+  const { formData, analysisResult, showReport, companyInfo } = useUnifiedAssessment();
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
 
   const handleFormSubmit = (values: ESGFormValues) => {
     // This is handled in the UnifiedAssessmentForm component
@@ -17,6 +20,10 @@ const UnifiedESGAnalysisContent = () => {
   const handleFormAnalysisComplete = (result: string) => {
     // This is handled in the UnifiedAssessmentForm component
     console.log("Analysis complete:", result);
+  };
+
+  const handleContinueToAssessment = () => {
+    setShowAssessmentForm(true);
   };
 
   return (
@@ -32,10 +39,14 @@ const UnifiedESGAnalysisContent = () => {
         </CardHeader>
         <CardContent>
           {!showReport ? (
-            <UnifiedAssessmentForm 
-              onSubmit={handleFormSubmit}
-              onAnalysisComplete={handleFormAnalysisComplete}
-            />
+            !showAssessmentForm ? (
+              <CompanyOverview onContinue={handleContinueToAssessment} />
+            ) : (
+              <UnifiedAssessmentForm 
+                onSubmit={handleFormSubmit}
+                onAnalysisComplete={handleFormAnalysisComplete}
+              />
+            )
           ) : (
             formData && analysisResult && (
               <UnifiedAssessmentReport 

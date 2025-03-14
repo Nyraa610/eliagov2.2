@@ -1,42 +1,43 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { ESGFormValues } from "../../esg-diagnostic/ESGFormSchema";
+import { CompanyAnalysisResult } from "@/services/companyAnalysisService";
 
 interface UnifiedAssessmentContextType {
   formData: ESGFormValues | null;
+  setFormData: (data: ESGFormValues) => void;
   analysisResult: string | null;
+  setAnalysisResult: (result: string) => void;
   showReport: boolean;
-  setFormData: (data: ESGFormValues | null) => void;
-  setAnalysisResult: (result: string | null) => void;
   setShowReport: (show: boolean) => void;
-  handleStartNewAssessment: () => void;
+  companyInfo: CompanyAnalysisResult | null;
+  setCompanyInfo: (info: CompanyAnalysisResult) => void;
+  isLoadingCompanyInfo: boolean;
+  setIsLoadingCompanyInfo: (isLoading: boolean) => void;
 }
 
 const UnifiedAssessmentContext = createContext<UnifiedAssessmentContextType | undefined>(undefined);
 
-export const UnifiedAssessmentProvider = ({ children }: { children: React.ReactNode }) => {
+export const UnifiedAssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [formData, setFormData] = useState<ESGFormValues | null>(null);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
-
-  const handleStartNewAssessment = () => {
-    setShowReport(false);
-    setFormData(null);
-    setAnalysisResult(null);
-  };
+  const [companyInfo, setCompanyInfo] = useState<CompanyAnalysisResult | null>(null);
+  const [isLoadingCompanyInfo, setIsLoadingCompanyInfo] = useState(false);
 
   return (
-    <UnifiedAssessmentContext.Provider 
-      value={{
-        formData,
-        analysisResult,
-        showReport,
-        setFormData,
-        setAnalysisResult,
-        setShowReport,
-        handleStartNewAssessment
-      }}
-    >
+    <UnifiedAssessmentContext.Provider value={{
+      formData,
+      setFormData,
+      analysisResult,
+      setAnalysisResult,
+      showReport,
+      setShowReport,
+      companyInfo,
+      setCompanyInfo,
+      isLoadingCompanyInfo,
+      setIsLoadingCompanyInfo
+    }}>
       {children}
     </UnifiedAssessmentContext.Provider>
   );
