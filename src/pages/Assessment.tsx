@@ -38,6 +38,11 @@ export default function Assessment() {
     setActiveTab(tab);
   };
 
+  // Function to handle showing diagnostic
+  const handleShowDiagnostic = (show: boolean) => {
+    setShowDiagnostic(show);
+  };
+
   return (
     <UserLayout title={t("assessment.title")}>
       <p className="text-gray-600 mb-6">
@@ -61,6 +66,7 @@ export default function Assessment() {
             diagStatus={diagStatus}
             setDiagStatus={setDiagStatus}
             showDiagnostic={showDiagnostic}
+            setShowDiagnostic={handleShowDiagnostic}
             setActiveAssessmentTab={setActiveAssessmentTab}
           />
         </TabsContent>
