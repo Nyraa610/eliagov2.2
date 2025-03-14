@@ -22,10 +22,12 @@ serve(async (req) => {
     
     // Parse request body and validate company name
     let companyName;
+    let country;
     try {
       const requestData = await req.json();
       companyName = validateCompanyName(requestData);
-      console.log(`Received request with companyName: ${companyName}`);
+      country = requestData.country || null;
+      console.log(`Received request with companyName: ${companyName}, country: ${country || 'not specified'}`);
     } catch (error) {
       console.error('Error parsing request body:', error);
       throw new Error('Invalid request format');
@@ -34,7 +36,7 @@ serve(async (req) => {
     console.log(`Processing company analysis request for: ${companyName}`);
     
     // Call OpenAI to get company analysis
-    const data = await analyzeCompany(companyName);
+    const data = await analyzeCompany(companyName, country);
     
     // Extract company info from OpenAI response
     const companyInfoText = data.choices[0]?.message?.content;

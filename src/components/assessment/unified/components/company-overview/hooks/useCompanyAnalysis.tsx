@@ -35,6 +35,7 @@ export function useCompanyAnalysis() {
     isLoadingCompanyInfo,
     analysisError,
     handleRetryAnalysis,
-    analyzeCompany
+    analyzeCompany,
+    setCompanyInfo
   };
 }

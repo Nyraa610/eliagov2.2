@@ -16,15 +16,16 @@ export const companyAnalysisService = {
   /**
    * Get company analysis based on company name
    * @param companyName The name of the company to analyze
+   * @param country Optional country where the company is based
    * @returns Promise with company analysis result
    */
-  getCompanyAnalysis: async (companyName: string): Promise<CompanyAnalysisResult> => {
+  getCompanyAnalysis: async (companyName: string, country?: string): Promise<CompanyAnalysisResult> => {
     try {
-      console.log(`Requesting analysis for company: ${companyName}`);
+      console.log(`Requesting analysis for company: ${companyName}, Country: ${country || 'not specified'}`);
       
       // Make sure we're sending a proper JSON payload
       const { data, error } = await supabase.functions.invoke('company-analysis', {
-        body: { companyName }
+        body: { companyName, country }
       });
       
       // Handle edge function errors

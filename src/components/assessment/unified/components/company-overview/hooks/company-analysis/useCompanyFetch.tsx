@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -65,9 +66,10 @@ export function useCompanyFetch({
         }
         
         const companyName = profileData.companies.name;
+        const country = profileData.companies.country || null;
         setUserCompany(companyName);
         
-        await analyzeCompany(companyName);
+        await analyzeCompany(companyName, country);
       } catch (error) {
         console.error("Error in getUserCompanyAndAnalyze:", error);
         
@@ -100,7 +102,7 @@ export function useCompanyFetch({
     getUserCompanyAndAnalyze();
   }, [userCompany, setUserCompany, setCompanyInfo, setIsLoadingCompanyInfo, setAnalysisError, toast]);
   
-  const analyzeCompany = async (companyName: string) => {
+  const analyzeCompany = async (companyName: string, country?: string | null) => {
     if (!companyName.trim()) {
       setIsLoadingCompanyInfo(false);
       setAnalysisError("Company name is required");
@@ -115,8 +117,8 @@ export function useCompanyFetch({
     setAnalysisError(null);
     
     try {
-      console.log(`Analyzing company: ${companyName}`);
-      const result = await companyAnalysisService.getCompanyAnalysis(companyName);
+      console.log(`Analyzing company: ${companyName}, Country: ${country || 'not specified'}`);
+      const result = await companyAnalysisService.getCompanyAnalysis(companyName, country || undefined);
       console.log("Analysis result:", result);
       
       setCompanyInfo(result);

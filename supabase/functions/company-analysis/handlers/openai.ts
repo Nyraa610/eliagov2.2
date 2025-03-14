@@ -2,14 +2,14 @@
 /**
  * Analyze a company using OpenAI's API
  */
-export async function analyzeCompany(companyName: string): Promise<any> {
+export async function analyzeCompany(companyName: string, country?: string): Promise<any> {
   const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openaiApiKey) {
     console.error('OpenAI API key not found in environment variables');
     throw new Error('OpenAI API key not configured');
   }
   
-  console.log(`Analyzing company: ${companyName}`);
+  console.log(`Analyzing company: ${companyName}, Country: ${country || 'not specified'}`);
   
   try {
     // Build the prompt for company analysis
@@ -27,7 +27,9 @@ export async function analyzeCompany(companyName: string): Promise<any> {
       
       Return ONLY the JSON object with no additional text.`;
     
-    const prompt = `Research and provide information about: ${companyName}`;
+    // Enhanced prompt with country information if available
+    const locationInfo = country ? ` based in ${country}` : '';
+    const prompt = `Research and provide information about: ${companyName}${locationInfo}`;
     
     console.log("Sending request to OpenAI API");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {

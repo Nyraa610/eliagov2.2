@@ -7,6 +7,8 @@ import { useCompanyAnalysis } from "./hooks/useCompanyAnalysis";
 import { CompanyLoadingState } from "./CompanyLoadingState";
 import { CompanyErrorState } from "./CompanyErrorState";
 import { CompanyInfoDisplay } from "./CompanyInfoDisplay";
+import { EditableCompanyInfoDisplay } from "./EditableCompanyInfoDisplay";
+import { CompanyAnalysisResult } from "@/services/companyAnalysisService";
 
 interface CompanyOverviewProps {
   onContinue: () => void;
@@ -19,8 +21,13 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
     analyzingProgress, 
     isLoadingCompanyInfo, 
     analysisError, 
-    handleRetryAnalysis 
+    handleRetryAnalysis,
+    setCompanyInfo 
   } = useCompanyAnalysis();
+
+  const handleSaveCompanyInfo = (updatedInfo: CompanyAnalysisResult) => {
+    setCompanyInfo(updatedInfo);
+  };
 
   return (
     <Card>
@@ -48,7 +55,10 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
             ) : null}
           </div>
         ) : (
-          <CompanyInfoDisplay companyInfo={companyInfo} />
+          <EditableCompanyInfoDisplay 
+            companyInfo={companyInfo} 
+            onSave={handleSaveCompanyInfo}
+          />
         )}
       </CardContent>
       <CardFooter>
