@@ -35,18 +35,17 @@ JSON Response Format:
   "overview": "A concise 3-4 sentence overview of the company's business, market position, and significance in its industry"
 }`;
 
-  // Call OpenAI API with improved parameters and organization ID
-  console.log('Sending request to OpenAI API with organization ID: org-4GIKqionAIxqxOG9FvGKCib2');
+  // Call OpenAI API with parameters conforming to latest API reference
+  console.log('Sending request to OpenAI API');
   
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${openaiApiKey}`,
       'Content-Type': 'application/json',
-      'OpenAI-Organization': 'org-4GIKqionAIxqxOG9FvGKCib2',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini', // Using the latest mini model for better performance
+      model: 'gpt-4o-mini', // Updated to use the recommended model
       messages: [
         { 
           role: 'system', 
@@ -59,7 +58,6 @@ JSON Response Format:
       ],
       temperature: 0.2, // Lower temperature for more factual, consistent responses
       max_tokens: 1000, // Ensure we have enough tokens for detailed responses
-      top_p: 0.9, // More focused sampling
     }),
   });
   
@@ -75,7 +73,7 @@ JSON Response Format:
       if (errorData.error?.type === 'invalid_request_error') {
         errorMessage = `Invalid request to OpenAI API: ${errorData.error.message}`;
       } else if (errorData.error?.type === 'authentication_error') {
-        errorMessage = 'OpenAI API authentication failed. Please check your API key and organization ID.';
+        errorMessage = 'OpenAI API authentication failed. Please check your API key.';
       } else if (errorData.error?.code === 'rate_limit_exceeded') {
         errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
       }
@@ -100,7 +98,6 @@ async function testOpenAIConnection(openaiApiKey: string): Promise<void> {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${openaiApiKey}`,
-        'OpenAI-Organization': 'org-4GIKqionAIxqxOG9FvGKCib2',
       },
     });
     
