@@ -5,7 +5,7 @@ import { CompanyAnalysisResult } from "@/services/companyAnalysisService";
 
 interface UnifiedAssessmentContextType {
   formData: ESGFormValues | null;
-  setFormData: (data: ESGFormValues) => void;
+  setFormData: (data: ESGFormValues | ((prevData: ESGFormValues | null) => ESGFormValues)) => void;
   analysisResult: string | null;
   setAnalysisResult: (result: string) => void;
   showReport: boolean;
@@ -14,6 +14,7 @@ interface UnifiedAssessmentContextType {
   setCompanyInfo: (info: CompanyAnalysisResult) => void;
   isLoadingCompanyInfo: boolean;
   setIsLoadingCompanyInfo: (isLoading: boolean) => void;
+  handleStartNewAssessment: () => void;
 }
 
 const UnifiedAssessmentContext = createContext<UnifiedAssessmentContextType | undefined>(undefined);
@@ -24,6 +25,13 @@ export const UnifiedAssessmentProvider: React.FC<{ children: React.ReactNode }> 
   const [showReport, setShowReport] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyAnalysisResult | null>(null);
   const [isLoadingCompanyInfo, setIsLoadingCompanyInfo] = useState(false);
+
+  // Add the missing function for starting a new assessment
+  const handleStartNewAssessment = () => {
+    setShowReport(false);
+    setFormData(null);
+    setAnalysisResult(null);
+  };
 
   return (
     <UnifiedAssessmentContext.Provider value={{
@@ -36,7 +44,8 @@ export const UnifiedAssessmentProvider: React.FC<{ children: React.ReactNode }> 
       companyInfo,
       setCompanyInfo,
       isLoadingCompanyInfo,
-      setIsLoadingCompanyInfo
+      setIsLoadingCompanyInfo,
+      handleStartNewAssessment
     }}>
       {children}
     </UnifiedAssessmentContext.Provider>

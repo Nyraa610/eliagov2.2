@@ -8,6 +8,7 @@ import { Building2, CalendarDays, Info, MapPin, Users } from "lucide-react";
 import { useUnifiedAssessment } from "../context/UnifiedAssessmentContext";
 import { companyAnalysisService } from "@/services/companyAnalysisService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ESGFormValues } from "../../esg-diagnostic/ESGFormSchema";
 
 interface CompanyOverviewProps {
   onContinue: () => void;
@@ -41,8 +42,8 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
       setCompanyInfo(result);
       
       // Pre-fill form data with company information
-      setFormData(prevData => ({
-        ...prevData,
+      setFormData((prevData: ESGFormValues | null) => ({
+        ...prevData || {},
         companyName: companyName,
         industry: result.industry,
         employeeCount: result.employeeCount

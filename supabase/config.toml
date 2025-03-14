@@ -3,6 +3,7 @@
 project_id = "tqvylbkavunzlckhqxcl"
 
 [functions]
+[functions.app]
 node_version = 18
 app_dir = "dist"
 
