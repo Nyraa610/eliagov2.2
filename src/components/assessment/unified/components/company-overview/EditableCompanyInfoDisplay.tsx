@@ -1,11 +1,13 @@
 
 import { useState } from "react";
 import { CompanyAnalysisResult } from "@/services/companyAnalysisService";
-import { Info, Users, MapPin, CalendarDays, Save, Edit, Check } from "lucide-react";
+import { Info, Users, MapPin, CalendarDays, Save, Edit, Check, FileText, Briefcase, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface EditableCompanyInfoDisplayProps {
   companyInfo: CompanyAnalysisResult;
@@ -145,6 +147,9 @@ export function EditableCompanyInfoDisplay({ companyInfo, onSave }: EditableComp
     );
   };
   
+  // Check if we have French registry data
+  const hasFrenchRegistryData = !!(companyInfo.siren || companyInfo.siret);
+  
   return (
     <div className="space-y-6">
       <div className="bg-muted p-4 rounded-lg">
@@ -170,6 +175,52 @@ export function EditableCompanyInfoDisplay({ companyInfo, onSave }: EditableComp
           <p className="text-sm text-muted-foreground">{editedValues.overview || companyInfo.overview}</p>
         )}
       </div>
+      
+      {hasFrenchRegistryData && (
+        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-lg flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              Official French Registry Data
+            </h3>
+            {companyInfo.registryStatus && (
+              <Badge variant={companyInfo.registryStatus === "Active" ? "success" : "destructive"}>
+                {companyInfo.registryStatus}
+              </Badge>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {companyInfo.siren && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">SIREN:</span>
+                <span className="text-sm">{companyInfo.siren}</span>
+              </div>
+            )}
+            
+            {companyInfo.siret && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">SIRET:</span>
+                <span className="text-sm">{companyInfo.siret}</span>
+              </div>
+            )}
+            
+            {companyInfo.legalForm && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Legal Form:</span>
+                <span className="text-sm">{companyInfo.legalForm}</span>
+              </div>
+            )}
+            
+            {companyInfo.activityCode && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Activity Code:</span>
+                <span className="text-sm">{companyInfo.activityCode}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {renderEditableField('industry', 'Industry', <Info className="h-4 w-4 text-primary" />)}

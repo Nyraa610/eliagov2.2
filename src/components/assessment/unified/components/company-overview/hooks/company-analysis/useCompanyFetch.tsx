@@ -100,7 +100,7 @@ export function useCompanyFetch({
     };
     
     getUserCompanyAndAnalyze();
-  }, [userCompany, setUserCompany, setCompanyInfo, setIsLoadingCompanyInfo, setAnalysisError, toast]);
+  }, [userCompany, setUserCompany, setCompanyInfo, setIsLoadingCompanyInfo, setAnalysisError, toast, setFormData]);
   
   const analyzeCompany = async (companyName: string, country?: string | null) => {
     if (!companyName.trim()) {
