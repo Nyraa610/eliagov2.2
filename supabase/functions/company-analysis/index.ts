@@ -1,7 +1,8 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "./utils/cors.ts";
-import { validateCompanyName, validateOpenAIKey } from "./utils/validation.ts";
+import { validateCompanyName } from "./utils/validation.ts";
 import { analyzeCompany } from "./handlers/openai.ts";
 import { processCompanyInfo } from "./services/companyService.ts";
 
@@ -17,8 +18,7 @@ serve(async (req) => {
   }
   
   try {
-    // Validate OpenAI API key
-    const openaiApiKey = validateOpenAIKey();
+    // Validate OpenAI API key - we'll get this directly in the handler
     
     // Parse request body and validate company name
     let companyName;
@@ -34,7 +34,7 @@ serve(async (req) => {
     console.log(`Processing company analysis request for: ${companyName}`);
     
     // Call OpenAI to get company analysis
-    const data = await analyzeCompany(companyName, openaiApiKey);
+    const data = await analyzeCompany(companyName);
     
     // Extract company info from OpenAI response
     const companyInfoText = data.choices[0]?.message?.content;

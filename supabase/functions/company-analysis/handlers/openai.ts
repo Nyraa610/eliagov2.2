@@ -1,115 +1,67 @@
 
-import { corsHeaders } from "../utils/cors.ts";
-
 /**
- * Call OpenAI API to get company analysis
+ * Analyze a company using OpenAI's API
  */
-export async function analyzeCompany(companyName: string, openaiApiKey: string): Promise<any> {
-  console.log(`Analyzing company: ${companyName}`);
-  
-  // Test OpenAI connection before proceeding
-  await testOpenAIConnection(openaiApiKey);
-  
-  // Define system prompt for company analysis
-  const systemPrompt = `You are a professional business analyst with expertise in company research and ESG (Environmental, Social, Governance) analysis. 
-    
-Your task is to provide a detailed, accurate profile of the company name provided, focusing on factual information.
-
-Instructions:
-1. Research and present factual information about the company.
-2. If the company is well-known, provide accurate information based on public knowledge.
-3. If the company is not recognizable or might be fictional, make reasonable estimates based on the company name and possible industry, but keep the information realistic and plausible.
-4. Structure your response as JSON matching exactly the format below.
-5. Ensure all fields are filled appropriately - never leave any field empty.
-6. Be concise but informative in each section.
-
-JSON Response Format:
-{
-  "industry": "The company's primary industry or sector",
-  "employeeCount": "Estimate of employee count (use ranges like '1-10', '11-50', '51-250', '251-1000', '1000+')",
-  "history": "A brief 2-3 sentence history of the company",
-  "mission": "The company's mission statement or core purpose",
-  "productsServices": ["List", "of", "main", "products", "or", "services"],
-  "location": "Headquarters location (city, country)",
-  "yearFounded": YYYY (numeric year only, no quotes),
-  "overview": "A concise 3-4 sentence overview of the company's business, market position, and significance in its industry"
-}`;
-
-  // Call OpenAI API with parameters conforming to latest API reference
-  console.log('Sending request to OpenAI API');
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini', // Updated to use the recommended model
-      messages: [
-        { 
-          role: 'system', 
-          content: systemPrompt 
-        },
-        { 
-          role: 'user', 
-          content: `Research and provide a company profile for: ${companyName}` 
-        }
-      ],
-      temperature: 0.2, // Lower temperature for more factual, consistent responses
-      max_tokens: 1000, // Ensure we have enough tokens for detailed responses
-    }),
-  });
-  
-  // Handle API response errors
-  if (!response.ok) {
-    let errorMessage = 'OpenAI API error';
-    try {
-      const errorData = await response.json();
-      console.error('OpenAI API error details:', JSON.stringify(errorData));
-      errorMessage = `OpenAI API error: ${errorData.error?.message || 'Unknown API error'}`;
-      
-      // Check for common error types and provide specific messages
-      if (errorData.error?.type === 'invalid_request_error') {
-        errorMessage = `Invalid request to OpenAI API: ${errorData.error.message}`;
-      } else if (errorData.error?.type === 'authentication_error') {
-        errorMessage = 'OpenAI API authentication failed. Please check your API key.';
-      } else if (errorData.error?.code === 'rate_limit_exceeded') {
-        errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
-      }
-    } catch (parseError) {
-      console.error('Error parsing OpenAI error response:', parseError);
-    }
-    throw new Error(errorMessage);
+export async function analyzeCompany(companyName: string): Promise<any> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiApiKey) {
+    console.error('OpenAI API key not found in environment variables');
+    throw new Error('OpenAI API key not configured');
   }
   
-  const data = await response.json();
-  console.log('OpenAI API response received:', JSON.stringify(data).substring(0, 200) + '...');
+  console.log(`Analyzing company: ${companyName}`);
   
-  return data;
-}
-
-/**
- * Test connection to OpenAI API before making main request
- */
-async function testOpenAIConnection(openaiApiKey: string): Promise<void> {
   try {
-    const testResponse = await fetch('https://api.openai.com/v1/models', {
-      method: 'GET',
+    // Build the prompt for company analysis
+    const systemPrompt = `You are a business analyst who specializes in company research. 
+      Provide comprehensive information about the company in a structured JSON format with the following fields:
+      
+      - industry: The industry the company operates in
+      - employeeCount: The approximate number of employees
+      - history: A brief company history
+      - mission: The company's mission statement
+      - productsServices: An array of the company's main products or services
+      - location: Company headquarters location
+      - yearFounded: The year the company was founded (as a number)
+      - overview: A brief overview of what the company does
+      
+      Return ONLY the JSON object with no additional text.`;
+    
+    const prompt = `Research and provide information about: ${companyName}`;
+    
+    console.log("Sending request to OpenAI API");
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openaiApiKey}`
       },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      })
     });
     
-    if (!testResponse.ok) {
-      const errorData = await testResponse.json();
-      console.error('OpenAI connection test failed:', errorData);
-      throw new Error(`Failed to connect to OpenAI: ${errorData.error?.message || 'Unknown error'}`);
-    } else {
-      console.log('OpenAI connection test successful');
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      if (response.status === 429) {
+        throw new Error("OpenAI API rate limit exceeded");
+      } else {
+        throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      }
     }
+    
+    const data = await response.json();
+    console.log("Successfully received OpenAI response");
+    return data;
   } catch (error) {
-    console.error('Error testing OpenAI connection:', error);
-    throw new Error(`OpenAI connection error: ${error.message}`);
+    console.error("Error connecting to OpenAI:", error);
+    throw new Error(`Failed to connect to OpenAI: ${error.message}`);
   }
 }

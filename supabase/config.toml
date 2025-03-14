@@ -2,14 +2,6 @@
 # A string that specifies the project ID
 project_id = "tqvylbkavunzlckhqxcl"
 
-# Configuration for Functions
 [functions]
   [functions.company-analysis]
   verify_jwt = false
-  
-  # Environment variables for all functions
-  [functions.company-analysis.env]
-  OPENAI_API_KEY = "***"
-  SUPABASE_URL = "***"
-  SUPABASE_ANON_KEY = "***"
-  SUPABASE_SERVICE_ROLE_KEY = "***"
