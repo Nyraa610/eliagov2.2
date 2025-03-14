@@ -2,15 +2,16 @@
 # A string used as a secret for the Edge Functions JWT.
 project_id = "tqvylbkavunzlckhqxcl"
 
-[functions]
-node_version = 18
-app_dir = "dist"
+[build]
+  [build.functions]
+    node_version = 18
+    app_dir = "dist"
 
-[functions.deploy]
-include = []
-exclude = []
+  [build.functions.deploy]
+    include = []
+    exclude = []
 
-[functions.env]
+[env]
 OPENAI_API_KEY = "***"
 SUPABASE_URL = "***"
 SUPABASE_ANON_KEY = "***"
