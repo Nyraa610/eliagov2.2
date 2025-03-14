@@ -22,8 +22,16 @@ serve(async (req) => {
       throw new Error('OpenAI API key not found in environment variables');
     }
     
-    // Parse request data
-    const { companyName } = await req.json();
+    // We're using fetch directly from the request body in the CompanyOverview component
+    // The companyName is expected to be in the request body
+    let companyName;
+    try {
+      const requestData = await req.json();
+      companyName = requestData.companyName;
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      throw new Error('Invalid request format');
+    }
     
     if (!companyName) {
       return new Response(
@@ -62,7 +70,9 @@ JSON Response Format:
   "overview": "A concise 3-4 sentence overview of the company's business, market position, and significance in its industry"
 }`;
     
-    // Call OpenAI API
+    // Call OpenAI API - Making sure to include all required parameters and proper headers
+    console.log('Sending request to OpenAI API...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -92,13 +102,15 @@ JSON Response Format:
     }
     
     const data = await response.json();
+    console.log('OpenAI API response received:', data);
+    
     const companyInfoText = data.choices[0]?.message?.content;
     
     if (!companyInfoText) {
       throw new Error('No response content from OpenAI');
     }
     
-    console.log('Received company info from OpenAI');
+    console.log('Received company info from OpenAI:', companyInfoText.substring(0, 100) + '...');
     
     // Parse the JSON response from the AI
     try {

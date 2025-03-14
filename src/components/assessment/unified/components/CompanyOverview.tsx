@@ -44,9 +44,9 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
             if (interval) clearInterval(interval);
             return 90;
           }
-          return prev + Math.floor(Math.random() * 10);
+          return prev + Math.floor(Math.random() * 5 + 1); // More consistent progress
         });
-      }, 1000);
+      }, 800);
     } else if (companyInfo) {
       // Set to 100% when data is loaded
       setAnalyzingProgress(100);
@@ -58,72 +58,79 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
     };
   }, [isLoadingCompanyInfo, companyInfo]);
   
-  // Fetch user's company when component mounts
+  // Fetch user's company when component mounts and automatically trigger analysis
   useEffect(() => {
-    const getUserCompany = async () => {
+    const getUserCompanyAndAnalyze = async () => {
       try {
+        // Skip if we already have company info or are loading it
+        if (companyInfo || isLoadingCompanyInfo) return;
+        
+        setIsLoadingCompanyInfo(true);
         const { data: sessionData } = await supabase.auth.getSession();
         
         if (sessionData.session) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*, companies:company_id(*)')
             .eq('id', sessionData.session.user.id)
             .single();
           
+          if (profileError) {
+            throw new Error(`Failed to fetch profile: ${profileError.message}`);
+          }
+          
           if (profileData?.companies?.name) {
             const companyName = profileData.companies.name;
             setUserCompany(companyName);
             
-            // Automatically analyze the company if we have a name
-            handleAnalyzeCompany(companyName);
+            // Automatically analyze the company
+            await analyzeCompany(companyName);
           } else {
+            setIsLoadingCompanyInfo(false);
             setAnalysisError("No company associated with your profile. Please contact your administrator.");
           }
+        } else {
+          setIsLoadingCompanyInfo(false);
+          setAnalysisError("You need to be logged in to view company information.");
         }
       } catch (error) {
         console.error("Error fetching user company:", error);
+        setIsLoadingCompanyInfo(false);
         setAnalysisError("Unable to retrieve your company information.");
       }
     };
     
-    if (!companyInfo && !isLoadingCompanyInfo) {
-      getUserCompany();
-    }
-  }, [companyInfo, isLoadingCompanyInfo]);
+    getUserCompanyAndAnalyze();
+  }, []);
   
-  const handleAnalyzeCompany = async (companyName: string) => {
+  const analyzeCompany = async (companyName: string) => {
     if (!companyName.trim()) {
-      toast({
-        title: "Company name required",
-        description: "No company name found in your profile.",
-        variant: "destructive"
-      });
+      setIsLoadingCompanyInfo(false);
+      setAnalysisError("Company name is required");
       return;
     }
     
-    setIsLoadingCompanyInfo(true);
     setAnalysisError(null);
     
     try {
+      console.log(`Analyzing company: ${companyName}`);
       const result = await companyAnalysisService.getCompanyAnalysis(companyName);
+      console.log("Analysis result:", result);
+      
       setCompanyInfo(result);
       
       // Pre-fill form data with company information
-      setFormData((prevData: ESGFormValues | null) => ({
-        ...prevData || {},
-        companyName: companyName,
-        industry: result.industry,
-        employeeCount: result.employeeCount
-      }));
+      setFormData((prevData: ESGFormValues | null) => {
+        return {
+          ...(prevData || {}),
+          companyName: companyName,
+          industry: result.industry,
+          employeeCount: result.employeeCount
+        };
+      });
       
       // Set progress to 100% when complete
       setAnalyzingProgress(100);
-      
-      toast({
-        title: "Company analyzed",
-        description: "We've gathered information about your company to help with the assessment."
-      });
     } catch (error) {
       console.error("Error analyzing company:", error);
       setAnalysisError(error instanceof Error ? error.message : "Failed to analyze company information");
@@ -137,6 +144,13 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
     }
   };
   
+  const handleRetryAnalysis = () => {
+    if (userCompany) {
+      setIsLoadingCompanyInfo(true);
+      analyzeCompany(userCompany);
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -144,7 +158,7 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
           <Building2 className="h-5 w-5" /> Company Information
         </CardTitle>
         <CardDescription>
-          We're gathering information about your company to provide a more tailored assessment
+          We're automatically gathering information about your company to provide a more tailored assessment
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -167,10 +181,10 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>
                         {analyzingProgress < 20 ? "Initializing company analysis..." : 
-                         analyzingProgress < 40 ? "Researching company details..." :
-                         analyzingProgress < 60 ? "Gathering industry information..." :
-                         analyzingProgress < 80 ? "Processing company data..." :
-                         "Finalizing analysis..."}
+                         analyzingProgress < 40 ? "Researching industry details..." :
+                         analyzingProgress < 60 ? "Gathering company history..." :
+                         analyzingProgress < 80 ? "Processing market position..." :
+                         "Finalizing company profile..."}
                       </span>
                     </div>
                   )}
@@ -185,7 +199,7 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => userCompany && handleAnalyzeCompany(userCompany)}
+                  onClick={handleRetryAnalysis}
                   className="mt-2"
                 >
                   Retry Analysis
@@ -193,7 +207,7 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
               </div>
             )}
             
-            {isLoadingCompanyInfo && !analysisError && (
+            {isLoadingCompanyInfo && !analysisError && !userCompany && (
               <div className="space-y-4">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
