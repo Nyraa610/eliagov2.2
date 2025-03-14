@@ -6,8 +6,8 @@
 import { getInseeToken } from "./auth.ts";
 import { getMockCompanyData } from "./mockData.ts";
 
-// INSEE API configuration
-const INSEE_API_BASE_URL = "https://api.insee.fr/entreprises/sirene/V3";
+// INSEE API configuration - updated to use the latest 3.11 API endpoint
+const INSEE_API_BASE_URL = "https://api.insee.fr/api-sirene/3.11";
 
 /**
  * Search for companies in the INSEE registry
@@ -23,20 +23,20 @@ export async function searchInseeCompany(companyName: string) {
       throw new Error("Failed to obtain INSEE API key");
     }
     
-    // Construct search query - using the correct endpoint based on INSEE API documentation
-    // Note: Their API documentation shows multiple endpoints, let's try both main ones
+    // Construct search query using the correct endpoint for version 3.11
+    // The endpoint is /siren as specified in the API documentation
+    const searchUrl = `${INSEE_API_BASE_URL}/siren`;
     
-    // First attempt with /siret endpoint (establishment search)
-    let searchUrl = `${INSEE_API_BASE_URL}/siret`;
-    let params = new URLSearchParams({
+    // Use the correct query parameter format for the 3.11 API version
+    const params = new URLSearchParams({
       q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search
       nombre: "5" // Limit results
     });
     
-    console.log(`Attempting first INSEE API endpoint: ${searchUrl}?${params.toString()}`);
+    console.log(`Attempting INSEE API search: ${searchUrl}?${params.toString()}`);
     
-    // Make request to INSEE API
-    let response = await fetch(`${searchUrl}?${params.toString()}`, {
+    // Make request to INSEE API with detailed logging
+    const response = await fetch(`${searchUrl}?${params.toString()}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -44,44 +44,20 @@ export async function searchInseeCompany(companyName: string) {
       }
     });
     
-    console.log(`First INSEE endpoint response status: ${response.status}`);
+    console.log(`INSEE API response status: ${response.status}`);
     
-    // If the first endpoint fails, try the uniteLegale endpoint
+    // If the request failed, log the error and throw an exception or use mock data
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`First endpoint error: ${errorText}`);
+      console.error(`INSEE API error (${response.status}): ${errorText}`);
       
-      // Try second endpoint (legal unit search)
-      searchUrl = `${INSEE_API_BASE_URL}/siren`;
-      params = new URLSearchParams({
-        q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search
-        nombre: "5" // Limit results
-      });
-      
-      console.log(`Attempting second INSEE API endpoint: ${searchUrl}?${params.toString()}`);
-      
-      response = await fetch(`${searchUrl}?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Accept": "application/json"
-        }
-      });
-      
-      console.log(`Second INSEE endpoint response status: ${response.status}`);
-      
-      // If both endpoints fail, log and use mock data in development
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Second endpoint error: ${errorText}`);
-        
-        if (Deno.env.get("ENVIRONMENT") === "development") {
-          console.warn("Both INSEE API endpoints failed, using mock data");
-          return { etablissements: [getMockCompanyData(companyName)] };
-        }
-        
-        throw new Error(`INSEE API search failed on both endpoints: ${response.status}`);
+      // In development environment, use mock data
+      if (Deno.env.get("ENVIRONMENT") === "development") {
+        console.warn("INSEE API request failed, using mock data");
+        return { etablissements: [getMockCompanyData(companyName)] };
       }
+      
+      throw new Error(`INSEE API search failed: ${response.status} - ${errorText.substring(0, 200)}`);
     }
     
     // Parse successful response
