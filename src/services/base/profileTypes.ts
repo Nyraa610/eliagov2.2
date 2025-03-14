@@ -9,5 +9,6 @@ export interface UserProfile {
   bio?: string;
   avatar_url?: string;
   company_id?: string;
+  company_name?: string;
   is_company_admin?: boolean;
 }
