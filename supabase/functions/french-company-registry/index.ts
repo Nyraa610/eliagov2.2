@@ -2,35 +2,98 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../company-analysis/utils/cors.ts";
 
-// Mock API for demonstration purposes, since we can't use the real INSEE API without proper credentials
-const mockCompanySearch = async (companyName: string) => {
-  console.log(`Searching for company: ${companyName}`);
-  
-  // Create a mock response based on the company name
-  return {
-    etablissements: [
-      {
-        siret: "12345678901234",
-        uniteLegale: {
-          siren: "123456789",
-          denominationUniteLegale: companyName,
-          activitePrincipaleUniteLegale: "62.01Z",
-          categorieJuridiqueUniteLegale: "5499",
-          dateCreationUniteLegale: "2015-01-01",
-          etatAdministratifUniteLegale: "A"
-        },
-        adresseEtablissement: {
-          numeroVoieEtablissement: "1",
-          typeVoieEtablissement: "RUE",
-          libelleVoieEtablissement: "DE PARIS",
-          codePostalEtablissement: "75001",
-          libelleCommuneEtablissement: "PARIS"
-        },
-        trancheEffectifsEtablissement: "11"
+// INSEE API configuration
+const INSEE_API_BASE_URL = "https://api.insee.fr/entreprises/sirene/V3";
+const INSEE_API_SEARCH_URL = `${INSEE_API_BASE_URL}/siret`;
+
+// Function to get authentication token from INSEE API
+async function getInseeToken() {
+  try {
+    const consumerKey = Deno.env.get("INSEE_CONSUMER_KEY");
+    const consumerSecret = Deno.env.get("INSEE_CONSUMER_SECRET");
+    
+    if (!consumerKey || !consumerSecret) {
+      throw new Error("INSEE API credentials not configured");
+    }
+    
+    // Create basic auth header from consumer key and secret
+    const credentials = btoa(`${consumerKey}:${consumerSecret}`);
+    
+    console.log("Requesting INSEE API token");
+    
+    const response = await fetch("https://api.insee.fr/token", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "grant_type=client_credentials"
+    });
+    
+    console.log(`INSEE token request status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("INSEE token error response:", errorBody);
+      throw new Error(`Failed to get INSEE API token: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("INSEE token obtained successfully");
+    
+    return data.access_token;
+  } catch (error) {
+    console.error("Error getting INSEE token:", error);
+    throw error;
+  }
+}
+
+// Function to search companies in INSEE registry
+async function searchInseeCompany(companyName: string) {
+  try {
+    // Get authentication token
+    const token = await getInseeToken();
+    
+    if (!token) {
+      throw new Error("Failed to obtain INSEE API token");
+    }
+    
+    // Construct search query
+    // Using Q parameter to search by name (denomination)
+    const params = new URLSearchParams({
+      q: `denomination:"${companyName}"`,
+      nombre: "5" // Limit results to 5
+    });
+    
+    const searchUrl = `${INSEE_API_SEARCH_URL}?${params.toString()}`;
+    console.log(`Searching INSEE API: ${searchUrl}`);
+    
+    // Make request to INSEE API
+    const response = await fetch(searchUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
       }
-    ]
-  };
-};
+    });
+    
+    console.log(`INSEE search request status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("INSEE search error response:", errorBody);
+      throw new Error(`INSEE API search failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`INSEE search results count: ${data.etablissements?.length || 0}`);
+    
+    return data;
+  } catch (error) {
+    console.error("Error searching INSEE registry:", error);
+    throw error;
+  }
+}
 
 serve(async (req) => {
   console.log("Edge function invoked: french-company-registry");
@@ -78,11 +141,25 @@ serve(async (req) => {
     
     console.log(`Searching for company: ${companyName}`);
     
-    // Use mock data instead of real INSEE API
-    // In a production environment, you would make a real API call here
-    const data = await mockCompanySearch(companyName);
+    let data;
+    try {
+      // Call the real INSEE API
+      data = await searchInseeCompany(companyName);
+    } catch (error) {
+      // If INSEE API fails, return error response
+      console.error("INSEE API error:", error.message);
+      return new Response(
+        JSON.stringify({ 
+          error: `INSEE API error: ${error.message}`
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
-    console.log("Received mock INSEE response");
+    console.log("Received INSEE API response");
     
     if (!data.etablissements || data.etablissements.length === 0) {
       console.log("No company found with the given name");

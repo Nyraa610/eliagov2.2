@@ -3,9 +3,10 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, CheckCircle2 } from "lucide-react";
+import { Loader2, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RegistryCompany {
   siret?: string;
@@ -30,6 +31,7 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
   const [results, setResults] = useState<RegistryCompany[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<RegistryCompany | null>(null);
+  const [apiErrorDetails, setApiErrorDetails] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +43,7 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
     
     setIsSearching(true);
     setError(null);
+    setApiErrorDetails(null);
     setResults([]);
     
     try {
@@ -54,6 +57,13 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
       
       if (error) {
         throw new Error(error.message || "Failed to search registry");
+      }
+      
+      if (data.error) {
+        // Handle API error returned in response body
+        setError("Error from INSEE API");
+        setApiErrorDetails(data.error);
+        return;
       }
       
       if (data.data) {
@@ -98,7 +108,15 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
       </form>
 
       {error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <Alert variant="destructive" className="mt-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm">{error}</AlertDescription>
+          {apiErrorDetails && (
+            <div className="mt-2 text-xs bg-destructive/10 p-2 rounded overflow-auto max-h-24">
+              {apiErrorDetails}
+            </div>
+          )}
+        </Alert>
       )}
 
       {results.length > 0 && (
@@ -119,6 +137,11 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
                     <p className="text-xs mt-1 text-muted-foreground">
                       {company.legalForm} • Activity Code: {company.activityCode}
                     </p>
+                    {company.status && (
+                      <Badge className={`mt-1 ${company.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {company.status}
+                      </Badge>
+                    )}
                   </div>
                   {selectedCompany?.siret === company.siret ? (
                     isUpdating ? (
