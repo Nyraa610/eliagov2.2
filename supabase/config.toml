@@ -7,8 +7,8 @@ project_id = "tqvylbkavunzlckhqxcl"
   [functions.company-analysis]
   verify_jwt = false
   
-# Environment variables
-[global.env]
+# Environment variables for all functions
+[functions.company-analysis.environment]
 OPENAI_API_KEY = "***"
 SUPABASE_URL = "***"
 SUPABASE_ANON_KEY = "***"
