@@ -8,3 +8,4 @@ project_id = "tqvylbkavunzlckhqxcl"
   
   [functions.french-company-registry]
   verify_jwt = false
+
