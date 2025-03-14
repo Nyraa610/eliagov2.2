@@ -16,11 +16,11 @@ const INSEE_API_SEARCH_URL = `${INSEE_API_BASE_URL}/siret`;
  */
 export async function searchInseeCompany(companyName: string) {
   try {
-    // Get authentication token
-    const token = await getInseeToken();
+    // Get API key
+    const apiKey = await getInseeToken();
     
-    if (!token) {
-      throw new Error("Failed to obtain INSEE API token");
+    if (!apiKey) {
+      throw new Error("Failed to obtain INSEE API key");
     }
     
     // Construct search query
@@ -33,11 +33,11 @@ export async function searchInseeCompany(companyName: string) {
     const searchUrl = `${INSEE_API_SEARCH_URL}?${params.toString()}`;
     console.log(`Searching INSEE API: ${searchUrl}`);
     
-    // Make request to INSEE API
+    // Make request to INSEE API with API key in Authorization header
     const response = await fetch(searchUrl, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Accept": "application/json"
       }
     });
@@ -59,3 +59,4 @@ export async function searchInseeCompany(companyName: string) {
     throw error;
   }
 }
+

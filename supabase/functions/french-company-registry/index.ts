@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
 import { searchInseeCompany } from "./services/inseeApi.ts";
-import { getMockCompanyData } from "./services/mockData.ts";
+import { formatAddress } from "./utils/formatters.ts";
 
 serve(async (req) => {
   console.log("Edge function invoked: french-company-registry");
@@ -50,14 +50,40 @@ serve(async (req) => {
     
     console.log(`Searching for company: ${companyName}`);
     
-    // For now, we'll use mock data since the certificate-based authentication is complex
-    // and requires additional setup in the Supabase environment
-    const companyData = getMockCompanyData(companyName);
+    // Search INSEE API for company data
+    const searchResults = await searchInseeCompany(companyName);
+    
+    if (!searchResults.etablissements || searchResults.etablissements.length === 0) {
+      return new Response(
+        JSON.stringify({
+          message: "No companies found in French registry",
+          data: null
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Get first result and format it
+    const company = searchResults.etablissements[0];
+    const formattedCompany = {
+      siret: company.siret,
+      siren: company.siren,
+      name: company.uniteLegale.denominationUniteLegale,
+      address: formatAddress(company.adresseEtablissement),
+      activityCode: company.uniteLegale.activitePrincipaleUniteLegale,
+      legalForm: company.uniteLegale.categorieJuridiqueUniteLegale,
+      creationDate: company.dateCreationEtablissement,
+      employeeCount: company.trancheEffectifsEtablissement,
+      status: company.uniteLegale.etatAdministratifUniteLegale === "A" ? "Active" : "Inactive"
+    };
     
     return new Response(
       JSON.stringify({ 
-        message: "Company information retrieved from French registry (mock data)",
-        data: companyData
+        message: "Company information retrieved from French registry",
+        data: formattedCompany
       }),
       {
         status: 200,
@@ -78,3 +104,4 @@ serve(async (req) => {
     );
   }
 });
+
