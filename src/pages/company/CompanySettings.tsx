@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Company, companyService } from "@/services/companyService";
+import { Company } from "@/services/company/types";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft } from "lucide-react";
@@ -10,61 +10,12 @@ import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGen
 import { CompanyAPIConnectors } from "@/components/company/settings/CompanyAPIConnectors";
 import { CompanyUserManagement } from "@/components/company/settings/CompanyUserManagement";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 
 export default function CompanySettings() {
   const { id } = useParams<{ id: string }>();
-  const [company, setCompany] = useState<Company | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchCompany = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        // Get company details
-        const data = await companyService.getCompany(id);
-        setCompany(data);
-        
-        // Check if user is admin
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) {
-          navigate("/login");
-          return;
-        }
-        
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_company_admin')
-          .eq('id', user.user.id)
-          .eq('company_id', id)
-          .single();
-        
-        if (profileError) {
-          console.error("Error checking admin status:", profileError);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(profile?.is_company_admin || false);
-        }
-      } catch (error) {
-        console.error("Error fetching company:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load company details.",
-          variant: "destructive",
-        });
-        navigate("/companies");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompany();
-  }, [id, navigate, toast]);
+  const { company, isAdmin, loading } = useCompanyProfile(id || "");
 
   if (loading) {
     return (

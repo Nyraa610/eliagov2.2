@@ -21,9 +21,10 @@ interface RegistryCompany {
 
 interface FrenchRegistrySearchProps {
   onSelectCompany: (company: RegistryCompany) => void;
+  isUpdating?: boolean;
 }
 
-export function FrenchRegistrySearch({ onSelectCompany }: FrenchRegistrySearchProps) {
+export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: FrenchRegistrySearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<RegistryCompany[]>([]);
@@ -80,9 +81,9 @@ export function FrenchRegistrySearch({ onSelectCompany }: FrenchRegistrySearchPr
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Enter company name to search in official registry"
           className="flex-1"
-          disabled={isSearching}
+          disabled={isSearching || isUpdating}
         />
-        <Button type="submit" disabled={isSearching}>
+        <Button type="submit" disabled={isSearching || isUpdating}>
           {isSearching ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
@@ -115,9 +116,13 @@ export function FrenchRegistrySearch({ onSelectCompany }: FrenchRegistrySearchPr
                       {company.legalForm} • Activity Code: {company.activityCode}
                     </p>
                   </div>
-                  {selectedCompany?.siret === company.siret && (
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  )}
+                  {selectedCompany?.siret === company.siret ? (
+                    isUpdating ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    ) : (
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    )
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
