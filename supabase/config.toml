@@ -1,15 +1,15 @@
 
-# A string used as a secret for the Edge Functions JWT.
+# Configuration for Supabase Edge Functions
+
 project_id = "tqvylbkavunzlckhqxcl"
 
-[build]
-  [build.functions]
-    node_version = 18
-    app_dir = "dist"
+[functions]
+node_version = 18
+app_dir = "dist"
 
-  [build.functions.deploy]
-    include = []
-    exclude = []
+[functions.deploy]
+include = []
+exclude = []
 
 [env]
 OPENAI_API_KEY = "***"
