@@ -184,7 +184,8 @@ export function EditableCompanyInfoDisplay({ companyInfo, onSave }: EditableComp
               Official French Registry Data
             </h3>
             {companyInfo.registryStatus && (
-              <Badge variant={companyInfo.registryStatus === "Active" ? "success" : "destructive"}>
+              <Badge variant={companyInfo.registryStatus === "Active" ? "outline" : "destructive"} 
+                className={companyInfo.registryStatus === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300" : ""}>
                 {companyInfo.registryStatus}
               </Badge>
             )}
