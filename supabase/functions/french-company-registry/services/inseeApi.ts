@@ -23,8 +23,9 @@ export async function searchInseeCompany(companyName: string) {
       throw new Error("Failed to obtain INSEE API key");
     }
     
-    // Construct search query using the correct endpoint for version 3.11
-    // The endpoint is /siren as specified in the API documentation
+    // Construct search URL using the specific SIREN endpoint format
+    // Based on documentation example: https://api.insee.fr/api-sirene/3.11/siren/[siren-number]
+    // For search by name, we'll use the appropriate query parameters
     const searchUrl = `${INSEE_API_BASE_URL}/siren`;
     
     // Use the correct query parameter format for the 3.11 API version
@@ -34,12 +35,14 @@ export async function searchInseeCompany(companyName: string) {
     });
     
     console.log(`Attempting INSEE API search: ${searchUrl}?${params.toString()}`);
+    console.log(`Using headers: X-INSEE-Api-Key-Integration: [API KEY HIDDEN]`);
     
-    // Make request to INSEE API with detailed logging
+    // Make request to INSEE API with detailed logging and CORRECT HEADER FORMAT
     const response = await fetch(`${searchUrl}?${params.toString()}`, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        // Using the correct header format as shown in the documentation
+        "X-INSEE-Api-Key-Integration": apiKey,
         "Accept": "application/json"
       }
     });
