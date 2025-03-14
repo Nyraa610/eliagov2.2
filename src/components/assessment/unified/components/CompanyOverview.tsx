@@ -1,14 +1,15 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Building2, CalendarDays, Info, MapPin, Users } from "lucide-react";
+import { Building2, CalendarDays, Info, MapPin, Users, Loader2 } from "lucide-react";
 import { useUnifiedAssessment } from "../context/UnifiedAssessmentContext";
 import { companyAnalysisService } from "@/services/companyAnalysisService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESGFormValues } from "../../esg-diagnostic/ESGFormSchema";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/lib/supabase";
 
 interface CompanyOverviewProps {
   onContinue: () => void;
@@ -24,19 +25,86 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
     setFormData
   } = useUnifiedAssessment();
   
-  const [companyName, setCompanyName] = useState("");
+  const [analyzingProgress, setAnalyzingProgress] = useState(0);
+  const [userCompany, setUserCompany] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   
-  const handleAnalyzeCompany = async () => {
+  // Function to simulate progress while waiting for the API
+  useEffect(() => {
+    let interval: number | null = null;
+    
+    if (isLoadingCompanyInfo && !companyInfo) {
+      // Reset progress at the start
+      setAnalyzingProgress(5);
+      
+      // Simulate progress to 90% (reserve the last 10% for actual data loading)
+      interval = window.setInterval(() => {
+        setAnalyzingProgress(prev => {
+          if (prev >= 90) {
+            if (interval) clearInterval(interval);
+            return 90;
+          }
+          return prev + Math.floor(Math.random() * 10);
+        });
+      }, 1000);
+    } else if (companyInfo) {
+      // Set to 100% when data is loaded
+      setAnalyzingProgress(100);
+      if (interval) clearInterval(interval);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isLoadingCompanyInfo, companyInfo]);
+  
+  // Fetch user's company when component mounts
+  useEffect(() => {
+    const getUserCompany = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData.session) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*, companies:company_id(*)')
+            .eq('id', sessionData.session.user.id)
+            .single();
+          
+          if (profileData?.companies?.name) {
+            const companyName = profileData.companies.name;
+            setUserCompany(companyName);
+            
+            // Automatically analyze the company if we have a name
+            handleAnalyzeCompany(companyName);
+          } else {
+            setAnalysisError("No company associated with your profile. Please contact your administrator.");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user company:", error);
+        setAnalysisError("Unable to retrieve your company information.");
+      }
+    };
+    
+    if (!companyInfo && !isLoadingCompanyInfo) {
+      getUserCompany();
+    }
+  }, [companyInfo, isLoadingCompanyInfo]);
+  
+  const handleAnalyzeCompany = async (companyName: string) => {
     if (!companyName.trim()) {
       toast({
         title: "Company name required",
-        description: "Please enter a company name to analyze.",
+        description: "No company name found in your profile.",
         variant: "destructive"
       });
       return;
     }
     
     setIsLoadingCompanyInfo(true);
+    setAnalysisError(null);
+    
     try {
       const result = await companyAnalysisService.getCompanyAnalysis(companyName);
       setCompanyInfo(result);
@@ -49,12 +117,16 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
         employeeCount: result.employeeCount
       }));
       
+      // Set progress to 100% when complete
+      setAnalyzingProgress(100);
+      
       toast({
         title: "Company analyzed",
         description: "We've gathered information about your company to help with the assessment."
       });
     } catch (error) {
       console.error("Error analyzing company:", error);
+      setAnalysisError(error instanceof Error ? error.message : "Failed to analyze company information");
       toast({
         title: "Analysis failed",
         description: error instanceof Error ? error.message : "Failed to analyze company information",
@@ -72,34 +144,56 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
           <Building2 className="h-5 w-5" /> Company Information
         </CardTitle>
         <CardDescription>
-          Let's learn about your company to provide a more tailored assessment
+          We're gathering information about your company to provide a more tailored assessment
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {!companyInfo ? (
           <div className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <label htmlFor="companyName" className="text-sm font-medium">
-                Company Name
-              </label>
-              <div className="flex gap-2">
-                <Input 
-                  id="companyName"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Enter your company name"
-                  className="flex-1"
-                />
+            {userCompany && (
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-medium mb-2">Analyzing: {userCompany}</h3>
+                
+                <div className="space-y-3">
+                  <Progress value={analyzingProgress} className="h-2" />
+                  
+                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                    <span>Gathering information...</span>
+                    <span>{analyzingProgress}%</span>
+                  </div>
+                  
+                  {isLoadingCompanyInfo && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>
+                        {analyzingProgress < 20 ? "Initializing company analysis..." : 
+                         analyzingProgress < 40 ? "Researching company details..." :
+                         analyzingProgress < 60 ? "Gathering industry information..." :
+                         analyzingProgress < 80 ? "Processing company data..." :
+                         "Finalizing analysis..."}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {analysisError && (
+              <div className="bg-destructive/10 p-4 rounded-lg text-destructive">
+                <h3 className="font-medium mb-1">Analysis Error</h3>
+                <p className="text-sm">{analysisError}</p>
                 <Button 
-                  onClick={handleAnalyzeCompany}
-                  disabled={isLoadingCompanyInfo || !companyName.trim()}
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => userCompany && handleAnalyzeCompany(userCompany)}
+                  className="mt-2"
                 >
-                  {isLoadingCompanyInfo ? "Analyzing..." : "Analyze"}
+                  Retry Analysis
                 </Button>
               </div>
-            </div>
+            )}
             
-            {isLoadingCompanyInfo && (
+            {isLoadingCompanyInfo && !analysisError && (
               <div className="space-y-4">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
@@ -180,7 +274,10 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
       </CardContent>
       <CardFooter>
         <div className="flex justify-end w-full">
-          <Button onClick={onContinue} disabled={isLoadingCompanyInfo && !companyInfo}>
+          <Button 
+            onClick={onContinue} 
+            disabled={isLoadingCompanyInfo && !companyInfo}
+          >
             Continue to Assessment
           </Button>
         </div>
