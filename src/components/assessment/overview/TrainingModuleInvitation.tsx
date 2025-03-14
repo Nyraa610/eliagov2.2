@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, ChevronRight } from "lucide-react";
+import { BookOpen, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -38,15 +38,11 @@ export function TrainingModuleInvitation() {
             >
               {t("assessment.training.dismiss", "Dismiss")}
             </Button>
-            <Button
-              as={Link}
-              to="/training" 
-              size="sm"
-              className="gap-1"
-            >
+            {/* Replace Button with as={Link} with a Link component that has button styling */}
+            <Link to="/training" className="inline-flex items-center justify-center gap-1 h-9 rounded-md px-3 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
               {t("assessment.training.startLearning", "Start Learning")}
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </Link>
           </div>
         </div>
       </CardContent>
