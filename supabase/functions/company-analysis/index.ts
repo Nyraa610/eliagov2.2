@@ -19,6 +19,7 @@ serve(async (req) => {
     // Get OpenAI API key from environment variables
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
+      console.error('OpenAI API key not found in environment variables');
       throw new Error('OpenAI API key not found in environment variables');
     }
     
@@ -28,6 +29,7 @@ serve(async (req) => {
     try {
       const requestData = await req.json();
       companyName = requestData.companyName;
+      console.log(`Received request with companyName: ${companyName}`);
     } catch (error) {
       console.error('Error parsing request body:', error);
       throw new Error('Invalid request format');
@@ -72,6 +74,30 @@ JSON Response Format:
     
     // Call OpenAI API with improved parameters
     console.log('Sending request to OpenAI API...');
+    
+    // Log the API key length for debugging (don't log the actual key)
+    console.log(`API key length: ${openaiApiKey.length}, starts with: ${openaiApiKey.substring(0, 3)}...`);
+    
+    // Testing connection to OpenAI
+    try {
+      const testResponse = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+        },
+      });
+      
+      if (!testResponse.ok) {
+        const errorData = await testResponse.json();
+        console.error('OpenAI connection test failed:', errorData);
+        throw new Error(`Failed to connect to OpenAI: ${errorData.error?.message || 'Unknown error'}`);
+      } else {
+        console.log('OpenAI connection test successful');
+      }
+    } catch (error) {
+      console.error('Error testing OpenAI connection:', error);
+      throw new Error(`OpenAI connection error: ${error.message}`);
+    }
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -120,7 +146,7 @@ JSON Response Format:
     }
     
     const data = await response.json();
-    console.log('OpenAI API response received');
+    console.log('OpenAI API response received:', JSON.stringify(data).substring(0, 200) + '...');
     
     const companyInfoText = data.choices[0]?.message?.content;
     
@@ -128,7 +154,7 @@ JSON Response Format:
       throw new Error('No response content from OpenAI');
     }
     
-    console.log('Received company info from OpenAI');
+    console.log('Received company info from OpenAI:', companyInfoText.substring(0, 200) + '...');
     
     // Parse the JSON response from the AI with enhanced error handling
     try {
@@ -139,6 +165,7 @@ JSON Response Format:
       
       try {
         companyInfo = JSON.parse(jsonString);
+        console.log('Successfully parsed JSON response');
       } catch (jsonError) {
         console.error('JSON parse error. Raw response:', companyInfoText);
         throw new Error('Failed to parse JSON from OpenAI response');
@@ -151,6 +178,7 @@ JSON Response Format:
       for (const field of requiredFields) {
         if (!companyInfo[field]) {
           hasMissingFields = true;
+          console.warn(`Missing field in OpenAI response: ${field}`);
           // Set appropriate defaults based on field type
           switch (field) {
             case 'productsServices':
@@ -208,6 +236,8 @@ JSON Response Format:
       statusCode = 429;
     } else if (error.message.includes('parse')) {
       userMessage = 'Error processing the company information. Our team has been notified.';
+    } else if (error.message.includes('connect to OpenAI')) {
+      userMessage = 'Unable to connect to the analysis service. Please check your internet connection and try again.';
     }
     
     return new Response(

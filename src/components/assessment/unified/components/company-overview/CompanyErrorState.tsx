@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface CompanyErrorStateProps {
   error: string;
@@ -9,8 +10,11 @@ interface CompanyErrorStateProps {
 export function CompanyErrorState({ error, onRetry }: CompanyErrorStateProps) {
   return (
     <div className="bg-destructive/10 p-4 rounded-lg text-destructive">
-      <h3 className="font-medium mb-1">Analysis Error</h3>
-      <p className="text-sm">{error}</p>
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-5 w-5" />
+        <h3 className="font-medium">Analysis Error</h3>
+      </div>
+      <p className="text-sm mb-3">{error}</p>
       <Button 
         variant="outline" 
         size="sm" 
