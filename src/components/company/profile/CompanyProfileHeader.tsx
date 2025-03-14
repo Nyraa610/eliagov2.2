@@ -25,7 +25,7 @@ export function CompanyProfileHeader({ company, isAdmin }: CompanyProfileHeaderP
       {isAdmin && (
         <Button onClick={() => navigate(`/company/${company.id}/settings`)}>
           <Settings className="h-4 w-4 mr-2" />
-          Settings
+          Company Settings
         </Button>
       )}
     </div>

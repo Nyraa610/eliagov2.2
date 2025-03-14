@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building, Users, Settings } from "lucide-react";
 import { CompanyMembers } from "@/components/company/CompanyMembers";
-import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { CompanyProfileHeader } from "@/components/company/profile/CompanyProfileHeader";
 import { CompanyOverviewTab } from "@/components/company/profile/CompanyOverviewTab";
 import { CompanyProfileLoading } from "@/components/company/profile/CompanyProfileLoading";
@@ -17,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { FrenchRegistrySearch } from "@/components/company/form/FrenchRegistrySearch";
 import { useToast } from "@/hooks/use-toast";
 import { companyService } from "@/services/company";
+import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 
 export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
