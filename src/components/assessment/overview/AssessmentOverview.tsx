@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { assessmentService } from "@/services/assessmentService";
 
 interface AssessmentOverviewProps {
-  showDiagnostic: (show: boolean) => void;
-  setDiagStatus: (status: FeatureStatus) => void;
-  setActiveAssessmentTab: (tab: string) => void;
   diagStatus: FeatureStatus;
+  setDiagStatus: (status: FeatureStatus) => void;
+  showDiagnostic: (show: boolean) => void;
+  setActiveAssessmentTab: (tab: string) => void;
 }
 
 export function AssessmentOverview({ 

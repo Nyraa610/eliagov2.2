@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -63,8 +64,7 @@ export default function Assessment() {
           <AssessmentOverview 
             diagStatus={diagStatus}
             setDiagStatus={setDiagStatus}
-            showDiagnostic={showDiagnostic}
-            setShowDiagnostic={handleShowDiagnostic}
+            showDiagnostic={handleShowDiagnostic}
             setActiveAssessmentTab={setActiveAssessmentTab}
           />
         </TabsContent>
