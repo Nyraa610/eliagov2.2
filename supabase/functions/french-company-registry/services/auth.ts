@@ -9,8 +9,7 @@
  * @returns Promise with the access token
  */
 export async function getInseeToken() {
-  // For public API key authentication, we just return the API key
-  // This is a simplified approach since we're using a public API key
+  // Use the INSEE public API key for authentication
   const API_KEY = "d7f7865e-5e28-4032-b786-5e5e28a032f6";
   
   if (!API_KEY) {
@@ -20,4 +19,3 @@ export async function getInseeToken() {
   console.log("Using INSEE public API key authentication");
   return API_KEY;
 }
-

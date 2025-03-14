@@ -1,7 +1,7 @@
 
 /**
  * Mock data service for INSEE API
- * Used when actual API connection is not available
+ * Used for development or when actual API connection fails
  */
 
 /**
@@ -14,13 +14,21 @@ export function getMockCompanyData(companyName: string) {
   const mockCompany = {
     siret: "12345678901234",
     siren: "123456789",
-    name: companyName,
-    address: "123 Rue de Paris, 75001 Paris",
-    activityCode: "62.01Z",
-    legalForm: "5710",
-    creationDate: "2010-01-01",
-    employeeCount: "20-49 employees",
-    status: "Active"
+    uniteLegale: {
+      denominationUniteLegale: `${companyName} (mock data)`,
+      activitePrincipaleUniteLegale: "62.01Z",
+      categorieJuridiqueUniteLegale: "5710",
+      etatAdministratifUniteLegale: "A"
+    },
+    adresseEtablissement: {
+      numeroVoieEtablissement: "123",
+      typeVoieEtablissement: "RUE",
+      libelleVoieEtablissement: "DE PARIS",
+      codePostalEtablissement: "75001",
+      libelleCommuneEtablissement: "PARIS"
+    },
+    dateCreationEtablissement: "2010-01-01",
+    trancheEffectifsEtablissement: "12"
   };
   
   console.log(`Returning mock data for company: ${companyName}`);
