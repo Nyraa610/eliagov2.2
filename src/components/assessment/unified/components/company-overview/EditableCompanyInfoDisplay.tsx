@@ -97,11 +97,11 @@ export function EditableCompanyInfoDisplay({ companyInfo, onSave }: EditableComp
           field="yearFounded"
           label="Founded"
           icon={<CalendarDays className="h-4 w-4 text-primary" />}
-          value={editedValues.yearFounded !== undefined ? editedValues.yearFounded : companyInfo.yearFounded}
+          value={String(editedValues.yearFounded !== undefined ? editedValues.yearFounded : companyInfo.yearFounded)}
           isEditing={editMode.yearFounded}
           onToggleEdit={() => toggleEditMode('yearFounded')}
           onSave={() => handleSave('yearFounded')}
-          onChange={(value) => handleChange('yearFounded', value)}
+          onChange={(value) => handleChange('yearFounded', Number(value))}
         />
       </div>
       
