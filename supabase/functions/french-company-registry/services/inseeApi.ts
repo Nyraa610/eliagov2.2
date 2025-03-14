@@ -23,24 +23,20 @@ export async function searchInseeCompany(companyName: string) {
       throw new Error("Failed to obtain INSEE API key");
     }
     
-    // Construct search query
-    // According to INSEE API docs, we need to search by denomination (company name)
-    // Reference: https://portail-api.insee.fr/catalog/api/2ba0e549-5587-3ef1-9082-99cd865de66f/doc
-    const searchUrl = `${INSEE_API_BASE_URL}/siret`;
+    // Construct search query - using the correct endpoint based on INSEE API documentation
+    // Note: Their API documentation shows multiple endpoints, let's try both main ones
     
-    // Build a proper query parameter for raison sociale (company name)
-    // Using Q parameter as per API documentation
-    const params = new URLSearchParams({
-      q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search with tilde
-      nombre: "5", // Limit results to 5
-      champs: "siret,siren,denominationUniteLegale,adresseEtablissement,dateCreationEtablissement,trancheEffectifsEtablissement,activitePrincipaleUniteLegale,categorieJuridiqueUniteLegale,etatAdministratifUniteLegale"
+    // First attempt with /siret endpoint (establishment search)
+    let searchUrl = `${INSEE_API_BASE_URL}/siret`;
+    let params = new URLSearchParams({
+      q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search
+      nombre: "5" // Limit results
     });
     
-    const fullUrl = `${searchUrl}?${params.toString()}`;
-    console.log(`Searching INSEE API: ${fullUrl}`);
+    console.log(`Attempting first INSEE API endpoint: ${searchUrl}?${params.toString()}`);
     
-    // Make request to INSEE API with API key as Bearer token
-    const response = await fetch(fullUrl, {
+    // Make request to INSEE API
+    let response = await fetch(`${searchUrl}?${params.toString()}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -48,25 +44,51 @@ export async function searchInseeCompany(companyName: string) {
       }
     });
     
-    console.log(`INSEE search request status: ${response.status}`);
+    console.log(`First INSEE endpoint response status: ${response.status}`);
     
+    // If the first endpoint fails, try the uniteLegale endpoint
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("INSEE search error response:", errorBody);
+      const errorText = await response.text();
+      console.error(`First endpoint error: ${errorText}`);
       
-      // If API call fails, fall back to mock data in development
-      if (Deno.env.get("ENVIRONMENT") === "development") {
-        console.warn("Falling back to mock data due to API error");
-        return { etablissements: [getMockCompanyData(companyName)] };
+      // Try second endpoint (legal unit search)
+      searchUrl = `${INSEE_API_BASE_URL}/siren`;
+      params = new URLSearchParams({
+        q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search
+        nombre: "5" // Limit results
+      });
+      
+      console.log(`Attempting second INSEE API endpoint: ${searchUrl}?${params.toString()}`);
+      
+      response = await fetch(`${searchUrl}?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json"
+        }
+      });
+      
+      console.log(`Second INSEE endpoint response status: ${response.status}`);
+      
+      // If both endpoints fail, log and use mock data in development
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Second endpoint error: ${errorText}`);
+        
+        if (Deno.env.get("ENVIRONMENT") === "development") {
+          console.warn("Both INSEE API endpoints failed, using mock data");
+          return { etablissements: [getMockCompanyData(companyName)] };
+        }
+        
+        throw new Error(`INSEE API search failed on both endpoints: ${response.status}`);
       }
-      
-      throw new Error(`INSEE API search failed: ${response.status} ${response.statusText}\nError body: ${errorBody}`);
     }
     
+    // Parse successful response
     const data = await response.json();
     console.log(`INSEE search results count: ${data.etablissements?.length || 0}`);
     
-    // If no results are found, we can optionally fall back to mock data in development
+    // Fall back to mock data if no results found (in development)
     if ((!data.etablissements || data.etablissements.length === 0) && 
         Deno.env.get("ENVIRONMENT") === "development") {
       console.warn("No results found in INSEE API, using mock data");

@@ -54,46 +54,51 @@ serve(async (req) => {
     
     console.log(`Searching for company: ${companyName}`);
     
-    // Search INSEE API for company data
-    const searchResults = await searchInseeCompany(companyName);
-    
-    if (!searchResults.etablissements || searchResults.etablissements.length === 0) {
+    // Search INSEE API for company data with improved logging
+    try {
+      const searchResults = await searchInseeCompany(companyName);
+      
+      if (!searchResults.etablissements || searchResults.etablissements.length === 0) {
+        return new Response(
+          JSON.stringify({
+            message: "No companies found in French registry",
+            data: null
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Get first result and format it
+      const company = searchResults.etablissements[0];
+      const formattedCompany = {
+        siret: company.siret,
+        siren: company.siren,
+        name: company.uniteLegale.denominationUniteLegale,
+        address: formatAddress(company.adresseEtablissement),
+        activityCode: company.uniteLegale.activitePrincipaleUniteLegale,
+        legalForm: company.uniteLegale.categorieJuridiqueUniteLegale,
+        creationDate: company.dateCreationEtablissement,
+        employeeCount: company.trancheEffectifsEtablissement,
+        status: company.uniteLegale.etatAdministratifUniteLegale === "A" ? "Active" : "Inactive"
+      };
+      
       return new Response(
-        JSON.stringify({
-          message: "No companies found in French registry",
-          data: null
+        JSON.stringify({ 
+          message: "Company information retrieved from French registry",
+          data: formattedCompany
         }),
         {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
+    } catch (error) {
+      console.error('Error in INSEE API search:', error);
+      throw error; // Let the outer catch handle it
     }
-    
-    // Get first result and format it
-    const company = searchResults.etablissements[0];
-    const formattedCompany = {
-      siret: company.siret,
-      siren: company.siren,
-      name: company.uniteLegale.denominationUniteLegale,
-      address: formatAddress(company.adresseEtablissement),
-      activityCode: company.uniteLegale.activitePrincipaleUniteLegale,
-      legalForm: company.uniteLegale.categorieJuridiqueUniteLegale,
-      creationDate: company.dateCreationEtablissement,
-      employeeCount: company.trancheEffectifsEtablissement,
-      status: company.uniteLegale.etatAdministratifUniteLegale === "A" ? "Active" : "Inactive"
-    };
-    
-    return new Response(
-      JSON.stringify({ 
-        message: "Company information retrieved from French registry",
-        data: formattedCompany
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
   } catch (error) {
     console.error('Error in french-company-registry function:', error);
     
