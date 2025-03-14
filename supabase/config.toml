@@ -5,3 +5,6 @@ project_id = "tqvylbkavunzlckhqxcl"
 [functions]
   [functions.company-analysis]
   verify_jwt = false
+  
+  [functions.french-company-registry]
+  verify_jwt = false

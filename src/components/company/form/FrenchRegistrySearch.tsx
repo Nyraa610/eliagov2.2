@@ -44,12 +44,16 @@ export function FrenchRegistrySearch({ onSelectCompany, isUpdating = false }: Fr
     setResults([]);
     
     try {
+      console.log("Calling French company registry with:", searchTerm);
+      
       const { data, error } = await supabase.functions.invoke("french-company-registry", {
         body: { companyName: searchTerm }
       });
       
+      console.log("Response from registry:", data, error);
+      
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message || "Failed to search registry");
       }
       
       if (data.data) {
