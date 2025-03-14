@@ -16,6 +16,10 @@ serve(async (req) => {
   }
   
   try {
+    // Log environment info for debugging
+    console.log(`Running in environment: ${Deno.env.get("ENVIRONMENT") || "production"}`);
+    console.log(`INSEE_API_KEY configured: ${Deno.env.has("INSEE_API_KEY") ? "Yes" : "No"}`);
+    
     // Parse request body to get company name
     let requestData;
     try {

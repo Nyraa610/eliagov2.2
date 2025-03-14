@@ -55,7 +55,7 @@ export async function searchInseeCompany(companyName: string) {
         return { etablissements: [getMockCompanyData(companyName)] };
       }
       
-      throw new Error(`INSEE API search failed: ${response.status} ${response.statusText}`);
+      throw new Error(`INSEE API search failed: ${response.status} ${response.statusText}\nError body: ${errorBody}`);
     }
     
     const data = await response.json();

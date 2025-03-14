@@ -9,13 +9,13 @@
  * @returns Promise with the access token
  */
 export async function getInseeToken() {
-  // Use the INSEE public API key for authentication
-  const API_KEY = "d7f7865e-5e28-4032-b786-5e5e28a032f6";
+  // Get API key from environment variables
+  const API_KEY = Deno.env.get("INSEE_API_KEY");
   
   if (!API_KEY) {
     throw new Error("INSEE API key not configured");
   }
   
-  console.log("Using INSEE public API key authentication");
+  console.log("Using INSEE API key authentication from environment variables");
   return API_KEY;
 }
