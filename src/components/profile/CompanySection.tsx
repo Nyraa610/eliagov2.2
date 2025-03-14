@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile } from "@/services/base/profileTypes";
-import { Building, Plus, Loader2 } from "lucide-react";
+import { Building, Plus, Loader2, Lock } from "lucide-react";
 import { companyService } from "@/services/company";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CompanySectionProps {
   profile: UserProfile | null;
@@ -74,9 +75,20 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
                 You're associated with a company: {profile.company_name || "Your Company"}
               </p>
             </div>
-            <Button onClick={() => navigate("/companies")} variant="outline">
-              View Company Details
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={() => navigate(`/company/${profile.company_id}`)} variant="default">
+                View Company
+              </Button>
+              
+              <Alert className="mt-4 bg-muted/50 border-dashed">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <AlertDescription className="text-sm text-muted-foreground">
+                    Need to manage multiple companies? Upgrade to our <span className="font-medium">Enterprise Plan</span> to create and manage multiple companies and their subsidiaries.
+                  </AlertDescription>
+                </div>
+              </Alert>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleCreateCompany} className="space-y-4">
