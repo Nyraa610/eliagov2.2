@@ -72,8 +72,8 @@ JSON Response Format:
   "overview": "A concise 3-4 sentence overview of the company's business, market position, and significance in its industry"
 }`;
     
-    // Call OpenAI API with improved parameters
-    console.log('Sending request to OpenAI API...');
+    // Call OpenAI API with improved parameters and organization ID
+    console.log('Sending request to OpenAI API with organization ID: org-4GIKqionAIxqxOG9FvGKCib2');
     
     // Log the API key length for debugging (don't log the actual key)
     console.log(`API key length: ${openaiApiKey.length}, starts with: ${openaiApiKey.substring(0, 3)}...`);
@@ -84,6 +84,7 @@ JSON Response Format:
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${openaiApiKey}`,
+          'OpenAI-Organization': 'org-4GIKqionAIxqxOG9FvGKCib2',
         },
       });
       
@@ -104,6 +105,7 @@ JSON Response Format:
       headers: {
         'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
+        'OpenAI-Organization': 'org-4GIKqionAIxqxOG9FvGKCib2',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini', // Using the latest mini model for better performance
@@ -128,14 +130,14 @@ JSON Response Format:
       let errorMessage = 'OpenAI API error';
       try {
         const errorData = await response.json();
-        console.error('OpenAI API error details:', errorData);
+        console.error('OpenAI API error details:', JSON.stringify(errorData));
         errorMessage = `OpenAI API error: ${errorData.error?.message || 'Unknown API error'}`;
         
         // Check for common error types and provide specific messages
         if (errorData.error?.type === 'invalid_request_error') {
           errorMessage = `Invalid request to OpenAI API: ${errorData.error.message}`;
         } else if (errorData.error?.type === 'authentication_error') {
-          errorMessage = 'OpenAI API authentication failed. Please check your API key.';
+          errorMessage = 'OpenAI API authentication failed. Please check your API key and organization ID.';
         } else if (errorData.error?.code === 'rate_limit_exceeded') {
           errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
         }

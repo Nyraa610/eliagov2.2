@@ -15,6 +15,11 @@ export function CompanyErrorState({ error, onRetry }: CompanyErrorStateProps) {
         <h3 className="font-medium">Analysis Error</h3>
       </div>
       <p className="text-sm mb-3">{error}</p>
+      <div className="text-xs text-destructive/80 mb-3">
+        Error details: {error.includes("OpenAI") ? 
+          "There was an issue with the AI service. Please check your API configuration and try again." : 
+          "The company analysis service is temporarily unavailable."}
+      </div>
       <Button 
         variant="outline" 
         size="sm" 
