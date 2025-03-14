@@ -7,9 +7,9 @@ project_id = "tqvylbkavunzlckhqxcl"
   [functions.company-analysis]
   verify_jwt = false
   
-# Environment variables for all functions
-[functions.company-analysis.environment]
-OPENAI_API_KEY = "***"
-SUPABASE_URL = "***"
-SUPABASE_ANON_KEY = "***"
-SUPABASE_SERVICE_ROLE_KEY = "***"
+  # Environment variables for all functions
+  [functions.company-analysis.env]
+  OPENAI_API_KEY = "***"
+  SUPABASE_URL = "***"
+  SUPABASE_ANON_KEY = "***"
+  SUPABASE_SERVICE_ROLE_KEY = "***"
