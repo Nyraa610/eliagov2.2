@@ -8,7 +8,6 @@ import { getMockCompanyData } from "./mockData.ts";
 
 // INSEE API configuration
 const INSEE_API_BASE_URL = "https://api.insee.fr/entreprises/sirene/V3";
-const INSEE_API_SEARCH_URL = `${INSEE_API_BASE_URL}/siret`;
 
 /**
  * Search for companies in the INSEE registry
@@ -25,17 +24,23 @@ export async function searchInseeCompany(companyName: string) {
     }
     
     // Construct search query
-    // Using Q parameter to search by denomination (company name)
+    // According to INSEE API docs, we need to search by denomination (company name)
+    // Reference: https://portail-api.insee.fr/catalog/api/2ba0e549-5587-3ef1-9082-99cd865de66f/doc
+    const searchUrl = `${INSEE_API_BASE_URL}/siret`;
+    
+    // Build a proper query parameter for raison sociale (company name)
+    // Using Q parameter as per API documentation
     const params = new URLSearchParams({
-      q: `denomination:"${companyName}"`,
-      nombre: "5" // Limit results to 5
+      q: `denominationUniteLegale:"${companyName}"~`,  // Using fuzzy search with tilde
+      nombre: "5", // Limit results to 5
+      champs: "siret,siren,denominationUniteLegale,adresseEtablissement,dateCreationEtablissement,trancheEffectifsEtablissement,activitePrincipaleUniteLegale,categorieJuridiqueUniteLegale,etatAdministratifUniteLegale"
     });
     
-    const searchUrl = `${INSEE_API_SEARCH_URL}?${params.toString()}`;
-    console.log(`Searching INSEE API: ${searchUrl}`);
+    const fullUrl = `${searchUrl}?${params.toString()}`;
+    console.log(`Searching INSEE API: ${fullUrl}`);
     
     // Make request to INSEE API with API key as Bearer token
-    const response = await fetch(searchUrl, {
+    const response = await fetch(fullUrl, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
