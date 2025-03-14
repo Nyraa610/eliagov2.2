@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building, User, Settings } from "lucide-react";
+import { Building, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompanyWithRole } from "@/services/companyService";
 
@@ -46,24 +46,15 @@ export function CompanyCard({ company }: CompanyCardProps) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter>
         <Button 
           variant="outline"
           size="sm"
           onClick={() => navigate(`/company/${company.id}`)}
+          className="w-full"
         >
           View Profile
         </Button>
-        {company.is_admin && (
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/company/${company.id}/manage`)}
-          >
-            <Settings className="w-4 h-4 mr-1" /> 
-            Manage
-          </Button>
-        )}
       </CardFooter>
     </Card>
   );

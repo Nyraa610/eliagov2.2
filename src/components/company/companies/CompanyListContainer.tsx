@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { companyService } from "@/services/companyService";
@@ -5,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "../CompanyListHeader";
 import { CompanyListContent } from "../CompanyListContent";
 import { supabaseService } from "@/services/base/supabaseService";
+import { MoreCompaniesBox } from "./MoreCompaniesBox";
 
 interface CompanyListContainerProps {
   maxCompanies?: number;
@@ -53,6 +55,7 @@ export function CompanyListContainer({
   };
 
   const canCreateCompany = companies.length < (maxCompanies || Infinity) || isAdmin;
+  const showMoreCompaniesBox = companies.length > 0 && !canCreateCompany;
 
   return (
     <div className="space-y-4">
@@ -65,13 +68,21 @@ export function CompanyListContainer({
         showRefresh={true}
       />
       
-      <CompanyListContent 
-        companies={companies} 
-        loading={loading} 
-        error={error} 
-        onRefresh={fetchCompanies}
-        onCreateCompany={() => navigate("/company/new")}
-      />
+      <div>
+        <CompanyListContent 
+          companies={companies} 
+          loading={loading} 
+          error={error} 
+          onRefresh={fetchCompanies}
+          onCreateCompany={() => navigate("/company/new")}
+        />
+        
+        {showMoreCompaniesBox && (
+          <div className="mt-6">
+            <MoreCompaniesBox onClick={onAddSubsidiary || (() => {})} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
