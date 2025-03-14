@@ -4,14 +4,9 @@ project_id = "tqvylbkavunzlckhqxcl"
 
 # Configuration for Functions
 [functions]
-[functions.serve]
-app_dir = "dist"
-node_version = "18"
-
-[functions.deploy]
-include = []
-exclude = []
-
+  [functions.company-analysis]
+  verify_jwt = false
+  
 # Environment variables
 [global.env]
 OPENAI_API_KEY = "***"
