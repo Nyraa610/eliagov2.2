@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { companyService } from "@/services/companyService";
 import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "../CompanyListHeader";
 import { CompanyListContent } from "../CompanyListContent";
+import { supabaseService } from "@/services/base/supabaseService";
 
 interface CompanyListContainerProps {
   maxCompanies?: number;
@@ -22,7 +22,6 @@ export function CompanyListContainer({
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Get companies when component mounts
   useEffect(() => {
     fetchCompanies();
   }, [toast]);
@@ -36,7 +35,6 @@ export function CompanyListContainer({
       console.log("Fetched companies:", data);
       setCompanies(data);
       
-      // Check if user is admin to enable additional features
       const hasAdminRole = await supabaseService.hasRole('admin');
       setIsAdmin(hasAdminRole);
     } catch (error: any) {
@@ -54,7 +52,6 @@ export function CompanyListContainer({
     }
   };
 
-  // User can create company if they have no companies or are admin
   const canCreateCompany = companies.length < (maxCompanies || Infinity) || isAdmin;
 
   return (
