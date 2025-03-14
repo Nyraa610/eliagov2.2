@@ -23,24 +23,18 @@ export async function searchInseeCompany(companyName: string) {
       throw new Error("Failed to obtain INSEE API key");
     }
     
-    // Construct search URL using the correct SIREN endpoint format
-    const baseUrl = `${INSEE_API_BASE_URL}/siren`;
+    // Construct the API request URL - updated based on official INSEE API format
+    const searchUrl = `${INSEE_API_BASE_URL}/siren/search`;
     
-    // Create a URL object to properly handle parameter encoding
-    // The API requires the format: q=denominationUniteLegale:"company name"&nombre=5
-    // This approach lets the browser handle spaces correctly while we control the quotes
-    const url = new URL(baseUrl);
+    // The INSEE API expects a query in q parameter with Lucene syntax
+    // Search within the specific field 'denominationUniteLegale'
+    const query = `denominationUniteLegale:${companyName}`;
     
-    // Add query parameter with proper quoting for search term
-    // Use q parameter with proper syntax instead of denominationUniteLegale
-    url.searchParams.append("q", `denominationUniteLegale:"${companyName}"`);
-    url.searchParams.append("nombre", "5");
-    
-    console.log(`Attempting INSEE API search: ${url.toString()}`);
+    console.log(`Attempting INSEE API search: ${searchUrl}?q=${encodeURIComponent(query)}&nombre=5`);
     console.log(`Using headers: X-INSEE-Api-Key-Integration: [API KEY HIDDEN]`);
     
     // Make request to INSEE API with detailed logging
-    const response = await fetch(url.toString(), {
+    const response = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}&nombre=5`, {
       method: "GET",
       headers: {
         "X-INSEE-Api-Key-Integration": apiKey,
