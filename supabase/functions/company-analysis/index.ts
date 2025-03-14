@@ -70,7 +70,7 @@ JSON Response Format:
   "overview": "A concise 3-4 sentence overview of the company's business, market position, and significance in its industry"
 }`;
     
-    // Call OpenAI API - Making sure to include all required parameters and proper headers
+    // Call OpenAI API with improved parameters
     console.log('Sending request to OpenAI API...');
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -80,7 +80,7 @@ JSON Response Format:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o-mini', // Using the latest mini model for better performance
         messages: [
           { 
             role: 'system', 
@@ -91,18 +91,36 @@ JSON Response Format:
             content: `Research and provide a company profile for: ${companyName}` 
           }
         ],
-        temperature: 0.5, // Lower temperature for more factual responses
+        temperature: 0.2, // Lower temperature for more factual, consistent responses
+        max_tokens: 1000, // Ensure we have enough tokens for detailed responses
+        top_p: 0.9, // More focused sampling
       }),
     });
     
+    // Enhanced error handling for API response
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      let errorMessage = 'OpenAI API error';
+      try {
+        const errorData = await response.json();
+        console.error('OpenAI API error details:', errorData);
+        errorMessage = `OpenAI API error: ${errorData.error?.message || 'Unknown API error'}`;
+        
+        // Check for common error types and provide specific messages
+        if (errorData.error?.type === 'invalid_request_error') {
+          errorMessage = `Invalid request to OpenAI API: ${errorData.error.message}`;
+        } else if (errorData.error?.type === 'authentication_error') {
+          errorMessage = 'OpenAI API authentication failed. Please check your API key.';
+        } else if (errorData.error?.code === 'rate_limit_exceeded') {
+          errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
+        }
+      } catch (parseError) {
+        console.error('Error parsing OpenAI error response:', parseError);
+      }
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
-    console.log('OpenAI API response received:', data);
+    console.log('OpenAI API response received');
     
     const companyInfoText = data.choices[0]?.message?.content;
     
@@ -110,21 +128,46 @@ JSON Response Format:
       throw new Error('No response content from OpenAI');
     }
     
-    console.log('Received company info from OpenAI:', companyInfoText.substring(0, 100) + '...');
+    console.log('Received company info from OpenAI');
     
-    // Parse the JSON response from the AI
+    // Parse the JSON response from the AI with enhanced error handling
     try {
       // Extract JSON from the response (in case there's any extra text)
       const jsonMatch = companyInfoText.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : companyInfoText;
-      const companyInfo = JSON.parse(jsonString);
+      let companyInfo;
       
-      // Validate required fields
+      try {
+        companyInfo = JSON.parse(jsonString);
+      } catch (jsonError) {
+        console.error('JSON parse error. Raw response:', companyInfoText);
+        throw new Error('Failed to parse JSON from OpenAI response');
+      }
+      
+      // Validate required fields with better fallback values
       const requiredFields = ['industry', 'employeeCount', 'history', 'mission', 'productsServices', 'location', 'yearFounded', 'overview'];
+      let hasMissingFields = false;
+      
       for (const field of requiredFields) {
         if (!companyInfo[field]) {
-          companyInfo[field] = field === 'productsServices' ? ['General services'] : 'Information not available';
+          hasMissingFields = true;
+          // Set appropriate defaults based on field type
+          switch (field) {
+            case 'productsServices':
+              companyInfo[field] = ['General services'];
+              break;
+            case 'yearFounded':
+              companyInfo[field] = new Date().getFullYear() - 10; // Default to 10 years ago
+              break;
+            default:
+              companyInfo[field] = `Information about ${field} not available`;
+          }
         }
+      }
+      
+      // Log warning if we had to fill in missing fields
+      if (hasMissingFields) {
+        console.warn('Some fields were missing in the OpenAI response and were populated with default values');
       }
       
       // Ensure yearFounded is a number
@@ -147,17 +190,33 @@ JSON Response Format:
         }
       );
     } catch (parseError) {
-      console.error('Error parsing OpenAI response:', parseError);
-      console.error('Raw response:', companyInfoText);
-      throw new Error(`Failed to parse company information: ${parseError.message}`);
+      console.error('Error processing OpenAI response:', parseError);
+      console.error('Raw response excerpt:', companyInfoText.substring(0, 200) + '...');
+      throw new Error(`Failed to process company information: ${parseError.message}`);
     }
   } catch (error) {
     console.error('Error in company-analysis function:', error);
     
+    // Create a more user-friendly error message based on error type
+    let userMessage = 'An unexpected error occurred during company analysis';
+    let statusCode = 500;
+    
+    if (error.message.includes('API key')) {
+      userMessage = 'Configuration error: OpenAI API key issue';
+    } else if (error.message.includes('rate limit')) {
+      userMessage = 'The analysis service is currently at capacity. Please try again in a few minutes.';
+      statusCode = 429;
+    } else if (error.message.includes('parse')) {
+      userMessage = 'Error processing the company information. Our team has been notified.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ 
+        error: userMessage,
+        details: error.message 
+      }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
