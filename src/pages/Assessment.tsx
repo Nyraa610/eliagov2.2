@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -38,7 +37,6 @@ export default function Assessment() {
     setActiveTab(tab);
   };
 
-  // Function to handle showing diagnostic
   const handleShowDiagnostic = (show: boolean) => {
     setShowDiagnostic(show);
   };

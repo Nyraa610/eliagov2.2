@@ -1,32 +1,20 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { Sparkles, HelpCircle, FileCheck } from "lucide-react";
-import { UnifiedDiagnosticForm } from "./UnifiedDiagnosticForm";
-import { ESGDiagnosticReport } from "../esg-diagnostic/ESGDiagnosticReport";
+import { Sparkles } from "lucide-react";
 import { ESGFormValues } from "../esg-diagnostic/ESGFormSchema";
+import { UnifiedAssessmentProvider, useUnifiedAssessment } from "./context/UnifiedAssessmentContext";
+import { UnifiedAssessmentForm } from "./components/UnifiedAssessmentForm";
+import { UnifiedAssessmentReport } from "./components/UnifiedAssessmentReport";
 
-export function UnifiedESGAnalysis() {
-  const [formData, setFormData] = useState<ESGFormValues | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-  const [showReport, setShowReport] = useState(false);
-  const { toast } = useToast();
+const UnifiedESGAnalysisContent = () => {
+  const { formData, analysisResult, showReport } = useUnifiedAssessment();
 
   const handleFormSubmit = (values: ESGFormValues) => {
-    setFormData(values);
+    // This is handled in the UnifiedAssessmentForm component
   };
 
   const handleFormAnalysisComplete = (result: string) => {
-    setAnalysisResult(result);
-    setShowReport(true);
-  };
-
-  const handleStartNewAssessment = () => {
-    setShowReport(false);
-    setFormData(null);
-    setAnalysisResult(null);
+    // This is handled in the UnifiedAssessmentForm component
   };
 
   return (
@@ -42,21 +30,28 @@ export function UnifiedESGAnalysis() {
         </CardHeader>
         <CardContent>
           {!showReport ? (
-            <UnifiedDiagnosticForm 
+            <UnifiedAssessmentForm 
               onSubmit={handleFormSubmit}
               onAnalysisComplete={handleFormAnalysisComplete}
             />
           ) : (
             formData && analysisResult && (
-              <ESGDiagnosticReport 
+              <UnifiedAssessmentReport 
                 formData={formData}
                 analysisResult={analysisResult}
-                onStartNew={handleStartNewAssessment}
               />
             )
           )}
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+export function UnifiedESGAnalysis() {
+  return (
+    <UnifiedAssessmentProvider>
+      <UnifiedESGAnalysisContent />
+    </UnifiedAssessmentProvider>
   );
 }
