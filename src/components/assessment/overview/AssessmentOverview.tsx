@@ -64,10 +64,10 @@ export function AssessmentOverview({
       <Card className="overflow-hidden">
         <CardHeader className="pb-2 space-y-1">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{t("assessment.diagnosticRSE.title")}</CardTitle>
+            <CardTitle className="text-lg">Unified ESG/RSE Assessment</CardTitle>
             {getStatusBadge(diagStatus)}
           </div>
-          <CardDescription>{t("assessment.diagnosticRSE.description")}</CardDescription>
+          <CardDescription>In-depth assessment to evaluate current practices and identify opportunities</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="flex items-start space-x-4 mb-4">
@@ -76,7 +76,8 @@ export function AssessmentOverview({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">
-                {t("assessment.diagnosticRSE.longDescription")}
+                This assessment helps analyze your company's current sustainability practices across environmental, social, 
+                and governance dimensions to identify strengths and areas for improvement.
               </p>
             </div>
           </div>
