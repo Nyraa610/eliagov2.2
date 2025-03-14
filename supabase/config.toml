@@ -1,17 +1,19 @@
 
-# Configuration for Supabase Edge Functions
-
+# A string that specifies the project ID
 project_id = "tqvylbkavunzlckhqxcl"
 
+# Configuration for Functions
 [functions]
-node_version = 18
+[functions.serve]
 app_dir = "dist"
+node_version = "18"
 
 [functions.deploy]
 include = []
 exclude = []
 
-[env]
+# Environment variables
+[global.env]
 OPENAI_API_KEY = "***"
 SUPABASE_URL = "***"
 SUPABASE_ANON_KEY = "***"
