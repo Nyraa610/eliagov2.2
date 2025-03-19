@@ -39,8 +39,12 @@ export function useValueChainActions({
         companyId: company.id
       };
       
-      await valueChainService.saveValueChain(data);
-      toast.success("Value chain saved successfully");
+      const success = await valueChainService.saveValueChain(data);
+      if (success) {
+        toast.success("Value chain saved successfully");
+      } else {
+        toast.error("Failed to save value chain");
+      }
     } catch (error) {
       console.error("Error saving value chain:", error);
       toast.error("Failed to save value chain");
@@ -57,13 +61,35 @@ export function useValueChainActions({
     valueChainService.exportAsJson(data);
   }, [nodes, edges, company]);
 
-  const handleImport = useCallback(async () => {
-    // Since there's no importValueChain method, we'll implement file input handling here
-    // This would typically involve a file input dialog that parses a JSON file
-    toast.error("Import functionality not yet implemented");
-    // For future implementation, we would read a file, parse it as JSON,
-    // validate it as ValueChainData, and then update the nodes and edges
-  }, []);
+  const handleImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file import
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const jsonData = JSON.parse(event.target?.result as string) as ValueChainData;
+          if (jsonData.nodes && jsonData.edges) {
+            setNodes(jsonData.nodes);
+            setEdges(jsonData.edges);
+            setSelectedNode(null);
+            toast.success("Value chain imported successfully");
+          } else {
+            toast.error("Invalid value chain data format");
+          }
+        } catch (error) {
+          console.error("Error parsing imported JSON:", error);
+          toast.error("Failed to parse imported file");
+        }
+      };
+      reader.readAsText(file);
+    } catch (error) {
+      console.error("Error importing value chain:", error);
+      toast.error("Failed to import value chain");
+    }
+  }, [setNodes, setEdges, setSelectedNode]);
 
   const handleClear = useCallback(() => {
     setNodes([]);
@@ -98,6 +124,8 @@ export function useValueChainActions({
         setSelectedNode(null);
         toast.success("Value chain generated successfully");
         setIsAIDialogOpen(false);
+      } else {
+        toast.error("AI failed to generate a valid value chain");
       }
     } catch (error) {
       console.error("Error generating value chain:", error);

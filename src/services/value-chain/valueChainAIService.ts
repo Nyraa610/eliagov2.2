@@ -8,7 +8,7 @@ import { toast } from "sonner";
  */
 export const valueChainAIService = {
   /**
-   * Generate value chain using AI based on company data
+   * Generate value chain using AI based on company data and contextual documents
    */
   generateValueChain: async (prompt: AIGenerationPrompt): Promise<ValueChainData | null> => {
     try {
@@ -27,7 +27,11 @@ export const valueChainAIService = {
            - id: a unique string identifier
            - type: "primary" (for primary activities), "support" (for support activities), or "external" (for external factors)
            - position: {x: number, y: number} for visual positioning
-           - data: {label: string, description: string, esgImpact: string}
+           - data: {
+               label: string, 
+               description: string, 
+               esgImpact: string (detailed description of environmental, social, and governance impacts)
+             }
         
         2. An array of "edges" connecting the nodes, each with:
            - id: a unique string identifier
@@ -41,7 +45,15 @@ export const valueChainAIService = {
         - External factors should include key suppliers, customers, regulatory factors, and environmental considerations.
         
         For each node, include an "esgImpact" field that describes the specific environmental, social, and governance impacts
-        of that activity component.
+        of that activity component. Be detailed and specific about:
+        - Environmental impacts (resources used, pollution, waste, etc.)
+        - Social impacts (labor practices, community impacts, etc.)
+        - Governance implications (compliance requirements, transparency needs, etc.)
+        
+        Position the nodes in a logical flow with:
+        - Support activities at the top (y positions between 50-150)
+        - Primary activities in the middle (y positions between 200-350)
+        - External factors around the edges
         
         Return only valid JSON with this structure, nothing else.
         
@@ -92,8 +104,35 @@ export const valueChainAIService = {
           console.log("PlantUML diagram included in response");
         }
         
+        // Ensure all nodes have proper positioning
+        const processedNodes = nodes.map((node, index) => {
+          // If node is missing position, assign a default position based on type
+          if (!node.position) {
+            const type = node.type || node.data?.type || 'primary';
+            let x = 150 + (index % 3) * 250;
+            let y = 150;
+            
+            if (type === 'primary') {
+              y = 250;
+            } else if (type === 'support') {
+              y = 100;
+            } else if (type === 'external') {
+              y = 400;
+            }
+            
+            node.position = { x, y };
+          }
+          
+          // Ensure node has an id
+          if (!node.id) {
+            node.id = `${node.type || 'node'}-${Date.now()}-${index}`;
+          }
+          
+          return node;
+        });
+        
         return {
-          nodes,
+          nodes: processedNodes,
           edges,
           name: `${prompt.companyName} ESG Value Chain`,
           metadata: {
