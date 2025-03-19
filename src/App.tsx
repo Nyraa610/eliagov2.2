@@ -1,189 +1,67 @@
-
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import RegisterConfirmation from "@/pages/RegisterConfirmation";
-import ResetPassword from "@/pages/ResetPassword";
-import Features from "@/pages/Features";
-import Assessment from "@/pages/Assessment";
-import Training from "@/pages/Training";
-import Dashboard from "@/pages/Dashboard";
-import AdminTraining from "@/pages/admin/Training";
-import CourseForm from "@/pages/admin/CourseForm";
-import ModuleManagement from "@/pages/admin/ModuleManagement";
-import ContentManagement from "@/pages/admin/ContentManagement";
-import NotFound from "@/pages/NotFound";
-import CourseView from "@/pages/CourseView";
-import QuizManagement from "@/pages/admin/QuizManagement";
-import Profile from "@/pages/Profile";
-import Unauthorized from "@/pages/Unauthorized";
-import AdminPanel from "@/pages/admin/AdminPanel";
-import UserManagement from "@/pages/admin/UserManagement";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
-import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
-import ActionPlan from "@/pages/assessment/ActionPlan";
-import IRO from "@/pages/assessment/IRO";
-import Companies from "@/pages/company/Companies";
-import CompanyProfile from "@/pages/company/CompanyProfile";
-import NewCompany from "@/pages/company/NewCompany";
-import CompanySettings from "@/pages/company/CompanySettings";
-import Engagement from "@/pages/Engagement";
-import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
-
-// Initialize i18n
-import './i18n/i18n';
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/register/confirmation",
-    element: <RegisterConfirmation />,
-  },
-  {
-    path: "/reset-password",
-    element: <ResetPassword />,
-  },
-  {
-    path: "/features",
-    element: <Features />,
-  },
-  {
-    path: "/dashboard",
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment",
-    element: <ProtectedRoute><Assessment /></ProtectedRoute>,
-  },
-  {
-    path: "/carbon-footprint",
-    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
-  },
-  {
-    path: "/materiality-analysis",
-    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
-  },
-  {
-    path: "/iro",
-    element: <ProtectedRoute><IRO /></ProtectedRoute>,
-  },
-  {
-    path: "/action-plan",
-    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/carbon-evaluation",
-    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/materiality-analysis",
-    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/iro",
-    element: <ProtectedRoute><IRO /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/action-plan",
-    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/value-chain",
-    element: <ProtectedRoute><ValueChainModeling /></ProtectedRoute>,
-  },
-  {
-    path: "/training",
-    element: <ProtectedRoute><Training /></ProtectedRoute>,
-  },
-  {
-    path: "/training/courses/:courseId",
-    element: <ProtectedRoute><CourseView /></ProtectedRoute>,
-  },
-  {
-    path: "/profile",
-    element: <ProtectedRoute><Profile /></ProtectedRoute>,
-  },
-  {
-    path: "/engagement",
-    element: <ProtectedRoute><Engagement /></ProtectedRoute>,
-  },
-  {
-    path: "/unauthorized",
-    element: <Unauthorized />,
-  },
-  {
-    path: "/admin/panel",
-    element: <ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/users",
-    element: <ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/training",
-    element: <ProtectedRoute requiredRole="admin"><AdminTraining /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:id?",
-    element: <ProtectedRoute requiredRole="admin"><CourseForm /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules",
-    element: <ProtectedRoute requiredRole="admin"><ModuleManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules/:moduleId/content",
-    element: <ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules/:moduleId/content/:contentId/quiz",
-    element: <ProtectedRoute requiredRole="admin"><QuizManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/companies",
-    element: <ProtectedRoute><Companies /></ProtectedRoute>,
-  },
-  {
-    path: "/company/new",
-    element: <ProtectedRoute><NewCompany /></ProtectedRoute>,
-  },
-  {
-    path: "/company/:id",
-    element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
-  },
-  // Keep CompanySettings route for backward compatibility, but it will redirect to CompanyProfile
-  {
-    path: "/company/:id/settings",
-    element: <ProtectedRoute><CompanySettings /></ProtectedRoute>,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import './i18n';
+import { useTheme } from './hooks/useTheme';
+import { ThemeProvider } from './components/ui/theme-provider';
+import { SiteHeader } from './components/layout/SiteHeader';
+import { SiteFooter } from './components/layout/SiteFooter';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { UserDashboard } from './pages/user/UserDashboard';
+import { CompanyDashboard } from './pages/company/CompanyDashboard';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { UserRole } from './services/base/profileTypes';
+import { CompanyProfile } from './pages/company/CompanyProfile';
+import { CompanySettings } from './pages/company/CompanySettings';
+import { Companies } from './pages/Companies';
+import { CreateCompany } from './pages/CreateCompany';
+import { TermsOfService } from './pages/TermsOfService';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { ContactUs } from './pages/ContactUs';
+import { Unauthorized } from './pages/Unauthorized';
+import { AssessmentPage } from './pages/assessment/AssessmentPage';
+import SalesOpportunities from "./pages/SalesOpportunities";
 
 function App() {
+  const { i18n } = useTranslation();
+  const { theme, setTheme } = useTheme();
+  const [locale, setLocale] = useState(i18n.language);
+
+  useEffect(() => {
+    i18n.changeLanguage(locale);
+  }, [locale, i18n]);
+
+  const handleLocaleChange = (newLocale: string) => {
+    setLocale(newLocale);
+  };
+
   return (
-    <LanguageProvider>
-      <RouterProvider router={router} />
-    </LanguageProvider>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/contact-us" element={<ContactUs />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+
+      {/* User Routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+
+      {/* Company Routes */}
+      <Route path="/companies" element={<ProtectedRoute><Companies /></ProtectedRoute>} />
+      <Route path="/companies/create" element={<ProtectedRoute requiredRole={UserRole.ADMIN}><CreateCompany /></ProtectedRoute>} />
+      <Route path="/company/:id" element={<ProtectedRoute><CompanyProfile /></ProtectedRoute>} />
+      <Route path="/company/:id/settings" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
+      <Route path="/company/:id/assessment" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
+      
+      {/* Add the new route for Sales Opportunities */}
+      <Route path="/company/:id/sales-opportunities" element={<SalesOpportunities />} />
+      
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
