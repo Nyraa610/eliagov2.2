@@ -1,4 +1,3 @@
-
 import {
   createBrowserRouter,
   RouterProvider,
@@ -154,6 +153,7 @@ const router = createBrowserRouter([
     path: "/company/:id",
     element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
   },
+  // Keep CompanySettings route for backward compatibility, but it will redirect to CompanyProfile
   {
     path: "/company/:id/settings",
     element: <ProtectedRoute><CompanySettings /></ProtectedRoute>,
