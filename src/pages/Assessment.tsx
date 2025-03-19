@@ -14,7 +14,7 @@ import { useAssessmentProgress } from "@/hooks/useAssessmentProgress";
 import { ESGAssessmentHistory } from "@/components/assessment/esg-diagnostic/ESGAssessmentHistory";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Share2 } from "lucide-react";
+import { Share2, ActivitySquare } from "lucide-react";
 
 export default function Assessment() {
   const navigate = useNavigate();
@@ -74,6 +74,12 @@ export default function Assessment() {
             <Link to="/assessment/value-chain">
               <Share2 className="w-4 h-4" />
               Value Chain Modeling
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/assessment/iro">
+              <ActivitySquare className="w-4 h-4" />
+              Impact, Risks & Opportunities
             </Link>
           </Button>
         </div>

@@ -28,6 +28,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
 import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
 import ActionPlan from "@/pages/assessment/ActionPlan";
+import IRO from "@/pages/assessment/IRO";
 import Companies from "@/pages/company/Companies";
 import CompanyProfile from "@/pages/company/CompanyProfile";
 import NewCompany from "@/pages/company/NewCompany";
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
   },
   {
+    path: "/iro",
+    element: <ProtectedRoute><IRO /></ProtectedRoute>,
+  },
+  {
     path: "/action-plan",
     element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
   },
@@ -90,6 +95,10 @@ const router = createBrowserRouter([
   {
     path: "/assessment/materiality-analysis",
     element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/iro",
+    element: <ProtectedRoute><IRO /></ProtectedRoute>,
   },
   {
     path: "/assessment/action-plan",
