@@ -22,9 +22,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'X-Client-Info': 'elia-go-app'
-    },
-    fetchOptions: {
-      cache: 'no-cache'
     }
   }
 });

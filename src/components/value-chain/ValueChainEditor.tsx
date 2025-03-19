@@ -23,7 +23,7 @@ import { ValueChainToolbar } from "./ValueChainToolbar";
 import { NodeEditPanel } from "./NodeEditPanel";
 import { AIGenerationDialog } from "./AIGenerationDialog";
 import { toast } from "sonner";
-import { valueChainService } from "@/services/valueChainService";
+import { valueChainService } from "@/services/value-chain";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 
 // Import react-flow styles

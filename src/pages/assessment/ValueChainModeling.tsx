@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
-import { valueChainService } from "@/services/valueChainService";
+import { valueChainService } from "@/services/value-chain";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
