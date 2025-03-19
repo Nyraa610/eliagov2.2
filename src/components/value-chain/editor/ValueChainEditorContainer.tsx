@@ -56,7 +56,7 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     company
   });
 
-  const onGenerateWithAI = (prompt: AIGenerationPrompt) => {
+  const onGenerateWithAI = async (prompt: AIGenerationPrompt) => {
     return handleGenerateAI(prompt, setIsGenerating, setIsAIDialogOpen);
   };
 
