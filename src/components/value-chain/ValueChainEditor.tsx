@@ -36,6 +36,7 @@ interface ValueChainEditorProps {
 
 export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  // Fix: Pass an empty array as default value
   const [nodes, setNodes, onNodesChange] = useNodesState(initialData?.nodes || []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
   const [selectedNode, setSelectedNode] = useState<ValueChainNode | null>(null);

@@ -4,7 +4,6 @@ import { supabaseClient } from "./supabaseClient";
 export const authService = {
   getCurrentUser: async () => {
     try {
-      console.log("authService: Getting current user");
       const { data, error } = await supabaseClient.auth.getSession();
       
       if (error) {
@@ -12,7 +11,6 @@ export const authService = {
         throw error;
       }
       
-      console.log("authService: Session data:", JSON.stringify(data));
       return data.session?.user || null;
     } catch (error) {
       console.error("authService: Exception getting current user:", error);
@@ -22,7 +20,6 @@ export const authService = {
   
   signOut: async () => {
     try {
-      console.log("authService: Signing out user");
       const { error } = await supabaseClient.auth.signOut();
       
       if (error) {
@@ -30,7 +27,6 @@ export const authService = {
         throw error;
       }
       
-      console.log("authService: User signed out successfully");
       // Clear any cached user data
       localStorage.removeItem('sb-auth-token');
       return true;
@@ -42,7 +38,6 @@ export const authService = {
   
   refreshSession: async () => {
     try {
-      console.log("authService: Refreshing session");
       const { data, error } = await supabaseClient.auth.refreshSession();
       
       if (error) {
@@ -50,7 +45,6 @@ export const authService = {
         throw error;
       }
       
-      console.log("authService: Session refreshed successfully");
       return data.session;
     } catch (error) {
       console.error("authService: Exception refreshing session:", error);
