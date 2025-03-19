@@ -20,9 +20,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   if (isLoading) {
     // Still checking authentication
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2 text-gray-600">Verifying authentication...</p>
+      <div className="min-h-screen flex flex-col justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+        <p className="text-gray-600">Verifying authentication...</p>
       </div>
     );
   }

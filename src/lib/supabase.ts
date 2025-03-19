@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: localStorage
+    storage: typeof window !== 'undefined' ? localStorage : undefined
   },
   realtime: {
     params: {
@@ -28,8 +28,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Expose a function to check authentication status
 export const isAuthenticated = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  return !!data.session?.user;
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return !!data.session?.user;
+  } catch (error) {
+    console.error("Error checking authentication status:", error);
+    return false;
+  }
 };
 
 // Create a global auth state listener

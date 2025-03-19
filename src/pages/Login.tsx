@@ -26,6 +26,8 @@ export default function Login() {
 
   // Check if user is already logged in
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         setIsCheckingAuth(true);
@@ -36,14 +38,16 @@ export default function Login() {
           return;
         }
         
-        if (data.session) {
+        if (data.session && isMounted) {
           console.log("User already logged in, redirecting to dashboard");
           navigate("/dashboard", { replace: true });
         }
       } catch (checkError) {
         console.error("Exception during auth check:", checkError);
       } finally {
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     };
     
@@ -52,6 +56,8 @@ export default function Login() {
     // Set up auth listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!isMounted) return;
+        
         console.log("Auth state changed in Login component:", event);
         if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           console.log("User signed in, redirecting to dashboard");
@@ -61,6 +67,7 @@ export default function Login() {
     );
     
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
   }, [navigate]);

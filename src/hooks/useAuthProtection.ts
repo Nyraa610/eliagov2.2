@@ -15,6 +15,8 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         console.log("useAuthProtection: Checking authentication...");
@@ -24,9 +26,12 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         
         if (error) {
           console.error("useAuthProtection: Error getting session:", error.message);
-          setAuthError(`Error checking authentication: ${error.message}`);
-          setIsAuthenticated(false);
-          setHasRequiredRole(false);
+          if (isMounted) {
+            setAuthError(`Error checking authentication: ${error.message}`);
+            setIsAuthenticated(false);
+            setHasRequiredRole(false);
+            setIsLoading(false);
+          }
           return;
         }
         
@@ -34,7 +39,9 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         
         if (user) {
           console.log("useAuthProtection: Session found for user:", user.id);
-          setIsAuthenticated(true);
+          if (isMounted) {
+            setIsAuthenticated(true);
+          }
           
           // If role is required, check if user has the role
           if (requiredRole) {
@@ -46,43 +53,59 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
               if (profile && profile.role === 'admin') {
                 // Admins have access to everything
                 console.log("useAuthProtection: User is admin, granting access");
-                setHasRequiredRole(true);
+                if (isMounted) {
+                  setHasRequiredRole(true);
+                }
               } else if (profile) {
                 // Check specific role requirements for non-admins
                 const hasRole = profile.role === requiredRole;
                 console.log(`useAuthProtection: User has required role: ${hasRole}`);
-                setHasRequiredRole(hasRole);
+                if (isMounted) {
+                  setHasRequiredRole(hasRole);
+                }
               } else {
                 console.error("useAuthProtection: Could not fetch user profile");
-                setHasRequiredRole(false);
+                if (isMounted) {
+                  setHasRequiredRole(false);
+                }
               }
             } catch (roleError: any) {
               console.error("useAuthProtection: Error checking role:", roleError);
-              setAuthError(`Error checking role: ${roleError.message}`);
-              setHasRequiredRole(false);
+              if (isMounted) {
+                setAuthError(`Error checking role: ${roleError.message}`);
+                setHasRequiredRole(false);
+              }
             }
           } else {
             // No specific role required
-            setHasRequiredRole(true);
+            if (isMounted) {
+              setHasRequiredRole(true);
+            }
           }
         } else {
           console.log("useAuthProtection: No session found");
-          setIsAuthenticated(false);
-          setHasRequiredRole(!requiredRole);
+          if (isMounted) {
+            setIsAuthenticated(false);
+            setHasRequiredRole(!requiredRole);
+          }
         }
       } catch (error: any) {
         console.error("useAuthProtection: Error checking authentication:", error);
-        setAuthError(`Error checking authentication: ${error.message}`);
-        setIsAuthenticated(false);
-        setHasRequiredRole(false);
-        
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: error.message || "There was a problem verifying your login.",
-        });
+        if (isMounted) {
+          setAuthError(`Error checking authentication: ${error.message}`);
+          setIsAuthenticated(false);
+          setHasRequiredRole(false);
+          
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: error.message || "There was a problem verifying your login.",
+          });
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     
@@ -92,6 +115,8 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log(`useAuthProtection: Auth state changed - Event: ${event}`);
+        
+        if (!isMounted) return;
         
         try {
           if (session?.user) {
@@ -129,20 +154,23 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         } catch (error: any) {
           console.error("useAuthProtection: Error in auth change listener:", error);
           setAuthError(`Auth change error: ${error.message}`);
+        } finally {
+          setIsLoading(false);
         }
       }
     );
     
     return () => {
       console.log("useAuthProtection: Cleaning up auth listener");
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, [requiredRole, toast]);
+  }, [requiredRole, toast, location.pathname]);
 
   return { 
     isAuthenticated, 
     hasRequiredRole, 
     authError, 
-    isLoading: isAuthenticated === null || hasRequiredRole === null 
+    isLoading: isLoading
   };
 };
