@@ -12,7 +12,7 @@ import { ValueChainData } from "@/types/valueChain";
 
 export default function ValueChainModeling() {
   const [loading, setLoading] = useState(true);
-  // Fix: Use proper type and pass an empty array as default value
+  // Fix: Initialize with null instead of empty array
   const [valueChainData, setValueChainData] = useState<ValueChainData | null>(null);
   const { company, loading: companyLoading } = useCompanyProfile();
 
