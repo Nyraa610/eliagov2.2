@@ -7,5 +7,5 @@ interface ValueChainEditorProps {
 }
 
 export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
-  return <ValueChainEditorContainer initialData={initialData as ValueChainData} />;
+  return <ValueChainEditorContainer initialData={initialData} />;
 }

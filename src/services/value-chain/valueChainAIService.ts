@@ -14,7 +14,7 @@ export const valueChainAIService = {
     try {
       // Prepare a structured prompt for the AI
       const promptText = `
-        Generate a JSON value chain model for a company with these details:
+        Generate a detailed JSON value chain model for ESG reporting purposes with these details:
         
         Company name: ${prompt.companyName}
         Industry: ${prompt.industry}
@@ -27,21 +27,28 @@ export const valueChainAIService = {
            - id: a unique string identifier
            - type: "primary" (for primary activities), "support" (for support activities), or "external" (for external factors)
            - position: {x: number, y: number} for visual positioning
-           - data: {label: string, description: string}
+           - data: {label: string, description: string, esgImpact: string}
         
         2. An array of "edges" connecting the nodes, each with:
            - id: a unique string identifier
            - source: the id of the source node
            - target: the id of the target node
-           - label: optional description of the connection
+           - label: description of the connection, particularly noting ESG implications
         
-        Organize the nodes to show a logical flow of activities.
-        Primary activities should include: inbound logistics, operations, outbound logistics, marketing/sales, and service.
-        Support activities should include: infrastructure, HR management, technology development, and procurement.
-        External factors should include key suppliers and customers.
+        Organize the nodes to show a comprehensive ESG-focused value chain:
+        - Primary activities should include: inbound logistics, operations, outbound logistics, marketing/sales, and service.
+        - Support activities should include: infrastructure, HR management, technology development, and procurement.
+        - External factors should include key suppliers, customers, regulatory factors, and environmental considerations.
+        
+        For each node, include an "esgImpact" field that describes the specific environmental, social, and governance impacts
+        of that activity component.
         
         Return only valid JSON with this structure, nothing else.
+        
+        If appropriate, you may provide a PlantUML representation in the metadata section of the JSON to visualize the relationship.
       `;
+
+      console.log("Sending AI request for value chain generation");
 
       // Call the AI service to generate the value chain
       const result = await aiService.analyzeContent({
@@ -71,16 +78,29 @@ export const valueChainAIService = {
           jsonStr = jsonStr.split('}').slice(0, -1).join('}') + '}';
         }
         
+        console.log("Parsing AI response to JSON");
         const valueChainData = JSON.parse(jsonStr);
         
         // Validate and format the data
         const nodes = Array.isArray(valueChainData.nodes) ? valueChainData.nodes : [];
         const edges = Array.isArray(valueChainData.edges) ? valueChainData.edges : [];
         
+        // Save PlantUML diagram if available
+        let plantUml = null;
+        if (valueChainData.metadata && valueChainData.metadata.plantUml) {
+          plantUml = valueChainData.metadata.plantUml;
+          console.log("PlantUML diagram included in response");
+        }
+        
         return {
           nodes,
           edges,
-          name: `${prompt.companyName} Value Chain`
+          name: `${prompt.companyName} ESG Value Chain`,
+          metadata: {
+            plantUml,
+            generatedFor: 'ESG reporting purposes',
+            generationTimestamp: new Date().toISOString()
+          }
         };
       } catch (parseError) {
         console.error("Error parsing AI response:", parseError);

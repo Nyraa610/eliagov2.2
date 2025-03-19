@@ -6,6 +6,7 @@ export type NodeData = {
   type?: string;
   description?: string;
   icon?: string;
+  esgImpact?: string;
 };
 
 export interface ValueChainNode extends Node<NodeData> {}
@@ -19,6 +20,12 @@ export type ValueChainData = {
   companyId?: string;
   createdAt?: string;
   updatedAt?: string;
+  metadata?: {
+    plantUml?: string;
+    generatedFor?: string;
+    generationTimestamp?: string;
+    [key: string]: any;
+  };
 };
 
 export type ValueChainTemplate = {
