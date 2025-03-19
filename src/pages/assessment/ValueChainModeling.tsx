@@ -8,10 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
+import { ValueChainData } from "@/types/valueChain";
 
 export default function ValueChainModeling() {
   const [loading, setLoading] = useState(true);
-  const [valueChainData, setValueChainData] = useState(null);
+  const [valueChainData, setValueChainData] = useState<ValueChainData | null>(null);
   const { company, loading: companyLoading } = useCompanyProfile();
 
   useEffect(() => {
