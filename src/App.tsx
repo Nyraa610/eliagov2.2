@@ -1,3 +1,4 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -32,6 +33,7 @@ import CompanyProfile from "@/pages/company/CompanyProfile";
 import NewCompany from "@/pages/company/NewCompany";
 import CompanySettings from "@/pages/company/CompanySettings";
 import Engagement from "@/pages/Engagement";
+import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -92,6 +94,10 @@ const router = createBrowserRouter([
   {
     path: "/assessment/action-plan",
     element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
+  },
+  {
+    path: "/assessment/value-chain",
+    element: <ProtectedRoute><ValueChainModeling /></ProtectedRoute>,
   },
   {
     path: "/training",

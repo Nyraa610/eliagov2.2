@@ -12,6 +12,9 @@ import { EliaAssistant } from "@/components/assessment/unified/EliaAssistant";
 import { UnifiedESGAnalysis } from "@/components/assessment/unified/UnifiedESGAnalysis";
 import { useAssessmentProgress } from "@/hooks/useAssessmentProgress";
 import { ESGAssessmentHistory } from "@/components/assessment/esg-diagnostic/ESGAssessmentHistory";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Share2 } from "lucide-react";
 
 export default function Assessment() {
   const navigate = useNavigate();
@@ -62,9 +65,19 @@ export default function Assessment() {
 
   return (
     <UserLayout title={t("assessment.title")}>
-      <p className="text-gray-600 mb-6">
-        Complete your company's ESG/RSE assessment with the help of Elia, our AI assistant.
-      </p>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-gray-600">
+          Complete your company's ESG/RSE assessment with the help of Elia, our AI assistant.
+        </p>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/assessment/value-chain">
+              <Share2 className="w-4 h-4" />
+              Value Chain Modeling
+            </Link>
+          </Button>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
