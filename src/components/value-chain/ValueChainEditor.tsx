@@ -7,6 +7,7 @@ import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ReactFlowProvider } from "@xyflow/react";
 
 interface ValueChainEditorProps {
   initialData?: ValueChainData | null;
@@ -61,5 +62,9 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
     );
   }
 
-  return <ValueChainEditorContainer initialData={valueChainData} />;
+  return (
+    <ReactFlowProvider>
+      <ValueChainEditorContainer initialData={valueChainData} />
+    </ReactFlowProvider>
+  );
 }

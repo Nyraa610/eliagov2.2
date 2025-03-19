@@ -13,7 +13,7 @@ import { GenerationProgressBar } from "./components/GenerationProgressBar";
 import { EditorLayout } from "./components/EditorLayout";
 import { DialogManager } from "./components/DialogManager";
 
-// Import react-flow styles
+// Import react-flow styles - IMPORTANT!
 import "@xyflow/react/dist/style.css";
 import "@/styles/value-chain.css";
 
@@ -44,6 +44,8 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     setNodes,
     setEdges
   } = useValueChainNodes(initialData);
+
+  console.log("Rendering ValueChainEditorContainer with nodes:", nodes.length, "edges:", edges.length);
 
   const {
     handleSave,

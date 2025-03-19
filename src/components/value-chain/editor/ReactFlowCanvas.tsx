@@ -9,14 +9,13 @@ import {
   Connection,
   Edge,
   Node,
-  addEdge,
-  useReactFlow
+  useReactFlow,
+  addEdge
 } from "@xyflow/react";
 import { PrimaryActivityNode } from "../nodes/PrimaryActivityNode";
 import { SupportActivityNode } from "../nodes/SupportActivityNode";
 import { ExternalFactorNode } from "../nodes/ExternalFactorNode";
 import { CustomNode } from "../nodes/CustomNode";
-import { NodeType } from "@/types/valueChain";
 
 interface ReactFlowCanvasProps {
   nodes: Node[];
@@ -33,7 +32,7 @@ export function ReactFlowCanvas({
   onEdgesChange,
   onNodeClick
 }: ReactFlowCanvasProps) {
-  const reactFlowInstance = useReactFlow();
+  const { setEdges } = useReactFlow();
 
   // Define node types
   const nodeTypes = {
@@ -46,9 +45,9 @@ export function ReactFlowCanvas({
   // Handle connections
   const onConnect = useCallback(
     (params: Connection) => {
-      return addEdge({ ...params, animated: false }, edges);
+      setEdges((eds) => addEdge({ ...params, animated: false }, eds));
     },
-    [edges]
+    [setEdges]
   );
 
   return (

@@ -33,13 +33,13 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!hasRequiredRole) {
+  if (requiredRole && !hasRequiredRole) {
     // Doesn't have required role, redirect to unauthorized page
     console.log("ProtectedRoute: Doesn't have required role, redirecting to unauthorized");
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Authenticated and has required role
+  // Authenticated and has required role (or no role required)
   console.log("ProtectedRoute: User authenticated and authorized, rendering children");
   return <>{children}</>;
 };

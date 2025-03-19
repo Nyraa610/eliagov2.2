@@ -4,17 +4,18 @@ import { Node, Edge, useNodesState, useEdgesState } from "@xyflow/react";
 import { ValueChainData, ValueChainNode, NodeType } from "@/types/valueChain";
 import { toast } from "sonner";
 
-export function useValueChainNodes(initialData?: ValueChainData) {
-  // Initialize with empty arrays to fix the TypeScript error
+export function useValueChainNodes(initialData?: ValueChainData | null) {
+  // Initialize with empty arrays as a base
   const [nodes, setNodes, onNodesChange] = useNodesState(initialData?.nodes || []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
   const [selectedNode, setSelectedNode] = useState<ValueChainNode | null>(null);
 
   // Initialize with some basic nodes if no initial data
   useEffect(() => {
-    if (!initialData && nodes.length === 0) {
+    if ((!initialData || initialData.nodes.length === 0) && nodes.length === 0) {
+      console.log("Creating default value chain nodes");
       // Create a default simple value chain structure
-      setNodes([
+      const defaultNodes = [
         {
           id: 'primary-1',
           type: 'primary',
@@ -39,9 +40,9 @@ export function useValueChainNodes(initialData?: ValueChainData) {
           position: { x: 350, y: 50 },
           data: { label: 'Support Activities', type: 'support' }
         }
-      ]);
+      ];
 
-      setEdges([
+      const defaultEdges = [
         {
           id: 'edge-p1-p2',
           source: 'primary-1',
@@ -57,13 +58,17 @@ export function useValueChainNodes(initialData?: ValueChainData) {
           source: 'support-1',
           target: 'primary-2'
         }
-      ]);
+      ];
+
+      setNodes(defaultNodes);
+      setEdges(defaultEdges);
     }
   }, [initialData, nodes.length, setNodes, setEdges]);
 
   // Node selection
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
+      console.log("Node clicked:", node);
       setSelectedNode(node as ValueChainNode);
     },
     []

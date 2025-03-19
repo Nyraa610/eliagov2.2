@@ -4,15 +4,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://tqvylbkavunzlckhqxcl.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxdnlsYmthdnVuemxja2hxeGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzMzM4MDksImV4cCI6MjA1NTkwOTgwOX0.2CjAxh7DpNx74ncjK9f_r8W9kfiISZw-1QoqmneIn1o';
 
+const isBrowser = typeof window !== 'undefined';
+
 // Initialize the Supabase client with optimized session configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
+    persistSession: isBrowser,
     storageKey: 'elia-go-auth',
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
+    autoRefreshToken: isBrowser,
+    detectSessionInUrl: isBrowser,
     flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? localStorage : undefined
+    storage: isBrowser ? localStorage : undefined
   },
   realtime: {
     params: {
@@ -30,16 +32,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const isAuthenticated = async () => {
   try {
     const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
+    if (error) {
+      console.error("Error checking authentication status:", error);
+      return false;
+    }
     return !!data.session?.user;
   } catch (error) {
-    console.error("Error checking authentication status:", error);
+    console.error("Exception checking authentication status:", error);
     return false;
   }
 };
 
 // Create a global auth state listener
 export const setupAuthListener = (callback: (isAuthenticated: boolean) => void) => {
+  if (!isBrowser) {
+    return { subscription: { unsubscribe: () => {} } };
+  }
+  
+  console.log("Setting up auth state listener");
   return supabase.auth.onAuthStateChange((event, session) => {
     console.log("Auth state changed:", event, session ? "Session exists" : "No session");
     callback(!!session);
