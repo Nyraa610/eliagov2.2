@@ -6,7 +6,7 @@ import { companyService } from "@/services/company";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
-export function useCompanyProfile(id: string | undefined) {
+export function useCompanyProfile(id?: string) {
   const [company, setCompany] = useState<Company | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,10 @@ export function useCompanyProfile(id: string | undefined) {
 
   useEffect(() => {
     const fetchCompany = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);

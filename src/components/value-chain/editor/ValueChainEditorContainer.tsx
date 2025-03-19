@@ -15,7 +15,7 @@ import "@xyflow/react/dist/style.css";
 import "@/styles/value-chain.css";
 
 interface ValueChainEditorContainerProps {
-  initialData?: ValueChainData;
+  initialData?: ValueChainData | null;
 }
 
 export function ValueChainEditorContainer({ initialData }: ValueChainEditorContainerProps) {
