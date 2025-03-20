@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Shield, Link } from "lucide-react";
 import { Company } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
-import { HubspotConnector } from "./HubspotConnector";
+import { HubspotConnector } from "./connectors/HubspotConnector";
 import { APIKeyConnector } from "./connectors/APIKeyConnector";
 import { APIDocumentation } from "./connectors/APIDocumentation";
 import { Users, Calculator, ShoppingCart, MessageCircle } from "./icons/ConnectorIcons";
