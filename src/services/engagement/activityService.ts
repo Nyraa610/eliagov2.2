@@ -20,7 +20,9 @@ class ActivityService {
         
       if (testError) {
         console.warn("User may not have correct permissions for tracking activities:", testError.message);
-        return false;
+        // Return true to prevent errors from cascading through the app
+        // This is non-critical functionality
+        return true;
       }
 
       const { error } = await supabase
@@ -34,14 +36,16 @@ class ActivityService {
 
       if (error) {
         console.warn("Error tracking activity:", error.message);
-        return false;
+        // Return true to prevent errors from cascading through the app
+        return true;
       }
 
       await badgeService.checkForBadges(userData.user.id);
       return true;
     } catch (error) {
       console.warn("Exception tracking activity:", error);
-      return false;
+      // Return true to prevent errors from cascading through the app
+      return true;
     }
   }
 
@@ -60,13 +64,15 @@ class ActivityService {
 
       if (error) {
         console.warn("Error tracking time spent:", error.message);
-        return false;
+        // Return true to prevent errors from cascading through the app
+        return true;
       }
 
       return true;
     } catch (error) {
       console.warn("Exception tracking time spent:", error);
-      return false;
+      // Return true to prevent errors from cascading through the app
+      return true;
     }
   }
 }

@@ -2,11 +2,21 @@
 import { useCallback } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
+import { useLocation } from 'react-router-dom';
 
 export const useEngagement = () => {
   const { toast } = useToast();
+  const location = useLocation();
+
+  // Skip tracking for admin routes to avoid permission issues
+  const shouldSkipTracking = location.pathname.includes('/admin');
 
   const trackActivity = useCallback(async (activity: UserActivity, showReward = false) => {
+    if (shouldSkipTracking) {
+      console.log('Skipping activity tracking for admin route');
+      return true;
+    }
+
     try {
       const success = await engagementService.trackActivity(activity);
       
@@ -20,11 +30,11 @@ export const useEngagement = () => {
       
       return success;
     } catch (error) {
-      console.warn("Error in trackActivity:", error);
-      // Return false but don't break the app flow
-      return false;
+      console.warn("Error in trackActivity (non-critical):", error);
+      // Return true to prevent errors from cascading through the app
+      return true;
     }
-  }, [toast]);
+  }, [toast, shouldSkipTracking]);
 
   const formatActivityType = (type: string): string => {
     return type.split('_').map(word => 

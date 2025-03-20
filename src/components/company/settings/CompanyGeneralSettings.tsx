@@ -3,7 +3,7 @@ import { Company } from "@/services/company/types";
 
 export interface CompanyGeneralSettingsProps {
   company: Company;
-  onCompanyUpdate?: (company: Company) => void; // Made optional to fix type error
+  onCompanyUpdate?: (company: Company) => void; 
 }
 
 export function CompanyGeneralSettings({ company, onCompanyUpdate }: CompanyGeneralSettingsProps) {

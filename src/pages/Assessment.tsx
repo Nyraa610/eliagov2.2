@@ -14,7 +14,7 @@ import { useAssessmentProgress } from "@/hooks/useAssessmentProgress";
 import { ESGAssessmentHistory } from "@/components/assessment/esg-diagnostic/ESGAssessmentHistory";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Share2 } from "lucide-react";
+import { Share2, TrendingUp } from "lucide-react";
 
 export default function Assessment() {
   const navigate = useNavigate();
@@ -70,6 +70,12 @@ export default function Assessment() {
           Complete your company's ESG/RSE assessment with the help of Elia, our AI assistant.
         </p>
         <div className="flex gap-2">
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/assessment/iro">
+              <TrendingUp className="w-4 h-4" />
+              Impact, Risks & Opportunities
+            </Link>
+          </Button>
           <Button asChild variant="outline" className="gap-2">
             <Link to="/assessment/value-chain">
               <Share2 className="w-4 h-4" />

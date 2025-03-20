@@ -8,6 +8,7 @@ export function useAssessmentProgress() {
   const [carbonEvalStatus, setCarbonEvalStatus] = useState<FeatureStatus>("not-started");
   const [materialityStatus, setMaterialityStatus] = useState<FeatureStatus>("not-started");
   const [actionPlanStatus, setActionPlanStatus] = useState<FeatureStatus>("not-started");
+  const [iroStatus, setIroStatus] = useState<FeatureStatus>("not-started");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +34,11 @@ export function useAssessmentProgress() {
         if (actionPlanProgress) {
           setActionPlanStatus(actionPlanProgress.status as FeatureStatus);
         }
+
+        const iroProgress = await assessmentService.getAssessmentProgress('iro_analysis');
+        if (iroProgress) {
+          setIroStatus(iroProgress.status as FeatureStatus);
+        }
       } catch (error) {
         console.error("Error loading assessment statuses:", error);
       } finally {
@@ -56,9 +62,10 @@ export function useAssessmentProgress() {
     const total = statusValues[diagStatus] + 
                   statusValues[carbonEvalStatus] + 
                   statusValues[materialityStatus] + 
-                  statusValues[actionPlanStatus];
+                  statusValues[actionPlanStatus] +
+                  statusValues[iroStatus];
     
-    return Math.round((total / 4) * 100);
+    return Math.round((total / 5) * 100);
   };
 
   return {
@@ -70,6 +77,8 @@ export function useAssessmentProgress() {
     setMaterialityStatus,
     actionPlanStatus,
     setActionPlanStatus,
+    iroStatus,
+    setIroStatus,
     loading,
     getOverallProgress
   };
