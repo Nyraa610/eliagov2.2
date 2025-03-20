@@ -1,12 +1,9 @@
 
-import { AIGenerationDialog } from "../../AIGenerationDialog";
 import { DocumentUploadDialog } from "../../DocumentUploadDialog";
 import { AutomatedValueChainBuilder } from "../../AutomatedValueChainBuilder";
 import { AIGenerationPrompt } from "@/types/valueChain";
 
 interface DialogManagerProps {
-  isAIDialogOpen: boolean;
-  setIsAIDialogOpen: (open: boolean) => void;
   isUploadDialogOpen: boolean;
   setIsUploadDialogOpen: (open: boolean) => void;
   isAutomatedBuilderOpen: boolean;
@@ -15,14 +12,11 @@ interface DialogManagerProps {
   companyName: string;
   industry: string;
   location: string;
-  onGenerateWithAI: (prompt: AIGenerationPrompt) => Promise<void>;
   onDocumentUpload: (files: File[]) => void;
-  onAutomatedValueChain: (prompt: string, files: File[]) => Promise<void>;
+  onAutomatedValueChain: (prompt: AIGenerationPrompt) => Promise<void>;
 }
 
 export function DialogManager({
-  isAIDialogOpen,
-  setIsAIDialogOpen,
   isUploadDialogOpen,
   setIsUploadDialogOpen,
   isAutomatedBuilderOpen,
@@ -31,21 +25,11 @@ export function DialogManager({
   companyName,
   industry,
   location,
-  onGenerateWithAI,
   onDocumentUpload,
   onAutomatedValueChain
 }: DialogManagerProps) {
   return (
     <>
-      <AIGenerationDialog
-        open={isAIDialogOpen}
-        onOpenChange={setIsAIDialogOpen}
-        onGenerate={onGenerateWithAI}
-        isGenerating={isGenerating}
-        companyName={companyName}
-        industry={industry}
-      />
-      
       <DocumentUploadDialog
         open={isUploadDialogOpen}
         onOpenChange={setIsUploadDialogOpen}
@@ -59,6 +43,7 @@ export function DialogManager({
         companyName={companyName}
         industry={industry}
         location={location}
+        isGenerating={isGenerating}
       />
     </>
   );

@@ -11,7 +11,7 @@ interface UseAutomatedValueChainProps {
   setNodes: (nodes: any) => void;
   setEdges: (edges: any) => void;
   setSelectedNode: (node: any) => void;
-  setIsAIDialogOpen: (isOpen: boolean) => void;
+  setIsAIDialogOpen?: (isOpen: boolean) => void;
   company: Company | null;
 }
 
@@ -26,7 +26,7 @@ export function useAutomatedValueChain({
 }: UseAutomatedValueChainProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const onGenerateWithAI = useCallback(async (prompt: AIGenerationPrompt) => {
+  const handleAutomatedValueChain = useCallback(async (prompt: AIGenerationPrompt) => {
     if (isProcessing) return;
     
     setIsProcessing(true);
@@ -36,77 +36,17 @@ export function useAutomatedValueChain({
     try {
       // Update progress regularly
       const progressInterval = setInterval(() => {
-        setGeneratingProgress(prev => {
+        setGeneratingProgress((prev) => {
           // Make sure we never go past 90% until the actual data arrives
           const newProgress = prev + 5;
           return newProgress > 90 ? 90 : newProgress;
         });
       }, 500);
       
-      console.log("Generating value chain with AI prompt:", prompt);
+      console.log("Starting automated value chain generation for company:", company?.name);
       
+      // Call the generate value chain service
       const result = await valueChainService.generateValueChain(prompt);
-      
-      clearInterval(progressInterval);
-      setGeneratingProgress(100);
-      
-      // Update state with generated value chain
-      if (result && result.nodes && result.edges) {
-        console.log("AI generated value chain:", result);
-        
-        // Short delay to show 100% before setting the new nodes/edges
-        setTimeout(() => {
-          setNodes(result.nodes);
-          setEdges(result.edges);
-          setSelectedNode(null);
-          setIsGenerating(false);
-          setIsAIDialogOpen(false);
-          toast.success("Value chain generated successfully");
-        }, 500);
-      } else {
-        throw new Error("Invalid result format from AI generation");
-      }
-    } catch (error) {
-      console.error("Error generating value chain with AI:", error);
-      toast.error("Failed to generate value chain. Please try again.");
-      setGeneratingProgress(0);
-      setIsGenerating(false);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode, setIsAIDialogOpen]);
-
-  const handleAutomatedValueChain = useCallback(async (prompt: string, files: File[] = []) => {
-    if (!company) {
-      toast.error("Please select a company first");
-      return;
-    }
-    
-    if (isProcessing) return;
-    
-    setIsProcessing(true);
-    setIsGenerating(true);
-    setGeneratingProgress(0);
-    
-    try {
-      // Update progress regularly
-      const progressInterval = setInterval(() => {
-        setGeneratingProgress(prev => {
-          // Make sure we never go past 90% until the actual data arrives
-          const newProgress = prev + 5;
-          return newProgress > 90 ? 90 : newProgress;
-        });
-      }, 500);
-      
-      console.log("Starting automated value chain generation for company:", company.name);
-      
-      // Call the quick generate value chain service with files if available
-      const result = await valueChainService.quickGenerateValueChain(prompt, {
-        companyName: company.name,
-        industry: company.industry || 'Unknown',
-        companyId: company.id,
-        files
-      });
       
       clearInterval(progressInterval);
       setGeneratingProgress(100);
@@ -121,7 +61,10 @@ export function useAutomatedValueChain({
           setEdges(result.edges);
           setSelectedNode(null);
           setIsGenerating(false);
-          toast.success("Value chain generated automatically");
+          if (setIsAIDialogOpen) {
+            setIsAIDialogOpen(false);
+          }
+          toast.success("Value chain generated successfully");
         }, 500);
       } else {
         throw new Error("Invalid result format from automated generation");
@@ -134,10 +77,9 @@ export function useAutomatedValueChain({
     } finally {
       setIsProcessing(false);
     }
-  }, [company, isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode]);
+  }, [company, isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode, setIsAIDialogOpen]);
 
   return {
-    onGenerateWithAI,
     handleAutomatedValueChain
   };
 }

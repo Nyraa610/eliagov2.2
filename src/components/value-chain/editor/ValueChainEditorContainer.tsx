@@ -64,7 +64,7 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     setNodes,
     setEdges,
     setSelectedNode,
-    setIsAIDialogOpen: dialogState.setIsAIDialogOpen,
+    setIsAIDialogOpen: () => {}, // Remove reference to AI dialog
     company
   });
 
@@ -93,8 +93,6 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
       />
       
       <DialogManager
-        isAIDialogOpen={dialogState.isAIDialogOpen}
-        setIsAIDialogOpen={dialogState.setIsAIDialogOpen}
         isUploadDialogOpen={dialogState.isUploadDialogOpen}
         setIsUploadDialogOpen={dialogState.setIsUploadDialogOpen}
         isAutomatedBuilderOpen={dialogState.isAutomatedBuilderOpen}
@@ -103,7 +101,6 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
         companyName={company?.name || ''}
         industry={company?.industry || ''}
         location={company?.country || ''}
-        onGenerateWithAI={handleAutomatedValueChain}
         onDocumentUpload={() => {}}
         onAutomatedValueChain={handleAutomatedValueChain}
       />
