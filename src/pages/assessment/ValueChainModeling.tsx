@@ -1,6 +1,7 @@
 
 import { UserLayout } from "@/components/user/UserLayout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { DocumentUploadDialog } from "@/components/value-chain/DocumentUploadDialog";
 import { AIQuickGenerateDialog } from "@/components/value-chain/AIQuickGenerateDialog";
 import { ValueChainHeader } from "@/components/value-chain/page/ValueChainHeader";
@@ -8,6 +9,7 @@ import { IntroductionCard } from "@/components/value-chain/page/IntroductionCard
 import { DocumentsSection } from "@/components/value-chain/page/DocumentsSection";
 import { AuthGate } from "@/components/value-chain/page/AuthGate";
 import { useValueChainPage } from "@/components/value-chain/page/useValueChainPage";
+import { ArrowRight } from "lucide-react";
 
 export default function ValueChainModeling() {
   const {
@@ -29,7 +31,8 @@ export default function ValueChainModeling() {
     handleOpenAIDialog,
     handleDocumentUpload,
     handleRemoveDocument,
-    handleQuickGenerate
+    handleQuickGenerate,
+    handleNavigateToEditor
   } = useValueChainPage();
 
   if (loading) {
@@ -65,6 +68,16 @@ export default function ValueChainModeling() {
         isLoading={isDocumentsLoading}
         error={documentsError}
       />
+      
+      <div className="mt-8 flex justify-end">
+        <Button 
+          onClick={handleNavigateToEditor}
+          size="lg"
+          className="gap-2"
+        >
+          Go to Value Chain Editor <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
 
       <AuthGate isAuthenticated={isAuth} />
       

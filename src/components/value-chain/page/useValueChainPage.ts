@@ -1,5 +1,6 @@
 
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStatus } from "./hooks/useAuthStatus";
 import { useDocuments } from "./hooks/useDocuments";
 import { useAIGeneration } from "./hooks/useAIGeneration";
@@ -7,6 +8,7 @@ import { useDialogState } from "./hooks/useDialogState";
 
 export function useValueChainPage() {
   const { loading, isAuth, companyId } = useAuthStatus();
+  const navigate = useNavigate();
   
   const {
     uploadedDocuments,
@@ -59,6 +61,11 @@ export function useValueChainPage() {
     return result;
   };
 
+  const handleNavigateToEditor = () => {
+    console.log("Navigating to value chain editor");
+    navigate("/assessment/value-chain/results");
+  };
+
   return {
     loading,
     isAuth,
@@ -78,6 +85,7 @@ export function useValueChainPage() {
     handleOpenAIDialog,
     handleDocumentUpload,
     handleRemoveDocument,
-    handleQuickGenerate: handleValueChainGenerate
+    handleQuickGenerate: handleValueChainGenerate,
+    handleNavigateToEditor
   };
 }
