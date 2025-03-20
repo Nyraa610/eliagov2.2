@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { valueChainService } from "@/services/value-chain";
 import { toast } from "sonner";
 
@@ -23,6 +23,11 @@ export function useDocuments() {
       toast.error("Failed to load documents");
     }
   }, []);
+
+  // Load documents when the component mounts
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   const handleDocumentUpload = useCallback(async (files: File[]) => {
     if (!files.length) return;

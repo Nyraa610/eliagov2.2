@@ -16,8 +16,6 @@ interface DocumentsSectionProps {
 }
 
 export function DocumentsSection({ documents, onRemoveDocument, companyId }: DocumentsSectionProps) {
-  if (documents.length === 0) return null;
-  
   return (
     <div className="mb-6">
       <Card>
@@ -33,11 +31,15 @@ export function DocumentsSection({ documents, onRemoveDocument, companyId }: Doc
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DocumentList 
-            documents={documents}
-            onRemove={onRemoveDocument}
-            className="w-full"
-          />
+          {documents.length === 0 ? (
+            <div className="text-center text-gray-500 p-4">No documents uploaded yet</div>
+          ) : (
+            <DocumentList 
+              documents={documents}
+              onRemove={onRemoveDocument}
+              className="w-full"
+            />
+          )}
         </CardContent>
       </Card>
     </div>

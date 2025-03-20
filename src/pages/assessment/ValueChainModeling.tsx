@@ -55,13 +55,12 @@ export default function ValueChainModeling() {
         generationProgress={generationProgress}
       />
       
-      {isAuth && (
-        <DocumentsSection 
-          documents={uploadedDocuments}
-          onRemoveDocument={handleRemoveDocument}
-          companyId={companyId}
-        />
-      )}
+      {/* Always display DocumentsSection, it will show "No documents" message when empty */}
+      <DocumentsSection 
+        documents={uploadedDocuments}
+        onRemoveDocument={handleRemoveDocument}
+        companyId={companyId}
+      />
 
       <AuthGate isAuthenticated={isAuth} />
       
