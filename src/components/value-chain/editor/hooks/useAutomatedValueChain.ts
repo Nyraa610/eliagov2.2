@@ -45,8 +45,16 @@ export function useAutomatedValueChain({
       
       console.log("Starting automated value chain generation for company:", company?.name);
       
-      // Call the detailed generation service instead of direct value chain generation
-      const result = await valueChainService.generateValueChain(prompt);
+      // Call the valueChainService.quickGenerateValueChain which directly calls the edge function
+      const result = await valueChainService.quickGenerateValueChain(
+        aiPromptBuilder.buildValueChainPrompt(prompt),
+        {
+          companyName: prompt.companyName || company?.name || "Unknown",
+          industry: prompt.industry || company?.industry || "Unknown",
+          companyId: company?.id || "anonymous",
+          documentUrls: [] // No documents in this flow
+        }
+      );
       
       clearInterval(progressInterval);
       setGeneratingProgress(100);
@@ -83,3 +91,5 @@ export function useAutomatedValueChain({
     handleAutomatedValueChain
   };
 }
+
+import { aiPromptBuilder } from "@/services/value-chain/ai/aiPromptBuilder";
