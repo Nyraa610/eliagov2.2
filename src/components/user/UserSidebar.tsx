@@ -2,7 +2,7 @@
 import { 
   BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, 
   Globe, Home, Layers, LineChart, Medal, Settings, 
-  Target, Trophy, User 
+  Target, Trophy, User, Share2, TrendingUp
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 export const UserSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
   const location = useLocation();
   
   useEffect(() => {
@@ -33,6 +34,14 @@ export const UserSidebar = () => {
     
     fetchUserCompany();
   }, []);
+
+  const toggleSubmenu = (menuId: string) => {
+    if (expandedSubmenu === menuId) {
+      setExpandedSubmenu(null);
+    } else {
+      setExpandedSubmenu(menuId);
+    }
+  };
   
   const menuItems = [
     {
@@ -49,6 +58,13 @@ export const UserSidebar = () => {
       title: "Assessment",
       icon: <BarChart3 className="h-5 w-5" />,
       path: "/assessment",
+      submenu: [
+        {
+          title: "Value Chain Modeling",
+          icon: <Share2 className="h-5 w-5" />,
+          path: "/assessment/value-chain",
+        },
+      ],
     },
     {
       title: "Carbon Footprint",
@@ -59,6 +75,13 @@ export const UserSidebar = () => {
       title: "Materiality Analysis",
       icon: <Layers className="h-5 w-5" />,
       path: "/materiality-analysis",
+      submenu: [
+        {
+          title: "Impact, Risks & Opportunities",
+          icon: <TrendingUp className="h-5 w-5" />,
+          path: "/assessment/iro",
+        },
+      ],
     },
     {
       title: "Action Plan",
@@ -122,20 +145,65 @@ export const UserSidebar = () => {
       <div className="py-4 flex-1">
         <ul className="space-y-1 px-2">
           {menuItems.map((item) => (
-            <li key={item.path}>
-              <Link 
-                to={item.path}
-                className={cn(
-                  "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
-                  location.pathname === item.path
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-100",
-                  collapsed ? "justify-center" : "justify-start"
+            <li key={item.path} className="flex flex-col">
+              <div className="flex flex-col">
+                <Link 
+                  to={item.path}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                    location.pathname === item.path
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-gray-600 hover:bg-gray-100",
+                    collapsed ? "justify-center" : "justify-between",
+                    item.submenu && !collapsed ? "pr-2" : ""
+                  )}
+                >
+                  <div className="flex items-center">
+                    {item.icon}
+                    {!collapsed && <span className="ml-3">{item.title}</span>}
+                  </div>
+                  
+                  {!collapsed && item.submenu && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleSubmenu(item.path);
+                      }}
+                      className="h-5 w-5 p-0"
+                    >
+                      {expandedSubmenu === item.path ? (
+                        <ChevronLeft className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                </Link>
+                
+                {!collapsed && item.submenu && expandedSubmenu === item.path && (
+                  <ul className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-2">
+                    {item.submenu.map((subItem) => (
+                      <li key={subItem.path}>
+                        <Link 
+                          to={subItem.path}
+                          className={cn(
+                            "flex items-center px-3 py-1.5 rounded-md text-sm transition-colors",
+                            location.pathname === subItem.path
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-gray-600 hover:bg-gray-100"
+                          )}
+                        >
+                          {subItem.icon}
+                          <span className="ml-3">{subItem.title}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              >
-                {item.icon}
-                {!collapsed && <span className="ml-3">{item.title}</span>}
-              </Link>
+              </div>
             </li>
           ))}
         </ul>
