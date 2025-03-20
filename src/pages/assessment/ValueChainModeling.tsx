@@ -40,6 +40,9 @@ export default function ValueChainModeling() {
             description: "Please sign in to access this feature.",
             variant: "destructive",
           });
+        } else {
+          // Load documents when authenticated
+          loadDocuments();
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -50,6 +53,16 @@ export default function ValueChainModeling() {
     
     checkAuth();
   }, [uiToast]);
+
+  // New function to load documents from the service
+  const loadDocuments = async () => {
+    try {
+      const docs = await valueChainService.getDocuments();
+      setUploadedDocuments(docs);
+    } catch (error) {
+      console.error("Error loading documents:", error);
+    }
+  };
 
   const handleOpenUploadDialog = () => {
     if (!isAuth) {
@@ -104,6 +117,9 @@ export default function ValueChainModeling() {
         
         setUploadedDocuments(prev => [...prev, ...newDocuments]);
         toast.success(`Successfully uploaded ${files.length} document${files.length > 1 ? 's' : ''}`);
+        
+        // Refresh document list
+        await loadDocuments();
       } else {
         toast.error("Failed to upload documents");
       }
@@ -119,13 +135,25 @@ export default function ValueChainModeling() {
     }
   };
   
-  const handleRemoveDocument = (index: number) => {
-    setUploadedDocuments(prev => {
-      const newDocs = [...prev];
-      newDocs.splice(index, 1);
-      return newDocs;
-    });
-    toast.success("Document removed successfully");
+  const handleRemoveDocument = async (index: number) => {
+    try {
+      const docToRemove = uploadedDocuments[index];
+      const success = await valueChainService.deleteDocument(docToRemove.url);
+      
+      if (success) {
+        setUploadedDocuments(prev => {
+          const newDocs = [...prev];
+          newDocs.splice(index, 1);
+          return newDocs;
+        });
+        toast.success("Document removed successfully");
+      } else {
+        toast.error("Failed to remove document");
+      }
+    } catch (error) {
+      console.error("Error removing document:", error);
+      toast.error("Error removing document. Please try again.");
+    }
   };
 
   const handleQuickGenerate = async (prompt: string) => {
@@ -251,15 +279,6 @@ export default function ValueChainModeling() {
                     <Progress value={uploadProgress} className="h-1.5" />
                   </div>
                 )}
-                
-                {uploadedDocuments.length > 0 && (
-                  <div className="mt-3">
-                    <DocumentList 
-                      documents={uploadedDocuments}
-                      onRemove={handleRemoveDocument}
-                    />
-                  </div>
-                )}
               </div>
               <div className="border rounded-md p-3">
                 <div className="flex items-center gap-2 mb-2 font-medium text-foreground">
@@ -303,6 +322,30 @@ export default function ValueChainModeling() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Document list section in the highlighted area */}
+      {isAuth && uploadedDocuments.length > 0 && (
+        <div className="mb-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Uploaded Documents
+              </CardTitle>
+              <CardDescription>
+                Documents that will be used to analyze and generate your value chain
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocumentList 
+                documents={uploadedDocuments}
+                onRemove={handleRemoveDocument}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {isAuth ? (
         <ValueChainEditor />
@@ -328,6 +371,7 @@ export default function ValueChainModeling() {
         isGenerating={isGenerating}
         progress={generationProgress}
         hasDocuments={uploadedDocuments.length > 0}
+        documents={uploadedDocuments}
       />
     </UserLayout>
   );
