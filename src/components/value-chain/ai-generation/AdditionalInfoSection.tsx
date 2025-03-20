@@ -1,7 +1,6 @@
 
-import React from "react";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AdditionalInfoSectionProps {
   additionalInfo: string;
@@ -14,14 +13,17 @@ export function AdditionalInfoSection({
 }: AdditionalInfoSectionProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="additional-info">Additional Information</Label>
+      <Label htmlFor="additional-info">Additional Information (Optional)</Label>
       <Textarea
         id="additional-info"
-        value={additionalInfo || ''}
-        onChange={e => onAdditionalInfoChange(e.target.value)}
-        placeholder="Provide any additional information that might help generate a more accurate value chain"
-        rows={3}
+        placeholder="Add details about your business model, supply chain, or specific ESG goals..."
+        value={additionalInfo}
+        onChange={(e) => onAdditionalInfoChange(e.target.value)}
+        rows={4}
       />
+      <p className="text-xs text-muted-foreground">
+        The more information you provide, the more accurate your value chain model will be.
+      </p>
     </div>
   );
 }

@@ -1,25 +1,22 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 
 interface DialogActionsProps {
   isGenerating: boolean;
   onCancel: () => void;
 }
 
-export function DialogActions({ isGenerating, onCancel }: DialogActionsProps) {
+export function DialogActions({
+  isGenerating,
+  onCancel
+}: DialogActionsProps) {
   return (
-    <div className="flex justify-end gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        disabled={isGenerating}
-      >
+    <div className="flex justify-end gap-2 pt-4">
+      <Button variant="outline" onClick={onCancel} type="button" disabled={isGenerating}>
         Cancel
       </Button>
-      <Button type="submit" disabled={isGenerating}>
+      <Button disabled={isGenerating} type="submit">
         {isGenerating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -27,8 +24,8 @@ export function DialogActions({ isGenerating, onCancel }: DialogActionsProps) {
           </>
         ) : (
           <>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate
+            <Wand2 className="mr-2 h-4 w-4" />
+            Generate Value Chain
           </>
         )}
       </Button>

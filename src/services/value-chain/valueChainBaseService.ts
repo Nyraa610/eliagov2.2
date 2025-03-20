@@ -4,74 +4,67 @@ import { ValueChainData } from "@/types/valueChain";
 import { toast } from "sonner";
 
 /**
- * Base service for value chain data operations
+ * Service for CRUD operations on value chain data
  */
 export const valueChainBaseService = {
   /**
-   * Save value chain data
+   * Save value chain data to Supabase
+   * @param valueChain The value chain data to save
+   * @returns Promise<boolean> indicating success or failure
    */
-  saveValueChain: async (data: ValueChainData): Promise<boolean> => {
+  saveValueChain: async (valueChain: ValueChainData): Promise<boolean> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log("No authenticated user session found");
-        toast.error("You need to be logged in to save value chain data");
-        return false;
-      }
-      
-      const userId = session.user.id;
-      
-      // Check if there's an existing record for this company
-      const { data: existingRecord } = await supabase
+      // Check if an entry already exists for this company
+      const { data: existingData, error: fetchError } = await supabase
         .from('value_chains')
         .select('id')
-        .eq('company_id', data.companyId)
-        .maybeSingle();
+        .eq('company_id', valueChain.companyId)
+        .limit(1);
       
-      const payload = {
-        user_id: userId,
-        company_id: data.companyId,
-        name: data.name || 'Value Chain Model',
+      if (fetchError) throw fetchError;
+      
+      const valueChainData = {
+        company_id: valueChain.companyId,
+        name: valueChain.name,
         data: {
-          nodes: data.nodes,
-          edges: data.edges
+          nodes: valueChain.nodes,
+          edges: valueChain.edges,
+          metadata: valueChain.metadata || {}
         },
         updated_at: new Date().toISOString()
       };
       
       let result;
       
-      if (existingRecord?.id) {
-        // Update existing record
+      if (existingData?.length) {
+        // Update existing value chain
         result = await supabase
           .from('value_chains')
-          .update(payload)
-          .eq('id', existingRecord.id);
+          .update(valueChainData)
+          .eq('company_id', valueChain.companyId);
       } else {
-        // Insert new record
+        // Insert new value chain
         result = await supabase
           .from('value_chains')
-          .insert([payload]);
+          .insert({
+            ...valueChainData,
+            created_at: new Date().toISOString()
+          });
       }
       
-      if (result.error) {
-        console.error("Error saving value chain:", result.error.message);
-        toast.error("Failed to save value chain");
-        return false;
-      }
+      if (result.error) throw result.error;
       
-      console.log(`Value chain saved for company ${data.companyId}`);
       return true;
     } catch (error) {
-      console.error("Exception saving value chain:", error);
-      toast.error("An error occurred while saving value chain");
+      console.error("Error saving value chain:", error);
       return false;
     }
   },
-
+  
   /**
-   * Load value chain data for a company
+   * Load value chain data from Supabase
+   * @param companyId The company ID to load value chain for
+   * @returns Promise<ValueChainData | null>
    */
   loadValueChain: async (companyId: string): Promise<ValueChainData | null> => {
     try {
@@ -79,27 +72,32 @@ export const valueChainBaseService = {
         .from('value_chains')
         .select('*')
         .eq('company_id', companyId)
-        .maybeSingle();
+        .limit(1)
+        .single();
       
       if (error) {
-        console.error("Error loading value chain:", error.message);
-        return null;
+        if (error.code === 'PGRST116') {
+          // No records found, not an error
+          return null;
+        }
+        throw error;
       }
       
-      if (!data) {
-        return null;
-      }
+      if (!data) return null;
       
+      // Convert from database format to our app format
       return {
-        nodes: data.data.nodes,
-        edges: data.data.edges,
+        nodes: data.data.nodes || [],
+        edges: data.data.edges || [],
         name: data.name,
         companyId: data.company_id,
         createdAt: data.created_at,
-        updatedAt: data.updated_at
+        updatedAt: data.updated_at,
+        metadata: data.data.metadata || {}
       };
     } catch (error) {
-      console.error("Exception loading value chain:", error);
+      console.error("Error loading value chain:", error);
+      toast.error("Failed to load value chain data");
       return null;
     }
   }

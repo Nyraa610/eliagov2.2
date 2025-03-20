@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ValueChainModeling() {
   const { toast } = useToast();
@@ -64,9 +65,31 @@ export default function ValueChainModeling() {
         </Button>
       </div>
       
-      <p className="text-muted-foreground mb-6">
-        Model your company's value chain to better understand your activities and their impact. Use the AI generation feature to get started quickly.
-      </p>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Value Chain Analysis for ESG Reporting</CardTitle>
+          <CardDescription>
+            Visualize and analyze your company's value creation process to enhance ESG performance
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 text-muted-foreground">
+            <p>
+              A value chain model is crucial for ESG reporting as it helps identify environmental, social, and governance impacts across your business activities. By mapping your value chain, you can:
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Identify key sustainability hotspots where environmental or social impacts are concentrated</li>
+              <li>Prioritize areas for improvement to maximize ESG performance</li>
+              <li>Demonstrate transparency and traceability in your sustainability reporting</li>
+              <li>Facilitate stakeholder engagement by clearly illustrating how your business creates value</li>
+              <li>Enable more accurate scope 1, 2, and 3 emissions calculations</li>
+            </ul>
+            <p>
+              Use our editor below to create your value chain or leverage our AI-powered generation tool to get started quickly.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {isAuth ? (
         <ValueChainEditor />

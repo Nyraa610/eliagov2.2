@@ -1,45 +1,79 @@
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, Wand2, Upload } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileUp, Wand2, Plus } from "lucide-react";
 
 interface EmptyStateGuideProps {
   onOpenAIDialog: () => void;
-  onOpenAutomatedBuilder: () => void;
   onOpenUploadDialog: () => void;
+  onOpenAutomatedBuilder: () => void;
 }
 
-export function EmptyStateGuide({
-  onOpenAIDialog,
-  onOpenAutomatedBuilder,
-  onOpenUploadDialog
+export function EmptyStateGuide({ 
+  onOpenAIDialog, 
+  onOpenUploadDialog,
+  onOpenAutomatedBuilder
 }: EmptyStateGuideProps) {
   return (
-    <div className="bg-muted p-6 mb-6 rounded-lg">
-      <h3 className="text-lg font-semibold mb-2">Value Chain Modeling in Elia Go</h3>
-      <p className="mb-4 text-muted-foreground">
-        This tool helps you visualize and analyze your company's value chain - the sequence of activities that create value for customers.
-        Value chains are essential for ESG reporting as they help identify environmental and social impacts across your business operations.
-      </p>
-      <ul className="list-disc pl-5 space-y-2 mb-4 text-muted-foreground">
-        <li>Use the toolbar to add different types of nodes: primary activities (core operations), support activities, and external factors</li>
-        <li>Connect nodes by dragging from one node's handle to another</li>
-        <li>Click on any node to edit its properties</li>
-        <li>Use the AI generation feature to automatically create a value chain based on your company information</li>
-        <li>Upload supporting documents to help with AI-assisted value chain creation</li>
-      </ul>
-      <div className="flex gap-2 mt-4">
-        <Button onClick={onOpenAIDialog} className="gap-1">
-          <Sparkles className="h-4 w-4" />
-          Generate with AI
-        </Button>
-        <Button onClick={onOpenAutomatedBuilder} variant="outline" className="gap-1">
-          <Wand2 className="h-4 w-4" />
-          Automated Builder
-        </Button>
-        <Button onClick={onOpenUploadDialog} variant="outline" className="gap-1">
-          <Upload className="h-4 w-4" />
-          Upload Documents
-        </Button>
+    <div className="h-full flex flex-col items-center justify-center p-8">
+      <div className="max-w-2xl w-full">
+        <h2 className="text-2xl font-semibold mb-6 text-center">Create Your Value Chain</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Manual Creation</CardTitle>
+              <CardDescription>Build your value chain from scratch</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Add nodes and connections to create a custom value chain that perfectly matches your business.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full gap-1" onClick={onOpenAIDialog}>
+                <Plus className="h-4 w-4" />
+                Start Building
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">AI Generation</CardTitle>
+              <CardDescription>Let AI create a value chain for you</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Our AI can generate a complete value chain based on your company details and industry.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="secondary" className="w-full gap-1" onClick={onOpenAutomatedBuilder}>
+                <Wand2 className="h-4 w-4" />
+                Generate with AI
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Upload Documents</CardTitle>
+              <CardDescription>Use existing documents</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Upload existing value chain diagrams, pitch decks, or business documents to inform your model.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full gap-1" onClick={onOpenUploadDialog}>
+                <FileUp className="h-4 w-4" />
+                Upload Documents
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </div>
   );

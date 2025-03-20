@@ -1,5 +1,4 @@
 
-import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -17,26 +16,24 @@ export function CompanyInfoSection({
   onIndustryChange
 }: CompanyInfoSectionProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="company-name">Company Name</Label>
-        <Input 
-          id="company-name" 
-          value={companyName} 
-          onChange={e => onCompanyNameChange(e.target.value)}
-          placeholder="Enter company name" 
-          required
+        <Input
+          id="company-name"
+          placeholder="Enter your company name"
+          value={companyName}
+          onChange={(e) => onCompanyNameChange(e.target.value)}
         />
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="industry">Industry</Label>
-        <Input 
-          id="industry" 
-          value={industry} 
-          onChange={e => onIndustryChange(e.target.value)}
-          placeholder="e.g. Manufacturing, Technology, Retail" 
-          required
+        <Input
+          id="industry"
+          placeholder="e.g. Manufacturing, IT Services, Retail"
+          value={industry}
+          onChange={(e) => onIndustryChange(e.target.value)}
         />
       </div>
     </div>

@@ -1,8 +1,8 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Plus, Trash2 } from "lucide-react";
 
 interface ServiceInputListProps {
   services: string[];
@@ -18,35 +18,38 @@ export function ServiceInputList({
   onUpdateService
 }: ServiceInputListProps) {
   return (
-    <div className="space-y-2">
-      <Label>Services</Label>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Label>Key Services</Label>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onAddService}
+          type="button"
+          className="h-8 gap-1 text-xs"
+        >
+          <Plus className="h-3 w-3" /> Add Service
+        </Button>
+      </div>
+      
       {services.map((service, index) => (
-        <div key={`service-${index}`} className="flex gap-2 mb-2">
+        <div key={index} className="flex gap-2">
           <Input
-            value={service}
-            onChange={e => onUpdateService(index, e.target.value)}
             placeholder={`Service ${index + 1}`}
+            value={service}
+            onChange={(e) => onUpdateService(index, e.target.value)}
           />
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={() => onRemoveService(index)}
-            disabled={services.length <= 1}
+            type="button"
+            disabled={services.length === 1}
           >
-            ×
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onAddService}
-        className="mt-1"
-      >
-        Add Service
-      </Button>
     </div>
   );
 }

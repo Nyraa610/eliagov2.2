@@ -3,53 +3,54 @@ import { ValueChainData } from "@/types/valueChain";
 import { toast } from "sonner";
 
 /**
- * Service for export/import functionality of value chain
+ * Service for exporting and importing value chain data
  */
 export const valueChainExportService = {
   /**
-   * Export value chain as an image
-   * @param canvasElement The canvas element to export
-   * @returns A URL to the exported image
+   * Export value chain data as a JSON file
+   * @param valueChain The value chain data to export
    */
-  exportAsImage: async (canvasElement: HTMLElement): Promise<string | null> => {
+  exportAsJson: (valueChain: ValueChainData): void => {
     try {
-      // Use html-to-image or similar library functionality
-      // This is a placeholder for actual implementation
-      console.log("Exporting canvas as image");
+      // Create a JSON string from the value chain data
+      const jsonStr = JSON.stringify(valueChain, null, 2);
       
-      // Return a data URL
-      return null;
-    } catch (error) {
-      console.error("Error exporting value chain as image:", error);
-      toast.error("Failed to export as image");
-      return null;
-    }
-  },
-
-  /**
-   * Export value chain as JSON file
-   */
-  exportAsJson: (data: ValueChainData): void => {
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
+      // Create a blob from the JSON string
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      
+      // Create a URL for the blob
       const url = URL.createObjectURL(blob);
       
-      // Create a link and trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${data.name || 'value-chain'}.json`;
-      document.body.appendChild(a);
-      a.click();
+      // Create a download link and click it
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${valueChain.name || 'value-chain'}.json`;
+      document.body.appendChild(link);
+      link.click();
       
       // Clean up
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      document.body.removeChild(link);
       
-      toast.success("Value chain exported as JSON");
+      toast.success("Value chain exported successfully");
     } catch (error) {
-      console.error("Error exporting value chain as JSON:", error);
-      toast.error("Failed to export as JSON");
+      console.error("Error exporting value chain:", error);
+      toast.error("Failed to export value chain");
+    }
+  },
+  
+  /**
+   * Export value chain as an image
+   * @param canvasId The ID of the ReactFlow canvas element
+   */
+  exportAsImage: (canvasId: string): void => {
+    try {
+      // This is a placeholder - actual implementation would use html2canvas or similar
+      // to capture the ReactFlow canvas as an image
+      toast.error("Export as image not yet implemented");
+    } catch (error) {
+      console.error("Error exporting value chain as image:", error);
+      toast.error("Failed to export value chain as image");
     }
   }
 };

@@ -1,5 +1,6 @@
 
 import { Progress } from "@/components/ui/progress";
+import { Loader2 } from "lucide-react";
 
 interface GenerationProgressBarProps {
   isGenerating: boolean;
@@ -10,14 +11,18 @@ export function GenerationProgressBar({ isGenerating, progress }: GenerationProg
   if (!isGenerating) return null;
   
   return (
-    <div className="mb-4 p-4 border rounded-lg bg-background">
-      <h3 className="text-sm font-medium mb-2">Generating Value Chain</h3>
-      <Progress value={progress} className="h-2 mb-2" />
-      <p className="text-xs text-muted-foreground">
-        {progress < 30 ? "Analyzing company information..." : 
-         progress < 60 ? "Identifying key value chain components..." :
-         progress < 90 ? "Creating value chain structure..." :
-         "Finalizing your value chain..."}
+    <div className="mb-6 bg-muted p-4 rounded-lg">
+      <div className="flex items-center gap-3 mb-2">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <span className="font-medium">
+          {progress < 100 ? "Generating your value chain..." : "Complete!"}
+        </span>
+      </div>
+      <Progress value={progress} className="h-2" />
+      <p className="text-xs text-muted-foreground mt-2">
+        {progress < 100 
+          ? "We're analyzing your company data and building an optimized value chain for ESG reporting." 
+          : "Your value chain has been successfully generated!"}
       </p>
     </div>
   );
