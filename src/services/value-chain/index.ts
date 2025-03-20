@@ -14,6 +14,7 @@ export const valueChainService = {
   
   // AI operations
   generateValueChain: valueChainAIService.generateValueChain,
+  quickGenerateValueChain: valueChainAIService.quickGenerateValueChain,
   
   // Export/Import operations
   exportAsImage: valueChainExportService.exportAsImage,

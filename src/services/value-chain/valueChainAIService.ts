@@ -2,6 +2,7 @@
 import { aiService } from "@/services/aiService";
 import { ValueChainData, AIGenerationPrompt } from "@/types/valueChain";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Service for AI-related functionality of value chain
@@ -150,6 +151,51 @@ export const valueChainAIService = {
     } catch (error) {
       console.error("Error generating value chain with AI:", error);
       toast.error("Failed to generate value chain");
+      return null;
+    }
+  },
+  
+  /**
+   * Quick generate a value chain using OpenAI via a Supabase Edge Function
+   * @param prompt Text prompt describing the company and requirements
+   * @param documentUrls Optional array of document URLs to provide context
+   * @returns The generated value chain data or null if failed
+   */
+  quickGenerateValueChain: async (prompt: string, documentUrls: string[] = []): Promise<ValueChainData | null> => {
+    try {
+      console.log("Initiating quick value chain generation with AI");
+      
+      // Call the Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('value-chain-generator', {
+        body: { prompt, documentUrls }
+      });
+      
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(`Edge function error: ${error.message}`);
+      }
+      
+      if (!data || !data.nodes || !Array.isArray(data.nodes)) {
+        console.error("Invalid response from edge function:", data);
+        throw new Error("Invalid response from AI generation");
+      }
+      
+      console.log(`Generated value chain with ${data.nodes.length} nodes and ${data.edges.length} edges`);
+      
+      return {
+        nodes: data.nodes,
+        edges: data.edges,
+        name: "AI Generated Value Chain",
+        metadata: {
+          generatedFrom: "Quick generation",
+          prompt,
+          documentsUsed: documentUrls.length,
+          generationTimestamp: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error("Error in quick value chain generation:", error);
+      toast.error("Failed to generate value chain with AI");
       return null;
     }
   }

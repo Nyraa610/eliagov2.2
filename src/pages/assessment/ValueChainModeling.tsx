@@ -1,3 +1,4 @@
+
 import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Link } from "react-router-dom";
@@ -13,15 +14,19 @@ import { valueChainService } from "@/services/value-chain";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Progress } from "@/components/ui/progress";
+import { AIQuickGenerateDialog } from "@/components/value-chain/AIQuickGenerateDialog";
 
 export default function ValueChainModeling() {
   const { toast: uiToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [isAuth, setIsAuth] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<{ url: string; name: string }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,6 +61,19 @@ export default function ValueChainModeling() {
     }
     
     setIsUploadDialogOpen(true);
+  };
+
+  const handleOpenAIDialog = () => {
+    if (!isAuth) {
+      uiToast({
+        title: "Authentication required",
+        description: "Please sign in to use AI generation.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsAIDialogOpen(true);
   };
 
   const handleDocumentUpload = async (files: File[]) => {
@@ -97,6 +115,43 @@ export default function ValueChainModeling() {
         setIsUploading(false);
         setIsUploadDialogOpen(false);
       }, 500);
+    }
+  };
+
+  const handleQuickGenerate = async (prompt: string) => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    
+    try {
+      // Start progress simulation
+      const updateInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          const newProgress = prev + 5;
+          return newProgress < 90 ? newProgress : prev;
+        });
+      }, 500);
+      
+      // Call the value chain generator with the prompt
+      const result = await valueChainService.quickGenerateValueChain(prompt, uploadedDocuments.map(doc => doc.url));
+      
+      clearInterval(updateInterval);
+      setGenerationProgress(100);
+      
+      if (result) {
+        toast.success("Value chain generated successfully!");
+        setIsAIDialogOpen(false);
+        // The ValueChainEditor component will be refreshed with the new data
+      } else {
+        toast.error("Failed to generate value chain");
+      }
+    } catch (error) {
+      console.error("AI generation error:", error);
+      toast.error("Error generating value chain. Please try again.");
+    } finally {
+      setTimeout(() => {
+        setGenerationProgress(0);
+        setIsGenerating(false);
+      }, 1000);
     }
   };
 
@@ -213,7 +268,7 @@ export default function ValueChainModeling() {
               </div>
               <div className="border rounded-md p-3">
                 <div className="flex items-center gap-2 mb-2 font-medium text-foreground">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4Z"/><path d="m9 15 3-3 3 3"/><path d="M10 10h4"/></svg>
+                  <Wand2 className="h-5 w-5" />
                   <span>AI-Powered Generation</span>
                 </div>
                 <p className="text-sm">
@@ -221,18 +276,33 @@ export default function ValueChainModeling() {
                   for ESG reporting, saving you time and ensuring all key activities are captured.
                 </p>
                 <Button 
-                  onClick={() => isAuth ? toast.info("AI Generation feature coming soon") : uiToast({
-                    title: "Authentication required",
-                    description: "Please sign in to use AI generation.",
-                    variant: "destructive",
-                  })} 
+                  onClick={handleOpenAIDialog} 
                   variant="secondary" 
                   size="sm" 
                   className="mt-3 w-full"
+                  disabled={isGenerating}
                 >
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Generate with AI
+                  {isGenerating ? (
+                    <>
+                      <span className="animate-pulse">Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Generate with AI
+                    </>
+                  )}
                 </Button>
+                
+                {isGenerating && (
+                  <div className="mt-3 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span>Generating value chain...</span>
+                      <span>{generationProgress}%</span>
+                    </div>
+                    <Progress value={generationProgress} className="h-1.5" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -254,6 +324,15 @@ export default function ValueChainModeling() {
         open={isUploadDialogOpen}
         onOpenChange={setIsUploadDialogOpen}
         onUpload={handleDocumentUpload}
+      />
+      
+      <AIQuickGenerateDialog
+        open={isAIDialogOpen}
+        onOpenChange={setIsAIDialogOpen}
+        onGenerate={handleQuickGenerate}
+        isGenerating={isGenerating}
+        progress={generationProgress}
+        hasDocuments={uploadedDocuments.length > 0}
       />
     </UserLayout>
   );
