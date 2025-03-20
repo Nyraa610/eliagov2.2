@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -18,34 +19,8 @@ interface CompanySectionProps {
 export function CompanySection({ profile, onCompanyCreated }: CompanySectionProps) {
   const [companyName, setCompanyName] = useState("");
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
-  const [displayCompanyName, setDisplayCompanyName] = useState<string>("Loading company...");
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchCompanyName = async () => {
-      if (profile?.company_id) {
-        try {
-          if (profile.company_name) {
-            setDisplayCompanyName(profile.company_name);
-            return;
-          }
-          
-          const company = await companyService.getCompany(profile.company_id);
-          if (company && company.name) {
-            setDisplayCompanyName(company.name);
-          } else {
-            setDisplayCompanyName("Unknown Company");
-          }
-        } catch (error) {
-          console.error("Error fetching company details:", error);
-          setDisplayCompanyName("Unknown Company");
-        }
-      }
-    };
-    
-    fetchCompanyName();
-  }, [profile]);
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +35,14 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
 
     setIsCreatingCompany(true);
     try {
+      // Simple company creation with just a name
       await companyService.createCompany({ name: companyName });
       toast({
         title: "Success",
         description: "Company created successfully",
       });
       setCompanyName("");
+      // Refresh profile to show the new company
       onCompanyCreated();
     } catch (error) {
       console.error("Error creating company:", error);
@@ -95,7 +72,7 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
           <div className="space-y-4">
             <div className="bg-green-50 dark:bg-green-950 p-4 rounded-md">
               <p className="text-green-700 dark:text-green-300">
-                You're associated with a company: {displayCompanyName}
+                You're associated with a company: {profile.company_name || "Your Company"}
               </p>
             </div>
             <div className="space-y-2">
