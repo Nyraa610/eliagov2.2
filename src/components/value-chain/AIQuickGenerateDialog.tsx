@@ -11,7 +11,7 @@ import { DocumentList } from "./DocumentList";
 interface AIQuickGenerateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerate: (prompt: string) => Promise<void>;
+  onGenerate: (prompt: string) => Promise<boolean | void>;
   isGenerating: boolean;
   progress: number;
   hasDocuments?: boolean;
