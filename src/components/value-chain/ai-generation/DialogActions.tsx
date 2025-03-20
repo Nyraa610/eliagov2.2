@@ -7,22 +7,24 @@ interface DialogActionsProps {
   isUploading?: boolean;
   hasFiles?: boolean;
   onCancel: () => void;
+  isDisabled?: boolean;
 }
 
 export function DialogActions({
   isGenerating,
   isUploading = false,
   hasFiles = false,
-  onCancel
+  onCancel,
+  isDisabled = false
 }: DialogActionsProps) {
-  const isDisabled = isGenerating || isUploading;
+  const buttonDisabled = isGenerating || isUploading || isDisabled;
   
   return (
     <div className="flex justify-end gap-2 pt-4">
-      <Button variant="outline" onClick={onCancel} type="button" disabled={isDisabled}>
+      <Button variant="outline" onClick={onCancel} type="button" disabled={buttonDisabled}>
         Cancel
       </Button>
-      <Button disabled={isDisabled} type="submit">
+      <Button disabled={buttonDisabled} type="submit">
         {isGenerating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
