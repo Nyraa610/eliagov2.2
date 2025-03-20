@@ -7,70 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { isAuthenticated, isLoading: authLoading, signIn } = useAuth();
 
   // Get the redirect path from location state or default to dashboard
   const from = location.state?.from?.pathname || "/dashboard";
 
   // Check if user is already logged in
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuth = async () => {
-      try {
-        setIsCheckingAuth(true);
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Error checking authentication:", error.message);
-          return;
-        }
-        
-        if (data.session && isMounted) {
-          console.log("User already logged in, redirecting to dashboard");
-          navigate("/dashboard", { replace: true });
-        }
-      } catch (checkError) {
-        console.error("Exception during auth check:", checkError);
-      } finally {
-        if (isMounted) {
-          setIsCheckingAuth(false);
-        }
-      }
-    };
-    
-    checkAuth();
-    
-    // Set up auth listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
-        
-        console.log("Auth state changed in Login component:", event);
-        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          console.log("User signed in, redirecting to dashboard");
-          navigate("/dashboard", { replace: true });
-        }
-      }
-    );
-    
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [navigate]);
+    if (isAuthenticated && !authLoading) {
+      console.log("User already logged in, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -78,25 +38,12 @@ export default function Login() {
     setLoginError(null);
     
     try {
-      console.log("Attempting to log in with email:", email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signIn(email, password);
       
       if (error) {
-        console.error("Supabase login error:", error);
-        throw error;
+        setLoginError(error.message || "An unknown error occurred during login");
+        return;
       }
-      
-      if (!data || !data.user) {
-        console.error("Login succeeded but no user data returned");
-        throw new Error("No user data returned from login");
-      }
-      
-      console.log("Login successful, user:", data.user.id);
-      console.log("Session:", data.session);
       
       toast({
         title: "Login successful",
@@ -108,18 +55,12 @@ export default function Login() {
     } catch (error: any) {
       console.error("Login error:", error);
       setLoginError(error.message || "An unknown error occurred during login");
-      
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Failed to log in. Please check your credentials and try again.",
-      });
     } finally {
       setIsLoading(false);
     }
   };
   
-  if (isCheckingAuth) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10 flex items-center justify-center">
         <div className="text-center">

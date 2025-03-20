@@ -2,7 +2,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { UserRole } from "@/services/base/profileTypes";
 import { Loader2 } from "lucide-react";
-import { useAuthProtection } from "@/hooks/useAuthProtection";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabaseService } from "@/services/base/supabaseService";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,31 +13,67 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const location = useLocation();
-  const { isAuthenticated, hasRequiredRole, authError, isLoading } = useAuthProtection(requiredRole);
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const [hasRequiredRole, setHasRequiredRole] = useState<boolean | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
-  if (authError) {
-    console.error("ProtectedRoute: Authentication error:", authError);
-  }
+  // Only check for role if authentication is successful and role is required
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!isAuthenticated || !requiredRole || !user) {
+        return;
+      }
 
-  if (isLoading) {
-    // Still checking authentication
+      try {
+        setIsRoleLoading(true);
+        console.log(`ProtectedRoute: Checking if user has role: ${requiredRole}`);
+        
+        // Check if user has the required role
+        const hasRole = await supabaseService.hasRole(requiredRole);
+        setHasRequiredRole(hasRole);
+        
+        if (!hasRole) {
+          console.log("ProtectedRoute: User doesn't have required role:", requiredRole);
+        }
+      } catch (error: any) {
+        console.error("ProtectedRoute: Error checking user role:", error);
+        setRoleError(error.message || "Error checking permissions");
+      } finally {
+        setIsRoleLoading(false);
+      }
+    };
+    
+    checkUserRole();
+  }, [isAuthenticated, requiredRole, user]);
+
+  // Show loading state while checking authentication or role
+  if (authLoading || (requiredRole && isAuthenticated && isRoleLoading)) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-        <p className="text-gray-600">Verifying authentication...</p>
+        <p className="text-gray-600">
+          {authLoading ? "Verifying authentication..." : "Checking permissions..."}
+        </p>
       </div>
     );
   }
 
+  // Not authenticated, redirect to login
   if (!isAuthenticated) {
-    // Not authenticated, redirect to login
     console.log("ProtectedRoute: Not authenticated, redirecting to login with return path:", location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Role is required but user doesn't have it
   if (requiredRole && !hasRequiredRole) {
-    // Doesn't have required role, redirect to unauthorized page
     console.log("ProtectedRoute: Doesn't have required role, redirecting to unauthorized");
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Error checking role
+  if (roleError) {
+    console.error("ProtectedRoute: Error checking role:", roleError);
     return <Navigate to="/unauthorized" replace />;
   }
 

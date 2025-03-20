@@ -19,98 +19,54 @@ import { MobileMenu } from './navigation/MobileMenu';
 import { MobileMenuButton } from './navigation/MobileMenuButton';
 import { DesktopNavigation } from './navigation/DesktopNavigation';
 import { NotificationButton } from './navigation/NotificationButton';
-import { supabase, setupAuthListener } from '@/lib/supabase';
 import { PointsDisplay } from './engagement/PointsDisplay';
 import { BadgeDisplay } from './engagement/BadgeDisplay';
 import { EngagementTracker } from './engagement/EngagementTracker';
-import { supabaseService } from '@/services/base/supabaseService';
 import { UserProfile } from '@/services/base/profileTypes';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabaseService } from '@/services/base/supabaseService';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [authStatus, setAuthStatus] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+  const { isAuthenticated, isLoading: authLoading, user, signOut } = useAuth();
   
   // Check if a route is active
   const isActive = (path: string) => location.pathname === path;
   
-  // Fetch user profile and set up auth listener
+  // Fetch user profile when authenticated
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserProfile = async () => {
+      if (!isAuthenticated || !user) {
+        setUserProfile(null);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
-        const { data, error } = await supabase.auth.getSession();
-        const isAuth = !!data.session?.user;
-        setAuthStatus(isAuth);
-        
-        if (isAuth) {
-          console.log("Navigation: User is authenticated, fetching profile");
-          const profile = await supabaseService.getUserProfile();
-          setUserProfile(profile);
-        } else {
-          console.log("Navigation: User is not authenticated");
-          setUserProfile(null);
-        }
+        console.log("Navigation: User is authenticated, fetching profile");
+        const profile = await supabaseService.getUserProfile();
+        setUserProfile(profile);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching user profile:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchUserData();
-    
-    // Set up auth listener to update auth state in real-time
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log(`Navigation: Auth state changed - Event: ${event}`);
-        
-        try {
-          if (session?.user) {
-            console.log("Navigation: New session detected for user:", session.user.id);
-            setAuthStatus(true);
-            
-            // Fetch updated user profile
-            const profile = await supabaseService.getUserProfile();
-            setUserProfile(profile);
-          } else if (event === 'SIGNED_OUT') {
-            console.log("Navigation: User signed out");
-            setAuthStatus(false);
-            setUserProfile(null);
-          } else {
-            // Handle other auth state changes
-            const { data } = await supabase.auth.getSession();
-            setAuthStatus(!!data.session);
-          }
-        } catch (error: any) {
-          console.error("Navigation: Error in auth change listener:", error);
-        }
-      }
-    );
-    
-    return () => {
-      console.log("Navigation: Cleaning up auth listener");
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+    fetchUserProfile();
+  }, [isAuthenticated, user]);
   
   // Handle logout
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
-      await supabaseService.signOut();
-      setAuthStatus(false);
-      setUserProfile(null);
-      console.log("User logged out successfully");
-      
-      // Navigate to the home page using window.location to ensure a full refresh
-      window.location.href = '/';
+      await signOut();
+      // No need to manually navigate - auth state change will trigger a redirect
     } catch (error) {
       console.error("Error signing out:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,9 +83,9 @@ export function Navigation() {
             <span className="font-bold text-primary hidden md:block">ELIA GO</span>
           </Link>
           
-          {!isLoading && authStatus && (
+          {!authLoading && isAuthenticated && (
             <DesktopNavigation 
-              isAuthenticated={authStatus} 
+              isAuthenticated={isAuthenticated} 
               userProfile={userProfile} 
               isActive={isActive}
               onLogout={handleLogout}
@@ -138,7 +94,7 @@ export function Navigation() {
         </div>
         
         <div className="flex items-center">
-          {!isLoading && authStatus && (
+          {!authLoading && isAuthenticated && (
             <>
               <div className="hidden md:flex items-center">
                 <PointsDisplay />
@@ -150,15 +106,15 @@ export function Navigation() {
           
           <LanguageSelector />
           
-          {isLoading ? (
+          {authLoading ? (
             <div className="animate-pulse h-8 w-8 bg-gray-200 rounded-full ml-2"></div>
-          ) : authStatus ? (
+          ) : isAuthenticated ? (
             <UserMenu userProfile={userProfile} onLogout={handleLogout} />
           ) : (
             <AuthButtons />
           )}
           
-          {!isLoading && authStatus && (
+          {!authLoading && isAuthenticated && (
             <MobileMenuButton 
               isOpen={mobileMenuOpen} 
               onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
@@ -167,11 +123,11 @@ export function Navigation() {
         </div>
       </div>
       
-      {!isLoading && authStatus && (
+      {!authLoading && isAuthenticated && (
         <MobileMenu 
           isOpen={mobileMenuOpen} 
           onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-          isAuthenticated={authStatus}
+          isAuthenticated={isAuthenticated}
           isActive={isActive}
           onLogout={handleLogout} 
         />

@@ -1,40 +1,67 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { 
-  registrationFormSchema, 
-  RegistrationFormValues,
-  useRegistration 
-} from "@/hooks/useRegistration";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Form schema definition
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 export function RegisterForm() {
-  const { isLoading, registerUser } = useRegistration();
-
-  const form = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationFormSchema),
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { signUp } = useAuth();
+  
+  // React Hook Form setup
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
-      firstName: "",
-      lastName: "",
-      phone: "",
-      company: "",
-      country: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = (values: RegistrationFormValues) => {
-    registerUser(values);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setServerError(null);
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signUp(values.email, values.password);
+      
+      if (error) {
+        setServerError(error.message || "Registration failed. Please try again.");
+        return;
+      }
+      
+      // Redirect to confirmation page
+      navigate("/register/confirmation");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      setServerError(error.message || "An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

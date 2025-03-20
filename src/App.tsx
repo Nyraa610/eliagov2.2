@@ -25,6 +25,7 @@ import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
 import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
 import ActionPlan from "@/pages/assessment/ActionPlan";
@@ -177,9 +178,11 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <LanguageProvider>
-      <RouterProvider router={router} />
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <RouterProvider router={router} />
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 
