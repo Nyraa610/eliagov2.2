@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserLayout } from "@/components/user/UserLayout";
@@ -10,7 +11,7 @@ import { useHubspotIntegration } from "@/hooks/useHubspotIntegration";
 import { HubspotContact, HubspotNote, SustainabilityOpportunity } from "@/services/integrations/types";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HubspotConnector } from "@/components/company/settings/connectors/HubspotConnector";
+import { HubspotConnector } from "@/components/company/settings/HubspotConnector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function SalesOpportunities() {
@@ -31,11 +32,13 @@ export default function SalesOpportunities() {
     refreshData
   } = useHubspotIntegration(id || "");
 
+  // Function to get initials from a name
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName && !lastName) return "??";
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`;
   };
   
+  // Function to get color based on score
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 50) return "bg-yellow-100 text-yellow-800";
