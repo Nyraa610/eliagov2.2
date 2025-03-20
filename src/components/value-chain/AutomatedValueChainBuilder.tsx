@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 interface AutomatedValueChainBuilderProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerate: (prompt: string) => Promise<void>;
+  onGenerate: (prompt: string, files: File[]) => Promise<void>;
   companyName: string;
   industry: string;
   location: string;
@@ -34,7 +34,7 @@ export function AutomatedValueChainBuilder({
     e.preventDefault();
     setIsGenerating(true);
     try {
-      await onGenerate(prompt);
+      await onGenerate(prompt, uploadedFiles);
       onOpenChange(false);
       setPrompt("");
       setUploadedFiles([]);

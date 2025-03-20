@@ -64,7 +64,9 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
 
   return (
     <ReactFlowProvider>
-      <ValueChainEditorContainer initialData={valueChainData} />
+      <div className="h-[600px] overflow-hidden">
+        <ValueChainEditorContainer initialData={valueChainData} />
+      </div>
     </ReactFlowProvider>
   );
 }

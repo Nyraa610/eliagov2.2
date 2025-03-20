@@ -12,6 +12,7 @@ import { EmptyStateGuide } from "./components/EmptyStateGuide";
 import { GenerationProgressBar } from "./components/GenerationProgressBar";
 import { EditorLayout } from "./components/EditorLayout";
 import { DialogManager } from "./components/DialogManager";
+import { valueChainService } from "@/services/value-chain";
 
 // Import react-flow styles - IMPORTANT!
 import "@xyflow/react/dist/style.css";
@@ -75,51 +76,68 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     toast.success(`${files.length} document(s) uploaded successfully`);
   };
 
-  const handleAutomatedValueChain = async (prompt: string) => {
+  const handleAutomatedValueChain = async (prompt: string, files: File[]) => {
     setIsGenerating(true);
     setIsAutomatedBuilderOpen(false);
     
     // Simulate progress updates
     const interval = setInterval(() => {
       setGeneratingProgress(prev => {
-        const newProgress = prev + 10;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-        }
-        return newProgress < 100 ? newProgress : 99;
+        const newProgress = prev + 5;
+        return newProgress < 90 ? newProgress : 90;
       });
-    }, 1500);
+    }, 800);
 
     try {
+      console.log("Starting automated value chain generation with prompt:", prompt);
+      console.log("Using company details:", company?.name, company?.industry, company?.country);
+      
       // Add custom prompt for ESG reporting
-      const esgPrompt: AIGenerationPrompt = {
-        companyName: company?.name || 'Your Company',
-        industry: company?.industry || 'General',
-        products: [],
-        services: [],
-        additionalInfo: `Build a value chain for ESG reporting purposes. Company location: ${company?.country || 'Unknown'}. 
-        Additional context: ${prompt}. Please structure the value chain to highlight environmental, social, and governance aspects.`
-      };
+      const fullPrompt = `
+        Generate a value chain for ESG reporting purposes for ${company?.name || 'Company'}.
+        Industry: ${company?.industry || 'General'}
+        Location: ${company?.country || 'Global'}
+        
+        Additional context: ${prompt}
+        
+        Please structure the value chain to highlight environmental, social, and governance aspects.
+      `;
       
-      // Pass the uploaded documents as context
-      if (uploadedDocuments.length > 0) {
-        esgPrompt.additionalInfo += `\nAnalysis based on ${uploadedDocuments.length} uploaded document(s).`;
+      // Convert files to document URLs if needed
+      // In a real implementation, these would be uploaded and converted to URLs
+      const documentUrls: string[] = files.map(file => file.name);
+      
+      // Call the quick generate function from valueChainService
+      console.log("Calling quickGenerateValueChain with prompt:", fullPrompt);
+      const result = await valueChainService.quickGenerateValueChain(fullPrompt, documentUrls);
+      
+      if (result) {
+        console.log("Generation successful, received data:", result);
+        // Update the nodes and edges
+        setNodes(result.nodes);
+        setEdges(result.edges);
+        setSelectedNode(null);
+        
+        // Set progress to 100%
+        setGeneratingProgress(100);
+        
+        toast.success("Value chain generated successfully!");
+      } else {
+        console.error("Generation failed - no result returned");
+        toast.error("Failed to generate value chain");
       }
-      
-      await handleGenerateAI(esgPrompt, setIsGenerating, setIsAIDialogOpen);
-      
-      // Complete progress
-      setGeneratingProgress(100);
-      setTimeout(() => {
-        setGeneratingProgress(0);
-      }, 1000);
-      
     } catch (error) {
       console.error("Error generating automated value chain:", error);
       toast.error("Failed to generate value chain");
     } finally {
+      // Clean up
       clearInterval(interval);
-      setIsGenerating(false);
+      
+      // Reset progress after a short delay
+      setTimeout(() => {
+        setGeneratingProgress(0);
+        setIsGenerating(false);
+      }, 1000);
     }
   };
 

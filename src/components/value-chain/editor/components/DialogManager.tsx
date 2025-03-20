@@ -17,7 +17,7 @@ interface DialogManagerProps {
   location: string;
   onGenerateWithAI: (prompt: AIGenerationPrompt) => Promise<void>;
   onDocumentUpload: (files: File[]) => void;
-  onAutomatedValueChain: (prompt: string) => Promise<void>;
+  onAutomatedValueChain: (prompt: string, files: File[]) => Promise<void>;
 }
 
 export function DialogManager({
@@ -42,8 +42,6 @@ export function DialogManager({
         onOpenChange={setIsAIDialogOpen}
         onGenerate={onGenerateWithAI}
         isGenerating={isGenerating}
-        companyName={companyName}
-        industry={industry}
       />
       
       <DocumentUploadDialog
