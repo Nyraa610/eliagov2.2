@@ -36,7 +36,7 @@ export function useAutomatedValueChain({
     try {
       // Update progress regularly
       const progressInterval = setInterval(() => {
-        setGeneratingProgress((prev: number) => {
+        setGeneratingProgress((prev) => {
           // Make sure we never go past 90% until the actual data arrives
           const newProgress = prev + 5;
           return newProgress > 90 ? 90 : newProgress;
@@ -76,7 +76,7 @@ export function useAutomatedValueChain({
     }
   }, [isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode, setIsAIDialogOpen]);
 
-  const handleAutomatedValueChain = useCallback(async (files?: File[]) => {
+  const handleAutomatedValueChain = useCallback(async (prompt: string, files: File[] = []) => {
     if (!company) {
       toast.error("Please select a company first");
       return;
@@ -91,7 +91,7 @@ export function useAutomatedValueChain({
     try {
       // Update progress regularly
       const progressInterval = setInterval(() => {
-        setGeneratingProgress((prev: number) => {
+        setGeneratingProgress((prev) => {
           // Make sure we never go past 90% until the actual data arrives
           const newProgress = prev + 5;
           return newProgress > 90 ? 90 : newProgress;
@@ -101,7 +101,7 @@ export function useAutomatedValueChain({
       console.log("Starting automated value chain generation for company:", company.name);
       
       // Call the quick generate value chain service with files if available
-      const result = await valueChainService.quickGenerateValueChain({
+      const result = await valueChainService.quickGenerateValueChain(prompt, {
         companyName: company.name,
         industry: company.industry || 'Unknown',
         companyId: company.id,

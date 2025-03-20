@@ -4,6 +4,13 @@ import { ValueChainData, AIGenerationPrompt } from "@/types/valueChain";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
+interface QuickGenerateParams {
+  companyName: string;
+  industry: string;
+  companyId: string;
+  files?: File[];
+}
+
 /**
  * Service for AI-related functionality of value chain
  */
@@ -158,16 +165,32 @@ export const valueChainAIService = {
   /**
    * Quick generate a value chain using OpenAI via a Supabase Edge Function
    * @param prompt Text prompt describing the company and requirements
-   * @param documentUrls Optional array of document URLs to provide context
+   * @param params Object containing company info and optional documents
    * @returns The generated value chain data or null if failed
    */
-  quickGenerateValueChain: async (prompt: string, documentUrls: string[] = []): Promise<ValueChainData | null> => {
+  quickGenerateValueChain: async (prompt: string, params: QuickGenerateParams): Promise<ValueChainData | null> => {
     try {
       console.log("Initiating quick value chain generation with AI");
       
+      let documentUrls: string[] = [];
+      
+      // Process uploaded files if any
+      if (params.files && params.files.length > 0) {
+        // Here you would typically upload the files to storage and get their URLs
+        // For now we'll just log them
+        console.log(`Processing ${params.files.length} files for context`);
+        documentUrls = params.files.map(file => file.name);
+      }
+      
       // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('value-chain-generator', {
-        body: { prompt, documentUrls }
+        body: { 
+          prompt,
+          documentUrls,
+          companyName: params.companyName,
+          industry: params.industry,
+          companyId: params.companyId
+        }
       });
       
       if (error) {

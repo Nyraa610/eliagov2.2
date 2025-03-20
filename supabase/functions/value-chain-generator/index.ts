@@ -22,7 +22,13 @@ serve(async (req) => {
     }
 
     // Parse request data
-    const { prompt, documentUrls } = await req.json();
+    const { 
+      prompt, 
+      documentUrls, 
+      companyName, 
+      industry,
+      companyId 
+    } = await req.json();
 
     // Create the prompt for OpenAI
     const systemPrompt = `
@@ -72,8 +78,14 @@ serve(async (req) => {
       Only respond with valid JSON. Do not include any other text or explanation.
     `;
     
+    // Add company and industry info to the prompt
+    let userPrompt = prompt || "";
+    
+    if (companyName) {
+      userPrompt = `Company: ${companyName}\nIndustry: ${industry || 'Not specified'}\n\n${userPrompt}`;
+    }
+    
     // Add document context if available
-    let userPrompt = JSON.stringify(prompt);
     if (documentUrls && documentUrls.length > 0) {
       userPrompt += `\n\nAdditional context from uploaded documents: The user has provided ${documentUrls.length} document(s) which should be considered in the analysis. Document URLs: ${JSON.stringify(documentUrls)}`;
     }
@@ -138,11 +150,22 @@ serve(async (req) => {
         return node;
       });
       
-      // Add metadata about document usage
+      // Add metadata about document usage, company, etc.
+      valueChainData.metadata = valueChainData.metadata || {};
+      
       if (documentUrls && documentUrls.length > 0) {
-        valueChainData.metadata = valueChainData.metadata || {};
         valueChainData.metadata.documentsUsed = documentUrls.length;
       }
+      
+      if (companyName) {
+        valueChainData.metadata.companyName = companyName;
+        valueChainData.metadata.industry = industry || 'Not specified';
+      }
+      
+      if (companyId) {
+        valueChainData.metadata.companyId = companyId;
+      }
+      
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw OpenAI response:', data.choices[0].message.content);

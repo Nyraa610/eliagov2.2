@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -102,7 +101,6 @@ export function AutomatedValueChainBuilder({
             </div>
           </div>
           
-          {/* Document Upload Area */}
           <div className="space-y-2">
             <Label htmlFor="documents">Supporting Documents (Optional)</Label>
             <div
