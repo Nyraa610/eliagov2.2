@@ -6,7 +6,6 @@ import { useValueChainActions } from "./useValueChainActions";
 import { DialogManager } from "./components/DialogManager";
 import { EditorContent } from "./components/EditorContent";
 import { useDialogState } from "./hooks/useDialogState";
-import { useDocumentUpload } from "./hooks/useDocumentUpload";
 import { useGenerationProgress } from "./hooks/useGenerationProgress";
 import { useAutomatedValueChain } from "./hooks/useAutomatedValueChain";
 
@@ -23,7 +22,6 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
   
   // Use custom hooks for state management
   const dialogState = useDialogState();
-  const documentUpload = useDocumentUpload();
   const generationProgress = useGenerationProgress();
 
   const {
@@ -60,7 +58,7 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
   });
 
   // Custom hook for automated value chain generation
-  const { onGenerateWithAI, handleAutomatedValueChain } = useAutomatedValueChain({
+  const { handleAutomatedValueChain } = useAutomatedValueChain({
     setIsGenerating: generationProgress.setIsGenerating,
     setGeneratingProgress: generationProgress.setGeneratingProgress,
     setNodes,
@@ -90,8 +88,6 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
         handleReset={handleReset}
         isGenerating={generationProgress.isGenerating}
         generatingProgress={generationProgress.generatingProgress}
-        onGenerateAI={() => dialogState.setIsAIDialogOpen(true)}
-        onUploadDocuments={() => dialogState.setIsUploadDialogOpen(true)}
         onAutomatedBuilder={() => dialogState.setIsAutomatedBuilderOpen(true)}
         setSelectedNode={setSelectedNode}
       />
@@ -107,8 +103,8 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
         companyName={company?.name || ''}
         industry={company?.industry || ''}
         location={company?.country || ''}
-        onGenerateWithAI={onGenerateWithAI}
-        onDocumentUpload={documentUpload.handleDocumentUpload}
+        onGenerateWithAI={handleAutomatedValueChain}
+        onDocumentUpload={() => {}}
         onAutomatedValueChain={handleAutomatedValueChain}
       />
     </div>

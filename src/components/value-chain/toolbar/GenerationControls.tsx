@@ -2,8 +2,6 @@
 import { GenerationControlsSection } from "./sections/GenerationControlsSection";
 
 interface GenerationControlsProps {
-  onGenerateAI: () => void;
-  onUploadDocuments: () => void;
   onAutomatedBuilder: () => void;
 }
 

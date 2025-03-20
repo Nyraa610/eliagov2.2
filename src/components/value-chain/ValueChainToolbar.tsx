@@ -17,8 +17,6 @@ interface ValueChainToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onReset: () => void;
-  onGenerateAI: () => void;
-  onUploadDocuments: () => void;
   onAutomatedBuilder: () => void;
 }
 
@@ -31,8 +29,6 @@ export function ValueChainToolbar({
   onZoomIn,
   onZoomOut,
   onReset,
-  onGenerateAI,
-  onUploadDocuments,
   onAutomatedBuilder
 }: ValueChainToolbarProps) {
   return (
@@ -54,8 +50,6 @@ export function ValueChainToolbar({
             
             <ToolbarSection withSeparator>
               <GenerationControlsSection
-                onGenerateAI={onGenerateAI}
-                onUploadDocuments={onUploadDocuments}
                 onAutomatedBuilder={onAutomatedBuilder}
               />
             </ToolbarSection>

@@ -25,8 +25,6 @@ interface EditorContentProps {
   handleReset: any;
   isGenerating: boolean;
   generatingProgress: number;
-  onGenerateAI: () => void;
-  onUploadDocuments: () => void;
   onAutomatedBuilder: () => void;
   setSelectedNode: (node: any) => void;
 }
@@ -49,8 +47,6 @@ export function EditorContent({
   handleReset,
   isGenerating,
   generatingProgress,
-  onGenerateAI,
-  onUploadDocuments,
   onAutomatedBuilder,
   setSelectedNode
 }: EditorContentProps) {
@@ -60,9 +56,7 @@ export function EditorContent({
     <>
       {!nodes.length && !isGenerating && (
         <EmptyStateGuide
-          onOpenAIDialog={onGenerateAI}
           onOpenAutomatedBuilder={onAutomatedBuilder}
-          onOpenUploadDialog={onUploadDocuments}
         />
       )}
       
@@ -76,8 +70,6 @@ export function EditorContent({
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onReset={handleReset}
-          onGenerateAI={onGenerateAI}
-          onUploadDocuments={onUploadDocuments}
           onAutomatedBuilder={onAutomatedBuilder}
         />
       </div>
