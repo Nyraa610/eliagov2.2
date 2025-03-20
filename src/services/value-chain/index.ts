@@ -1,6 +1,6 @@
 
 import { valueChainBaseService } from "./valueChainBaseService";
-import { valueChainAIService } from "./valueChainAIService";
+import { valueChainAIService } from "./ai";
 import { valueChainExportService } from "./valueChainExportService";
 import { documentService } from "./document";
 

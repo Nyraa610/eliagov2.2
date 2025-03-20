@@ -7,7 +7,7 @@ import { AIGenerationPrompt } from "@/types/valueChain";
 
 interface UseAutomatedValueChainProps {
   setIsGenerating: (isGenerating: boolean) => void;
-  setGeneratingProgress: (progress: number) => void;
+  setGeneratingProgress: React.Dispatch<React.SetStateAction<number>>;
   setNodes: (nodes: any) => void;
   setEdges: (edges: any) => void;
   setSelectedNode: (node: any) => void;
@@ -36,12 +36,10 @@ export function useAutomatedValueChain({
     try {
       // Update progress regularly
       const progressInterval = setInterval(() => {
-        // Get current progress
-        let currentProgress = 0;
-        setGeneratingProgress((prev) => {
+        setGeneratingProgress(prev => {
           // Make sure we never go past 90% until the actual data arrives
-          currentProgress = prev + 5;
-          return currentProgress > 90 ? 90 : currentProgress;
+          const newProgress = prev + 5;
+          return newProgress > 90 ? 90 : newProgress;
         });
       }, 500);
       
@@ -93,12 +91,10 @@ export function useAutomatedValueChain({
     try {
       // Update progress regularly
       const progressInterval = setInterval(() => {
-        // Get current progress
-        let currentProgress = 0;
-        setGeneratingProgress((prev) => {
+        setGeneratingProgress(prev => {
           // Make sure we never go past 90% until the actual data arrives
-          currentProgress = prev + 5;
-          return currentProgress > 90 ? 90 : currentProgress;
+          const newProgress = prev + 5;
+          return newProgress > 90 ? 90 : newProgress;
         });
       }, 500);
       
