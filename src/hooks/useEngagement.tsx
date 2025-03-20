@@ -7,17 +7,23 @@ export const useEngagement = () => {
   const { toast } = useToast();
 
   const trackActivity = useCallback(async (activity: UserActivity, showReward = false) => {
-    const success = await engagementService.trackActivity(activity);
-    
-    if (success && showReward) {
-      toast({
-        title: "Points Earned!",
-        description: `You earned ${activity.points_earned} points for ${formatActivityType(activity.activity_type)}`,
-        duration: 3000,
-      });
+    try {
+      const success = await engagementService.trackActivity(activity);
+      
+      if (success && showReward) {
+        toast({
+          title: "Points Earned!",
+          description: `You earned ${activity.points_earned} points for ${formatActivityType(activity.activity_type)}`,
+          duration: 3000,
+        });
+      }
+      
+      return success;
+    } catch (error) {
+      console.warn("Error in trackActivity:", error);
+      // Return false but don't break the app flow
+      return false;
     }
-    
-    return success;
   }, [toast]);
 
   const formatActivityType = (type: string): string => {

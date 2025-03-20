@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { RegistryInformation } from "@/components/company/profile/RegistryInformation";
 import { Company } from "@/services/company/types";
+import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGeneralSettings";
 
 interface SettingsTabProps {
   company: Company;

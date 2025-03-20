@@ -8,20 +8,35 @@ import { supabase } from '@/lib/supabase';
 export function EngagementTracker() {
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Track user login
+  // Check if user is on admin route
   useEffect(() => {
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    setIsAdmin(isAdminRoute);
+  }, [location.pathname]);
+
+  // Track user login - skip for admin routes
+  useEffect(() => {
+    if (isAdmin) return;
+    
     const checkUserAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Record login activity
-        await engagementService.trackActivity({
-          activity_type: 'login',
-          points_earned: 5
-        });
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          // Record login activity
+          await engagementService.trackActivity({
+            activity_type: 'login',
+            points_earned: 5
+          }).catch(err => {
+            console.warn("Could not track login activity", err);
+          });
+        }
+      } catch (error) {
+        console.warn("Auth check error in EngagementTracker:", error);
       }
     };
 
@@ -30,11 +45,17 @@ export function EngagementTracker() {
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN') {
-          await engagementService.trackActivity({
-            activity_type: 'login',
-            points_earned: 5
-          });
+        if (event === 'SIGNED_IN' && !isAdmin) {
+          try {
+            await engagementService.trackActivity({
+              activity_type: 'login',
+              points_earned: 5
+            }).catch(err => {
+              console.warn("Could not track login activity on auth change", err);
+            });
+          } catch (error) {
+            console.warn("Auth change error in EngagementTracker:", error);
+          }
         }
       }
     );
@@ -42,24 +63,34 @@ export function EngagementTracker() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [isAdmin]);
 
-  // Track page views
+  // Track page views - skip for admin routes
   useEffect(() => {
+    if (isAdmin) return;
+    
     const trackPageView = async () => {
-      await engagementService.trackActivity({
-        activity_type: 'page_view',
-        points_earned: 1,
-        metadata: { path: location.pathname }
-      });
-      setLastActive(Date.now());
+      try {
+        await engagementService.trackActivity({
+          activity_type: 'page_view',
+          points_earned: 1,
+          metadata: { path: location.pathname }
+        }).catch(err => {
+          console.warn("Could not track page view", err);
+        });
+        setLastActive(Date.now());
+      } catch (error) {
+        console.warn("Page view tracking error:", error);
+      }
     };
 
     trackPageView();
-  }, [location.pathname]);
+  }, [location.pathname, isAdmin]);
 
-  // Track time spent
+  // Track time spent - skip for admin routes
   useEffect(() => {
+    if (isAdmin) return;
+    
     const trackInterval = setInterval(() => {
       if (!isTracking) return;
 
@@ -69,7 +100,9 @@ export function EngagementTracker() {
       if (timeSpentSeconds > 5) {
         // Cap inactive time at 60 seconds to prevent large time accumulations during breaks
         const cappedTime = Math.min(timeSpentSeconds, 60);
-        engagementService.trackTimeSpent(cappedTime);
+        engagementService.trackTimeSpent(cappedTime).catch(err => {
+          console.warn("Could not track time spent", err);
+        });
         setLastActive(now);
       }
     }, 60000); // Check every minute
@@ -77,10 +110,12 @@ export function EngagementTracker() {
     return () => {
       clearInterval(trackInterval);
     };
-  }, [lastActive, isTracking]);
+  }, [lastActive, isTracking, isAdmin]);
 
-  // Track user interactions
+  // Track user interactions - skip for admin routes
   useEffect(() => {
+    if (isAdmin) return;
+    
     const handleUserActivity = () => {
       setLastActive(Date.now());
     };
@@ -96,7 +131,7 @@ export function EngagementTracker() {
       window.removeEventListener('click', handleUserActivity);
       window.removeEventListener('scroll', handleUserActivity);
     };
-  }, []);
+  }, [isAdmin]);
 
   // Pause tracking when tab is not visible
   useEffect(() => {

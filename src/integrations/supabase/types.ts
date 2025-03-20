@@ -252,6 +252,157 @@ export type Database = {
         }
         Relationships: []
       }
+      hubspot_contacts: {
+        Row: {
+          company_id: string
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          hubspot_id: string
+          id: string
+          last_name: string | null
+          last_synced_at: string
+          raw_data: Json | null
+          sustainability_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          hubspot_id: string
+          id?: string
+          last_name?: string | null
+          last_synced_at?: string
+          raw_data?: Json | null
+          sustainability_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          hubspot_id?: string
+          id?: string
+          last_name?: string | null
+          last_synced_at?: string
+          raw_data?: Json | null
+          sustainability_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hubspot_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hubspot_integrations: {
+        Row: {
+          access_token: string | null
+          company_id: string
+          created_at: string
+          id: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hubspot_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hubspot_notes: {
+        Row: {
+          analyzed: boolean | null
+          company_id: string
+          contact_id: string | null
+          content: string | null
+          created_at: string
+          hubspot_id: string
+          id: string
+          last_synced_at: string
+          raw_data: Json | null
+          sustainability_keywords: string[] | null
+          sustainability_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          analyzed?: boolean | null
+          company_id: string
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          hubspot_id: string
+          id?: string
+          last_synced_at?: string
+          raw_data?: Json | null
+          sustainability_keywords?: string[] | null
+          sustainability_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analyzed?: boolean | null
+          company_id?: string
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          hubspot_id?: string
+          id?: string
+          last_synced_at?: string
+          raw_data?: Json | null
+          sustainability_keywords?: string[] | null
+          sustainability_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hubspot_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hubspot_notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "hubspot_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_completions: {
         Row: {
           completed_at: string | null
@@ -501,6 +652,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sustainability_opportunities: {
+        Row: {
+          company_id: string
+          contact_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          opportunity_score: number
+          opportunity_status: string | null
+          source: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          opportunity_score?: number
+          opportunity_status?: string | null
+          source?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          opportunity_score?: number
+          opportunity_status?: string | null
+          source?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sustainability_opportunities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sustainability_opportunities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "hubspot_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_activities: {
         Row: {
