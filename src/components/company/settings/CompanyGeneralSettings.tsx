@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Company } from "@/services/companyService";
@@ -12,10 +11,9 @@ import { companyService } from "@/services/company";
 
 interface CompanyGeneralSettingsProps {
   company: Company;
-  onCompanyUpdate?: (company: Company) => void;
 }
 
-export function CompanyGeneralSettings({ company, onCompanyUpdate }: CompanyGeneralSettingsProps) {
+export function CompanyGeneralSettings({ company }: CompanyGeneralSettingsProps) {
   const [registryDialogOpen, setRegistryDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
@@ -150,7 +148,7 @@ export function CompanyGeneralSettings({ company, onCompanyUpdate }: CompanyGene
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CompanyProfileForm company={company} onSuccess={onCompanyUpdate} />
+          <CompanyProfileForm company={company} />
         </CardContent>
       </Card>
 

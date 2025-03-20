@@ -1,28 +1,44 @@
 
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { ShieldX } from "lucide-react";
+import { ShieldAlert, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Unauthorized() {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="text-center max-w-md px-6">
-        <div className="flex justify-center mb-6">
-          <ShieldX className="h-20 w-20 text-destructive" />
-        </div>
-        <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">
-          You don't have permission to access this page. 
-          Please contact your administrator if you believe this is an error.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild>
-            <Link to="/dashboard">Go to Dashboard</Link>
+    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+      <Navigation />
+      <div className="container mx-auto px-4 page-header-spacing">
+        <motion.div 
+          className="max-w-lg mx-auto text-center py-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
+            className="w-24 h-24 bg-red-100 rounded-full mx-auto flex items-center justify-center mb-6"
+          >
+            <ShieldAlert className="h-12 w-12 text-red-600" />
+          </motion.div>
+          
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Access Denied</h1>
+          
+          <p className="text-lg text-gray-600 mb-8">
+            Sorry, you don't have permission to access this page. 
+            This area requires administrator privileges.
+          </p>
+          
+          <Button onClick={() => navigate("/")} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Return to Home
           </Button>
-          <Button variant="outline" asChild>
-            <Link to="/">Return to Home</Link>
-          </Button>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

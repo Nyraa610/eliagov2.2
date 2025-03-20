@@ -7,7 +7,6 @@ export function useAssessmentProgress() {
   const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
   const [carbonEvalStatus, setCarbonEvalStatus] = useState<FeatureStatus>("not-started");
   const [materialityStatus, setMaterialityStatus] = useState<FeatureStatus>("not-started");
-  const [iroStatus, setIroStatus] = useState<FeatureStatus>("not-started");
   const [actionPlanStatus, setActionPlanStatus] = useState<FeatureStatus>("not-started");
   const [loading, setLoading] = useState(true);
 
@@ -28,11 +27,6 @@ export function useAssessmentProgress() {
         const materialityProgress = await assessmentService.getAssessmentProgress('materiality_analysis');
         if (materialityProgress) {
           setMaterialityStatus(materialityProgress.status as FeatureStatus);
-        }
-        
-        const iroProgress = await assessmentService.getAssessmentProgress('iro_analysis');
-        if (iroProgress) {
-          setIroStatus(iroProgress.status as FeatureStatus);
         }
         
         const actionPlanProgress = await assessmentService.getAssessmentProgress('action_plan');
@@ -62,10 +56,9 @@ export function useAssessmentProgress() {
     const total = statusValues[diagStatus] + 
                   statusValues[carbonEvalStatus] + 
                   statusValues[materialityStatus] + 
-                  statusValues[iroStatus] +
                   statusValues[actionPlanStatus];
     
-    return Math.round((total / 5) * 100);
+    return Math.round((total / 4) * 100);
   };
 
   return {
@@ -75,8 +68,6 @@ export function useAssessmentProgress() {
     setCarbonEvalStatus,
     materialityStatus,
     setMaterialityStatus,
-    iroStatus,
-    setIroStatus,
     actionPlanStatus,
     setActionPlanStatus,
     loading,

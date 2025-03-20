@@ -2,7 +2,7 @@
 import { 
   BarChart3, BookOpen, Building, ChevronLeft, ChevronRight, 
   Globe, Home, Layers, LineChart, Medal, Settings, 
-  Target, Trophy, User, ActivitySquare
+  Target, Trophy, User 
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,11 +59,6 @@ export const UserSidebar = () => {
       title: "Materiality Analysis",
       icon: <Layers className="h-5 w-5" />,
       path: "/materiality-analysis",
-    },
-    {
-      title: "Impact, Risks & Opportunities",
-      icon: <ActivitySquare className="h-5 w-5" />,
-      path: "/iro",
     },
     {
       title: "Action Plan",
