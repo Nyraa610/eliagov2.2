@@ -18,6 +18,22 @@ export const valueChainDocumentService = {
         throw new Error("Authentication required to upload documents");
       }
       
+      // Get user's company if not provided
+      let userCompanyId = companyId;
+      if (!userCompanyId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.user.id)
+          .single();
+          
+        userCompanyId = profile?.company_id;
+        
+        if (!userCompanyId) {
+          throw new Error("User is not associated with a company");
+        }
+      }
+      
       // Ensure the value_chain_documents bucket exists
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
       if (bucketsError) throw bucketsError;
@@ -32,12 +48,12 @@ export const valueChainDocumentService = {
       
       // Upload each file
       const uploadPromises = files.map(async (file) => {
-        const folderPrefix = companyId || user.user.id;
+        const folderPrefix = userCompanyId;
         const filePath = `${folderPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
         console.log(`Uploading file ${file.name} to ${filePath}`);
         
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('value_chain_documents')
           .upload(filePath, file, {
             cacheControl: '3600',
@@ -54,6 +70,17 @@ export const valueChainDocumentService = {
           .getPublicUrl(filePath);
           
         console.log(`Successfully uploaded file ${file.name}, URL: ${urlData.publicUrl}`);
+        
+        // Save document metadata to the database
+        await supabase.from('company_documents').insert({
+          company_id: userCompanyId,
+          name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          url: urlData.publicUrl,
+          uploaded_by: user.user.id,
+          document_type: 'value_chain'
+        });
         
         return urlData.publicUrl;
       });
@@ -80,12 +107,28 @@ export const valueChainDocumentService = {
         throw new Error("Authentication required to access documents");
       }
       
-      const folderPrefix = companyId || user.user.id;
+      // Get user's company if not provided
+      let userCompanyId = companyId;
+      if (!userCompanyId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.user.id)
+          .single();
+          
+        userCompanyId = profile?.company_id;
+        
+        if (!userCompanyId) {
+          return [];
+        }
+      }
       
-      // List files in the user's folder
-      const { data, error } = await supabase.storage
-        .from('value_chain_documents')
-        .list(folderPrefix);
+      // Get documents from the database instead of storage
+      const { data, error } = await supabase
+        .from('company_documents')
+        .select('*')
+        .eq('company_id', userCompanyId)
+        .eq('document_type', 'value_chain');
         
       if (error) {
         throw error;
@@ -95,18 +138,12 @@ export const valueChainDocumentService = {
         return [];
       }
       
-      // Get public URLs for each file
-      const documents = data.map(file => {
-        const filePath = `${folderPrefix}/${file.name}`;
-        const { data: urlData } = supabase.storage
-          .from('value_chain_documents')
-          .getPublicUrl(filePath);
-          
-        return {
-          url: urlData.publicUrl,
-          name: file.name.substring(file.name.indexOf('-') + 1).replace(/_/g, ' ')
-        };
-      });
+      // Format the response to match the expected interface
+      const documents = data.map(doc => ({
+        url: doc.url,
+        name: doc.name,
+        id: doc.id
+      }));
       
       return documents;
     } catch (error) {
@@ -122,24 +159,47 @@ export const valueChainDocumentService = {
    */
   async deleteDocument(url: string): Promise<boolean> {
     try {
+      // Find the document in the database
+      const { data: document, error: findError } = await supabase
+        .from('company_documents')
+        .select('*')
+        .eq('url', url)
+        .single();
+        
+      if (findError || !document) {
+        throw new Error("Document not found");
+      }
+      
       // Extract the path from the URL
       const urlObj = new URL(url);
       const pathSegments = urlObj.pathname.split('/');
-      const bucketName = pathSegments[1]; // Should be value_chain_documents
       
       // The file path is everything after the bucket name
-      const filePath = pathSegments.slice(2).join('/');
+      const bucketPath = pathSegments.slice(1);
+      const bucketName = bucketPath[0]; // Should be value_chain_documents
+      const filePath = bucketPath.slice(1).join('/');
       
       if (bucketName !== 'value_chain_documents') {
         throw new Error("Invalid document URL");
       }
       
-      const { error } = await supabase.storage
+      // Remove the file from storage
+      const { error: storageError } = await supabase.storage
         .from('value_chain_documents')
         .remove([filePath]);
         
-      if (error) {
-        throw error;
+      if (storageError) {
+        console.error("Error removing from storage:", storageError);
+      }
+      
+      // Remove the document from the database
+      const { error: dbError } = await supabase
+        .from('company_documents')
+        .delete()
+        .eq('id', document.id);
+        
+      if (dbError) {
+        throw dbError;
       }
       
       return true;

@@ -3,12 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FileText } from "lucide-react";
 import { DocumentList } from "@/components/value-chain/DocumentList";
 
-interface DocumentsSectionProps {
-  documents: { url: string; name: string }[];
-  onRemoveDocument: (index: number) => void;
+interface Document {
+  url: string;
+  name: string;
+  id?: string;
 }
 
-export function DocumentsSection({ documents, onRemoveDocument }: DocumentsSectionProps) {
+interface DocumentsSectionProps {
+  documents: Document[];
+  onRemoveDocument: (index: number) => void;
+  companyId?: string | null;
+}
+
+export function DocumentsSection({ documents, onRemoveDocument, companyId }: DocumentsSectionProps) {
   if (documents.length === 0) return null;
   
   return (
@@ -20,7 +27,9 @@ export function DocumentsSection({ documents, onRemoveDocument }: DocumentsSecti
             Uploaded Documents
           </CardTitle>
           <CardDescription>
-            Documents that will be used to analyze and generate your value chain
+            {companyId 
+              ? "Company documents that will be used to analyze and generate your value chain" 
+              : "Documents that will be used to analyze and generate your value chain"}
           </CardDescription>
         </CardHeader>
         <CardContent>

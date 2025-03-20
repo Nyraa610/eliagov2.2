@@ -13,6 +13,7 @@ export default function ValueChainModeling() {
   const {
     loading,
     isAuth,
+    companyId,
     isUploadDialogOpen,
     setIsUploadDialogOpen,
     isAIDialogOpen,
@@ -58,6 +59,7 @@ export default function ValueChainModeling() {
         <DocumentsSection 
           documents={uploadedDocuments}
           onRemoveDocument={handleRemoveDocument}
+          companyId={companyId}
         />
       )}
 

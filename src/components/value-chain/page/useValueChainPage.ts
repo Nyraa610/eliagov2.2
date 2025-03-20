@@ -6,7 +6,7 @@ import { useAIGeneration } from "./hooks/useAIGeneration";
 import { useDialogState } from "./hooks/useDialogState";
 
 export function useValueChainPage() {
-  const { loading, isAuth } = useAuthStatus();
+  const { loading, isAuth, companyId } = useAuthStatus();
   
   const {
     uploadedDocuments,
@@ -32,12 +32,12 @@ export function useValueChainPage() {
     handleOpenAIDialog
   } = useDialogState({ isAuth });
 
-  // Load documents when authenticated
+  // Load documents when authenticated and company ID is available
   useEffect(() => {
-    if (isAuth && !loading) {
+    if (isAuth && !loading && companyId) {
       loadDocuments();
     }
-  }, [isAuth, loading]);
+  }, [isAuth, loading, companyId]);
 
   // Wrapper for the quick generate function to pass document URLs
   const handleValueChainGenerate = async (prompt: string) => {
@@ -50,6 +50,7 @@ export function useValueChainPage() {
   return {
     loading,
     isAuth,
+    companyId,
     isUploadDialogOpen,
     setIsUploadDialogOpen,
     isAIDialogOpen,
