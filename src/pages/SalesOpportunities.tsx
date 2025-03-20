@@ -11,7 +11,7 @@ import { useHubspotIntegration } from "@/hooks/useHubspotIntegration";
 import { HubspotContact, HubspotNote, SustainabilityOpportunity } from "@/services/integrations/types";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HubspotConnector } from "@/components/company/settings/HubspotConnector";
+import { HubspotConnector } from "@/components/company/settings/connectors/HubspotConnector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function SalesOpportunities() {

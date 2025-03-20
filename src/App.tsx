@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import './i18n';
+import './i18n/i18n'; // Fixed import path
 import { useTheme } from './hooks/useTheme';
 import { ThemeProvider } from './components/ui/theme-provider';
 import { SiteHeader } from './components/layout/SiteHeader';
