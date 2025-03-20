@@ -45,7 +45,7 @@ export function useAutomatedValueChain({
       
       console.log("Starting automated value chain generation for company:", company?.name);
       
-      // Call the generate value chain service
+      // Call the detailed generation service instead of direct value chain generation
       const result = await valueChainService.generateValueChain(prompt);
       
       clearInterval(progressInterval);

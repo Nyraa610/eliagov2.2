@@ -1,5 +1,4 @@
 
-import { DocumentUploadDialog } from "../../DocumentUploadDialog";
 import { AutomatedValueChainBuilder } from "../../AutomatedValueChainBuilder";
 import { AIGenerationPrompt } from "@/types/valueChain";
 
@@ -30,12 +29,6 @@ export function DialogManager({
 }: DialogManagerProps) {
   return (
     <>
-      <DocumentUploadDialog
-        open={isUploadDialogOpen}
-        onOpenChange={setIsUploadDialogOpen}
-        onUpload={onDocumentUpload}
-      />
-      
       <AutomatedValueChainBuilder
         open={isAutomatedBuilderOpen}
         onOpenChange={setIsAutomatedBuilderOpen}
