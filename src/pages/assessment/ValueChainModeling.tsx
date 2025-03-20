@@ -1,4 +1,3 @@
-
 import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Link } from "react-router-dom";
@@ -66,7 +65,6 @@ export default function ValueChainModeling() {
     setUploadProgress(0);
     
     try {
-      // Set up progress updates
       const updateInterval = setInterval(() => {
         setUploadProgress(prev => {
           const newProgress = prev + 10;
@@ -80,7 +78,6 @@ export default function ValueChainModeling() {
       setUploadProgress(100);
       
       if (documentUrls.length > 0) {
-        // Map file names to URLs
         const newDocuments = documentUrls.map((url, index) => ({
           url,
           name: files[index].name
@@ -198,7 +195,7 @@ export default function ValueChainModeling() {
                         <span className="text-sm font-medium">Uploaded Documents</span>
                       </div>
                       <StatusBadge status="completed" className="text-xs py-0 px-2 h-5">
-                        {uploadedDocuments.length} file{uploadedDocuments.length !== 1 ? 's' : ''}
+                        <span>{uploadedDocuments.length} file{uploadedDocuments.length !== 1 ? 's' : ''}</span>
                       </StatusBadge>
                     </div>
                     <div className="max-h-40 overflow-y-auto border rounded-md p-2">
