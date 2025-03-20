@@ -167,7 +167,7 @@ export default function ValueChainResults() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[800px]">
+                    <div className="h-[600px]">
                       <ValueChainEditor initialData={valueChainData} />
                     </div>
                   </CardContent>
@@ -203,7 +203,7 @@ export default function ValueChainResults() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[800px]">
+                  <div className="h-[600px]">
                     <ValueChainEditor initialData={valueChainData} />
                   </div>
                 </CardContent>
