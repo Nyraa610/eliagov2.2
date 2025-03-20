@@ -13,6 +13,7 @@ import { DocumentUploadDialog } from "@/components/value-chain/DocumentUploadDia
 import { valueChainService } from "@/services/value-chain";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Progress } from "@/components/ui/progress";
 
 export default function ValueChainModeling() {
   const { toast: uiToast } = useToast();
@@ -21,6 +22,7 @@ export default function ValueChainModeling() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<{ url: string; name: string }[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,8 +63,21 @@ export default function ValueChainModeling() {
     if (!files.length) return;
     
     setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
+      // Set up progress updates
+      const updateInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const newProgress = prev + 10;
+          return newProgress < 95 ? newProgress : prev;
+        });
+      }, 300);
+      
       const documentUrls = await valueChainService.uploadDocuments(files);
+      
+      clearInterval(updateInterval);
+      setUploadProgress(100);
       
       if (documentUrls.length > 0) {
         // Map file names to URLs
@@ -80,8 +95,11 @@ export default function ValueChainModeling() {
       console.error("Document upload error:", error);
       toast.error("Error uploading documents. Please try again.");
     } finally {
-      setIsUploading(false);
-      setIsUploadDialogOpen(false);
+      setTimeout(() => {
+        setUploadProgress(0);
+        setIsUploading(false);
+        setIsUploadDialogOpen(false);
+      }, 500);
     }
   };
 
@@ -162,17 +180,34 @@ export default function ValueChainModeling() {
                   )}
                 </Button>
                 
+                {isUploading && (
+                  <div className="mt-3 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span>Uploading documents...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-1.5" />
+                  </div>
+                )}
+                
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium">Uploaded Documents ({uploadedDocuments.length})</span>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-1">
+                        <FileText className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium">Uploaded Documents</span>
+                      </div>
+                      <StatusBadge status="completed" className="text-xs py-0 px-2 h-5">
+                        {uploadedDocuments.length} file{uploadedDocuments.length !== 1 ? 's' : ''}
+                      </StatusBadge>
                     </div>
                     <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                       {uploadedDocuments.map((doc, index) => (
-                        <div key={index} className="text-xs flex items-center justify-between py-1 border-b last:border-0">
+                        <div key={index} className="text-xs flex items-center justify-between py-1.5 px-2 border-b last:border-0 hover:bg-muted/50">
                           <span className="truncate max-w-[200px]">{doc.name}</span>
-                          <StatusBadge status="completed" showIcon={false} className="text-[10px] py-0 px-2 h-5" />
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-[10px]">
+                            View
+                          </a>
                         </div>
                       ))}
                     </div>
