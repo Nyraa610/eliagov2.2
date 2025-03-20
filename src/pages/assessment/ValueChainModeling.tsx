@@ -3,7 +3,7 @@ import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
@@ -84,9 +84,29 @@ export default function ValueChainModeling() {
               <li>Facilitate stakeholder engagement by clearly illustrating how your business creates value</li>
               <li>Enable more accurate scope 1, 2, and 3 emissions calculations</li>
             </ul>
-            <p>
-              Use our editor below to create your value chain or leverage our AI-powered generation tool to get started quickly.
-            </p>
+            <p className="font-semibold mt-4 text-foreground">Getting Started:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+              <div className="border rounded-md p-3">
+                <div className="flex items-center gap-2 mb-2 font-medium text-foreground">
+                  <FileUp className="h-5 w-5" />
+                  <span>Upload Company Documents</span>
+                </div>
+                <p className="text-sm">
+                  Upload existing documents like business plans, pitch decks, organizational charts, or process flows 
+                  to help build an accurate value chain model based on your company's specific operations.
+                </p>
+              </div>
+              <div className="border rounded-md p-3">
+                <div className="flex items-center gap-2 mb-2 font-medium text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4Z"/><path d="m9 15 3-3 3 3"/><path d="M10 10h4"/></svg>
+                  <span>AI-Powered Generation</span>
+                </div>
+                <p className="text-sm">
+                  Let our AI analyze your company information and generate a comprehensive value chain model optimized 
+                  for ESG reporting, saving you time and ensuring all key activities are captured.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

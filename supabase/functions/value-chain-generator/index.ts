@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     // Parse request data
-    const { prompt } = await req.json();
+    const { prompt, documentUrls } = await req.json();
 
     // Create the prompt for OpenAI
     const systemPrompt = `
@@ -72,6 +72,12 @@ serve(async (req) => {
       Only respond with valid JSON. Do not include any other text or explanation.
     `;
     
+    // Add document context if available
+    let userPrompt = JSON.stringify(prompt);
+    if (documentUrls && documentUrls.length > 0) {
+      userPrompt += `\n\nAdditional context from uploaded documents: The user has provided ${documentUrls.length} document(s) which should be considered in the analysis. Document URLs: ${JSON.stringify(documentUrls)}`;
+    }
+    
     // Call OpenAI to generate the value chain
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -83,7 +89,7 @@ serve(async (req) => {
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: JSON.stringify(prompt) }
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
         max_tokens: 4000,
@@ -131,6 +137,12 @@ serve(async (req) => {
         
         return node;
       });
+      
+      // Add metadata about document usage
+      if (documentUrls && documentUrls.length > 0) {
+        valueChainData.metadata = valueChainData.metadata || {};
+        valueChainData.metadata.documentsUsed = documentUrls.length;
+      }
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw OpenAI response:', data.choices[0].message.content);

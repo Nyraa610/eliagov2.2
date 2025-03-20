@@ -7,6 +7,7 @@ export function AIGenerationFormHeader() {
       <DialogTitle>Generate Value Chain with AI</DialogTitle>
       <DialogDescription>
         Provide information about your company to generate a detailed value chain model optimized for ESG reporting.
+        You can also upload company documents to enhance accuracy.
       </DialogDescription>
     </DialogHeader>
   );
