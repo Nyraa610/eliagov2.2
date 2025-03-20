@@ -1,16 +1,18 @@
 
-import { AIGenerationPrompt } from "@/types/valueChain";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { valueChainService } from "@/services/value-chain";
+import { Company } from "@/services/company/types";
+import { AIGenerationPrompt } from "@/types/valueChain";
 
 interface UseAutomatedValueChainProps {
-  setIsGenerating: (value: boolean) => void;
-  setGeneratingProgress: (value: number) => void;
+  setIsGenerating: (isGenerating: boolean) => void;
+  setGeneratingProgress: (progress: number) => void;
   setNodes: (nodes: any) => void;
   setEdges: (edges: any) => void;
   setSelectedNode: (node: any) => void;
-  setIsAIDialogOpen: (value: boolean) => void;
-  company: any;
+  setIsAIDialogOpen: (isOpen: boolean) => void;
+  company: Company | null;
 }
 
 export function useAutomatedValueChain({
@@ -22,99 +24,117 @@ export function useAutomatedValueChain({
   setIsAIDialogOpen,
   company
 }: UseAutomatedValueChainProps) {
-  const onGenerateWithAI = async (prompt: AIGenerationPrompt) => {
-    setIsGenerating(true);
-    setIsAIDialogOpen(false);
-    
-    // Simulate progress updates
-    const interval = setInterval(() => {
-      setGeneratingProgress(prev => {
-        const newProgress = prev + 5;
-        return newProgress < 90 ? newProgress : 90;
-      });
-    }, 800);
+  const [isProcessing, setIsProcessing] = useState(false);
 
+  const onGenerateWithAI = useCallback(async (prompt: AIGenerationPrompt) => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    setIsGenerating(true);
+    setGeneratingProgress(0);
+    
     try {
-      const data = await valueChainService.generateValueChain(prompt);
-      if (data) {
-        setNodes(data.nodes);
-        setEdges(data.edges);
-        setSelectedNode(null);
-        setGeneratingProgress(100);
-        toast.success("Value chain generated successfully");
+      // Update progress regularly
+      const progressInterval = setInterval(() => {
+        setGeneratingProgress((prev: number) => {
+          // Make sure we never go past 90% until the actual data arrives
+          const newProgress = prev + 5;
+          return newProgress > 90 ? 90 : newProgress;
+        });
+      }, 500);
+      
+      console.log("Generating value chain with AI prompt:", prompt);
+      
+      const result = await valueChainService.generateValueChain(prompt);
+      
+      clearInterval(progressInterval);
+      setGeneratingProgress(100);
+      
+      // Update state with generated value chain
+      if (result && result.nodes && result.edges) {
+        console.log("AI generated value chain:", result);
+        
+        // Short delay to show 100% before setting the new nodes/edges
+        setTimeout(() => {
+          setNodes(result.nodes);
+          setEdges(result.edges);
+          setSelectedNode(null);
+          setIsGenerating(false);
+          setIsAIDialogOpen(false);
+          toast.success("Value chain generated successfully");
+        }, 500);
       } else {
-        toast.error("AI failed to generate a valid value chain");
+        throw new Error("Invalid result format from AI generation");
       }
     } catch (error) {
-      console.error("Error generating value chain:", error);
-      toast.error("Failed to generate value chain");
+      console.error("Error generating value chain with AI:", error);
+      toast.error("Failed to generate value chain. Please try again.");
+      setGeneratingProgress(0);
+      setIsGenerating(false);
     } finally {
-      clearInterval(interval);
-      
-      // Reset progress after a short delay
-      setTimeout(() => {
-        setGeneratingProgress(0);
-        setIsGenerating(false);
-      }, 1000);
+      setIsProcessing(false);
     }
-  };
+  }, [isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode, setIsAIDialogOpen]);
 
-  const handleAutomatedValueChain = async (prompt: string, files: File[]) => {
-    setIsGenerating(true);
+  const handleAutomatedValueChain = useCallback(async (files?: File[]) => {
+    if (!company) {
+      toast.error("Please select a company first");
+      return;
+    }
     
-    // Simulate progress updates
-    const interval = setInterval(() => {
-      setGeneratingProgress(prev => {
-        const newProgress = prev + 5;
-        return newProgress < 90 ? newProgress : 90;
-      });
-    }, 800);
-
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    setIsGenerating(true);
+    setGeneratingProgress(0);
+    
     try {
-      console.log("Starting automated value chain generation with prompt:", prompt);
-      console.log("Using company details:", company?.name, company?.industry, company?.country);
+      // Update progress regularly
+      const progressInterval = setInterval(() => {
+        setGeneratingProgress((prev: number) => {
+          // Make sure we never go past 90% until the actual data arrives
+          const newProgress = prev + 5;
+          return newProgress > 90 ? 90 : newProgress;
+        });
+      }, 500);
       
-      // Add custom prompt for ESG reporting
-      const fullPrompt = `
-        Generate a value chain for ESG reporting purposes for ${company?.name || 'Company'}.
-        Industry: ${company?.industry || 'General'}
-        Location: ${company?.country || 'Global'}
+      console.log("Starting automated value chain generation for company:", company.name);
+      
+      // Call the quick generate value chain service with files if available
+      const result = await valueChainService.quickGenerateValueChain({
+        companyName: company.name,
+        industry: company.industry || 'Unknown',
+        companyId: company.id,
+        files
+      });
+      
+      clearInterval(progressInterval);
+      setGeneratingProgress(100);
+      
+      // Update state with generated value chain
+      if (result && result.nodes && result.edges) {
+        console.log("Automated value chain generated:", result);
         
-        Additional context: ${prompt}
-        
-        Please structure the value chain to highlight environmental, social, and governance aspects.
-      `;
-      
-      // Convert files to document URLs if needed
-      const documentUrls: string[] = files.map(file => file.name);
-      
-      console.log("Calling quickGenerateValueChain with prompt:", fullPrompt);
-      const result = await valueChainService.quickGenerateValueChain(fullPrompt, documentUrls);
-      
-      if (result) {
-        console.log("Generation successful, received data:", result);
-        setNodes(result.nodes);
-        setEdges(result.edges);
-        setSelectedNode(null);
-        setGeneratingProgress(100);
-        toast.success("Value chain generated successfully!");
+        // Short delay to show 100% before setting the new nodes/edges
+        setTimeout(() => {
+          setNodes(result.nodes);
+          setEdges(result.edges);
+          setSelectedNode(null);
+          setIsGenerating(false);
+          toast.success("Value chain generated automatically");
+        }, 500);
       } else {
-        console.error("Generation failed - no result returned");
-        toast.error("Failed to generate value chain");
+        throw new Error("Invalid result format from automated generation");
       }
     } catch (error) {
       console.error("Error generating automated value chain:", error);
-      toast.error("Failed to generate value chain");
+      toast.error("Failed to generate automated value chain. Please try again.");
+      setGeneratingProgress(0);
+      setIsGenerating(false);
     } finally {
-      clearInterval(interval);
-      
-      // Reset progress after a short delay
-      setTimeout(() => {
-        setGeneratingProgress(0);
-        setIsGenerating(false);
-      }, 1000);
+      setIsProcessing(false);
     }
-  };
+  }, [company, isProcessing, setIsGenerating, setGeneratingProgress, setNodes, setEdges, setSelectedNode]);
 
   return {
     onGenerateWithAI,

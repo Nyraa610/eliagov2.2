@@ -2,11 +2,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NodeType } from "@/types/valueChain";
-import { NodeTypeButtons } from "./toolbar/NodeTypeButtons";
-import { ViewControls } from "./toolbar/ViewControls";
-import { GenerationControls } from "./toolbar/GenerationControls";
-import { FileControls } from "./toolbar/FileControls";
 import { ToolbarSection } from "./toolbar/ToolbarSection";
+import { NodeTypeButtonsSection } from "./toolbar/sections/NodeTypeButtonsSection";
+import { ViewControlsSection } from "./toolbar/sections/ViewControlsSection";
+import { GenerationControlsSection } from "./toolbar/sections/GenerationControlsSection";
+import { FileControlsSection } from "./toolbar/sections/FileControlsSection";
 
 interface ValueChainToolbarProps {
   onAddNode: (type: NodeType) => void;
@@ -41,11 +41,11 @@ export function ValueChainToolbar({
         <CardContent className="p-3">
           <div className="flex items-center gap-2 flex-wrap">
             <ToolbarSection withSeparator>
-              <NodeTypeButtons onAddNode={onAddNode} />
+              <NodeTypeButtonsSection onAddNode={onAddNode} />
             </ToolbarSection>
             
             <ToolbarSection withSeparator>
-              <ViewControls 
+              <ViewControlsSection 
                 onZoomIn={onZoomIn}
                 onZoomOut={onZoomOut}
                 onReset={onReset}
@@ -53,7 +53,7 @@ export function ValueChainToolbar({
             </ToolbarSection>
             
             <ToolbarSection withSeparator>
-              <GenerationControls
+              <GenerationControlsSection
                 onGenerateAI={onGenerateAI}
                 onUploadDocuments={onUploadDocuments}
                 onAutomatedBuilder={onAutomatedBuilder}
@@ -63,7 +63,7 @@ export function ValueChainToolbar({
             <div className="flex-1"></div>
             
             <ToolbarSection withSeparator={false}>
-              <FileControls
+              <FileControlsSection
                 onSave={onSave}
                 onExport={onExport}
                 onImport={onImport}

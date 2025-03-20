@@ -2,20 +2,16 @@
 import { useCallback } from "react";
 import {
   ReactFlow,
-  Background,
-  Controls,
-  Panel,
-  BackgroundVariant,
   Connection,
   Edge,
   Node,
   useReactFlow,
   addEdge
 } from "@xyflow/react";
-import { PrimaryActivityNode } from "../nodes/PrimaryActivityNode";
-import { SupportActivityNode } from "../nodes/SupportActivityNode";
-import { ExternalFactorNode } from "../nodes/ExternalFactorNode";
-import { CustomNode } from "../nodes/CustomNode";
+import { FlowBackground } from "./components/flow/FlowBackground";
+import { FlowControls } from "./components/flow/FlowControls";
+import { FlowLegend } from "./components/flow/FlowLegend";
+import { nodeTypes } from "./components/flow/FlowNodeTypes";
 
 interface ReactFlowCanvasProps {
   nodes: Node[];
@@ -33,14 +29,6 @@ export function ReactFlowCanvas({
   onNodeClick
 }: ReactFlowCanvasProps) {
   const { setEdges } = useReactFlow();
-
-  // Define node types
-  const nodeTypes = {
-    primary: PrimaryActivityNode,
-    support: SupportActivityNode,
-    external: ExternalFactorNode,
-    custom: CustomNode
-  };
 
   // Handle connections
   const onConnect = useCallback(
@@ -61,29 +49,9 @@ export function ReactFlowCanvas({
       nodeTypes={nodeTypes}
       fitView
     >
-      <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-      <Controls />
-      
-      <Panel position="top-left" className="bg-white p-2 rounded shadow-sm text-sm">
-        <div className="flex gap-2 items-center">
-          <div className="flex gap-1 items-center">
-            <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
-            <span>Primary</span>
-          </div>
-          <div className="flex gap-1 items-center">
-            <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
-            <span>Support</span>
-          </div>
-          <div className="flex gap-1 items-center">
-            <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-            <span>External</span>
-          </div>
-          <div className="flex gap-1 items-center">
-            <div className="w-3 h-3 bg-purple-400 rounded-sm"></div>
-            <span>Custom</span>
-          </div>
-        </div>
-      </Panel>
+      <FlowBackground />
+      <FlowControls />
+      <FlowLegend />
     </ReactFlow>
   );
 }
