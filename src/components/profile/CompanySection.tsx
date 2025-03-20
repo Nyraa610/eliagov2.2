@@ -72,7 +72,7 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
           <div className="space-y-4">
             <div className="bg-green-50 dark:bg-green-950 p-4 rounded-md">
               <p className="text-green-700 dark:text-green-300">
-                You're associated with a company: {profile.company_name || "Your Company"}
+                You're associated with a company: {profile.company_name || "Unknown Company"}
               </p>
             </div>
             <div className="space-y-2">
