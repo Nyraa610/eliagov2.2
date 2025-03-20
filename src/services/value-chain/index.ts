@@ -23,6 +23,8 @@ export const valueChainService = {
   // Document operations
   uploadDocuments: valueChainDocumentService.uploadDocuments,
   processDocuments: valueChainDocumentService.processDocuments,
+  getDocuments: valueChainDocumentService.getDocuments,
+  deleteDocument: valueChainDocumentService.deleteDocument,
   
   // Get a friendly list of acceptable document types
   getAcceptableDocumentTypes: () => ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"

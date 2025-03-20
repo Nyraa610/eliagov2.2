@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { AIQuickGenerateDialog } from "@/components/value-chain/AIQuickGenerateDialog";
+import { DocumentList } from "@/components/value-chain/DocumentList";
 
 export default function ValueChainModeling() {
   const { toast: uiToast } = useToast();
@@ -116,6 +117,15 @@ export default function ValueChainModeling() {
         setIsUploadDialogOpen(false);
       }, 500);
     }
+  };
+  
+  const handleRemoveDocument = (index: number) => {
+    setUploadedDocuments(prev => {
+      const newDocs = [...prev];
+      newDocs.splice(index, 1);
+      return newDocs;
+    });
+    toast.success("Document removed successfully");
   };
 
   const handleQuickGenerate = async (prompt: string) => {
@@ -244,25 +254,10 @@ export default function ValueChainModeling() {
                 
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-3">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">Uploaded Documents</span>
-                      </div>
-                      <StatusBadge status="completed" className="text-xs py-0 px-2 h-5">
-                        <span>{uploadedDocuments.length} file{uploadedDocuments.length !== 1 ? 's' : ''}</span>
-                      </StatusBadge>
-                    </div>
-                    <div className="max-h-40 overflow-y-auto border rounded-md p-2">
-                      {uploadedDocuments.map((doc, index) => (
-                        <div key={index} className="text-xs flex items-center justify-between py-1.5 px-2 border-b last:border-0 hover:bg-muted/50">
-                          <span className="truncate max-w-[200px]">{doc.name}</span>
-                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-[10px]">
-                            View
-                          </a>
-                        </div>
-                      ))}
-                    </div>
+                    <DocumentList 
+                      documents={uploadedDocuments}
+                      onRemove={handleRemoveDocument}
+                    />
                   </div>
                 )}
               </div>

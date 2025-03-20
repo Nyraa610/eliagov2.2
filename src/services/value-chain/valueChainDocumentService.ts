@@ -69,6 +69,88 @@ export const valueChainDocumentService = {
   },
   
   /**
+   * Get all documents for the current user or specified company
+   * @param companyId Optional company ID to get documents for
+   * @returns Array of document objects with URLs and names
+   */
+  async getDocuments(companyId?: string): Promise<{ url: string; name: string }[]> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error("Authentication required to access documents");
+      }
+      
+      const folderPrefix = companyId || user.user.id;
+      
+      // List files in the user's folder
+      const { data, error } = await supabase.storage
+        .from('value_chain_documents')
+        .list(folderPrefix);
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      // Get public URLs for each file
+      const documents = data.map(file => {
+        const filePath = `${folderPrefix}/${file.name}`;
+        const { data: urlData } = supabase.storage
+          .from('value_chain_documents')
+          .getPublicUrl(filePath);
+          
+        return {
+          url: urlData.publicUrl,
+          name: file.name.substring(file.name.indexOf('-') + 1).replace(/_/g, ' ')
+        };
+      });
+      
+      return documents;
+    } catch (error) {
+      console.error("Error getting documents:", error);
+      return [];
+    }
+  },
+  
+  /**
+   * Delete a document by its URL
+   * @param url URL of the document to delete
+   * @returns Boolean indicating success
+   */
+  async deleteDocument(url: string): Promise<boolean> {
+    try {
+      // Extract the path from the URL
+      const urlObj = new URL(url);
+      const pathSegments = urlObj.pathname.split('/');
+      const bucketName = pathSegments[1]; // Should be value_chain_documents
+      
+      // The file path is everything after the bucket name
+      const filePath = pathSegments.slice(2).join('/');
+      
+      if (bucketName !== 'value_chain_documents') {
+        throw new Error("Invalid document URL");
+      }
+      
+      const { error } = await supabase.storage
+        .from('value_chain_documents')
+        .remove([filePath]);
+        
+      if (error) {
+        throw error;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("Failed to delete document");
+      return false;
+    }
+  },
+  
+  /**
    * Process documents to extract text and context for AI analysis
    * This is a placeholder for future implementation
    */

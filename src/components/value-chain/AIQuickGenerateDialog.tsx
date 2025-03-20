@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, Wand2, FileText } from "lucide-react";
+import { DocumentList } from "./DocumentList";
 
 interface AIQuickGenerateDialogProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface AIQuickGenerateDialogProps {
   isGenerating: boolean;
   progress: number;
   hasDocuments?: boolean;
+  documents?: { name: string; url: string }[];
 }
 
 export function AIQuickGenerateDialog({
@@ -22,7 +24,8 @@ export function AIQuickGenerateDialog({
   onGenerate,
   isGenerating,
   progress,
-  hasDocuments = false
+  hasDocuments = false,
+  documents = []
 }: AIQuickGenerateDialogProps) {
   const [prompt, setPrompt] = useState<string>("");
 
@@ -70,6 +73,13 @@ export function AIQuickGenerateDialog({
                 <span>Your uploaded documents will be analyzed to enhance the generated value chain.</span>
               </div>
             </div>
+          )}
+          
+          {documents && documents.length > 0 && (
+            <DocumentList 
+              documents={documents} 
+              className="mt-2"
+            />
           )}
 
           {isGenerating && (
