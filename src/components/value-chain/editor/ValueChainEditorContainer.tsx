@@ -1,18 +1,14 @@
 
-import { useRef, useState } from "react";
-import { ValueChainData, AIGenerationPrompt } from "@/types/valueChain";
+import { ValueChainData } from "@/types/valueChain";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
-import { NodeEditPanel } from "../NodeEditPanel";
-import { ValueChainToolbar } from "../ValueChainToolbar";
-import { ReactFlowCanvas } from "./ReactFlowCanvas";
 import { useValueChainNodes } from "./useValueChainNodes";
 import { useValueChainActions } from "./useValueChainActions";
-import { toast } from "sonner";
-import { EmptyStateGuide } from "./components/EmptyStateGuide";
-import { GenerationProgressBar } from "./components/GenerationProgressBar";
-import { EditorLayout } from "./components/EditorLayout";
 import { DialogManager } from "./components/DialogManager";
-import { valueChainService } from "@/services/value-chain";
+import { EditorContent } from "./components/EditorContent";
+import { useDialogState } from "./hooks/useDialogState";
+import { useDocumentUpload } from "./hooks/useDocumentUpload";
+import { useGenerationProgress } from "./hooks/useGenerationProgress";
+import { useAutomatedValueChain } from "./hooks/useAutomatedValueChain";
 
 // Import react-flow styles - IMPORTANT!
 import "@xyflow/react/dist/style.css";
@@ -23,14 +19,12 @@ interface ValueChainEditorContainerProps {
 }
 
 export function ValueChainEditorContainer({ initialData }: ValueChainEditorContainerProps) {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isAutomatedBuilderOpen, setIsAutomatedBuilderOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingProgress, setGeneratingProgress] = useState(0);
   const { company } = useCompanyProfile();
-  const [uploadedDocuments, setUploadedDocuments] = useState<File[]>([]);
+  
+  // Use custom hooks for state management
+  const dialogState = useDialogState();
+  const documentUpload = useDocumentUpload();
+  const generationProgress = useGenerationProgress();
 
   const {
     nodes,
@@ -55,8 +49,7 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     handleClear,
     handleZoomIn,
     handleZoomOut,
-    handleReset,
-    handleGenerateAI
+    handleReset
   } = useValueChainActions({
     nodes,
     edges,
@@ -66,147 +59,56 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     company
   });
 
-  const onGenerateWithAI = async (prompt: AIGenerationPrompt) => {
-    return handleGenerateAI(prompt, setIsGenerating, setIsAIDialogOpen);
-  };
-
-  const handleDocumentUpload = (files: File[]) => {
-    setUploadedDocuments(files);
-    setIsUploadDialogOpen(false);
-    toast.success(`${files.length} document(s) uploaded successfully`);
-  };
-
-  const handleAutomatedValueChain = async (prompt: string, files: File[]) => {
-    setIsGenerating(true);
-    setIsAutomatedBuilderOpen(false);
-    
-    // Simulate progress updates
-    const interval = setInterval(() => {
-      setGeneratingProgress(prev => {
-        const newProgress = prev + 5;
-        return newProgress < 90 ? newProgress : 90;
-      });
-    }, 800);
-
-    try {
-      console.log("Starting automated value chain generation with prompt:", prompt);
-      console.log("Using company details:", company?.name, company?.industry, company?.country);
-      
-      // Add custom prompt for ESG reporting
-      const fullPrompt = `
-        Generate a value chain for ESG reporting purposes for ${company?.name || 'Company'}.
-        Industry: ${company?.industry || 'General'}
-        Location: ${company?.country || 'Global'}
-        
-        Additional context: ${prompt}
-        
-        Please structure the value chain to highlight environmental, social, and governance aspects.
-      `;
-      
-      // Convert files to document URLs if needed
-      // In a real implementation, these would be uploaded and converted to URLs
-      const documentUrls: string[] = files.map(file => file.name);
-      
-      // Call the quick generate function from valueChainService
-      console.log("Calling quickGenerateValueChain with prompt:", fullPrompt);
-      const result = await valueChainService.quickGenerateValueChain(fullPrompt, documentUrls);
-      
-      if (result) {
-        console.log("Generation successful, received data:", result);
-        // Update the nodes and edges
-        setNodes(result.nodes);
-        setEdges(result.edges);
-        setSelectedNode(null);
-        
-        // Set progress to 100%
-        setGeneratingProgress(100);
-        
-        toast.success("Value chain generated successfully!");
-      } else {
-        console.error("Generation failed - no result returned");
-        toast.error("Failed to generate value chain");
-      }
-    } catch (error) {
-      console.error("Error generating automated value chain:", error);
-      toast.error("Failed to generate value chain");
-    } finally {
-      // Clean up
-      clearInterval(interval);
-      
-      // Reset progress after a short delay
-      setTimeout(() => {
-        setGeneratingProgress(0);
-        setIsGenerating(false);
-      }, 1000);
-    }
-  };
+  // Custom hook for automated value chain generation
+  const { onGenerateWithAI, handleAutomatedValueChain } = useAutomatedValueChain({
+    setIsGenerating: generationProgress.setIsGenerating,
+    setGeneratingProgress: generationProgress.setGeneratingProgress,
+    setNodes,
+    setEdges,
+    setSelectedNode,
+    setIsAIDialogOpen: dialogState.setIsAIDialogOpen,
+    company
+  });
 
   return (
     <div className="h-[calc(100vh-200px)] min-h-[800px]">
-      {!nodes.length && !isGenerating && (
-        <EmptyStateGuide
-          onOpenAIDialog={() => setIsAIDialogOpen(true)}
-          onOpenAutomatedBuilder={() => setIsAutomatedBuilderOpen(true)}
-          onOpenUploadDialog={() => setIsUploadDialogOpen(true)}
-        />
-      )}
-      
-      <div className="mb-4">
-        <ValueChainToolbar
-          onAddNode={handleAddNode}
-          onSave={handleSave}
-          onExport={handleExport}
-          onImport={handleImport}
-          onClear={handleClear}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onReset={handleReset}
-          onGenerateAI={() => setIsAIDialogOpen(true)}
-          onUploadDocuments={() => setIsUploadDialogOpen(true)}
-          onAutomatedBuilder={() => setIsAutomatedBuilderOpen(true)}
-        />
-      </div>
-      
-      <GenerationProgressBar 
-        isGenerating={isGenerating} 
-        progress={generatingProgress} 
-      />
-      
-      <EditorLayout
-        flowRef={reactFlowWrapper}
-        flowCanvas={
-          <ReactFlowCanvas
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onNodeClick={onNodeClick}
-          />
-        }
-        sidePanel={
-          selectedNode && (
-            <NodeEditPanel
-              selectedNode={selectedNode}
-              onUpdate={handleUpdateNode}
-              onClose={() => setSelectedNode(null)}
-            />
-          )
-        }
+      <EditorContent
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        selectedNode={selectedNode}
+        handleUpdateNode={handleUpdateNode}
+        handleAddNode={handleAddNode}
+        handleSave={handleSave}
+        handleExport={handleExport}
+        handleImport={handleImport}
+        handleClear={handleClear}
+        handleZoomIn={handleZoomIn}
+        handleZoomOut={handleZoomOut}
+        handleReset={handleReset}
+        isGenerating={generationProgress.isGenerating}
+        generatingProgress={generationProgress.generatingProgress}
+        onGenerateAI={() => dialogState.setIsAIDialogOpen(true)}
+        onUploadDocuments={() => dialogState.setIsUploadDialogOpen(true)}
+        onAutomatedBuilder={() => dialogState.setIsAutomatedBuilderOpen(true)}
+        setSelectedNode={setSelectedNode}
       />
       
       <DialogManager
-        isAIDialogOpen={isAIDialogOpen}
-        setIsAIDialogOpen={setIsAIDialogOpen}
-        isUploadDialogOpen={isUploadDialogOpen}
-        setIsUploadDialogOpen={setIsUploadDialogOpen}
-        isAutomatedBuilderOpen={isAutomatedBuilderOpen}
-        setIsAutomatedBuilderOpen={setIsAutomatedBuilderOpen}
-        isGenerating={isGenerating}
+        isAIDialogOpen={dialogState.isAIDialogOpen}
+        setIsAIDialogOpen={dialogState.setIsAIDialogOpen}
+        isUploadDialogOpen={dialogState.isUploadDialogOpen}
+        setIsUploadDialogOpen={dialogState.setIsUploadDialogOpen}
+        isAutomatedBuilderOpen={dialogState.isAutomatedBuilderOpen}
+        setIsAutomatedBuilderOpen={dialogState.setIsAutomatedBuilderOpen}
+        isGenerating={generationProgress.isGenerating}
         companyName={company?.name || ''}
         industry={company?.industry || ''}
         location={company?.country || ''}
         onGenerateWithAI={onGenerateWithAI}
-        onDocumentUpload={handleDocumentUpload}
+        onDocumentUpload={documentUpload.handleDocumentUpload}
         onAutomatedValueChain={handleAutomatedValueChain}
       />
     </div>
