@@ -11,6 +11,8 @@ export function useValueChainPage() {
   const {
     uploadedDocuments,
     isUploading,
+    isLoading: isDocumentsLoading,
+    error: documentsError,
     uploadProgress,
     loadDocuments,
     handleDocumentUpload,
@@ -37,7 +39,7 @@ export function useValueChainPage() {
     if (isAuth && !loading && companyId) {
       loadDocuments();
     }
-  }, [isAuth, loading, companyId]);
+  }, [isAuth, loading, companyId, loadDocuments]);
 
   // Wrapper for the quick generate function to pass document URLs
   const handleValueChainGenerate = async (prompt: string) => {
@@ -60,6 +62,8 @@ export function useValueChainPage() {
     uploadedDocuments,
     uploadProgress,
     generationProgress,
+    isDocumentsLoading,
+    documentsError,
     handleOpenUploadDialog,
     handleOpenAIDialog,
     handleDocumentUpload,

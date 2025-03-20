@@ -17,10 +17,15 @@ export const documentBaseService = {
       
       const bucketExists = buckets?.some(b => b.name === 'value_chain_documents');
       if (!bucketExists) {
+        // If creating through the client fails due to RLS, we'll handle this on the server
         const { error: createBucketError } = await supabase.storage.createBucket('value_chain_documents', {
           public: true
         });
-        if (createBucketError) throw createBucketError;
+        
+        if (createBucketError) {
+          console.error("Error creating bucket:", createBucketError);
+          return false;
+        }
       }
       
       return true;

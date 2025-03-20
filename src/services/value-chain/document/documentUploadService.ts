@@ -31,50 +31,66 @@ export const documentUploadService = {
       // Ensure the bucket exists
       const bucketExists = await documentBaseService.ensureDocumentBucketExists();
       if (!bucketExists) {
-        throw new Error("Failed to ensure storage bucket exists");
+        console.warn("Bucket doesn't exist, but we'll try to upload anyway");
       }
       
       // Upload each file
       const uploadPromises = files.map(async (file) => {
-        const folderPrefix = userCompanyId;
-        const filePath = `${folderPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('value_chain_documents')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
+        try {
+          const folderPrefix = userCompanyId;
+          const filePath = `${folderPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('value_chain_documents')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error(`Error uploading file ${file.name}:`, uploadError);
+            throw uploadError;
+          }
+          
+          const { data: urlData } = supabase.storage
+            .from('value_chain_documents')
+            .getPublicUrl(filePath);
+            
+          // Save document metadata to the database
+          const { error: insertError } = await supabase.from('company_documents').insert({
+            company_id: userCompanyId,
+            name: file.name,
+            file_type: file.type,
+            file_size: file.size,
+            url: urlData.publicUrl,
+            uploaded_by: user.user.id,
+            document_type: 'value_chain'
           });
           
-        if (uploadError) {
-          console.error(`Error uploading file ${file.name}:`, uploadError);
-          throw uploadError;
-        }
-        
-        const { data: urlData } = supabase.storage
-          .from('value_chain_documents')
-          .getPublicUrl(filePath);
+          if (insertError) {
+            console.error("Error saving document metadata:", insertError);
+            throw insertError;
+          }
           
-        // Save document metadata to the database
-        const { error: insertError } = await supabase.from('company_documents').insert({
-          company_id: userCompanyId,
-          name: file.name,
-          file_type: file.type,
-          file_size: file.size,
-          url: urlData.publicUrl,
-          uploaded_by: user.user.id,
-          document_type: 'value_chain'
-        });
-        
-        if (insertError) {
-          console.error("Error saving document metadata:", insertError);
-          throw insertError;
+          // Return the public URL for the file
+          return urlData.publicUrl;
+        } catch (error) {
+          console.error(`Error processing file ${file.name}:`, error);
+          toast.error(`Failed to upload ${file.name}`);
+          return null;
         }
-        
-        return urlData.publicUrl;
       });
       
-      const documentUrls = await Promise.all(uploadPromises);
+      const results = await Promise.all(uploadPromises);
+      const documentUrls = results.filter(url => url !== null) as string[];
+      
+      if (documentUrls.length === 0 && files.length > 0) {
+        toast.error("Failed to upload any documents");
+      } else if (documentUrls.length < files.length) {
+        toast.warning(`Uploaded ${documentUrls.length} of ${files.length} documents`);
+      } else {
+        toast.success(`Uploaded ${documentUrls.length} document(s) successfully`);
+      }
       
       return documentUrls;
     } catch (error) {

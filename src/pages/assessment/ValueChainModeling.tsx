@@ -23,6 +23,8 @@ export default function ValueChainModeling() {
     uploadedDocuments,
     uploadProgress,
     generationProgress,
+    isDocumentsLoading,
+    documentsError,
     handleOpenUploadDialog,
     handleOpenAIDialog,
     handleDocumentUpload,
@@ -55,11 +57,13 @@ export default function ValueChainModeling() {
         generationProgress={generationProgress}
       />
       
-      {/* Always display DocumentsSection, it will show "No documents" message when empty */}
+      {/* Always display DocumentsSection with loading and error states */}
       <DocumentsSection 
         documents={uploadedDocuments}
         onRemoveDocument={handleRemoveDocument}
         companyId={companyId}
+        isLoading={isDocumentsLoading}
+        error={documentsError}
       />
 
       <AuthGate isAuthenticated={isAuth} />

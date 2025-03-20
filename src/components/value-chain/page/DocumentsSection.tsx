@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { DocumentList } from "@/components/value-chain/DocumentList";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Document {
   url: string;
@@ -13,9 +14,17 @@ interface DocumentsSectionProps {
   documents: Document[];
   onRemoveDocument: (index: number) => void;
   companyId?: string | null;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export function DocumentsSection({ documents, onRemoveDocument, companyId }: DocumentsSectionProps) {
+export function DocumentsSection({ 
+  documents, 
+  onRemoveDocument, 
+  companyId,
+  isLoading = false,
+  error = null
+}: DocumentsSectionProps) {
   return (
     <div className="mb-6">
       <Card>
@@ -31,7 +40,15 @@ export function DocumentsSection({ documents, onRemoveDocument, companyId }: Doc
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {documents.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-500 p-4">{error}</div>
+          ) : documents.length === 0 ? (
             <div className="text-center text-gray-500 p-4">No documents uploaded yet</div>
           ) : (
             <DocumentList 

@@ -6,21 +6,30 @@ import { toast } from "sonner";
 interface Document {
   url: string;
   name: string;
-  id?: string;
+  id: string;
 }
 
 export function useDocuments() {
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDocuments = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
       const documents = await valueChainService.getDocuments();
+      console.log("Documents loaded:", documents);
       setUploadedDocuments(documents);
     } catch (error) {
       console.error("Error loading documents:", error);
+      setError("Failed to load documents");
       toast.error("Failed to load documents");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -51,12 +60,8 @@ export function useDocuments() {
       setUploadProgress(100);
       
       if (uploadedUrls.length > 0) {
-        toast.success(`${files.length} document(s) uploaded successfully`);
-        
         // Reload documents to get the freshly uploaded ones
         await loadDocuments();
-      } else {
-        toast.error("Failed to upload documents");
       }
     } catch (error) {
       console.error("Error uploading documents:", error);
@@ -91,6 +96,8 @@ export function useDocuments() {
   return {
     uploadedDocuments,
     isUploading,
+    isLoading,
+    error,
     uploadProgress,
     loadDocuments,
     handleDocumentUpload,
