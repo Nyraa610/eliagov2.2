@@ -1,4 +1,3 @@
-
 import {
   createBrowserRouter,
   RouterProvider,
@@ -36,6 +35,7 @@ import NewCompany from "@/pages/company/NewCompany";
 import CompanySettings from "@/pages/company/CompanySettings";
 import Engagement from "@/pages/Engagement";
 import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
+import ValueChainResults from "@/pages/assessment/ValueChainResults";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -106,6 +106,10 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><ValueChainModeling /></ProtectedRoute>,
   },
   {
+    path: "/assessment/value-chain/results",
+    element: <ProtectedRoute><ValueChainResults /></ProtectedRoute>,
+  },
+  {
     path: "/training",
     element: <ProtectedRoute><Training /></ProtectedRoute>,
   },
@@ -165,7 +169,6 @@ const router = createBrowserRouter([
     path: "/company/:id",
     element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
   },
-  // Keep CompanySettings route for backward compatibility, but it will redirect to CompanyProfile
   {
     path: "/company/:id/settings",
     element: <ProtectedRoute><CompanySettings /></ProtectedRoute>,
