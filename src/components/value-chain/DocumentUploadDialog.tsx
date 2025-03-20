@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileCheck } from "lucide-react";
 import { UploadArea } from "./upload/UploadArea";
 import { FileList } from "./upload/FileList";
-import { FileValidator } from "./upload/FileValidator";
+import { useFileUpload } from "./upload/useFileUpload";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -18,77 +17,24 @@ export function DocumentUploadDialog({
   onOpenChange,
   onUpload
 }: DocumentUploadDialogProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [fileValidationStatus, setFileValidationStatus] = useState<{[key: string]: boolean}>({});
-
-  useEffect(() => {
-    const handleFileInputChange = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail?.target?.files) {
-        const newFiles = Array.from(customEvent.detail.target.files as FileList);
-        processNewFiles(newFiles);
-      }
-    };
-
-    document.addEventListener('fileInputChange', handleFileInputChange);
-    return () => {
-      document.removeEventListener('fileInputChange', handleFileInputChange);
-    };
-  }, []);
-
-  const processNewFiles = (newFiles: File[]) => {
-    const { validFiles, validationStatus } = FileValidator.validateFiles(newFiles);
-    
-    setFileValidationStatus(prev => ({...prev, ...validationStatus}));
-    setFiles(prev => [...prev, ...validFiles]);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      processNewFiles(newFiles);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files) {
-      const droppedFiles = Array.from(e.dataTransfer.files);
-      processNewFiles(droppedFiles);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    const fileToRemove = files[index];
-    setFiles(files.filter((_, i) => i !== index));
-    
-    // Update validation status
-    const newValidationStatus = {...fileValidationStatus};
-    delete newValidationStatus[fileToRemove.name];
-    setFileValidationStatus(newValidationStatus);
-  };
+  const {
+    files,
+    isDragging,
+    handleFilesAdded,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    removeFile,
+    clearFiles
+  } = useFileUpload();
 
   const handleSubmit = () => {
     onUpload(files);
-    setFiles([]);
-    setFileValidationStatus({});
+    clearFiles();
   };
 
   const handleCancel = () => {
-    setFiles([]);
-    setFileValidationStatus({});
+    clearFiles();
     onOpenChange(false);
   };
 
@@ -107,6 +53,7 @@ export function DocumentUploadDialog({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onFilesSelected={handleFilesAdded}
         />
         
         <FileList files={files} onRemoveFile={removeFile} />

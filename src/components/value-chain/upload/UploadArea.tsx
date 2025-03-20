@@ -1,15 +1,39 @@
 
 import { Button } from "@/components/ui/button";
 import { FileUp } from "lucide-react";
+import { useRef } from "react";
 
 interface UploadAreaProps {
   isDragging: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
+  onFilesSelected: (files: File[]) => void;
+  acceptedFormats?: string;
 }
 
-export function UploadArea({ isDragging, onDragOver, onDragLeave, onDrop }: UploadAreaProps) {
+export function UploadArea({ 
+  isDragging, 
+  onDragOver, 
+  onDragLeave, 
+  onDrop, 
+  onFilesSelected,
+  acceptedFormats = ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+}: UploadAreaProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFiles = Array.from(e.target.files);
+      onFilesSelected(selectedFiles);
+      
+      // Reset the input to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div
       className={`border-2 border-dashed rounded-lg p-8 text-center ${
@@ -29,17 +53,17 @@ export function UploadArea({ isDragging, onDragOver, onDragLeave, onDrop }: Uplo
       <Button
         variant="outline"
         size="sm"
-        onClick={() => document.getElementById("file-upload")?.click()}
+        onClick={() => fileInputRef.current?.click()}
       >
         Browse Files
       </Button>
       <input
-        id="file-upload"
+        ref={fileInputRef}
         type="file"
         className="hidden"
-        accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+        accept={acceptedFormats}
         multiple
-        onChange={e => document.dispatchEvent(new CustomEvent('fileInputChange', { detail: e }))}
+        onChange={handleFileInputChange}
       />
     </div>
   );
