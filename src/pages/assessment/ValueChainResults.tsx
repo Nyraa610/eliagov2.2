@@ -5,9 +5,10 @@ import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check, FileText, Download } from "lucide-react";
+import { ArrowLeft, Check, FileText, Download, Plus } from "lucide-react";
 import { ValueChainData } from "@/types/valueChain";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export default function ValueChainResults() {
@@ -15,6 +16,7 @@ export default function ValueChainResults() {
   const location = useLocation();
   const [valueChainData, setValueChainData] = useState<ValueChainData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"view" | "create">("view");
 
   useEffect(() => {
     console.log("ValueChainResults: Component mounted");
@@ -43,11 +45,13 @@ export default function ValueChainResults() {
           setValueChainData(parsedData);
         } else {
           console.log("ValueChainResults: No data found in localStorage either");
-          toast.error("No value chain data found. Please generate a new value chain.");
+          // Still allow the user to create from scratch
+          setActiveTab("create");
         }
       } catch (error) {
         console.error("Error parsing saved value chain data:", error);
         toast.error("Error loading saved value chain data");
+        setActiveTab("create");
       }
       setLoading(false);
     }
@@ -102,7 +106,7 @@ export default function ValueChainResults() {
           </div>
           
           <div className="flex items-center gap-2">
-            {valueChainData && (
+            {valueChainData && activeTab === "view" && (
               <>
                 <Button 
                   variant="outline" 
@@ -135,55 +139,77 @@ export default function ValueChainResults() {
               <Skeleton className="h-[500px] w-full" />
             </CardContent>
           </Card>
-        ) : valueChainData ? (
-          <>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  AI Generated Value Chain
-                </CardTitle>
-                <CardDescription>
-                  Based on your documents and inputs, we've generated a value chain model for your business.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[600px]">
-                  <ValueChainEditor initialData={valueChainData} />
-                </div>
-              </CardContent>
-            </Card>
+        ) : (
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "view" | "create")} className="w-full">
+            <TabsList className="mb-4">
+              {valueChainData && (
+                <TabsTrigger value="view" className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  View Generated Value Chain
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="create" className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                Create/Edit Value Chain
+              </TabsTrigger>
+            </TabsList>
             
-            {valueChainData.metadata?.plantUml && (
+            {valueChainData && (
+              <TabsContent value="view">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      AI Generated Value Chain
+                    </CardTitle>
+                    <CardDescription>
+                      Based on your documents and inputs, we've generated a value chain model for your business.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[600px]">
+                      <ValueChainEditor initialData={valueChainData} />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {valueChainData.metadata?.plantUml && (
+                  <Card className="mt-6">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">PlantUML Diagram</CardTitle>
+                      <CardDescription>
+                        A UML representation of your value chain
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
+                        {valueChainData.metadata.plantUml}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            )}
+            
+            <TabsContent value="create">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">PlantUML Diagram</CardTitle>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Plus className="h-5 w-5 text-green-500" />
+                    Create Your Value Chain
+                  </CardTitle>
                   <CardDescription>
-                    A UML representation of your value chain
+                    Build a value chain model from scratch or modify an existing one
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
-                    {valueChainData.metadata.plantUml}
-                  </pre>
+                  <div className="h-[600px]">
+                    <ValueChainEditor initialData={null} />
+                  </div>
                 </CardContent>
               </Card>
-            )}
-          </>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>No Generated Value Chain Found</CardTitle>
-              <CardDescription>
-                Return to the Value Chain Editor to generate a new value chain.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleBackToEditor}>
-                Go to Value Chain Editor
-              </Button>
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </UserLayout>
