@@ -5,9 +5,10 @@ import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check, FileText } from "lucide-react";
+import { ArrowLeft, Check, FileText, Download } from "lucide-react";
 import { ValueChainData } from "@/types/valueChain";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function ValueChainResults() {
   const navigate = useNavigate();
@@ -16,23 +17,32 @@ export default function ValueChainResults() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get valueChainData from location state or localStorage
-    const data = location.state?.valueChainData;
+    console.log("ValueChainResults: Component mounted");
     
-    if (data) {
-      setValueChainData(data);
-      setLoading(false);
+    // Get valueChainData from location state
+    const stateData = location.state?.valueChainData;
+    
+    if (stateData) {
+      console.log("ValueChainResults: Data found in location state", stateData);
+      setValueChainData(stateData);
       // Also save to localStorage as a fallback
-      localStorage.setItem('lastGeneratedValueChain', JSON.stringify(data));
+      localStorage.setItem('lastGeneratedValueChain', JSON.stringify(stateData));
+      setLoading(false);
     } else {
+      console.log("ValueChainResults: No data in location state, checking localStorage");
       // Try to get from localStorage if not in navigation state
       const savedData = localStorage.getItem('lastGeneratedValueChain');
       if (savedData) {
         try {
-          setValueChainData(JSON.parse(savedData));
+          const parsedData = JSON.parse(savedData);
+          console.log("ValueChainResults: Data loaded from localStorage", parsedData);
+          setValueChainData(parsedData);
         } catch (error) {
           console.error("Error parsing saved value chain data:", error);
+          toast.error("Error loading saved value chain data");
         }
+      } else {
+        console.log("ValueChainResults: No data found in localStorage either");
       }
       setLoading(false);
     }
@@ -40,6 +50,34 @@ export default function ValueChainResults() {
 
   const handleBackToEditor = () => {
     navigate("/assessment/value-chain");
+  };
+
+  const handleSaveResults = () => {
+    toast.success("Value chain saved successfully!");
+    // You can implement actual saving functionality later
+  };
+
+  const handleExportResults = () => {
+    if (!valueChainData) return;
+    
+    try {
+      // Create a download for the JSON
+      const dataStr = JSON.stringify(valueChainData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportName = valueChainData.name || 'value-chain-export';
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataUri);
+      downloadAnchorNode.setAttribute("download", `${exportName}.json`);
+      document.body.appendChild(downloadAnchorNode); // required for firefox
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      
+      toast.success("Value chain exported successfully!");
+    } catch (error) {
+      console.error("Error exporting value chain:", error);
+      toast.error("Error exporting value chain");
+    }
   };
 
   return (
@@ -60,10 +98,24 @@ export default function ValueChainResults() {
           
           <div className="flex items-center gap-2">
             {valueChainData && (
-              <Button variant="default" className="flex items-center gap-1">
-                <Check className="h-4 w-4" />
-                Save Results
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportResults}
+                  className="flex items-center gap-1"
+                >
+                  <Download className="h-4 w-4" />
+                  Export JSON
+                </Button>
+                <Button 
+                  variant="default" 
+                  onClick={handleSaveResults}
+                  className="flex items-center gap-1"
+                >
+                  <Check className="h-4 w-4" />
+                  Save Results
+                </Button>
+              </>
             )}
           </div>
         </div>

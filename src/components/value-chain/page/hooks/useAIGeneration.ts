@@ -3,10 +3,12 @@ import { useState } from "react";
 import { valueChainService } from "@/services/value-chain";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { ValueChainData } from "@/types/valueChain";
 
 export function useAIGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [generatedData, setGeneratedData] = useState<ValueChainData | null>(null);
   const navigate = useNavigate();
 
   const handleQuickGenerate = async (prompt: string, documentUrls: string[]) => {
@@ -22,6 +24,9 @@ export function useAIGeneration() {
         });
       }, 500);
       
+      console.log("Calling quick generate value chain with prompt:", prompt);
+      console.log("Document URLs:", documentUrls);
+      
       // Call the value chain generator with the prompt
       const result = await valueChainService.quickGenerateValueChain(prompt, documentUrls);
       
@@ -29,7 +34,12 @@ export function useAIGeneration() {
       setGenerationProgress(100);
       
       if (result) {
+        console.log("Value chain generated successfully:", result);
+        setGeneratedData(result);
         toast.success("Value chain generated successfully!");
+        
+        // Save to localStorage before navigation
+        localStorage.setItem('lastGeneratedValueChain', JSON.stringify(result));
         
         // Navigate to the results page with the generated data
         setTimeout(() => {
@@ -40,6 +50,7 @@ export function useAIGeneration() {
         
         return true;
       } else {
+        console.error("Failed to generate value chain - no result returned");
         toast.error("Failed to generate value chain");
         return false;
       }
@@ -58,6 +69,7 @@ export function useAIGeneration() {
   return {
     isGenerating,
     generationProgress,
+    generatedData,
     handleQuickGenerate
   };
 }
