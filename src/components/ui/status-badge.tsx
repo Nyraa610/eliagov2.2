@@ -63,12 +63,14 @@ interface StatusBadgeProps {
   status: FeatureStatus;
   showIcon?: boolean;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export function StatusBadge({ 
   status, 
   showIcon = true, 
-  className 
+  className,
+  children
 }: StatusBadgeProps) {
   const statusInfo = statusConfig[status];
   
@@ -82,7 +84,7 @@ export function StatusBadge({
       )}
     >
       {showIcon && <StatusIcon status={status} />}
-      {statusInfo.label}
+      {children || statusInfo.label}
     </Badge>
   );
 }
