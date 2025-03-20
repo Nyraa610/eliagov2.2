@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export const useSupabaseStorage = () => {
@@ -7,15 +7,48 @@ export const useSupabaseStorage = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<Error | null>(null);
   
+  useEffect(() => {
+    // Ensure required buckets exist on component mount
+    const createRequiredBuckets = async () => {
+      try {
+        // Get list of buckets
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+        
+        if (bucketsError) {
+          console.error("Error listing buckets:", bucketsError);
+          return;
+        }
+        
+        // Check if our bucket exists
+        const valueChainBucketExists = buckets?.some(b => b.name === 'value_chain_documents');
+        
+        if (!valueChainBucketExists) {
+          console.log("Creating value_chain_documents bucket...");
+          
+          const { error: createError } = await supabase.storage.createBucket('value_chain_documents', {
+            public: true
+          });
+          
+          if (createError) {
+            console.error("Error creating bucket:", createError);
+          } else {
+            console.log("Bucket 'value_chain_documents' created successfully");
+          }
+        }
+      } catch (err) {
+        console.error("Error initializing storage buckets:", err);
+      }
+    };
+    
+    createRequiredBuckets();
+  }, []);
+  
   const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
     try {
-      console.log(`Checking if bucket '${bucketName}' exists...`);
-      
       // Get list of buckets
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
       
       if (bucketsError) {
-        console.error("Error listing buckets:", bucketsError);
         throw bucketsError;
       }
       
@@ -23,22 +56,15 @@ export const useSupabaseStorage = () => {
       const bucketExists = buckets?.some(b => b.name === bucketName);
       
       if (!bucketExists) {
-        console.log(`Creating bucket '${bucketName}'...`);
-        
         const { error: createError } = await supabase.storage.createBucket(bucketName, {
           public: true
         });
         
         if (createError) {
-          console.error(`Error creating bucket '${bucketName}':`, createError);
           throw createError;
         }
-        
-        console.log(`Bucket '${bucketName}' created successfully.`);
-        return true;
       }
       
-      console.log(`Bucket '${bucketName}' already exists.`);
       return true;
     } catch (err) {
       console.error(`Error ensuring bucket '${bucketName}' exists:`, err);
@@ -60,8 +86,6 @@ export const useSupabaseStorage = () => {
       // Ensure bucket exists
       await ensureBucketExists(bucketName);
       
-      console.log(`Uploading file to ${bucketName}/${filePath}...`);
-      
       // Upload file
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -71,11 +95,8 @@ export const useSupabaseStorage = () => {
         });
       
       if (uploadError) {
-        console.error(`Error uploading to ${bucketName}/${filePath}:`, uploadError);
         throw uploadError;
       }
-      
-      console.log(`File uploaded successfully to ${bucketName}/${filePath}.`);
       
       // Get public URL
       const { data } = supabase.storage
@@ -85,8 +106,6 @@ export const useSupabaseStorage = () => {
       if (!data || !data.publicUrl) {
         throw new Error(`Failed to get public URL for ${bucketName}/${filePath}`);
       }
-      
-      console.log(`Public URL: ${data.publicUrl}`);
       
       return data.publicUrl;
     } catch (err) {

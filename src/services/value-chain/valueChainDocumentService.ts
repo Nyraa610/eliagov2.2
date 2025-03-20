@@ -51,8 +51,6 @@ export const valueChainDocumentService = {
         const folderPrefix = userCompanyId;
         const filePath = `${folderPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
-        console.log(`Uploading file ${file.name} to ${filePath}`);
-        
         const { error: uploadError, data: uploadData } = await supabase.storage
           .from('value_chain_documents')
           .upload(filePath, file, {
@@ -69,10 +67,8 @@ export const valueChainDocumentService = {
           .from('value_chain_documents')
           .getPublicUrl(filePath);
           
-        console.log(`Successfully uploaded file ${file.name}, URL: ${urlData.publicUrl}`);
-        
         // Save document metadata to the database
-        await supabase.from('company_documents').insert({
+        const { error: insertError } = await supabase.from('company_documents').insert({
           company_id: userCompanyId,
           name: file.name,
           file_type: file.type,
@@ -81,6 +77,11 @@ export const valueChainDocumentService = {
           uploaded_by: user.user.id,
           document_type: 'value_chain'
         });
+        
+        if (insertError) {
+          console.error("Error saving document metadata:", insertError);
+          throw insertError;
+        }
         
         return urlData.publicUrl;
       });
@@ -100,11 +101,11 @@ export const valueChainDocumentService = {
    * @param companyId Optional company ID to get documents for
    * @returns Array of document objects with URLs and names
    */
-  async getDocuments(companyId?: string): Promise<{ url: string; name: string }[]> {
+  async getDocuments(companyId?: string): Promise<{ url: string; name: string; id: string }[]> {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
-        throw new Error("Authentication required to access documents");
+        return [];
       }
       
       // Get user's company if not provided
@@ -123,7 +124,7 @@ export const valueChainDocumentService = {
         }
       }
       
-      // Get documents from the database instead of storage
+      // Get documents from the database
       const { data, error } = await supabase
         .from('company_documents')
         .select('*')
@@ -131,21 +132,16 @@ export const valueChainDocumentService = {
         .eq('document_type', 'value_chain');
         
       if (error) {
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
+        console.error("Error fetching documents:", error);
         return [];
       }
       
-      // Format the response to match the expected interface
-      const documents = data.map(doc => ({
+      // Format the response
+      return data.map(doc => ({
         url: doc.url,
         name: doc.name,
         id: doc.id
       }));
-      
-      return documents;
     } catch (error) {
       console.error("Error getting documents:", error);
       return [];
@@ -174,22 +170,20 @@ export const valueChainDocumentService = {
       const urlObj = new URL(url);
       const pathSegments = urlObj.pathname.split('/');
       
-      // The file path is everything after the bucket name
+      // The file path is everything after the bucket name in the URL path
       const bucketPath = pathSegments.slice(1);
       const bucketName = bucketPath[0]; // Should be value_chain_documents
       const filePath = bucketPath.slice(1).join('/');
       
-      if (bucketName !== 'value_chain_documents') {
-        throw new Error("Invalid document URL");
-      }
-      
       // Remove the file from storage
-      const { error: storageError } = await supabase.storage
-        .from('value_chain_documents')
-        .remove([filePath]);
-        
-      if (storageError) {
-        console.error("Error removing from storage:", storageError);
+      if (bucketName === 'value_chain_documents') {
+        const { error: storageError } = await supabase.storage
+          .from('value_chain_documents')
+          .remove([filePath]);
+          
+        if (storageError) {
+          console.error("Error removing from storage:", storageError);
+        }
       }
       
       // Remove the document from the database
@@ -208,15 +202,5 @@ export const valueChainDocumentService = {
       toast.error("Failed to delete document");
       return false;
     }
-  },
-  
-  /**
-   * Process documents to extract text and context for AI analysis
-   * This is a placeholder for future implementation
-   */
-  async processDocuments(documentUrls: string[]): Promise<string> {
-    // This would ideally extract text from PDFs, analyze images, etc.
-    // For now, we'll just return the URLs as context
-    return `Supporting documents provided: ${documentUrls.join(', ')}`;
   }
 };
