@@ -42,6 +42,8 @@ export function DialogManager({
         onOpenChange={setIsAIDialogOpen}
         onGenerate={onGenerateWithAI}
         isGenerating={isGenerating}
+        companyName={companyName}
+        industry={industry}
       />
       
       <DocumentUploadDialog
