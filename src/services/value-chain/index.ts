@@ -22,7 +22,6 @@ export const valueChainService = {
   
   // Document operations
   uploadDocuments: valueChainDocumentService.uploadDocuments,
-  processDocuments: valueChainDocumentService.processDocuments,
   getDocuments: valueChainDocumentService.getDocuments,
   deleteDocument: valueChainDocumentService.deleteDocument,
   
