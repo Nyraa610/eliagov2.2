@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
@@ -10,7 +9,7 @@ type AuthContextType = {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: any | null }>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<Session | null>;
 };
@@ -117,38 +116,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
-      console.log("AuthProvider: Signing up user with email:", email);
+      console.log("AuthContext: Attempting to sign up:", email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: metadata || {},
+        },
       });
       
       if (error) {
-        console.error("AuthProvider: Sign up error:", error.message);
-        toast({
-          variant: "destructive",
-          title: "Registration failed",
-          description: error.message,
-        });
+        console.error("AuthContext: Sign up error:", error.message);
         return { error };
       }
       
-      console.log("AuthProvider: User signed up successfully");
-      toast({
-        title: "Registration successful",
-        description: "Please check your email to confirm your account",
-      });
-      return { error: null };
+      console.log("AuthContext: Sign up successful:", data.user?.id);
+      return { data, error: null };
     } catch (error: any) {
-      console.error("AuthProvider: Exception during sign up:", error);
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: error.message || "An unexpected error occurred",
-      });
-      return { error };
+      console.error("AuthContext: Sign up exception:", error);
+      return { data: null, error };
     }
   };
 
