@@ -35,6 +35,8 @@ export const valueChainDocumentService = {
         const folderPrefix = companyId || user.user.id;
         const filePath = `${folderPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         
+        console.log(`Uploading file ${file.name} to ${filePath}`);
+        
         const { error: uploadError } = await supabase.storage
           .from('value_chain_documents')
           .upload(filePath, file, {
@@ -42,18 +44,22 @@ export const valueChainDocumentService = {
             upsert: true
           });
           
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error(`Error uploading file ${file.name}:`, uploadError);
+          throw uploadError;
+        }
         
         const { data: urlData } = supabase.storage
           .from('value_chain_documents')
           .getPublicUrl(filePath);
           
+        console.log(`Successfully uploaded file ${file.name}, URL: ${urlData.publicUrl}`);
+        
         return urlData.publicUrl;
       });
       
       const documentUrls = await Promise.all(uploadPromises);
       
-      toast.success(`${files.length} document${files.length > 1 ? 's' : ''} uploaded successfully`);
       return documentUrls;
     } catch (error) {
       console.error("Error uploading documents:", error);

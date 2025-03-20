@@ -3,7 +3,7 @@ import { UserLayout } from "@/components/user/UserLayout";
 import { ValueChainEditor } from "@/components/value-chain/ValueChainEditor";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileUp, Wand2 } from "lucide-react";
+import { ChevronLeft, FileUp, Wand2, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DocumentUploadDialog } from "@/components/value-chain/DocumentUploadDialog";
 import { valueChainService } from "@/services/value-chain";
 import { toast } from "sonner";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export default function ValueChainModeling() {
   const { toast: uiToast } = useToast();
@@ -19,6 +20,7 @@ export default function ValueChainModeling() {
   const [isAuth, setIsAuth] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedDocuments, setUploadedDocuments] = useState<{ url: string; name: string }[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -63,6 +65,13 @@ export default function ValueChainModeling() {
       const documentUrls = await valueChainService.uploadDocuments(files);
       
       if (documentUrls.length > 0) {
+        // Map file names to URLs
+        const newDocuments = documentUrls.map((url, index) => ({
+          url,
+          name: files[index].name
+        }));
+        
+        setUploadedDocuments(prev => [...prev, ...newDocuments]);
         toast.success(`Successfully uploaded ${files.length} document${files.length > 1 ? 's' : ''}`);
       } else {
         toast.error("Failed to upload documents");
@@ -139,10 +148,36 @@ export default function ValueChainModeling() {
                   variant="outline" 
                   size="sm" 
                   className="mt-3 w-full"
+                  disabled={isUploading}
                 >
-                  <FileUp className="h-4 w-4 mr-2" />
-                  Upload Documents
+                  {isUploading ? (
+                    <>
+                      <span className="animate-pulse">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="h-4 w-4 mr-2" />
+                      Upload Documents
+                    </>
+                  )}
                 </Button>
+                
+                {uploadedDocuments.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium">Uploaded Documents ({uploadedDocuments.length})</span>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+                      {uploadedDocuments.map((doc, index) => (
+                        <div key={index} className="text-xs flex items-center justify-between py-1 border-b last:border-0">
+                          <span className="truncate max-w-[200px]">{doc.name}</span>
+                          <StatusBadge status="completed" showIcon={false} className="text-[10px] py-0 px-2 h-5" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="border rounded-md p-3">
                 <div className="flex items-center gap-2 mb-2 font-medium text-foreground">
