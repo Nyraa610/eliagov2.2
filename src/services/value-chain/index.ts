@@ -2,7 +2,7 @@
 import { valueChainBaseService } from "./valueChainBaseService";
 import { valueChainAIService } from "./valueChainAIService";
 import { valueChainExportService } from "./valueChainExportService";
-import { valueChainDocumentService } from "./valueChainDocumentService";
+import { documentService } from "./document";
 
 /**
  * Value Chain Service - Main interface that combines all value chain related services
@@ -21,9 +21,9 @@ export const valueChainService = {
   exportAsJson: valueChainExportService.exportAsJson,
   
   // Document operations
-  uploadDocuments: valueChainDocumentService.uploadDocuments,
-  getDocuments: valueChainDocumentService.getDocuments,
-  deleteDocument: valueChainDocumentService.deleteDocument,
+  uploadDocuments: documentService.uploadDocuments,
+  getDocuments: documentService.getDocuments,
+  deleteDocument: documentService.deleteDocument,
   
   // Get a friendly list of acceptable document types
   getAcceptableDocumentTypes: () => ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
