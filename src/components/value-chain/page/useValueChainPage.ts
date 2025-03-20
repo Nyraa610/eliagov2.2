@@ -43,10 +43,20 @@ export function useValueChainPage() {
 
   // Wrapper for the quick generate function to pass document URLs
   const handleValueChainGenerate = async (prompt: string) => {
-    const result = await handleQuickGenerate(prompt, uploadedDocuments.map(doc => doc.url));
+    console.log("Starting value chain generation with prompt:", prompt);
+    const documentURLs = uploadedDocuments.map(doc => doc.url);
+    console.log("Using document URLs:", documentURLs);
+    
+    const result = await handleQuickGenerate(prompt, documentURLs);
+    
     if (result) {
+      console.log("Generation successful, closing dialog");
       setIsAIDialogOpen(false);
+    } else {
+      console.log("Generation failed, keeping dialog open");
     }
+    
+    return result;
   };
 
   return {

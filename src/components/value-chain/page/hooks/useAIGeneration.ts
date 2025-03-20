@@ -39,14 +39,20 @@ export function useAIGeneration() {
         toast.success("Value chain generated successfully!");
         
         // Save to localStorage before navigation
-        localStorage.setItem('lastGeneratedValueChain', JSON.stringify(result));
+        try {
+          localStorage.setItem('lastGeneratedValueChain', JSON.stringify(result));
+          console.log("Saved value chain data to localStorage");
+        } catch (storageError) {
+          console.error("Error saving to localStorage:", storageError);
+        }
         
-        // Navigate to the results page with the generated data
+        // Force a delay before navigation to ensure state updates have completed
         setTimeout(() => {
+          console.log("Navigating to results page...");
           navigate("/assessment/value-chain/results", { 
             state: { valueChainData: result }
           });
-        }, 1000);
+        }, 1500);
         
         return true;
       } else {

@@ -26,23 +26,28 @@ export default function ValueChainResults() {
       console.log("ValueChainResults: Data found in location state", stateData);
       setValueChainData(stateData);
       // Also save to localStorage as a fallback
-      localStorage.setItem('lastGeneratedValueChain', JSON.stringify(stateData));
+      try {
+        localStorage.setItem('lastGeneratedValueChain', JSON.stringify(stateData));
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
       setLoading(false);
     } else {
       console.log("ValueChainResults: No data in location state, checking localStorage");
       // Try to get from localStorage if not in navigation state
-      const savedData = localStorage.getItem('lastGeneratedValueChain');
-      if (savedData) {
-        try {
+      try {
+        const savedData = localStorage.getItem('lastGeneratedValueChain');
+        if (savedData) {
           const parsedData = JSON.parse(savedData);
           console.log("ValueChainResults: Data loaded from localStorage", parsedData);
           setValueChainData(parsedData);
-        } catch (error) {
-          console.error("Error parsing saved value chain data:", error);
-          toast.error("Error loading saved value chain data");
+        } else {
+          console.log("ValueChainResults: No data found in localStorage either");
+          toast.error("No value chain data found. Please generate a new value chain.");
         }
-      } else {
-        console.log("ValueChainResults: No data found in localStorage either");
+      } catch (error) {
+        console.error("Error parsing saved value chain data:", error);
+        toast.error("Error loading saved value chain data");
       }
       setLoading(false);
     }
