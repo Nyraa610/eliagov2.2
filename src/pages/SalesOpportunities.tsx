@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserLayout } from "@/components/user/UserLayout";
@@ -32,13 +31,11 @@ export default function SalesOpportunities() {
     refreshData
   } = useHubspotIntegration(id || "");
 
-  // Function to get initials from a name
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName && !lastName) return "??";
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`;
   };
   
-  // Function to get color based on score
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 50) return "bg-yellow-100 text-yellow-800";
