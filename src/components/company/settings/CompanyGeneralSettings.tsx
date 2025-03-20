@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Company } from "@/services/companyService";
@@ -11,9 +12,10 @@ import { companyService } from "@/services/company";
 
 interface CompanyGeneralSettingsProps {
   company: Company;
+  onCompanyUpdate?: (company: Company) => void;
 }
 
-export function CompanyGeneralSettings({ company }: CompanyGeneralSettingsProps) {
+export function CompanyGeneralSettings({ company, onCompanyUpdate }: CompanyGeneralSettingsProps) {
   const [registryDialogOpen, setRegistryDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
@@ -35,12 +37,17 @@ export function CompanyGeneralSettings({ company }: CompanyGeneralSettingsProps)
         country: "France"
       };
       
-      await companyService.updateCompany(company.id, updateData);
+      const updatedCompany = await companyService.updateCompany(company.id, updateData);
       
       toast({
         title: "Company Updated",
         description: "Official registry information has been updated successfully.",
       });
+      
+      // Call the onCompanyUpdate callback if it exists
+      if (onCompanyUpdate && updatedCompany) {
+        onCompanyUpdate(updatedCompany);
+      }
       
       setRegistryDialogOpen(false);
       window.location.reload();
