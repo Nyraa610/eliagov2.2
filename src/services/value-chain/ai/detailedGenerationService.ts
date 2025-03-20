@@ -1,6 +1,5 @@
 
 import { ValueChainData, AIGenerationPrompt } from "@/types/valueChain";
-import { aiService } from "@/services/aiService";
 import { aiPromptBuilder } from "./aiPromptBuilder";
 import { responseParser } from "./responseParser";
 import { toast } from "sonner";
@@ -36,8 +35,13 @@ export const detailedGenerationService = {
       
       console.log("Value chain generated:", data);
       
-      // Return the data directly as it's already in the right format
-      return data as ValueChainData;
+      // Process the data to ensure it has the correct format for ReactFlow
+      const processedData = responseParser.processEdgeFunctionResponse(data);
+      if (!processedData) {
+        throw new Error("Failed to process value chain data");
+      }
+      
+      return processedData;
     } catch (error) {
       console.error("Error generating value chain with AI:", error);
       toast.error("Failed to generate value chain");

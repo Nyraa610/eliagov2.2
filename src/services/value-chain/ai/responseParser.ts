@@ -71,7 +71,7 @@ function processValueChainData(data: any): ValueChainData {
     console.log("PlantUML diagram included in response");
   }
   
-  // Ensure all nodes have proper positioning
+  // Ensure all nodes have proper positioning and required data for ReactFlow
   const processedNodes = nodes.map((node, index) => {
     // If node is missing position, assign a default position based on type
     if (!node.position) {
@@ -95,12 +95,33 @@ function processValueChainData(data: any): ValueChainData {
       node.id = `${node.type || 'node'}-${Date.now()}-${index}`;
     }
     
+    // Ensure node has a data object with at least a label
+    if (!node.data) {
+      node.data = { label: node.label || `Node ${index}` };
+    } else if (!node.data.label) {
+      node.data.label = node.label || `Node ${index}`;
+    }
+    
+    // Ensure node has a type (required for ReactFlow rendering)
+    if (!node.type) {
+      node.type = node.data.type || 'primary';
+    }
+    
     return node;
+  });
+  
+  // Ensure all edges have necessary properties
+  const processedEdges = edges.map((edge, index) => {
+    if (!edge.id) {
+      edge.id = `edge-${Date.now()}-${index}`;
+    }
+    
+    return edge;
   });
   
   return {
     nodes: processedNodes,
-    edges,
+    edges: processedEdges,
     name: data.name || "AI Generated Value Chain",
     metadata: {
       plantUml: plantUml,

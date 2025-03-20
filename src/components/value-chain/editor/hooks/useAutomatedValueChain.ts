@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { valueChainService } from "@/services/value-chain";
 import { Company } from "@/services/company/types";
 import { AIGenerationPrompt } from "@/types/valueChain";
+import { aiPromptBuilder } from "@/services/value-chain/ai/aiPromptBuilder";
 
 interface UseAutomatedValueChainProps {
   setIsGenerating: (isGenerating: boolean) => void;
@@ -45,16 +46,14 @@ export function useAutomatedValueChain({
       
       console.log("Starting automated value chain generation for company:", company?.name);
       
-      // Call the valueChainService.quickGenerateValueChain which directly calls the edge function
-      const result = await valueChainService.quickGenerateValueChain(
-        aiPromptBuilder.buildValueChainPrompt(prompt),
-        {
-          companyName: prompt.companyName || company?.name || "Unknown",
-          industry: prompt.industry || company?.industry || "Unknown",
-          companyId: company?.id || "anonymous",
-          documentUrls: [] // No documents in this flow
-        }
-      );
+      // Call the valueChainService.generateValueChain which directly calls the edge function
+      const result = await valueChainService.generateValueChain({
+        companyName: prompt.companyName || company?.name || "Unknown",
+        industry: prompt.industry || company?.industry || "Unknown",
+        products: prompt.products || [],
+        services: prompt.services || [],
+        additionalInfo: prompt.additionalInfo || ''
+      });
       
       clearInterval(progressInterval);
       setGeneratingProgress(100);
@@ -91,5 +90,3 @@ export function useAutomatedValueChain({
     handleAutomatedValueChain
   };
 }
-
-import { aiPromptBuilder } from "@/services/value-chain/ai/aiPromptBuilder";
