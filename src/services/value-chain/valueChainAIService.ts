@@ -4,11 +4,12 @@ import { ValueChainData, AIGenerationPrompt } from "@/types/valueChain";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
-interface QuickGenerateParams {
+export interface QuickGenerateParams {
   companyName: string;
   industry: string;
   companyId: string;
   files?: File[];
+  documentUrls?: string[];
 }
 
 /**
@@ -172,14 +173,15 @@ export const valueChainAIService = {
     try {
       console.log("Initiating quick value chain generation with AI");
       
-      let documentUrls: string[] = [];
+      let documentUrls: string[] = params.documentUrls || [];
       
       // Process uploaded files if any
       if (params.files && params.files.length > 0) {
         // Here you would typically upload the files to storage and get their URLs
         // For now we'll just log them
         console.log(`Processing ${params.files.length} files for context`);
-        documentUrls = params.files.map(file => file.name);
+        const fileNames = params.files.map(file => file.name);
+        documentUrls = [...documentUrls, ...fileNames];
       }
       
       // Call the Supabase Edge Function

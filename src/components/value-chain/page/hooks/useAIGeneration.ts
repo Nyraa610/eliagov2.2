@@ -28,7 +28,12 @@ export function useAIGeneration() {
       console.log("Document URLs:", documentUrls);
       
       // Call the value chain generator with the prompt
-      const result = await valueChainService.quickGenerateValueChain(prompt, documentUrls);
+      const result = await valueChainService.quickGenerateValueChain(prompt, {
+        companyName: "Unknown",  // Default values when user isn't associated with a company
+        industry: "Unknown",
+        companyId: "anonymous",
+        documentUrls: documentUrls // Pass as part of the object
+      });
       
       clearInterval(updateInterval);
       setGenerationProgress(100);
