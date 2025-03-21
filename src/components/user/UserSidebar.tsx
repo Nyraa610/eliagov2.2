@@ -147,32 +147,29 @@ export const UserSidebar = () => {
           {menuItems.map((item) => (
             <li key={item.path} className="flex flex-col">
               <div className="flex flex-col">
-                <Link 
-                  to={item.path}
-                  className={cn(
-                    "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
-                    location.pathname === item.path
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-gray-600 hover:bg-gray-100",
-                    collapsed ? "justify-center" : "justify-between",
-                    item.submenu && !collapsed ? "pr-2" : ""
-                  )}
-                >
-                  <div className="flex items-center">
-                    {item.icon}
-                    {!collapsed && <span className="ml-3">{item.title}</span>}
-                  </div>
-                  
-                  {!collapsed && item.submenu && (
+                {item.submenu && !collapsed ? (
+                  <div 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors cursor-pointer",
+                      location.pathname === item.path
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={() => toggleSubmenu(item.path)}
+                  >
+                    <div className="flex items-center flex-1">
+                      {item.icon}
+                      <span className="ml-3">{item.title}</span>
+                    </div>
                     <Button 
                       variant="ghost" 
                       size="icon" 
+                      className="h-5 w-5 p-0"
+                      tabIndex={-1}
                       onClick={(e) => {
-                        e.preventDefault();
                         e.stopPropagation();
                         toggleSubmenu(item.path);
                       }}
-                      className="h-5 w-5 p-0"
                     >
                       {expandedSubmenu === item.path ? (
                         <ChevronLeft className="h-4 w-4" />
@@ -180,8 +177,24 @@ export const UserSidebar = () => {
                         <ChevronRight className="h-4 w-4" />
                       )}
                     </Button>
-                  )}
-                </Link>
+                  </div>
+                ) : (
+                  <Link 
+                    to={item.path}
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      location.pathname === item.path
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-gray-600 hover:bg-gray-100",
+                      collapsed ? "justify-center" : "justify-between"
+                    )}
+                  >
+                    <div className="flex items-center">
+                      {item.icon}
+                      {!collapsed && <span className="ml-3">{item.title}</span>}
+                    </div>
+                  </Link>
+                )}
                 
                 {!collapsed && item.submenu && expandedSubmenu === item.path && (
                   <ul className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-2">
