@@ -1,15 +1,15 @@
 
 import { useState, useCallback } from "react";
+import { Node } from "@xyflow/react";
 import { toast } from "sonner";
 import { valueChainService } from "@/services/value-chain";
 import { Company } from "@/services/company/types";
-import { AIGenerationPrompt } from "@/types/valueChain";
-import { aiPromptBuilder } from "@/services/value-chain/ai/aiPromptBuilder";
+import { AIGenerationPrompt, NodeData } from "@/types/valueChain";
 
 interface UseAutomatedValueChainProps {
   setIsGenerating: (isGenerating: boolean) => void;
   setGeneratingProgress: React.Dispatch<React.SetStateAction<number>>;
-  setNodes: (nodes: any) => void;
+  setNodes: (nodes: Node<NodeData>[] | ((nds: Node<NodeData>[]) => Node<NodeData>[])) => void;
   setEdges: (edges: any) => void;
   setSelectedNode: (node: any) => void;
   setIsAIDialogOpen?: (isOpen: boolean) => void;
@@ -64,7 +64,7 @@ export function useAutomatedValueChain({
         
         // Short delay to show 100% before setting the new nodes/edges
         setTimeout(() => {
-          setNodes(result.nodes);
+          setNodes(result.nodes as Node<NodeData>[]);
           setEdges(result.edges);
           setSelectedNode(null);
           setIsGenerating(false);

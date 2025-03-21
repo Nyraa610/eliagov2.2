@@ -23,7 +23,7 @@ export function useValueChainActions({
   setSelectedNode,
   company
 }: UseValueChainActionsProps) {
-  const reactFlowInstance = useReactFlow<NodeData>();
+  const reactFlowInstance = useReactFlow();
 
   const handleSave = useCallback(async () => {
     if (!company) {

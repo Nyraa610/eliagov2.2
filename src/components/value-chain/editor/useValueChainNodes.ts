@@ -15,7 +15,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
     if ((!initialData || initialData.nodes.length === 0) && nodes.length === 0) {
       console.log("Creating default value chain nodes");
       // Create a default simple value chain structure
-      const defaultNodes: ValueChainNode[] = [
+      const defaultNodes: Node<NodeData>[] = [
         {
           id: 'primary-1',
           type: 'primary',
@@ -60,7 +60,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       ];
 
-      setNodes(defaultNodes as Node<NodeData>[]);
+      setNodes(defaultNodes);
       setEdges(defaultEdges);
     }
   }, [initialData, nodes.length, setNodes, setEdges]);
@@ -91,7 +91,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
                 ...data
               },
               type: newType !== currentType ? newType : currentType
-            } as Node<NodeData>;
+            };
           }
           return node;
         })
@@ -104,7 +104,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Add a new node
   const handleAddNode = useCallback(
     (type: NodeType) => {
-      const newNode: ValueChainNode = {
+      const newNode: Node<NodeData> = {
         id: `${type}-${Date.now()}`,
         type,
         position: {
@@ -117,8 +117,8 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       };
       
-      setNodes((nds) => [...nds, newNode as Node<NodeData>]);
-      setSelectedNode(newNode);
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode as ValueChainNode);
     },
     [setNodes]
   );
