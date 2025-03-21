@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -33,10 +32,8 @@ export function Navigation() {
   const location = useLocation();
   const { isAuthenticated, isLoading: authLoading, user, signOut } = useAuth();
   
-  // Check if a route is active
   const isActive = (path: string) => location.pathname === path;
   
-  // Fetch user profile when authenticated
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!isAuthenticated || !user) {
@@ -60,11 +57,9 @@ export function Navigation() {
     fetchUserProfile();
   }, [isAuthenticated, user]);
   
-  // Handle logout
   const handleLogout = async () => {
     try {
       await signOut();
-      // No need to manually navigate - auth state change will trigger a redirect
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -79,7 +74,11 @@ export function Navigation() {
             to="/"
             className="flex items-center mr-6"
           >
-            <img src="/lovable-uploads/bf07f304-1895-4f5e-a378-715282528884.png" alt="Logo" className="h-8 w-8 mr-2" />
+            <img 
+              src="/lovable-uploads/68339245-bb39-49e9-befe-1c3bf86a589b.png" 
+              alt="Logo" 
+              className="h-8 w-8 mr-2" 
+            />
             <span className="font-bold text-primary hidden md:block">ELIA GO</span>
           </Link>
           

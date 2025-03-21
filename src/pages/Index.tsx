@@ -1,4 +1,3 @@
-
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -56,8 +55,8 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/lovable-uploads/bf07f304-1895-4f5e-a378-715282528884.png"
-                alt="Olive tree"
+                src="/lovable-uploads/68339245-bb39-49e9-befe-1c3bf86a589b.png"
+                alt="ELIA GO"
                 className="w-full rounded-2xl shadow-xl animate-float"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
