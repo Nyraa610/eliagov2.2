@@ -9,7 +9,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2, Edit } from "lucide-react";
+import { PlusCircle, Trash2, Edit, ArrowUp, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -57,6 +57,21 @@ export function TwoColumnTable({
     form.setValue("items", newItems);
   };
   
+  const handleMoveItem = (index: number, direction: "up" | "down") => {
+    if ((direction === "up" && index === 0) || 
+        (direction === "down" && index === items.length - 1)) {
+      return; // Can't move further up/down
+    }
+    
+    const newItems = [...items];
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    
+    // Swap items
+    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    
+    form.setValue("items", newItems);
+  };
+  
   const handleCloseDialog = () => {
     setIsAddingItem(false);
     setEditingIndex(null);
@@ -64,7 +79,7 @@ export function TwoColumnTable({
   };
   
   const handleSaveItem = (values: IROFormValues) => {
-    const item = form.getValues("items")[0] || {
+    const item = form.getValues("currentItem") || {
       issueTitle: "",
       description: "",
       impact: 1,
@@ -109,6 +124,21 @@ export function TwoColumnTable({
     return scale.find(item => item.value === value)?.label || value.toString();
   };
   
+  // Setup item for editing or adding
+  const setupItemForEditing = (item?: IROItem) => {
+    const defaultItem = {
+      issueTitle: "",
+      description: "",
+      impact: 1,
+      likelihood: 1,
+      type: "risk" as const,
+      category: "",
+      mitigationMeasures: "",
+    };
+    
+    form.setValue("currentItem", item || defaultItem);
+  };
+  
   // Render a table row with risk and opportunity side by side
   const renderTableRow = (index: number) => {
     const risk = risks[index];
@@ -126,7 +156,26 @@ export function TwoColumnTable({
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => handleEditItem(items.indexOf(risk))}
+                    onClick={() => handleMoveItem(items.indexOf(risk), "up")}
+                    disabled={items.indexOf(risk) === 0}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleMoveItem(items.indexOf(risk), "down")}
+                    disabled={items.indexOf(risk) === items.length - 1}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setupItemForEditing(risk);
+                      handleEditItem(items.indexOf(risk));
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -171,7 +220,26 @@ export function TwoColumnTable({
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => handleEditItem(items.indexOf(opportunity))}
+                    onClick={() => handleMoveItem(items.indexOf(opportunity), "up")}
+                    disabled={items.indexOf(opportunity) === 0}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleMoveItem(items.indexOf(opportunity), "down")}
+                    disabled={items.indexOf(opportunity) === items.length - 1}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setupItemForEditing(opportunity);
+                      handleEditItem(items.indexOf(opportunity));
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -212,7 +280,10 @@ export function TwoColumnTable({
   return (
     <div>
       <div className="mb-4 flex justify-end">
-        <Button onClick={openItemDialog} variant="outline" className="flex items-center gap-2">
+        <Button onClick={() => {
+          setupItemForEditing();
+          openItemDialog();
+        }} variant="outline" className="flex items-center gap-2">
           <PlusCircle className="h-4 w-4" /> Add Item
         </Button>
       </div>
@@ -254,7 +325,7 @@ export function TwoColumnTable({
             <form className="space-y-4">
               <FormField
                 control={form.control}
-                name={editingIndex !== null ? `items.${editingIndex}.issueTitle` : "items.0.issueTitle"}
+                name="currentItem.issueTitle"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Title</FormLabel>
@@ -269,13 +340,14 @@ export function TwoColumnTable({
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name={editingIndex !== null ? `items.${editingIndex}.type` : "items.0.type"}
+                  name="currentItem.type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -294,7 +366,7 @@ export function TwoColumnTable({
                 
                 <FormField
                   control={form.control}
-                  name={editingIndex !== null ? `items.${editingIndex}.category` : "items.0.category"}
+                  name="currentItem.category"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
@@ -309,7 +381,7 @@ export function TwoColumnTable({
               
               <FormField
                 control={form.control}
-                name={editingIndex !== null ? `items.${editingIndex}.description` : "items.0.description"}
+                name="currentItem.description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
@@ -328,13 +400,13 @@ export function TwoColumnTable({
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name={editingIndex !== null ? `items.${editingIndex}.impact` : "items.0.impact"}
+                  name="currentItem.impact"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Impact</FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange(Number(value))} 
-                        defaultValue={field.value.toString()}
+                        value={field.value.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -356,13 +428,13 @@ export function TwoColumnTable({
                 
                 <FormField
                   control={form.control}
-                  name={editingIndex !== null ? `items.${editingIndex}.likelihood` : "items.0.likelihood"}
+                  name="currentItem.likelihood"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Likelihood</FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange(Number(value))} 
-                        defaultValue={field.value.toString()}
+                        value={field.value.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -385,17 +457,17 @@ export function TwoColumnTable({
               
               <FormField
                 control={form.control}
-                name={editingIndex !== null ? `items.${editingIndex}.mitigationMeasures` : "items.0.mitigationMeasures"}
+                name="currentItem.mitigationMeasures"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {form.watch(editingIndex !== null ? `items.${editingIndex}.type` : "items.0.type") === "risk" 
+                      {form.watch("currentItem.type") === "risk" 
                         ? "Mitigation Measures" 
                         : "Enhancement Measures"}
                     </FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder={form.watch(editingIndex !== null ? `items.${editingIndex}.type` : "items.0.type") === "risk"
+                        placeholder={form.watch("currentItem.type") === "risk"
                           ? "Describe how to mitigate this risk"
                           : "Describe how to enhance this opportunity"
                         }

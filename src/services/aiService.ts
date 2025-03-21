@@ -1,7 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 
-export type AIAnalysisType = 'course-summary' | 'esg-assessment';
+export type AIAnalysisType = 'course-summary' | 'esg-assessment' | 'iro-analysis';
 
 export interface AIAnalysisRequest {
   type: AIAnalysisType;
@@ -69,6 +69,25 @@ export const aiService = {
       return response.result;
     } catch (error) {
       console.error("Error generating ESG analysis:", error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Generate Risks and Opportunities analysis
+   * @param businessContext The business context to analyze
+   * @returns Promise with the risks and opportunities analysis
+   */
+  generateIROAnalysis: async (businessContext: string): Promise<string> => {
+    try {
+      const response = await aiService.analyzeContent({
+        type: 'esg-assessment',
+        content: `IRO Analysis: ${businessContext}`
+      });
+      
+      return response.result;
+    } catch (error) {
+      console.error("Error generating IRO analysis:", error);
       throw error;
     }
   }
