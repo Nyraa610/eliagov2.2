@@ -1,30 +1,35 @@
 
 import { valueChainBaseService } from "./valueChainBaseService";
-import { valueChainAIService } from "./ai";
 import { valueChainExportService } from "./valueChainExportService";
 import { documentService } from "./document";
+import { aiService } from "./ai";
+import { ValueChainData } from "@/types/valueChain";
 
 /**
- * Value Chain Service - Main interface that combines all value chain related services
+ * Combined service for all value chain related operations
  */
 export const valueChainService = {
-  // Base operations
-  saveValueChain: valueChainBaseService.saveValueChain,
+  // Load value chain data
   loadValueChain: valueChainBaseService.loadValueChain,
   
-  // AI operations
-  generateValueChain: valueChainAIService.generateValueChain,
-  quickGenerateValueChain: valueChainAIService.quickGenerateValueChain,
+  // Save value chain data
+  saveValueChain: valueChainBaseService.saveValueChain,
   
-  // Export/Import operations
-  exportAsImage: valueChainExportService.exportAsImage,
+  // Version management
+  getValueChainVersions: valueChainBaseService.getValueChainVersions,
+  loadValueChainVersion: valueChainBaseService.loadValueChainVersion,
+  setCurrentVersion: valueChainBaseService.setCurrentVersion,
+  
+  // Export functionality
   exportAsJson: valueChainExportService.exportAsJson,
+  exportAsPNG: valueChainExportService.exportAsPNG,
   
-  // Document operations
-  uploadDocuments: documentService.uploadDocuments,
-  getDocuments: documentService.getDocuments,
+  // Document management
+  uploadDocument: documentService.uploadDocument,
   deleteDocument: documentService.deleteDocument,
+  getDocuments: documentService.getDocuments,
   
-  // Get a friendly list of acceptable document types
-  getAcceptableDocumentTypes: () => ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+  // AI generation methods
+  generateValueChain: aiService.detailedGenerationService.generateValueChain,
+  quickGenerateValueChain: aiService.quickGenerationService.quickGenerateValueChain
 };

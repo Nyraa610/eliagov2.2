@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { ValueChainData } from "@/types/valueChain";
 import { toast } from "sonner";
@@ -49,8 +49,14 @@ export function useValueChainResults() {
     }
   }, [location.state]);
 
+  const handleValueChainLoad = useCallback((valueChain: ValueChainData) => {
+    setValueChainData(valueChain);
+    setActiveTab("view");
+  }, []);
+
   return {
     valueChainData,
+    setValueChainData: handleValueChainLoad,
     loading,
     activeTab,
     setActiveTab

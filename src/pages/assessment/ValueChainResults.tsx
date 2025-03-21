@@ -9,7 +9,7 @@ import { CreateValueChainTab } from "@/components/value-chain/results/CreateValu
 import { ValueChainLoading } from "@/components/value-chain/results/ValueChainLoading";
 
 export default function ValueChainResults() {
-  const { valueChainData, loading, activeTab, setActiveTab } = useValueChainResults();
+  const { valueChainData, setValueChainData, loading, activeTab, setActiveTab } = useValueChainResults();
 
   return (
     <UserLayout title="Value Chain Results">
@@ -17,6 +17,7 @@ export default function ValueChainResults() {
         <ValueChainActions 
           valueChainData={valueChainData} 
           activeTab={activeTab} 
+          onValueChainLoad={setValueChainData}
         />
 
         {loading ? (

@@ -1,47 +1,49 @@
+import { Node, Edge } from "@xyflow/react";
 
-import { Node, Edge } from '@xyflow/react';
+export type NodeType = 'primary' | 'support' | 'external';
 
-export type NodeData = {
-  label: string;
-  type?: string;
-  description?: string;
-  icon?: string;
-  esgImpact?: string;
-};
-
-export interface ValueChainNode extends Node<NodeData> {}
-
-export interface ValueChainEdge extends Edge {}
-
-export type ValueChainData = {
-  nodes: ValueChainNode[];
-  edges: ValueChainEdge[];
-  name?: string;
-  companyId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  metadata?: {
-    plantUml?: string;
-    generatedFor?: string;
-    generationTimestamp?: string;
-    [key: string]: any;
-  };
-};
-
-export type ValueChainTemplate = {
+export interface ValueChainNode extends Node {
   id: string;
-  name: string;
-  description: string;
-  nodes: ValueChainNode[];
-  edges: ValueChainEdge[];
-};
+  type: NodeType;
+  position: { x: number; y: number };
+  data: { label: string; type: NodeType };
+}
 
-export type NodeType = 'primary' | 'support' | 'external' | 'custom';
-
-export type AIGenerationPrompt = {
+export interface AIGenerationPrompt {
   companyName: string;
   industry: string;
   products: string[];
   services: string[];
-  additionalInfo?: string;
-};
+  additionalInfo: string;
+}
+
+export interface AIProcessingResponse {
+  nodes: ValueChainNode[];
+  edges: Edge[];
+  metadata: {
+    plantUml?: string;
+    generatedFor?: string;
+    generationTimestamp?: string;
+  };
+}
+
+export interface ValueChainData {
+  nodes: ValueChainNode[];
+  edges: Edge[];
+  name?: string;
+  companyId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  metadata?: Record<string, any>;
+  version?: number;
+  id?: string;
+}
+
+export interface ValueChainVersion {
+  id: string;
+  name: string;
+  version: number;
+  isCurrent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -933,6 +933,47 @@ export type Database = {
           },
         ]
       }
+      value_chains: {
+        Row: {
+          company_id: string
+          created_at: string
+          data: Json
+          id: string
+          is_current: boolean
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          data: Json
+          id?: string
+          is_current?: boolean
+          name: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          is_current?: boolean
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "value_chains_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
