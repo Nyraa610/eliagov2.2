@@ -64,7 +64,7 @@ export function useAutomatedValueChain({
         
         // Short delay to show 100% before setting the new nodes/edges
         setTimeout(() => {
-          setNodes(result.nodes as unknown as Node<NodeData>[]);
+          setNodes(result.nodes as Node<NodeData>[]);
           setEdges(result.edges);
           setSelectedNode(null);
           setIsGenerating(false);

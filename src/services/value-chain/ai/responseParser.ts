@@ -1,7 +1,8 @@
 
-import { ValueChainData } from "@/types/valueChain";
+import { ValueChainData, NodeData } from "@/types/valueChain";
 import { AIProcessingResponse } from "./types";
 import { toast } from "sonner";
+import { Node } from "@xyflow/react";
 
 /**
  * Parser for AI-generated responses
@@ -97,9 +98,14 @@ function processValueChainData(data: any): ValueChainData {
     
     // Ensure node has a data object with at least a label
     if (!node.data) {
-      node.data = { label: node.label || `Node ${index}` };
+      node.data = { label: node.label || `Node ${index}`, type: node.type || 'primary' };
     } else if (!node.data.label) {
       node.data.label = node.label || `Node ${index}`;
+    }
+    
+    // Ensure node data has type property
+    if (!node.data.type) {
+      node.data.type = node.type || 'primary';
     }
     
     // Ensure node has a type (required for ReactFlow rendering)
@@ -107,7 +113,7 @@ function processValueChainData(data: any): ValueChainData {
       node.type = node.data.type || 'primary';
     }
     
-    return node;
+    return node as Node<NodeData>;
   });
   
   // Ensure all edges have necessary properties

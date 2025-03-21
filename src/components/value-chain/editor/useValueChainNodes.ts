@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Explicitly type with Node<NodeData>
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
-    initialData?.nodes as unknown as Node<NodeData>[] || []
+    initialData?.nodes as Node<NodeData>[] || []
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
@@ -62,7 +62,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       ];
 
-      setNodes(defaultNodes);
+      setNodes(defaultNodes as any);
       setEdges(defaultEdges);
     }
   }, [initialData, nodes.length, setNodes, setEdges]);
@@ -119,7 +119,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       };
       
-      setNodes((nds: Node<NodeData>[]) => [...nds, newNode]);
+      setNodes((nds: Node<NodeData>[]) => [...nds, newNode] as any);
       setSelectedNode(newNode);
     },
     [setNodes]
