@@ -1,6 +1,6 @@
 
 import { ChevronLeft, ChevronRight, LucideIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -30,28 +30,29 @@ export const MenuItem = ({
   toggleSubmenu 
 }: MenuItemProps) => {
   const hasSubmenu = item.submenu && item.submenu.length > 0;
+  const location = useLocation();
   
   if (hasSubmenu && !collapsed) {
     return (
       <li className="flex flex-col">
         <div className="flex flex-col">
-          <div 
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md text-sm transition-colors cursor-pointer",
-              isActive
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-            onClick={() => toggleSubmenu(item.path)}
-          >
-            <div className="flex items-center flex-1">
+          <div className="flex items-center">
+            <Link 
+              to={item.path}
+              className={cn(
+                "flex items-center px-3 py-2 rounded-md text-sm transition-colors flex-1",
+                isActive
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-gray-600 hover:bg-gray-100"
+              )}
+            >
               {item.icon}
               <span className="ml-3">{item.title}</span>
-            </div>
+            </Link>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-5 w-5 p-0"
+              className="h-8 w-8 p-0 ml-1"
               tabIndex={-1}
               onClick={(e) => {
                 e.stopPropagation();
