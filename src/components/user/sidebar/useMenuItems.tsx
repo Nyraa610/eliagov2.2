@@ -49,6 +49,11 @@ export const useMenuItems = () => {
           icon: <Share2 className="h-5 w-5" />,
           path: "/assessment/value-chain",
         },
+        {
+          title: "Impact, Risks & Opportunities",
+          icon: <TrendingUp className="h-5 w-5" />,
+          path: "/assessment/iro",
+        },
       ],
     },
     {
