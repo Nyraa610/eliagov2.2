@@ -20,7 +20,10 @@ export function ReviewFooter({ onPrevious, onSubmit, formValues }: ReviewFooterP
   const handleExportPDF = async () => {
     setIsExporting(true);
     try {
-      const success = exportToPDF(formValues.items);
+      // Get company name from the form if available, or use default
+      const companyName = formValues.companyName || "Your Company";
+      
+      const success = exportToPDF(formValues.items, companyName);
       
       if (success) {
         toast({

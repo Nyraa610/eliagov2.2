@@ -33,13 +33,16 @@ export function exportToPDF(items: IROItem[], companyName: string = "Your Compan
     const risks = items.filter(item => item.type === "risk");
     const opportunities = items.filter(item => item.type === "opportunity");
     
+    // Track the Y position for placing content
+    let yPos = 50;
+    
     // Add risks table
     if (risks.length > 0) {
       doc.setFontSize(14);
       doc.text("Risks Assessment", 14, 45);
       
       autoTable(doc, {
-        startY: 50,
+        startY: yPos,
         head: [["Risk", "Category", "Description", "Impact", "Likelihood", "Score", "Mitigation"]],
         body: risks.map(risk => [
           risk.issueTitle,
@@ -53,18 +56,19 @@ export function exportToPDF(items: IROItem[], companyName: string = "Your Compan
         theme: "striped",
         headStyles: { fillColor: [220, 50, 50] }
       });
+      
+      // Get the final Y position after the risks table
+      // @ts-ignore - We know this exists from the library even if TypeScript doesn't recognize it
+      yPos = (doc as any).lastAutoTable.finalY + 20;
     }
     
     // Add opportunities table
     if (opportunities.length > 0) {
-      const risksTableHeight = risks.length > 0 ? risks.length * 10 + 10 : 0;
-      const opportunitiesY = 50 + risksTableHeight + 20;
-      
       doc.setFontSize(14);
-      doc.text("Opportunities Assessment", 14, opportunitiesY - 5);
+      doc.text("Opportunities Assessment", 14, yPos - 5);
       
       autoTable(doc, {
-        startY: opportunitiesY,
+        startY: yPos,
         head: [["Opportunity", "Category", "Description", "Impact", "Likelihood", "Score", "Enhancement"]],
         body: opportunities.map(opportunity => [
           opportunity.issueTitle,
@@ -78,14 +82,17 @@ export function exportToPDF(items: IROItem[], companyName: string = "Your Compan
         theme: "striped",
         headStyles: { fillColor: [50, 150, 50] }
       });
+      
+      // Update the Y position after the opportunities table
+      // @ts-ignore - We know this exists from the library even if TypeScript doesn't recognize it
+      yPos = (doc as any).lastAutoTable.finalY + 15;
     }
     
     // Add summary at the end
-    const totalY = doc.lastAutoTable?.finalY || 100;
     doc.setFontSize(12);
-    doc.text(`Total Risks: ${risks.length}`, 14, totalY + 15);
-    doc.text(`Total Opportunities: ${opportunities.length}`, 14, totalY + 22);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, totalY + 29);
+    doc.text(`Total Risks: ${risks.length}`, 14, yPos);
+    doc.text(`Total Opportunities: ${opportunities.length}`, 14, yPos + 7);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, yPos + 14);
     
     // Save the PDF
     doc.save("iro-analysis-report.pdf");
