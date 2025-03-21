@@ -64,6 +64,9 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
     return () => {
       subscription.unsubscribe();
       clearTimeout(saveTimeout);
+      
+      // Save one final time when component unmounts
+      saveFormData();
     };
   }, [form, analysisStatus, toast]);
   
