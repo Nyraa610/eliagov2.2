@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -75,7 +76,7 @@ export function Navigation() {
             className="flex items-center mr-6"
           >
             <img 
-              src="/lovable-uploads/68339245-bb39-49e9-befe-1c3bf86a589b.png" 
+              src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
               alt="Logo" 
               className="h-8 w-8 mr-2" 
             />

@@ -1,3 +1,4 @@
+
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -55,7 +56,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <img
-                src="/lovable-uploads/68339245-bb39-49e9-befe-1c3bf86a589b.png"
+                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png"
                 alt="ELIA GO"
                 className="w-full rounded-2xl shadow-xl animate-float"
               />
