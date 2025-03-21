@@ -5,7 +5,7 @@ import { ValueChainData, ValueChainNode, NodeType, NodeData } from "@/types/valu
 import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
-  // Initialize with Node<NodeData>[] type
+  // Explicitly type with Node<NodeData>
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialData?.nodes as unknown as Node<NodeData>[] || []
   );
