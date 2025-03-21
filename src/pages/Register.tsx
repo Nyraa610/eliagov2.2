@@ -1,6 +1,6 @@
 
 import { Navigation } from "@/components/Navigation";
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import { RegisterForm } from "@/components/auth/register/RegisterForm";
 
 export default function Register() {
   return (

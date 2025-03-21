@@ -1,141 +1,121 @@
+import { useState, useCallback } from "react";
+import { Edge, Node, NodeChange, applyNodeChanges, EdgeChange, applyEdgeChanges, XYPosition, Connection } from "@xyflow/react";
+import { v4 as uuidv4 } from "uuid";
+import { NodeData, ValueChainNode } from "@/types/valueChain";
 
-import { useState, useEffect, useCallback } from "react";
-import { Node, Edge, useNodesState, useEdgesState } from "@xyflow/react";
-import { ValueChainData, ValueChainNode, NodeType, NodeData } from "@/types/valueChain";
-import { toast } from "sonner";
+export function useValueChainNodes(
+  initialNodes: ValueChainNode[] = [],
+  initialEdges: Edge[] = []
+) {
+  const [nodes, setNodes] = useState<ValueChainNode[]>(initialNodes);
+  const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
-export function useValueChainNodes(initialData?: ValueChainData | null) {
-  // Correctly type with Node<NodeData>
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
-    initialData?.nodes || []
-  );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
-  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
-
-  // Initialize with some basic nodes if no initial data
-  useEffect(() => {
-    if ((!initialData || initialData.nodes.length === 0) && nodes.length === 0) {
-      console.log("Creating default value chain nodes");
-      // Create a default simple value chain structure
-      const defaultNodes: Node<NodeData>[] = [
-        {
-          id: 'primary-1',
-          type: 'primary',
-          position: { x: 100, y: 200 },
-          data: { label: 'Input Logistics', type: 'primary' }
-        },
-        {
-          id: 'primary-2',
-          type: 'primary',
-          position: { x: 350, y: 200 },
-          data: { label: 'Operations', type: 'primary' }
-        },
-        {
-          id: 'primary-3',
-          type: 'primary',
-          position: { x: 600, y: 200 },
-          data: { label: 'Output Logistics', type: 'primary' }
-        },
-        {
-          id: 'support-1',
-          type: 'support',
-          position: { x: 350, y: 50 },
-          data: { label: 'Support Activities', type: 'support' }
-        }
-      ];
-
-      const defaultEdges = [
-        {
-          id: 'edge-p1-p2',
-          source: 'primary-1',
-          target: 'primary-2'
-        },
-        {
-          id: 'edge-p2-p3',
-          source: 'primary-2',
-          target: 'primary-3'
-        },
-        {
-          id: 'edge-s1-p2',
-          source: 'support-1',
-          target: 'primary-2'
-        }
-      ];
-
-      setNodes(defaultNodes);
-      setEdges(defaultEdges);
-    }
-  }, [initialData, nodes.length, setNodes, setEdges]);
-
-  // Node selection
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node<NodeData>) => {
-      console.log("Node clicked:", node);
-      setSelectedNode(node);
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds) => applyNodeChanges(changes, nds) as ValueChainNode[]);
     },
-    []
+    [setNodes]
   );
 
-  // Update node data
-  const handleUpdateNode = useCallback(
-    (nodeId: string, data: NodeData) => {
-      setNodes((nds: Node<NodeData>[]) =>
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+    },
+    [setEdges]
+  );
+
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => [
+        ...eds,
+        {
+          id: `e-${uuidv4()}`,
+          source: connection.source || "",
+          target: connection.target || "",
+          type: "smoothstep",
+          animated: true,
+        },
+      ]);
+    },
+    [setEdges]
+  );
+
+  const addNode = useCallback(
+    (type: string, position: XYPosition, label: string = "New Node", data: Partial<NodeData> = {}) => {
+      const newNode: ValueChainNode = {
+        id: `node-${uuidv4()}`,
+        type: "valueChainNode",
+        position,
+        data: {
+          label,
+          type: (type as NodeData["type"]) || "custom",
+          ...data,
+        },
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      return newNode;
+    },
+    [setNodes]
+  );
+
+  const updateNode = useCallback(
+    (nodeId: string, data: Partial<NodeData>) => {
+      setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            // If the node type has changed, we need to update the node type as well
-            const currentType = node.type;
-            const newType = data.type;
-            
             return {
               ...node,
               data: {
                 ...node.data,
-                ...data
+                ...data,
               },
-              type: newType !== currentType ? newType : currentType
             };
           }
           return node;
         })
       );
-      toast.success("Node updated");
     },
     [setNodes]
   );
 
-  // Add a new node
-  const handleAddNode = useCallback(
-    (type: NodeType) => {
-      const newNode: Node<NodeData> = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position: {
-          x: Math.random() * 300 + 100,
-          y: Math.random() * 300 + 100
-        },
-        data: {
-          label: `New ${type} node`,
-          type
-        }
-      };
-      
-      setNodes((nds: Node<NodeData>[]) => [...nds, newNode]);
-      setSelectedNode(newNode);
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter(
+          (edge) => edge.source !== nodeId && edge.target !== nodeId
+        )
+      );
     },
-    [setNodes]
+    [setNodes, setEdges]
+  );
+
+  const deleteEdge = useCallback(
+    (edgeId: string) => {
+      setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
+    },
+    [setEdges]
+  );
+
+  const resetNodesAndEdges = useCallback(
+    (newNodes: ValueChainNode[] = [], newEdges: Edge[] = []) => {
+      setNodes(newNodes);
+      setEdges(newEdges);
+    },
+    [setNodes, setEdges]
   );
 
   return {
     nodes,
     edges,
-    selectedNode,
-    setSelectedNode,
     onNodesChange,
     onEdgesChange,
-    onNodeClick,
-    handleUpdateNode,
-    handleAddNode,
-    setNodes,
-    setEdges
+    onConnect,
+    addNode,
+    updateNode,
+    deleteNode,
+    deleteEdge,
+    resetNodesAndEdges,
   };
 }

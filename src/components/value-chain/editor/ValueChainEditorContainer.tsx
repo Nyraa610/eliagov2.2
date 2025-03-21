@@ -1,111 +1,108 @@
+import ReactFlow, {
+  ReactFlowProvider,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  useReactFlow,
+  Controls,
+  Background,
+  NodeToolbar,
+  MiniMap,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { useCallback, useState, useEffect } from 'react';
+import { initialNodes, initialEdges } from './initial-elements';
+import FloatingEdge from './FloatingEdge';
+import { CustomNode } from './CustomNode';
+import { CustomToolbar } from './CustomToolbar';
+import { useValueChainNodes } from './useValueChainNodes';
+import { ValueChainData } from '@/types/valueChain';
 
-import { ValueChainData } from "@/types/valueChain";
-import { useCompanyProfile } from "@/hooks/useCompanyProfile";
-import { useValueChainNodes } from "./useValueChainNodes";
-import { useValueChainActions } from "./useValueChainActions";
-import { DialogManager } from "./components/DialogManager";
-import { EditorContent } from "./components/EditorContent";
-import { useDialogState } from "./hooks/useDialogState";
-import { useGenerationProgress } from "./hooks/useGenerationProgress";
-import { useAutomatedValueChain } from "./hooks/useAutomatedValueChain";
-import { Node } from "@xyflow/react";
-import { NodeData } from "@/types/valueChain";
+const nodeTypes = {
+  custom: CustomNode,
+};
 
-// Import react-flow styles - IMPORTANT!
-import "@xyflow/react/dist/style.css";
-import "@/styles/value-chain.css";
+const edgeTypes = {
+  floating: FloatingEdge,
+};
 
-interface ValueChainEditorContainerProps {
-  initialData?: ValueChainData | null;
-}
+const minimapStyle = {
+  height: 120,
+};
 
-export function ValueChainEditorContainer({ initialData }: ValueChainEditorContainerProps) {
-  const { company } = useCompanyProfile();
-  
-  // Use custom hooks for state management
-  const dialogState = useDialogState();
-  const generationProgress = useGenerationProgress();
+const rfStyle = {
+  backgroundColor: '#F0F0F0',
+};
 
-  const {
-    nodes,
-    edges,
-    selectedNode,
-    setSelectedNode,
-    onNodesChange,
-    onEdgesChange,
-    onNodeClick,
-    handleUpdateNode,
-    handleAddNode,
-    setNodes,
-    setEdges
-  } = useValueChainNodes(initialData);
+const ValueChainEditorContainer: React.FC<{ initialData?: ValueChainData }> = ({ initialData }) => {
+  const { nodes: initialNodes, edges: initialEdges } = useValueChainNodes(initialData);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const { fitView } = useReactFlow();
 
-  console.log("Rendering ValueChainEditorContainer with nodes:", nodes.length, "edges:", edges.length);
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
 
-  const {
-    handleSave,
-    handleExport,
-    handleImport,
-    handleClear,
-    handleZoomIn,
-    handleZoomOut,
-    handleReset
-  } = useValueChainActions({
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setSelectedNode,
-    company
-  });
+  const onDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
 
-  // Custom hook for automated value chain generation
-  const { handleAutomatedValueChain } = useAutomatedValueChain({
-    setIsGenerating: generationProgress.setIsGenerating,
-    setGeneratingProgress: generationProgress.setGeneratingProgress,
-    setNodes,
-    setEdges,
-    setSelectedNode,
-    setIsAIDialogOpen: () => {}, // Empty function as placeholder
-    company
-  });
+  const onDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData('application/reactflow');
+      const position = reactFlowInstance.project({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      const newNode = {
+        id: String(nodes.length + 1),
+        type,
+        position,
+        data: { label: `${type} node` },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [reactFlowInstance, nodes, setNodes]
+  );
+
+  useEffect(() => {
+    if (reactFlowInstance && initialNodes && initialEdges) {
+      fitView();
+    }
+  }, [reactFlowInstance, initialNodes, initialEdges, fitView]);
 
   return (
-    <div className="h-[calc(100vh-200px)] min-h-[800px]">
-      <EditorContent
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        selectedNode={selectedNode}
-        handleUpdateNode={handleUpdateNode}
-        handleAddNode={handleAddNode}
-        handleSave={handleSave}
-        handleExport={handleExport}
-        handleImport={handleImport}
-        handleClear={handleClear}
-        handleZoomIn={handleZoomIn}
-        handleZoomOut={handleZoomOut}
-        handleReset={handleReset}
-        isGenerating={generationProgress.isGenerating}
-        generatingProgress={generationProgress.generatingProgress}
-        onAutomatedBuilder={() => dialogState.setIsAutomatedBuilderOpen(true)}
-        setSelectedNode={setSelectedNode}
-      />
-      
-      <DialogManager
-        isUploadDialogOpen={dialogState.isUploadDialogOpen}
-        setIsUploadDialogOpen={dialogState.setIsUploadDialogOpen}
-        isAutomatedBuilderOpen={dialogState.isAutomatedBuilderOpen}
-        setIsAutomatedBuilderOpen={dialogState.setIsAutomatedBuilderOpen}
-        isGenerating={generationProgress.isGenerating}
-        companyName={company?.name || ''}
-        industry={company?.industry || ''}
-        location={company?.country || ''}
-        onDocumentUpload={() => {}}
-        onAutomatedValueChain={handleAutomatedValueChain}
-      />
+    <div className="w-full h-full">
+      <ReactFlowProvider>
+        <CustomToolbar />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          style={rfStyle}
+        >
+          <MiniMap style={minimapStyle} zoomable pannable />
+          <Controls />
+          <Background color="#aaa" variant="dots" gap={16} size={1} />
+        </ReactFlow>
+      </ReactFlowProvider>
     </div>
   );
-}
+};
+
+export default ValueChainEditorContainer;
