@@ -7,8 +7,8 @@ export default function Register() {
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-24">
-        <div className="max-w-md mx-auto space-y-6">
+      <main className="container mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-lg mx-auto space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-primary">Create your account</h1>
             <p className="text-gray-600">
@@ -16,7 +16,7 @@ export default function Register() {
             </p>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl border border-gray-200">
+          <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
             <RegisterForm />
           </div>
         </div>

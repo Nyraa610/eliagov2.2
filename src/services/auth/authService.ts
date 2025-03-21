@@ -32,11 +32,23 @@ export const authService = {
    */
   signUp: async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
+      // Format metadata to ensure we have consistent keys
+      const formattedMetadata = {
+        first_name: metadata?.firstName || "",
+        last_name: metadata?.lastName || "",
+        phone: metadata?.phone || "",
+        company: metadata?.company || "",
+        country: metadata?.country || "",
+        department: metadata?.department || "",
+        persona: metadata?.persona || "",
+        marketing_consent: metadata?.marketingConsent || false,
+      };
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata || {},
+          data: formattedMetadata,
         },
       });
       
