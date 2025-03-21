@@ -1,6 +1,4 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,28 +6,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { additionalInfoSchema } from "./formSchemas";
 import { departments, getPersonaOptions } from "./departmentOptions";
 import { z } from "zod";
+import { UseFormReturn } from "react-hook-form";
+import { RegisterFormData } from "./formSchemas";
 
-interface AdditionalInfoFormProps {
-  onSubmit: (values: z.infer<typeof additionalInfoSchema>) => void;
+export interface AdditionalInfoFormProps {
+  form: UseFormReturn<RegisterFormData, any, undefined>;
+  onSubmit: (values: Partial<RegisterFormData>) => void;
   onBack: () => void;
   isLoading: boolean;
 }
 
 export const AdditionalInfoForm = ({
+  form,
   onSubmit,
   onBack,
   isLoading
 }: AdditionalInfoFormProps) => {
-  const form = useForm<z.infer<typeof additionalInfoSchema>>({
-    resolver: zodResolver(additionalInfoSchema),
-    defaultValues: {
-      department: "",
-      persona: "",
-      marketingConsent: false,
-      termsConsent: false,
-    },
-  });
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

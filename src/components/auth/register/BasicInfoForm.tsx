@@ -6,27 +6,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { basicInfoSchema } from "./formSchemas";
 import { z } from "zod";
+import { UseFormReturn } from "react-hook-form";
+import { RegisterFormData } from "./formSchemas";
 
-interface BasicInfoFormProps {
-  onSubmit: (values: z.infer<typeof basicInfoSchema>) => void;
-  serverError: string | null;
+export interface BasicInfoFormProps {
+  form: UseFormReturn<RegisterFormData, any, undefined>;
+  onSubmit: (values: Partial<RegisterFormData>) => void;
+  isLoading: boolean;
 }
 
-export const BasicInfoForm = ({ onSubmit, serverError }: BasicInfoFormProps) => {
-  const form = useForm<z.infer<typeof basicInfoSchema>>({
-    resolver: zodResolver(basicInfoSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-      firstName: "",
-      lastName: "",
-      phone: "",
-      company: "",
-      country: "",
-    },
-  });
-
+export const BasicInfoForm = ({ form, onSubmit, isLoading }: BasicInfoFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -137,14 +126,8 @@ export const BasicInfoForm = ({ onSubmit, serverError }: BasicInfoFormProps) => 
           )}
         />
 
-        {serverError && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm">
-            {serverError}
-          </div>
-        )}
-
-        <Button type="submit" className="w-full">
-          Continue
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Processing..." : "Continue"}
         </Button>
       </form>
     </Form>

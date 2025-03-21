@@ -18,7 +18,7 @@ import FloatingEdge from './FloatingEdge';
 import { CustomNode } from './CustomNode';
 import { CustomToolbar } from './CustomToolbar';
 import { useValueChainNodes } from './useValueChainNodes';
-import { ValueChainData } from '@/types/valueChain';
+import { ValueChainData, NodeType } from '@/types/valueChain';
 
 const nodeTypes = {
   custom: CustomNode,
@@ -79,7 +79,7 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
         position,
         data: { 
           label: `${type || 'New'} node`,
-          type: 'custom'
+          type: 'custom' as NodeType
         },
       };
 
@@ -116,7 +116,7 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
         >
           <MiniMap style={minimapStyle} zoomable pannable />
           <Controls />
-          <Background color="#aaa" variant={BackgroundVariant.DOTS} gap={16} size={1} />
+          <Background color="#aaa" variant={BackgroundVariant.Dots} gap={16} size={1} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>

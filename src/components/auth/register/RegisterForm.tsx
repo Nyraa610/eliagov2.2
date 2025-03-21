@@ -56,24 +56,18 @@ export function RegisterForm() {
         ...data,
       } as RegisterFormData;
 
-      const result = await registerUser(combinedData);
+      await registerUser(combinedData);
       
-      if (result.success) {
-        toast({
-          description: "Registration successful! Please check your email to confirm your account.",
-        });
-        navigate("/register-confirmation");
-      } else {
-        toast({
-          variant: "destructive",
-          description: result.error || "Failed to register. Please try again.",
-        });
-      }
-    } catch (error) {
+      // Show success message and navigate
+      toast({
+        description: "Registration successful! Please check your email to confirm your account.",
+      });
+      navigate("/register-confirmation");
+    } catch (error: any) {
       console.error("Registration error:", error);
       toast({
         variant: "destructive",
-        description: "An unexpected error occurred. Please try again later.",
+        description: error?.message || "Failed to register. Please try again.",
       });
     }
   };
