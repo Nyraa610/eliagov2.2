@@ -11,7 +11,7 @@ interface UseValueChainActionsProps {
   edges: Edge[];
   setNodes: (nodes: Node<NodeData>[] | ((nds: Node<NodeData>[]) => Node<NodeData>[])) => void;
   setEdges: (edges: Edge[] | ((eds: Edge[]) => Edge[])) => void;
-  setSelectedNode: (node: ValueChainNode | null) => void;
+  setSelectedNode: (node: Node<NodeData> | null) => void;
   company: Company | null;
 }
 

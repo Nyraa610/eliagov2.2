@@ -11,7 +11,7 @@ interface UseAutomatedValueChainProps {
   setGeneratingProgress: React.Dispatch<React.SetStateAction<number>>;
   setNodes: (nodes: Node<NodeData>[] | ((nds: Node<NodeData>[]) => Node<NodeData>[])) => void;
   setEdges: (edges: any) => void;
-  setSelectedNode: (node: any) => void;
+  setSelectedNode: (node: Node<NodeData> | null) => void;
   setIsAIDialogOpen?: (isOpen: boolean) => void;
   company: Company | null;
 }

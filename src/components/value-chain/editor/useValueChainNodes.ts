@@ -6,9 +6,11 @@ import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Initialize with empty arrays as a base
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialData?.nodes as Node<NodeData>[] || []);
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
+    initialData?.nodes as unknown as Node<NodeData>[] || []
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
-  const [selectedNode, setSelectedNode] = useState<ValueChainNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
 
   // Initialize with some basic nodes if no initial data
   useEffect(() => {
@@ -67,9 +69,9 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
 
   // Node selection
   const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
+    (_: React.MouseEvent, node: Node<NodeData>) => {
       console.log("Node clicked:", node);
-      setSelectedNode(node as ValueChainNode);
+      setSelectedNode(node);
     },
     []
   );
@@ -118,7 +120,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
       };
       
       setNodes((nds) => [...nds, newNode]);
-      setSelectedNode(newNode as ValueChainNode);
+      setSelectedNode(newNode);
     },
     [setNodes]
   );
