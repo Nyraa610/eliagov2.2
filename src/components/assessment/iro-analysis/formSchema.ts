@@ -40,7 +40,8 @@ export const iroItemSchema = z.object({
 export const iroFormSchema = z.object({
   methodology: methodologySchema,
   items: z.array(iroItemSchema),
-  currentItem: iroItemSchema.optional() // Used for adding/editing items
+  currentItem: iroItemSchema.optional(), // Used for adding/editing items
+  companyName: z.string().optional() // Add company name field
 });
 
 export type MethodologyConfig = z.infer<typeof methodologySchema>;

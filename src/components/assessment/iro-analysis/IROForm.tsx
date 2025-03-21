@@ -23,6 +23,7 @@ const defaultFormValues: IROFormValues = {
     ],
   },
   items: [],
+  companyName: "Your Company" // Default company name
 };
 
 interface IROFormProps {
