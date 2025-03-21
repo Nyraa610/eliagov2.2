@@ -3,13 +3,13 @@ import { useCallback } from "react";
 import { Node, Edge, useReactFlow } from "@xyflow/react";
 import { toast } from "sonner";
 import { valueChainService } from "@/services/value-chain";
-import { AIGenerationPrompt, ValueChainData, ValueChainNode } from "@/types/valueChain";
+import { AIGenerationPrompt, ValueChainData, ValueChainNode, NodeData } from "@/types/valueChain";
 import { Company } from "@/services/company/types";
 
 interface UseValueChainActionsProps {
-  nodes: Node[];
+  nodes: Node<NodeData>[];
   edges: Edge[];
-  setNodes: (nodes: Node[] | ((nds: Node[]) => Node[])) => void;
+  setNodes: (nodes: Node<NodeData>[] | ((nds: Node<NodeData>[]) => Node<NodeData>[])) => void;
   setEdges: (edges: Edge[] | ((eds: Edge[]) => Edge[])) => void;
   setSelectedNode: (node: ValueChainNode | null) => void;
   company: Company | null;
@@ -23,7 +23,7 @@ export function useValueChainActions({
   setSelectedNode,
   company
 }: UseValueChainActionsProps) {
-  const reactFlowInstance = useReactFlow();
+  const reactFlowInstance = useReactFlow<NodeData>();
 
   const handleSave = useCallback(async () => {
     if (!company) {
@@ -72,7 +72,7 @@ export function useValueChainActions({
         try {
           const jsonData = JSON.parse(event.target?.result as string) as ValueChainData;
           if (jsonData.nodes && jsonData.edges) {
-            setNodes(jsonData.nodes);
+            setNodes(jsonData.nodes as Node<NodeData>[]);
             setEdges(jsonData.edges);
             setSelectedNode(null);
             toast.success("Value chain imported successfully");
@@ -119,7 +119,7 @@ export function useValueChainActions({
     try {
       const data = await valueChainService.generateValueChain(prompt);
       if (data) {
-        setNodes(data.nodes);
+        setNodes(data.nodes as Node<NodeData>[]);
         setEdges(data.edges);
         setSelectedNode(null);
         toast.success("Value chain generated successfully");

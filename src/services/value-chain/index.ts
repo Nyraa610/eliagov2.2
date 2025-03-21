@@ -22,10 +22,10 @@ export const valueChainService = {
   
   // Export functionality
   exportAsJson: valueChainExportService.exportAsJson,
-  exportAsPNG: valueChainExportService.exportAsImage, // Fixed method name
+  exportAsPNG: valueChainExportService.exportAsImage,
   
   // Document management
-  uploadDocuments: documentService.uploadDocuments, // Fixed method name
+  uploadDocuments: documentService.uploadDocuments,
   deleteDocument: documentService.deleteDocument,
   getDocuments: documentService.getDocuments,
   

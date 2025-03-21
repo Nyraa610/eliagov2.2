@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Initialize with empty arrays as a base
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialData?.nodes || []);
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialData?.nodes || []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
   const [selectedNode, setSelectedNode] = useState<ValueChainNode | null>(null);
 
@@ -60,7 +60,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       ];
 
-      setNodes(defaultNodes);
+      setNodes(defaultNodes as Node<NodeData>[]);
       setEdges(defaultEdges);
     }
   }, [initialData, nodes.length, setNodes, setEdges]);
@@ -91,7 +91,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
                 ...data
               },
               type: newType !== currentType ? newType : currentType
-            } as ValueChainNode;
+            } as Node<NodeData>;
           }
           return node;
         })
@@ -117,7 +117,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       };
       
-      setNodes((nds) => [...nds, newNode]);
+      setNodes((nds) => [...nds, newNode as Node<NodeData>]);
       setSelectedNode(newNode);
     },
     [setNodes]

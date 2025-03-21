@@ -3,13 +3,15 @@ import { Node, Edge } from "@xyflow/react";
 
 export type NodeType = 'primary' | 'support' | 'external' | 'custom';
 
-export interface NodeData {
+// Make NodeData a Record<string, unknown> to satisfy the Node type requirements
+export interface NodeData extends Record<string, unknown> {
   label: string;
   type: NodeType;
   description?: string;
 }
 
-export interface ValueChainNode extends Node {
+// Update ValueChainNode to correctly extend Node
+export interface ValueChainNode extends Node<NodeData> {
   id: string;
   type: NodeType;
   position: { x: number; y: number };
