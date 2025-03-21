@@ -126,7 +126,7 @@ function processValueChainData(data: any): ValueChainData {
   });
   
   return {
-    nodes: processedNodes,
+    nodes: processedNodes as any,
     edges: processedEdges,
     name: data.name || "AI Generated Value Chain",
     metadata: {

@@ -14,7 +14,6 @@ export interface NodeData extends Record<string, unknown> {
 // ValueChainNode correctly extends Node with our NodeData type
 export interface ValueChainNode extends Node<NodeData> {
   // No need to redefine fields that are already in Node<NodeData>
-  // Just ensure it's a proper extension
 }
 
 export interface AIGenerationPrompt {

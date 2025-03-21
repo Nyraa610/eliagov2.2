@@ -5,7 +5,7 @@ import { ValueChainData, ValueChainNode, NodeType, NodeData } from "@/types/valu
 import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
-  // Explicitly type with Node<NodeData>
+  // Correctly type with Node<NodeData>
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialData?.nodes as Node<NodeData>[] || []
   );
@@ -62,7 +62,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       ];
 
-      setNodes(defaultNodes as any);
+      setNodes(defaultNodes);
       setEdges(defaultEdges);
     }
   }, [initialData, nodes.length, setNodes, setEdges]);
@@ -119,7 +119,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       };
       
-      setNodes((nds: Node<NodeData>[]) => [...nds, newNode] as any);
+      setNodes((nds: Node<NodeData>[]) => [...nds, newNode]);
       setSelectedNode(newNode);
     },
     [setNodes]

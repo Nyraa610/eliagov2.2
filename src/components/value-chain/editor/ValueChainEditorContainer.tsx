@@ -66,7 +66,7 @@ export function ValueChainEditorContainer({ initialData }: ValueChainEditorConta
     setNodes,
     setEdges,
     setSelectedNode,
-    setIsAIDialogOpen: () => {}, // Remove reference to AI dialog
+    setIsAIDialogOpen: () => {}, // Empty function as placeholder
     company
   });
 
