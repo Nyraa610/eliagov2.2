@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Correctly type with Node<NodeData>
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
-    initialData?.nodes as Node<NodeData>[] || []
+    initialData?.nodes || []
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);

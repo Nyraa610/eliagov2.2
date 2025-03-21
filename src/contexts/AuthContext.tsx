@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
@@ -22,104 +23,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Handle auth state initialization
   useEffect(() => {
-    console.log("AuthProvider: Setting up auth state listener");
-    
-    // Set up auth state listener FIRST (before checking existing session)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log(`AuthProvider: Auth state changed - Event: ${event}`);
-        
-        try {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          
-          if (event === 'SIGNED_OUT') {
-            console.log("AuthProvider: User signed out");
-            setUser(null);
-            setSession(null);
-          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            console.log("AuthProvider: User signed in or token refreshed:", newSession?.user?.id);
-          }
-        } catch (error) {
-          console.error("AuthProvider: Error in auth state change listener:", error);
-        }
-      }
-    );
-
-    // THEN check for existing session (initial load)
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
         setIsLoading(true);
-        console.log("AuthProvider: Checking for existing session");
         
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("AuthProvider: Error getting session:", error.message);
-          return;
-        }
-        
+        // First set up the auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
+            if (newSession) {
+              setSession(newSession);
+              setUser(newSession.user);
+            } else if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+            }
+          }
+        );
+
+        // Then check for an existing session
+        const { data } = await supabase.auth.getSession();
         if (data?.session) {
-          console.log("AuthProvider: Found existing session for user:", data.session.user.id);
           setSession(data.session);
           setUser(data.session.user);
-        } else {
-          console.log("AuthProvider: No existing session found");
-          setSession(null);
-          setUser(null);
         }
+        
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error("AuthProvider: Exception checking auth status:", error);
+        console.error("Error in auth initialization:", error);
       } finally {
         setIsLoading(false);
       }
     };
+
+    // Initialize auth
+    const cleanup = initAuth();
     
-    initializeAuth();
-    
-    // Clean up subscription on unmount
+    // Clean up on unmount
     return () => {
-      console.log("AuthProvider: Cleaning up auth listener");
-      subscription.unsubscribe();
+      cleanup.then(unsub => unsub && unsub());
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("AuthProvider: Signing in user with email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error("AuthProvider: Sign in error:", error.message);
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: error.message,
-        });
         return { error };
       }
       
-      console.log("AuthProvider: User signed in successfully");
       return { error: null };
-    } catch (error: any) {
-      console.error("AuthProvider: Exception during sign in:", error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "An unexpected error occurred",
-      });
+    } catch (error) {
       return { error };
     }
   };
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
-      console.log("AuthContext: Attempting to sign up:", email);
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -129,62 +96,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
-        console.error("AuthContext: Sign up error:", error.message);
         return { error };
       }
       
-      console.log("AuthContext: Sign up successful:", data.user?.id);
-      return { data, error: null };
-    } catch (error: any) {
-      console.error("AuthContext: Sign up exception:", error);
-      return { data: null, error };
+      return { error: null };
+    } catch (error) {
+      return { error };
     }
   };
 
   const signOut = async () => {
-    console.log("AuthProvider: Signing out user");
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("AuthProvider: Sign out error:", error.message);
-        toast({
-          variant: "destructive", 
-          title: "Error signing out", 
-          description: error.message
-        });
-      }
-      
-      // Explicitly clear state on sign out
+      await supabase.auth.signOut();
       setUser(null);
       setSession(null);
-      
-      console.log("AuthProvider: User signed out successfully");
-    } catch (error: any) {
-      console.error("AuthProvider: Exception during sign out:", error);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: error.message || "An unexpected error occurred",
+        description: "An unexpected error occurred",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const refreshSession = async () => {
     try {
-      console.log("AuthProvider: Refreshing session");
       const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
-        console.error("AuthProvider: Error refreshing session:", error.message);
         return null;
       }
       
       if (data.session) {
-        console.log("AuthProvider: Session refreshed successfully");
         setSession(data.session);
         setUser(data.session.user);
         return data.session;
@@ -192,7 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return null;
     } catch (error) {
-      console.error("AuthProvider: Exception refreshing session:", error);
       return null;
     }
   };
