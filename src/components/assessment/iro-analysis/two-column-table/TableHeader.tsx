@@ -1,5 +1,5 @@
 
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHead, TableHeader as ShadcnTableHeader, TableRow } from "@/components/ui/table";
 
 interface TableHeaderProps {
   risksCount: number;
@@ -8,7 +8,7 @@ interface TableHeaderProps {
 
 export function TableHeader({ risksCount, opportunitiesCount }: TableHeaderProps) {
   return (
-    <TableHeader>
+    <ShadcnTableHeader>
       <TableRow>
         <TableHead className="w-1/2 text-center bg-red-50 text-red-800 border-r">
           Risks ({risksCount})
@@ -17,6 +17,6 @@ export function TableHeader({ risksCount, opportunitiesCount }: TableHeaderProps
           Opportunities ({opportunitiesCount})
         </TableHead>
       </TableRow>
-    </TableHeader>
+    </ShadcnTableHeader>
   );
 }
