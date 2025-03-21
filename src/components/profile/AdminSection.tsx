@@ -6,11 +6,54 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Users, Settings, Award, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
+import { supabaseService } from "@/services/base/supabaseService";
 
 export function AdminSection() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasTrainingAccess, setHasTrainingAccess] = useState(false);
+  const [hasUserAccess, setHasUserAccess] = useState(false);
+
+  useEffect(() => {
+    const checkAdminPermissions = async () => {
+      try {
+        setIsLoading(true);
+        const profile = await supabaseService.getUserProfile();
+        
+        // Admin role should have access to everything
+        if (profile?.role === 'admin') {
+          setHasTrainingAccess(true);
+          setHasUserAccess(true);
+        }
+      } catch (error) {
+        console.error("Error checking admin permissions:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to verify admin permissions"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAdminPermissions();
+  }, [toast]);
+
+  const handleNavigate = (path: string, hasAccess: boolean) => {
+    if (hasAccess) {
+      navigate(path);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You don't have permission to access this area."
+      });
+    }
+  };
 
   return (
     <Card>
@@ -57,7 +100,8 @@ export function AdminSection() {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => navigate("/admin/training")}
+                    onClick={() => handleNavigate("/admin/training", hasTrainingAccess)}
+                    disabled={isLoading}
                   >
                     Go to Instructor Panel
                   </Button>
@@ -83,7 +127,8 @@ export function AdminSection() {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => navigate("/admin/users")}
+                    onClick={() => handleNavigate("/admin/users", hasUserAccess)}
+                    disabled={isLoading}
                   >
                     User Management
                   </Button>
@@ -142,8 +187,9 @@ export function AdminSection() {
                       Create, edit, and manage courses for your users.
                     </p>
                     <Button 
-                      onClick={() => navigate("/admin/training")}
+                      onClick={() => handleNavigate("/admin/training", hasTrainingAccess)}
                       size="sm"
+                      disabled={isLoading}
                     >
                       Go to Instructor Panel
                     </Button>
@@ -172,8 +218,9 @@ export function AdminSection() {
                       View and manage user accounts, change user roles between admin and regular user.
                     </p>
                     <Button 
-                      onClick={() => navigate("/admin/users")}
+                      onClick={() => handleNavigate("/admin/users", hasUserAccess)}
                       size="sm"
+                      disabled={isLoading}
                     >
                       Manage Users
                     </Button>
