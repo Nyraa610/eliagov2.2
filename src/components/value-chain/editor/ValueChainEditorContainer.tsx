@@ -8,6 +8,7 @@ import { EditorContent } from "./components/EditorContent";
 import { useDialogState } from "./hooks/useDialogState";
 import { useGenerationProgress } from "./hooks/useGenerationProgress";
 import { useAutomatedValueChain } from "./hooks/useAutomatedValueChain";
+import { Node } from "@xyflow/react";
 
 // Import react-flow styles - IMPORTANT!
 import "@xyflow/react/dist/style.css";

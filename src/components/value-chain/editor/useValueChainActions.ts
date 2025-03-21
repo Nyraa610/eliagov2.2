@@ -33,7 +33,7 @@ export function useValueChainActions({
 
     try {
       const data: ValueChainData = {
-        nodes: nodes as ValueChainNode[],
+        nodes: nodes as unknown as ValueChainNode[],
         edges,
         name: `${company.name} Value Chain`,
         companyId: company.id
@@ -53,7 +53,7 @@ export function useValueChainActions({
 
   const handleExport = useCallback(() => {
     const data: ValueChainData = {
-      nodes: nodes as ValueChainNode[],
+      nodes: nodes as unknown as ValueChainNode[],
       edges,
       name: company?.name ? `${company.name} Value Chain` : "Value Chain"
     };
@@ -72,7 +72,7 @@ export function useValueChainActions({
         try {
           const jsonData = JSON.parse(event.target?.result as string) as ValueChainData;
           if (jsonData.nodes && jsonData.edges) {
-            setNodes(jsonData.nodes as Node<NodeData>[]);
+            setNodes(jsonData.nodes as unknown as Node<NodeData>[]);
             setEdges(jsonData.edges);
             setSelectedNode(null);
             toast.success("Value chain imported successfully");
@@ -119,7 +119,7 @@ export function useValueChainActions({
     try {
       const data = await valueChainService.generateValueChain(prompt);
       if (data) {
-        setNodes(data.nodes as Node<NodeData>[]);
+        setNodes(data.nodes as unknown as Node<NodeData>[]);
         setEdges(data.edges);
         setSelectedNode(null);
         toast.success("Value chain generated successfully");
