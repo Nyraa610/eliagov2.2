@@ -53,7 +53,7 @@ export default function IRO() {
     
     loadSavedProgress();
 
-    // Track the page view
+    // Track the page view with specific engagement tracking
     trackActivity({
       activity_type: "view_iro_analysis",
       points_earned: 5,
@@ -67,6 +67,16 @@ export default function IRO() {
     try {
       await assessmentService.saveAssessmentProgress('iro_analysis', status, progress);
       console.log("IRO: Status saved successfully:", status);
+      
+      // Track completion if completed
+      if (status === "completed" && analysisStatus !== "completed") {
+        trackActivity({
+          activity_type: "complete_iro_analysis",
+          points_earned: 50,
+          metadata: { assessment_type: "iro_analysis" }
+        }, true); // Show reward notification
+      }
+      
     } catch (error) {
       console.error("Error saving status:", error);
       toast({
@@ -83,6 +93,23 @@ export default function IRO() {
     try {
       await assessmentService.saveAssessmentProgress('iro_analysis', analysisStatus, newProgress);
       console.log("IRO: Progress saved successfully:", newProgress);
+      
+      // Track significant progress (25%, 50%, 75%)
+      const progressMilestones = [25, 50, 75];
+      const oldProgressTier = Math.floor(progress / 25);
+      const newProgressTier = Math.floor(newProgress / 25);
+      
+      if (newProgressTier > oldProgressTier && progressMilestones.includes(newProgressTier * 25)) {
+        trackActivity({
+          activity_type: "iro_progress_milestone",
+          points_earned: 10,
+          metadata: { 
+            assessment_type: "iro_analysis",
+            progress_percentage: newProgressTier * 25
+          }
+        }, true);
+      }
+      
     } catch (error) {
       console.error("Error saving progress:", error);
       toast({

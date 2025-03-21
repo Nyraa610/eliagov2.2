@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import { engagementService } from '@/services/engagement';
-import { useToast } from '@/hooks/use-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 export function EngagementTracker() {
@@ -10,7 +10,6 @@ export function EngagementTracker() {
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Check if user is on admin route
@@ -71,9 +70,31 @@ export function EngagementTracker() {
     
     const trackPageView = async () => {
       try {
+        // Base points for any page view
+        let pointsEarned = 1;
+        let activityType = 'page_view';
+        
+        // Special case for specific page types
+        if (location.pathname.includes('/assessment')) {
+          activityType = 'view_assessment';
+          pointsEarned = 3;
+        } else if (location.pathname.includes('/training')) {
+          activityType = 'view_training';
+          pointsEarned = 2;
+        } else if (location.pathname.includes('/value-chain')) {
+          activityType = 'view_value_chain';
+          pointsEarned = 3;
+        } else if (location.pathname === '/engagement') {
+          activityType = 'visit_engagement_page';
+          pointsEarned = 3;
+        } else if (location.pathname === '/') {
+          activityType = 'view_dashboard';
+          pointsEarned = 2;
+        }
+        
         await engagementService.trackActivity({
-          activity_type: 'page_view',
-          points_earned: 1,
+          activity_type: activityType,
+          points_earned: pointsEarned,
           metadata: { path: location.pathname }
         }).catch(err => {
           console.warn("Could not track page view", err);

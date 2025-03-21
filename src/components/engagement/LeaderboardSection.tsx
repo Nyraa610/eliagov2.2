@@ -14,8 +14,9 @@ import {
   LeaderboardPeriod, 
   LeaderboardScope 
 } from '@/services/engagement';
-import { Trophy, Users, Building, Star, Medal } from 'lucide-react';
+import { Trophy, Users, Building, Star, Medal, Clock, Activity } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/lib/supabase';
 
 export function LeaderboardSection() {
@@ -159,11 +160,48 @@ export function LeaderboardSection() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-primary mr-1" />
-                        <span className="text-sm font-medium">{entry.total_points}</span>
-                      </div>
+                    <div className="flex items-center space-x-3">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center">
+                              <Activity className="h-4 w-4 text-primary mr-1" />
+                              <span className="text-sm font-medium">{entry.activity_count || 0}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Activities completed</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 text-primary mr-1" />
+                              <span className="text-sm font-medium">{Math.floor((entry.time_spent_seconds || 0) / 60)}m</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Time spent on platform</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-primary mr-1" />
+                              <span className="text-sm font-medium">{entry.total_points}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Total points earned</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       
                       <div className="flex items-center bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs">
                         <Medal className="h-3 w-3 mr-1" />

@@ -22,7 +22,7 @@ class LeaderboardService {
       // Fetch user engagement stats first
       const { data: statsData, error: statsError } = await supabase
         .from('user_engagement_stats')
-        .select('user_id, total_points, level')
+        .select('user_id, total_points, level, activity_count, time_spent_seconds, last_active_at')
         .order('total_points', { ascending: false })
         .limit(limit);
 
@@ -97,7 +97,10 @@ class LeaderboardService {
           company_name: company?.name || null,
           total_points: stat.total_points,
           level: stat.level,
-          rank: index + 1
+          rank: index + 1,
+          activity_count: stat.activity_count,
+          time_spent_seconds: stat.time_spent_seconds,
+          last_active_at: stat.last_active_at
         };
       });
     } catch (error) {

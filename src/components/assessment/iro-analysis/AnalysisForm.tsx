@@ -8,6 +8,7 @@ import { IROFormValues } from "./formSchema";
 import { assessmentService } from "@/services/assessmentService";
 import { FeatureStatus } from "@/types/training";
 import { useToast } from "@/components/ui/use-toast";
+import { useEngagement } from "@/hooks/useEngagement";
 
 interface AnalysisFormProps {
   form: UseFormReturn<IROFormValues>;
@@ -20,11 +21,39 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const { toast } = useToast();
+  const { trackActivity } = useEngagement();
   
   // Function to open dialog for adding new item
   const openItemDialog = () => {
     setIsAddingItem(true);
   };
+  
+  // Watch for items changes to track activity
+  useEffect(() => {
+    let previousItemsLength = form.getValues().items?.length || 0;
+    
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'items' || name?.startsWith('items')) {
+        const currentItems = form.getValues().items || [];
+        
+        // If items were added, track this activity
+        if (currentItems.length > previousItemsLength) {
+          trackActivity({
+            activity_type: 'add_iro_item',
+            points_earned: 5,
+            metadata: { 
+              assessment_type: "iro_analysis",
+              items_count: currentItems.length
+            }
+          });
+        }
+        
+        previousItemsLength = currentItems.length;
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, trackActivity]);
   
   // Autosave functionality
   useEffect(() => {

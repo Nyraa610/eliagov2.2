@@ -69,4 +69,7 @@ export interface LeaderboardEntry {
   total_points: number;
   level: number;
   rank: number;
+  activity_count?: number;
+  time_spent_seconds?: number;
+  last_active_at?: string;
 }

@@ -6,7 +6,7 @@ import { RewardsSection } from "@/components/engagement/RewardsSection";
 import { LeaderboardSection } from "@/components/engagement/LeaderboardSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Gift, Award, Star } from "lucide-react";
+import { Trophy, Gift, Award, Star, BarChart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Engagement() {
@@ -31,10 +31,14 @@ export default function Engagement() {
       </div>
 
       <Tabs defaultValue="rewards" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="rewards" className="flex items-center justify-center gap-2">
             <Gift className="h-4 w-4" />
             {t('engagement.rewards', 'Rewards')}
+          </TabsTrigger>
+          <TabsTrigger value="activities" className="flex items-center justify-center gap-2">
+            <BarChart className="h-4 w-4" />
+            {t('engagement.activities', 'Activities')}
           </TabsTrigger>
           <TabsTrigger value="leaderboard" className="flex items-center justify-center gap-2">
             <Trophy className="h-4 w-4" />
@@ -136,6 +140,95 @@ export default function Engagement() {
           </Card>
           
           <RewardsSection />
+        </TabsContent>
+        
+        <TabsContent value="activities" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart className="h-5 w-5 text-primary" />
+                {t('engagement.activityPoints', 'Activity Points')}
+              </CardTitle>
+              <CardDescription>
+                {t('engagement.activityPointsDesc', 'Points you can earn from various activities')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Card className="border border-muted">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">{t('engagement.assessment.title', 'Assessment Activities')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.assessment.start', 'Start Assessment')}</span>
+                      <span className="font-medium text-primary">5 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.assessment.milestone', 'Reach 50% Progress')}</span>
+                      <span className="font-medium text-primary">10 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.assessment.complete', 'Complete Assessment')}</span>
+                      <span className="font-medium text-primary">50 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.assessment.addItem', 'Add Assessment Item')}</span>
+                      <span className="font-medium text-primary">5 pts</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-muted">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">{t('engagement.training.title', 'Training Activities')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.training.start', 'Start Course')}</span>
+                      <span className="font-medium text-primary">3 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.training.completeModule', 'Complete Module')}</span>
+                      <span className="font-medium text-primary">10 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.training.passQuiz', 'Pass Quiz')}</span>
+                      <span className="font-medium text-primary">15 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.training.completeCourse', 'Complete Course')}</span>
+                      <span className="font-medium text-primary">50 pts</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-muted">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">{t('engagement.general.title', 'General Activities')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.general.login', 'Daily Login')}</span>
+                      <span className="font-medium text-primary">5 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.general.viewPage', 'View Page')}</span>
+                      <span className="font-medium text-primary">1 pt</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.general.timeSpent', '30 Min on Platform')}</span>
+                      <span className="font-medium text-primary">3 pts</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>{t('engagement.general.profile', 'Complete Profile')}</span>
+                      <span className="font-medium text-primary">10 pts</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="leaderboard">

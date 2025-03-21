@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +47,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         total_questions: results.totalQuestions,
         score_percentage: scorePercentage
       }
-    });
+    }, true);
     
     // Trigger confetti when component mounts and score is good
     if (showCelebration) {
