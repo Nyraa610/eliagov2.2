@@ -5,7 +5,7 @@ import { ValueChainData, ValueChainNode, NodeType, NodeData } from "@/types/valu
 import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
-  // Initialize with empty arrays as a base
+  // Initialize with Node<NodeData>[] type
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialData?.nodes as unknown as Node<NodeData>[] || []
   );
@@ -79,7 +79,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Update node data
   const handleUpdateNode = useCallback(
     (nodeId: string, data: NodeData) => {
-      setNodes((nds) =>
+      setNodes((nds: Node<NodeData>[]) =>
         nds.map((node) => {
           if (node.id === nodeId) {
             // If the node type has changed, we need to update the node type as well
@@ -119,7 +119,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
         }
       };
       
-      setNodes((nds) => [...nds, newNode]);
+      setNodes((nds: Node<NodeData>[]) => [...nds, newNode]);
       setSelectedNode(newNode);
     },
     [setNodes]

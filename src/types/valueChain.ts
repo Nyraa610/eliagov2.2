@@ -3,8 +3,8 @@ import { Node, Edge } from "@xyflow/react";
 
 export type NodeType = 'primary' | 'support' | 'external' | 'custom';
 
-// NodeData defines the data property of our nodes
-export interface NodeData extends Record<string, unknown> {
+// NodeData defines what's stored in the data property of our nodes
+export interface NodeData {
   label: string;
   type: NodeType;
   description?: string;

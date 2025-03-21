@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { NodeData, NodeType, ValueChainNode } from "@/types/valueChain";
+import { NodeData, NodeType } from "@/types/valueChain";
 import { X } from "lucide-react";
+import { Node } from "@xyflow/react";
 
 interface NodeEditPanelProps {
-  selectedNode: ValueChainNode | null;
+  selectedNode: Node<NodeData> | null;
   onUpdate: (nodeId: string, data: NodeData) => void;
   onClose: () => void;
 }
