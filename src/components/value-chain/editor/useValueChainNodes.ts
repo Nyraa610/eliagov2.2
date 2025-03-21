@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Node, Edge, useNodesState, useEdgesState } from "@xyflow/react";
-import { ValueChainData, ValueChainNode, NodeType } from "@/types/valueChain";
+import { ValueChainData, ValueChainNode, NodeType, NodeData } from "@/types/valueChain";
 import { toast } from "sonner";
 
 export function useValueChainNodes(initialData?: ValueChainData | null) {
@@ -15,7 +15,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
     if ((!initialData || initialData.nodes.length === 0) && nodes.length === 0) {
       console.log("Creating default value chain nodes");
       // Create a default simple value chain structure
-      const defaultNodes = [
+      const defaultNodes: ValueChainNode[] = [
         {
           id: 'primary-1',
           type: 'primary',
@@ -76,13 +76,13 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
 
   // Update node data
   const handleUpdateNode = useCallback(
-    (nodeId: string, data: any) => {
+    (nodeId: string, data: NodeData) => {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
             // If the node type has changed, we need to update the node type as well
             const currentType = node.type;
-            const newType = data.type as string;
+            const newType = data.type;
             
             return {
               ...node,
@@ -91,7 +91,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
                 ...data
               },
               type: newType !== currentType ? newType : currentType
-            };
+            } as ValueChainNode;
           }
           return node;
         })
@@ -104,7 +104,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
   // Add a new node
   const handleAddNode = useCallback(
     (type: NodeType) => {
-      const newNode = {
+      const newNode: ValueChainNode = {
         id: `${type}-${Date.now()}`,
         type,
         position: {
@@ -118,7 +118,7 @@ export function useValueChainNodes(initialData?: ValueChainData | null) {
       };
       
       setNodes((nds) => [...nds, newNode]);
-      setSelectedNode(newNode as ValueChainNode);
+      setSelectedNode(newNode);
     },
     [setNodes]
   );

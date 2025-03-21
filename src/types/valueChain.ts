@@ -1,12 +1,19 @@
+
 import { Node, Edge } from "@xyflow/react";
 
-export type NodeType = 'primary' | 'support' | 'external';
+export type NodeType = 'primary' | 'support' | 'external' | 'custom';
+
+export interface NodeData {
+  label: string;
+  type: NodeType;
+  description?: string;
+}
 
 export interface ValueChainNode extends Node {
   id: string;
   type: NodeType;
   position: { x: number; y: number };
-  data: { label: string; type: NodeType };
+  data: NodeData;
 }
 
 export interface AIGenerationPrompt {

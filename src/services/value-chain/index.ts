@@ -2,8 +2,8 @@
 import { valueChainBaseService } from "./valueChainBaseService";
 import { valueChainExportService } from "./valueChainExportService";
 import { documentService } from "./document";
-import { aiService } from "./ai";
 import { ValueChainData } from "@/types/valueChain";
+import { valueChainAIService } from "./ai";
 
 /**
  * Combined service for all value chain related operations
@@ -22,14 +22,14 @@ export const valueChainService = {
   
   // Export functionality
   exportAsJson: valueChainExportService.exportAsJson,
-  exportAsPNG: valueChainExportService.exportAsPNG,
+  exportAsPNG: valueChainExportService.exportAsImage, // Fixed method name
   
   // Document management
-  uploadDocument: documentService.uploadDocument,
+  uploadDocuments: documentService.uploadDocuments, // Fixed method name
   deleteDocument: documentService.deleteDocument,
   getDocuments: documentService.getDocuments,
   
   // AI generation methods
-  generateValueChain: aiService.detailedGenerationService.generateValueChain,
-  quickGenerateValueChain: aiService.quickGenerationService.quickGenerateValueChain
+  generateValueChain: valueChainAIService.generateValueChain,
+  quickGenerateValueChain: valueChainAIService.quickGenerateValueChain
 };

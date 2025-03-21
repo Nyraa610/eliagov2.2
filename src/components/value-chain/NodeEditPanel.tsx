@@ -18,13 +18,13 @@ interface NodeEditPanelProps {
 export function NodeEditPanel({ selectedNode, onUpdate, onClose }: NodeEditPanelProps) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
-  const [nodeType, setNodeType] = useState<NodeType>("custom");
+  const [nodeType, setNodeType] = useState<NodeType>("primary");
 
   useEffect(() => {
     if (selectedNode) {
       setLabel(selectedNode.data.label || "");
       setDescription(selectedNode.data.description || "");
-      setNodeType((selectedNode.data.type as NodeType) || "custom");
+      setNodeType(selectedNode.data.type);
     }
   }, [selectedNode]);
 
