@@ -6,6 +6,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PersonalInfoForm } from "@/components/profile/PersonalInfoForm";
 import { CompanySection } from "@/components/profile/CompanySection";
 import { LanguageSettings } from "@/components/profile/LanguageSettings";
+import { AdminSection } from "@/components/profile/AdminSection";
 
 interface ProfileContentProps {
   profile: UserProfile | null;
@@ -46,6 +47,12 @@ export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileCo
           </CardContent>
         </Card>
       </motion.div>
+
+      {isAdmin && (
+        <motion.div variants={item}>
+          <AdminSection />
+        </motion.div>
+      )}
 
       <motion.div variants={item}>
         <CompanySection profile={profile} onCompanyCreated={onCompanyCreated} />
