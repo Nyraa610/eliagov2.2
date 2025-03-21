@@ -6,19 +6,22 @@ import { IROFormValues } from "./formSchema";
 import { MethodologyForm } from "./MethodologyForm";
 import { AnalysisForm } from "./AnalysisForm";
 import { ReviewForm } from "./ReviewForm";
+import { FeatureStatus } from "@/types/training";
 
 interface IROTabsProps {
   form: UseFormReturn<IROFormValues>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onSubmit: (values: IROFormValues) => void;
+  analysisStatus: FeatureStatus;
 }
 
 export function IROTabs({ 
   form, 
   activeTab, 
   setActiveTab, 
-  onSubmit 
+  onSubmit,
+  analysisStatus
 }: IROTabsProps) {
   const tabs = [
     { id: "methodology", label: "Methodology", icon: <Settings className="h-4 w-4 mr-2" /> },
@@ -47,7 +50,8 @@ export function IROTabs({
         <AnalysisForm 
           form={form} 
           onPrevious={() => setActiveTab("methodology")} 
-          onNext={() => setActiveTab("review")} 
+          onNext={() => setActiveTab("review")}
+          analysisStatus={analysisStatus}
         />
       </TabsContent>
       

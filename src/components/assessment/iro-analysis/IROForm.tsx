@@ -86,6 +86,7 @@ export function IROForm({
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         onSubmit={onSubmit}
+        analysisStatus={analysisStatus}
       />
     </AssessmentBase>
   );
