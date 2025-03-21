@@ -1,4 +1,6 @@
-import ReactFlow, {
+
+import {
+  ReactFlow,
   ReactFlowProvider,
   useNodesState,
   useEdgesState,
@@ -8,10 +10,10 @@ import ReactFlow, {
   Background,
   NodeToolbar,
   MiniMap,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useCallback, useState, useEffect } from 'react';
-import { initialNodes, initialEdges } from './initial-elements';
 import FloatingEdge from './FloatingEdge';
 import { CustomNode } from './CustomNode';
 import { CustomToolbar } from './CustomToolbar';
@@ -34,8 +36,16 @@ const rfStyle = {
   backgroundColor: '#F0F0F0',
 };
 
-const ValueChainEditorContainer: React.FC<{ initialData?: ValueChainData }> = ({ initialData }) => {
-  const { nodes: initialNodes, edges: initialEdges } = useValueChainNodes(initialData);
+interface ValueChainEditorContainerProps {
+  initialData?: ValueChainData | null;
+}
+
+const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerProps) => {
+  const { nodes: initialNodes, edges: initialEdges } = useValueChainNodes(
+    initialData?.nodes || [],
+    initialData?.edges || []
+  );
+  
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -55,26 +65,34 @@ const ValueChainEditorContainer: React.FC<{ initialData?: ValueChainData }> = ({
     (event) => {
       event.preventDefault();
 
+      if (!reactFlowInstance) return;
+
       const type = event.dataTransfer.getData('application/reactflow');
-      const position = reactFlowInstance.project({
+      const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
+      
       const newNode = {
-        id: String(nodes.length + 1),
-        type,
+        id: `node-${nodes.length + 1}`,
+        type: 'custom',
         position,
-        data: { label: `${type} node` },
+        data: { 
+          label: `${type || 'New'} node`,
+          type: 'custom'
+        },
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => [...nds, newNode]);
     },
     [reactFlowInstance, nodes, setNodes]
   );
 
   useEffect(() => {
-    if (reactFlowInstance && initialNodes && initialEdges) {
-      fitView();
+    if (reactFlowInstance && initialNodes.length > 0 && initialEdges.length > 0) {
+      setTimeout(() => {
+        fitView();
+      }, 50);
     }
   }, [reactFlowInstance, initialNodes, initialEdges, fitView]);
 
@@ -98,7 +116,7 @@ const ValueChainEditorContainer: React.FC<{ initialData?: ValueChainData }> = ({
         >
           <MiniMap style={minimapStyle} zoomable pannable />
           <Controls />
-          <Background color="#aaa" variant="dots" gap={16} size={1} />
+          <Background color="#aaa" variant={BackgroundVariant.DOTS} gap={16} size={1} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>

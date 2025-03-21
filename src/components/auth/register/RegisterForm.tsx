@@ -1,93 +1,100 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useRegistration } from "@/hooks/useRegistration";
+import { RegisterFormData, basicInfoSchema, additionalInfoSchema } from "./formSchemas";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { AdditionalInfoForm } from "./AdditionalInfoForm";
-import { basicInfoSchema, additionalInfoSchema } from "./formSchemas";
 
 export function RegisterForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [step, setStep] = useState(1); // Track form step
-  const [basicInfo, setBasicInfo] = useState<z.infer<typeof basicInfoSchema> | null>(null);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [basicData, setBasicData] = useState<Partial<RegisterFormData>>({});
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { signUp } = useAuth();
-  
-  // Handle first step submission
-  const onSubmitBasicInfo = (values: z.infer<typeof basicInfoSchema>) => {
-    setBasicInfo(values);
-    setStep(2); // Proceed to the next step
+  const { registerUser, isLoading } = useRegistration();
+
+  // Step 1 form (basic info)
+  const basicInfoForm = useForm<RegisterFormData>({
+    resolver: zodResolver(basicInfoSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      company: "",
+      country: "",
+    },
+  });
+
+  // Step 2 form (additional info)
+  const additionalInfoForm = useForm<RegisterFormData>({
+    resolver: zodResolver(additionalInfoSchema),
+    defaultValues: {
+      department: "",
+      persona: "",
+      marketingConsent: false,
+      termsConsent: false,
+    },
+  });
+
+  const onBasicInfoSubmit = (data: Partial<RegisterFormData>) => {
+    setBasicData(data);
+    setCurrentStep(2);
   };
 
-  // Handle second step and complete registration
-  const onSubmitAdditionalInfo = async (values: z.infer<typeof additionalInfoSchema>) => {
-    if (!basicInfo) return;
-    
-    setServerError(null);
-    setIsLoading(true);
-    
+  const onAdditionalInfoSubmit = async (data: Partial<RegisterFormData>) => {
     try {
-      // Combine data from both steps
-      const fullData = {
-        ...basicInfo,
-        department: values.department,
-        persona: values.persona,
-        marketingConsent: values.marketingConsent,
-        termsAccepted: values.termsConsent,
-      };
+      // Combine data from both forms
+      const combinedData: RegisterFormData = {
+        ...basicData,
+        ...data,
+      } as RegisterFormData;
+
+      const result = await registerUser(combinedData);
       
-      const { error } = await signUp(basicInfo.email, basicInfo.password, {
-        firstName: basicInfo.firstName,
-        lastName: basicInfo.lastName,
-        phone: basicInfo.phone,
-        company: basicInfo.company,
-        country: basicInfo.country,
-        department: values.department,
-        persona: values.persona,
-        marketingConsent: values.marketingConsent ? true : false,
-      });
-      
-      if (error) {
-        setServerError(error.message || "Registration failed. Please try again.");
-        setStep(1); // Go back to first step if there's an error
-        return;
+      if (result.success) {
+        toast({
+          description: "Registration successful! Please check your email to confirm your account.",
+        });
+        navigate("/register-confirmation");
+      } else {
+        toast({
+          variant: "destructive",
+          description: result.error || "Failed to register. Please try again.",
+        });
       }
-      
-      // Show success message
-      toast({
-        title: "Registration successful!",
-        description: "Your account has been created successfully. Please check your email to confirm your account.",
-      });
-      
-      // Redirect to confirmation page
-      navigate("/register/confirmation");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Registration error:", error);
-      setServerError(error.message || "An unexpected error occurred. Please try again.");
-      setStep(1); // Go back to first step if there's an error
-    } finally {
-      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        description: "An unexpected error occurred. Please try again later.",
+      });
     }
   };
 
-  // Go back to first step
-  const handleBack = () => {
-    setStep(1);
+  const goBack = () => {
+    setCurrentStep(1);
   };
 
   return (
-    <div>
-      {step === 1 ? (
-        <BasicInfoForm onSubmit={onSubmitBasicInfo} serverError={serverError} />
+    <div className="space-y-4">
+      {currentStep === 1 ? (
+        <BasicInfoForm 
+          form={basicInfoForm} 
+          onSubmit={onBasicInfoSubmit}
+          isLoading={isLoading} 
+        />
       ) : (
         <AdditionalInfoForm 
-          onSubmit={onSubmitAdditionalInfo} 
-          onBack={handleBack} 
+          form={additionalInfoForm} 
+          onSubmit={onAdditionalInfoSubmit} 
+          onBack={goBack}
           isLoading={isLoading} 
         />
       )}

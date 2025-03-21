@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { ValueChainData } from "@/types/valueChain";
-import { ValueChainEditorContainer } from "./editor/ValueChainEditorContainer";
+import ValueChainEditorContainer from "./editor/ValueChainEditorContainer";
 import { valueChainService } from "@/services/value-chain";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { Skeleton } from "@/components/ui/skeleton";
