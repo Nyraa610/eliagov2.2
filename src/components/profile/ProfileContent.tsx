@@ -1,12 +1,11 @@
 
 import { UserProfile } from "@/services/base/profileTypes";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { PersonalInfoForm } from "@/components/profile/PersonalInfoForm";
-import { CompanySection } from "@/components/profile/CompanySection";
-import { LanguageSettings } from "@/components/profile/LanguageSettings";
+import { useProfileAnimations } from "@/hooks/useProfileAnimations";
+import { PersonalInfoCard } from "@/components/profile/PersonalInfoCard";
 import { AdminSection } from "@/components/profile/AdminSection";
+import { CompanySection } from "@/components/profile/CompanySection";
+import { LanguageCard } from "@/components/profile/LanguageCard";
 
 interface ProfileContentProps {
   profile: UserProfile | null;
@@ -15,20 +14,7 @@ interface ProfileContentProps {
 }
 
 export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileContentProps) {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
+  const { container, item } = useProfileAnimations();
 
   return (
     <motion.div 
@@ -37,16 +23,11 @@ export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileCo
       variants={container}
       className="space-y-6"
     >
-      <motion.div variants={item}>
-        <Card>
-          <CardHeader>
-            <ProfileHeader isAdmin={isAdmin} />
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <PersonalInfoForm profile={profile} />
-          </CardContent>
-        </Card>
-      </motion.div>
+      <PersonalInfoCard 
+        profile={profile} 
+        isAdmin={isAdmin} 
+        variants={item} 
+      />
 
       {isAdmin && (
         <motion.div variants={item}>
@@ -58,13 +39,7 @@ export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileCo
         <CompanySection profile={profile} onCompanyCreated={onCompanyCreated} />
       </motion.div>
 
-      <motion.div variants={item}>
-        <Card>
-          <CardHeader>
-            <LanguageSettings />
-          </CardHeader>
-        </Card>
-      </motion.div>
+      <LanguageCard variants={item} />
     </motion.div>
   );
 }
