@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +8,7 @@ import { CheckCircle2, XCircle, RotateCcw, Trophy, Award, Star } from "lucide-re
 import { motion } from "framer-motion";
 import confetti from 'canvas-confetti';
 import { useEngagement } from "@/hooks/useEngagement";
+import { useToast } from "@/components/ui/use-toast";
 
 interface QuizResultsProps {
   questions: QuizQuestion[];
@@ -36,6 +37,8 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 }) => {
   const scorePercentage = Math.round((results.earnedPoints / results.totalPoints) * 100);
   const { trackActivity } = useEngagement();
+  const { celebrateSuccess } = useToast();
+  const [showBadge, setShowBadge] = useState(false);
   
   useEffect(() => {
     // Track quiz completion
@@ -51,13 +54,36 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     
     // Trigger confetti when component mounts and score is good
     if (showCelebration) {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      const fireConfetti = () => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#FFA500', '#4CAF50', '#2196F3']
+        });
+      };
+      
+      // Initial confetti burst
+      fireConfetti();
+      
+      // Show celebratory toast
+      celebrateSuccess("Quiz Completed!", `You scored ${scorePercentage}% - Great job!`);
+      
+      // Add a badge animation if score is excellent
+      if (scorePercentage >= 80) {
+        setTimeout(() => setShowBadge(true), 1000);
+      }
+      
+      // Additional bursts
+      const timeout1 = setTimeout(fireConfetti, 700);
+      const timeout2 = setTimeout(fireConfetti, 1400);
+      
+      return () => {
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+      };
     }
-  }, [showCelebration, trackActivity, results, scorePercentage]);
+  }, [showCelebration, trackActivity, results, scorePercentage, celebrateSuccess]);
 
   return (
     <Card>
@@ -66,7 +92,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <motion.div 
-          className="flex justify-center mb-4"
+          className="flex justify-center mb-4 relative"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ 
@@ -80,6 +106,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             <Award className="h-16 w-16 text-primary" />
           ) : (
             <Trophy className="h-16 w-16 text-primary" />
+          )}
+          
+          {showBadge && (
+            <motion.div 
+              className="absolute -top-4 -right-4 bg-yellow-500 text-white rounded-full h-8 w-8 flex items-center justify-center"
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
+            >
+              <Star className="h-5 w-5" />
+            </motion.div>
           )}
         </motion.div>
         
@@ -100,7 +137,15 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           animate={{ width: "100%" }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          <Progress value={scorePercentage} className="h-2 mb-6" />
+          <Progress 
+            value={scorePercentage} 
+            className="h-2 mb-6" 
+            indicatorColor={
+              scorePercentage >= 80 ? "bg-green-500" : 
+              scorePercentage >= 60 ? "bg-yellow-500" : 
+              "bg-red-500"
+            }
+          />
         </motion.div>
         
         <motion.div 
@@ -173,9 +218,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           <RotateCcw className="h-4 w-4 mr-2" />
           Retry Quiz
         </Button>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button onClick={() => onComplete(results.earnedPoints)}>
-            Continue
+        <motion.div 
+          whileHover={{ scale: 1.05 }} 
+          whileTap={{ scale: 0.95 }}
+          className="hover-scale"
+        >
+          <Button 
+            onClick={() => onComplete(results.earnedPoints)}
+            className="relative overflow-hidden group"
+          >
+            <span className="relative z-10">Continue</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
           </Button>
         </motion.div>
       </CardFooter>

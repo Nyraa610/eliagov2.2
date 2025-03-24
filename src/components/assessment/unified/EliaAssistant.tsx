@@ -1,179 +1,146 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { MessagesSquare, SendHorizonal, Sparkles, ArrowDown } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/lib/supabase";
-
-type Message = {
-  content: string;
-  role: "assistant" | "user";
-  timestamp: Date;
-};
+import { Sparkles, Award, ThumbsUp, Send, X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function EliaAssistant() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hello! I'm Elia, your ESG assessment assistant. I can help you understand sustainability concepts, guide you through the assessment process, or answer any questions about your sustainability journey. How can I help you today?",
-      timestamp: new Date(),
-    },
+  const [expanded, setExpanded] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState("");
+  const [motivationalMessages] = useState([
+    "You're making great progress! Keep going!",
+    "Remember, every step in your ESG journey matters!",
+    "Ready to take your sustainability to the next level?",
+    "Your commitment to sustainability is admirable!",
+    "Small changes lead to big impact. You're doing great!",
+    "Every assessment brings you closer to your ESG goals!",
+    "You're on your way to becoming a sustainability leader!",
+    "Keep up the great work - the planet thanks you!"
   ]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  useEffect(() => {
+    // Show a random motivational message after 10 seconds
+    const timer = setTimeout(() => {
+      if (!expanded) {
+        setMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+        setShowMessage(true);
+      }
+    }, 10000);
     
-    // Add user message to the chat
-    const userMessage: Message = {
-      role: "user",
-      content: inputMessage,
-      timestamp: new Date(),
-    };
+    return () => clearTimeout(timer);
+  }, [expanded, motivationalMessages]);
+  
+  const handleExpand = () => {
+    setExpanded(!expanded);
+    setShowMessage(false);
     
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsLoading(true);
-    
-    try {
-      // Call Supabase Edge Function to get AI response
-      const { data, error } = await supabase.functions.invoke('ai-analysis', {
-        body: {
-          type: 'esg-assistant',
-          content: inputMessage,
-          context: messages.slice(-5) // Include last 5 messages for context
-        }
-      });
-      
-      if (error) throw error;
-      
-      // Add AI response to the chat
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: data.result || "I'm sorry, I couldn't process your request at this time.",
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Error getting assistant response:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get a response from Elia. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (!expanded) {
+      // Track engagement
+      console.log("Elia assistant opened"); 
     }
   };
   
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const handleLike = () => {
+    setShowMessage(false);
+    toast({
+      title: "Thanks for the feedback!",
+      description: "I'll keep providing helpful insights.",
+      variant: "celebration",
+    });
   };
-  
+
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <MessagesSquare className="h-5 w-5 text-primary" /> Chat with Elia
-        </CardTitle>
-        <CardDescription>
-          Your ESG/RSE assessment assistant powered by AI
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col h-full pb-0">
-        <ScrollArea className="flex-1 pr-4 mb-4">
-          <div className="space-y-4">
-            {messages.map((message, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  message.role === "assistant" ? "justify-start" : "justify-end"
-                }`}
-              >
-                <div
-                  className={`flex gap-3 max-w-[80%] ${
-                    message.role === "assistant" ? "" : "flex-row-reverse"
-                  }`}
-                >
-                  {message.role === "assistant" && (
-                    <Avatar className="h-8 w-8 bg-primary-foreground border border-primary/20">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                    </Avatar>
-                  )}
-                  <div
-                    className={`rounded-lg px-4 py-2 ${
-                      message.role === "assistant"
-                        ? "bg-muted"
-                        : "bg-primary text-primary-foreground"
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <p className="text-xs mt-1 opacity-70">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  {message.role === "user" && (
-                    <Avatar className="h-8 w-8 bg-primary">
-                      <div className="text-xs font-medium text-primary-foreground">You</div>
-                    </Avatar>
-                  )}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex gap-3 max-w-[80%]">
-                  <Avatar className="h-8 w-8 bg-primary-foreground border border-primary/20">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  </Avatar>
-                  <div className="rounded-lg px-4 py-2 bg-muted">
-                    <div className="flex gap-1">
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce" />
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.2s]" />
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:0.4s]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="pt-4">
-              <ArrowDown className="h-5 w-5 mx-auto text-muted-foreground animate-bounce" />
-            </div>
+    <Card className="shadow-md border-primary/20">
+      <CardHeader className="pb-2 cursor-pointer" onClick={handleExpand}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-8 w-8 bg-primary/20">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </Avatar>
+            <h3 className="font-semibold text-primary">Elia Assistant</h3>
           </div>
-        </ScrollArea>
-        <Separator className="my-2" />
-        <div className="pt-2 pb-4 flex gap-2">
-          <Input
-            placeholder="Type your question about ESG/RSE assessments..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!inputMessage.trim() || isLoading}
-            size="icon"
-          >
-            <SendHorizonal className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            {expanded ? <X className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
-      </CardContent>
+      </CardHeader>
+      
+      {expanded && (
+        <CardContent className="pt-2">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              I'm Elia, your sustainability assistant. How can I help you with your ESG assessment today?
+            </p>
+            
+            <div className="space-y-2">
+              <motion.div 
+                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                whileHover={{ scale: 1.01 }}
+              >
+                <Award className="h-4 w-4 mr-2 text-primary" />
+                Get tips for improving my assessment
+              </motion.div>
+              
+              <motion.div 
+                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                whileHover={{ scale: 1.01 }}
+              >
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                Help me understand ESG terminology
+              </motion.div>
+
+              <motion.div 
+                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                whileHover={{ scale: 1.01 }}
+              >
+                <ThumbsUp className="h-4 w-4 mr-2 text-primary" />
+                Recommend next steps for my sustainability journey
+              </motion.div>
+            </div>
+          </div>
+        </CardContent>
+      )}
+      
+      <AnimatePresence>
+        {showMessage && !expanded && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <CardContent className="pb-2">
+              <div className="rounded-md bg-primary/5 p-3 text-sm relative">
+                {message}
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-6 w-6 absolute top-2 right-2"
+                  onClick={() => setShowMessage(false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+                <div className="absolute bottom-0 translate-y-1/2 left-4 w-2 h-2 bg-primary/5 rotate-45"></div>
+              </div>
+            </CardContent>
+            <CardFooter className="pt-0 flex justify-end space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 px-2 text-xs"
+                onClick={handleLike}
+              >
+                <ThumbsUp className="h-3 w-3 mr-1" /> Helpful
+              </Button>
+            </CardFooter>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }

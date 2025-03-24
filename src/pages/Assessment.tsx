@@ -12,15 +12,17 @@ import { EliaAssistant } from "@/components/assessment/unified/EliaAssistant";
 import { UnifiedESGAnalysis } from "@/components/assessment/unified/UnifiedESGAnalysis";
 import { useAssessmentProgress } from "@/hooks/useAssessmentProgress";
 import { ESGAssessmentHistory } from "@/components/assessment/esg-diagnostic/ESGAssessmentHistory";
+import { GamificationFeedback } from "@/components/assessment/unified/GamificationFeedback";
 
 export default function Assessment() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast, celebrateCompletion } = useToast();
   const { t } = useTranslation();
   const { diagStatus, setDiagStatus, loading, getOverallProgress } = useAssessmentProgress();
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [showUnifiedAssessment, setShowUnifiedAssessment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -59,6 +61,17 @@ export default function Assessment() {
       setDiagStatus("in-progress");
     }
   };
+  
+  // Check if we should show a celebration on status change
+  useEffect(() => {
+    if (diagStatus === "completed" && !showCelebration) {
+      setShowCelebration(true);
+      celebrateCompletion(
+        "Assessment Completed!",
+        "Congratulations on completing your ESG assessment. View your results for insights."
+      );
+    }
+  }, [diagStatus, showCelebration, celebrateCompletion]);
 
   return (
     <UserLayout title={t("assessment.title")}>
@@ -95,6 +108,15 @@ export default function Assessment() {
           </div>
         </div>
       </div>
+      
+      {/* Celebration when assessment is completed */}
+      <GamificationFeedback
+        type="assessment"
+        message="You've successfully completed your ESG assessment! This is a significant step toward building a more sustainable business."
+        show={showCelebration}
+        points={100}
+        onAnimationComplete={() => setShowCelebration(false)}
+      />
     </UserLayout>
   );
 }

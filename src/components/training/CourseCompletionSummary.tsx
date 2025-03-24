@@ -29,10 +29,11 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
 }) => {
   const [certificate, setCertificate] = useState<{ id: string; certificate_url: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const { toast, celebrateSuccess } = useToast();
   const { trackActivity } = useEngagement();
   const successRate = Math.round((earnedPoints / totalPoints) * 100);
   const isSuccessful = successRate >= 75;
+  const [showAchievement, setShowAchievement] = useState(false);
 
   useEffect(() => {
     // Track course completion
@@ -46,6 +47,17 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
         success_rate: successRate
       }
     }, true);
+    
+    // Show achievement toast
+    celebrateSuccess(
+      "Course Completed!",
+      `You've completed ${courseTitle} with a score of ${successRate}%`
+    );
+    
+    // Delayed achievement banner appearance for courses with high scores
+    if (successRate > 85) {
+      setTimeout(() => setShowAchievement(true), 1000);
+    }
     
     if (isSuccessful) {
       const duration = 3 * 1000;
@@ -74,7 +86,7 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
       
       return () => clearInterval(interval);
     }
-  }, [isSuccessful, trackActivity, courseId, courseTitle, earnedPoints, successRate]);
+  }, [isSuccessful, trackActivity, courseId, courseTitle, earnedPoints, successRate, celebrateSuccess]);
 
   const handleGenerateCertificate = async () => {
     if (!courseId) return;
@@ -87,7 +99,18 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
       toast({
         title: "Certificate generated!",
         description: "Your certificate is ready to download",
+        variant: "celebration"
       });
+      
+      // Trigger certificate celebration
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        shapes: ['square'],
+        colors: ['#FFD700', '#9b87f5', '#7E69AB']
+      });
+      
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -118,6 +141,52 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
           </motion.h1>
         </div>
         
+        {showAchievement && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="bg-yellow-50 dark:bg-yellow-900/20 border-y border-yellow-200 dark:border-yellow-800"
+          >
+            <div className="flex items-center justify-center gap-3 py-3 px-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+              >
+                <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/50 p-1.5">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  >
+                    <div className="text-yellow-600 dark:text-yellow-300">
+                      🏆
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+              <div>
+                <motion.p 
+                  className="font-medium text-yellow-800 dark:text-yellow-300"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Achievement Unlocked: Sustainability Expert
+                </motion.p>
+                <motion.p 
+                  className="text-sm text-yellow-700 dark:text-yellow-400"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  You scored in the top tier of learners!
+                </motion.p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
         <CardHeader>
           <CardTitle className="text-center">
             {courseTitle} - Course Summary
@@ -142,9 +211,18 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
         </CardContent>
         
         <CardFooter className="justify-center pb-6">
-          <Button onClick={onContinue}>
-            Continue
-          </Button>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              onClick={onContinue} 
+              className="relative overflow-hidden group"
+            >
+              <span className="relative z-10">Continue</span>
+              <span className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            </Button>
+          </motion.div>
         </CardFooter>
       </Card>
     </motion.div>
