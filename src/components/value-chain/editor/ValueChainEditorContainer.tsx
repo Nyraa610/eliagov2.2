@@ -69,7 +69,7 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
 
   const handleAddNode = useCallback((type: NodeType) => {
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-    const position = reactFlowInstance.project({
+    const position = reactFlowInstance.screenToFlowPosition({
       x: reactFlowBounds.width / 2,
       y: reactFlowBounds.height / 2,
     });
@@ -176,7 +176,6 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
         onGenerate={handleAutomatedValueChain}
         companyName={company?.name || ""}
         industry={company?.industry || ""}
-        location={company?.location || ""}
         isGenerating={isGenerating}
       />
     </div>

@@ -28,6 +28,7 @@ interface ItemDialogProps {
   onSave: (values: IROFormValues) => void;
   onCancel: () => void;
   editingIndex: number | null;
+  setupItemForEditing: (item?: IROItem) => void;
 }
 
 export function ItemDialog({
@@ -36,7 +37,8 @@ export function ItemDialog({
   form,
   onSave,
   onCancel,
-  editingIndex
+  editingIndex,
+  setupItemForEditing
 }: ItemDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

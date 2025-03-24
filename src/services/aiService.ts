@@ -90,5 +90,24 @@ export const aiService = {
       console.error("Error generating IRO analysis:", error);
       throw error;
     }
+  },
+
+  /**
+   * Generate IRO items formatted for the IRO analysis form
+   * @param businessContext The business context to analyze
+   * @returns Promise with the analysis response
+   */
+  generateIROItems: async (businessContext: string): Promise<AIAnalysisResponse> => {
+    try {
+      const response = await aiService.analyzeContent({
+        type: 'esg-assessment',
+        content: `IRO Analysis: ${businessContext}`
+      });
+      
+      return response;
+    } catch (error) {
+      console.error("Error generating IRO items:", error);
+      throw error;
+    }
   }
 };

@@ -11,7 +11,6 @@ interface DialogManagerProps {
   isGenerating: boolean;
   companyName: string;
   industry: string;
-  location: string;
   onDocumentUpload: (files: File[]) => void;
   onAutomatedValueChain: (prompt: AIGenerationPrompt) => Promise<void>;
 }
@@ -24,7 +23,6 @@ export function DialogManager({
   isGenerating,
   companyName,
   industry,
-  location,
   onDocumentUpload,
   onAutomatedValueChain
 }: DialogManagerProps) {
@@ -36,7 +34,6 @@ export function DialogManager({
         onGenerate={onAutomatedValueChain}
         companyName={companyName}
         industry={industry}
-        location={location}
         isGenerating={isGenerating}
       />
       

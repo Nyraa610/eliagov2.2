@@ -186,10 +186,16 @@ export function TwoColumnTable({
       />
       
       {items.length === 0 ? (
-        <EmptyState onAddItem={openItemDialog} onGenerateWithAI={() => setIsAIDialogOpen(true)} />
+        <EmptyState 
+          onAddItem={openItemDialog} 
+          onGenerateWithAI={() => setIsAIDialogOpen(true)} 
+        />
       ) : (
         <Table>
-          <TableHeader />
+          <TableHeader 
+            risksCount={risks.length} 
+            opportunitiesCount={opportunities.length} 
+          />
           <TableBody>
             {Array.from({ length: maxLength }).map((_, rowIndex) => (
               <TableRow key={`row-${rowIndex}`}>
@@ -197,13 +203,15 @@ export function TwoColumnTable({
                   {rowIndex < risks.length && (
                     <RiskOpportunityCard
                       item={risks[rowIndex]}
-                      index={items.indexOf(risks[rowIndex])}
-                      onEdit={handleEditItem}
-                      onRemove={handleRemoveItem}
-                      onMove={handleMoveItem}
-                      scoreColor={getRiskScoreColor(risks[rowIndex].score)}
-                      impactLabel={getImpactLabel(risks[rowIndex].impact)}
-                      likelihoodLabel={getLikelihoodLabel(risks[rowIndex].likelihood)}
+                      itemIndex={items.indexOf(risks[rowIndex])}
+                      totalItems={items.length}
+                      handleEditItem={handleEditItem}
+                      handleRemoveItem={handleRemoveItem}
+                      handleMoveItem={handleMoveItem}
+                      setupItemForEditing={setupItemForEditingHandler}
+                      getRiskScoreColor={getRiskScoreColor}
+                      getImpactLabel={(value) => getImpactLabel(value, form.getValues())}
+                      getLikelihoodLabel={(value) => getLikelihoodLabel(value, form.getValues())}
                     />
                   )}
                 </TableCell>
@@ -211,13 +219,15 @@ export function TwoColumnTable({
                   {rowIndex < opportunities.length && (
                     <RiskOpportunityCard
                       item={opportunities[rowIndex]}
-                      index={items.indexOf(opportunities[rowIndex])}
-                      onEdit={handleEditItem}
-                      onRemove={handleRemoveItem}
-                      onMove={handleMoveItem}
-                      scoreColor={getRiskScoreColor(opportunities[rowIndex].score)}
-                      impactLabel={getImpactLabel(opportunities[rowIndex].impact)}
-                      likelihoodLabel={getLikelihoodLabel(opportunities[rowIndex].likelihood)}
+                      itemIndex={items.indexOf(opportunities[rowIndex])}
+                      totalItems={items.length}
+                      handleEditItem={handleEditItem}
+                      handleRemoveItem={handleRemoveItem}
+                      handleMoveItem={handleMoveItem}
+                      setupItemForEditing={setupItemForEditingHandler}
+                      getRiskScoreColor={getRiskScoreColor}
+                      getImpactLabel={(value) => getImpactLabel(value, form.getValues())}
+                      getLikelihoodLabel={(value) => getLikelihoodLabel(value, form.getValues())}
                     />
                   )}
                 </TableCell>
@@ -229,9 +239,9 @@ export function TwoColumnTable({
       
       {/* Item Dialog */}
       <ItemDialog
-        open={isAddingItem}
-        onOpenChange={setIsAddingItem}
-        onClose={handleCloseDialog}
+        isOpen={isAddingItem}
+        setIsOpen={setIsAddingItem}
+        onCancel={handleCloseDialog}
         onSave={handleSaveItem}
         editingIndex={editingIndex}
         form={form}

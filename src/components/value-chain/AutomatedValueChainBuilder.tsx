@@ -17,7 +17,6 @@ interface AutomatedValueChainBuilderProps {
   isGenerating: boolean;
   companyName?: string;
   industry?: string;
-  location?: string;
 }
 
 export function AutomatedValueChainBuilder({
@@ -26,8 +25,7 @@ export function AutomatedValueChainBuilder({
   onGenerate,
   isGenerating,
   companyName = "",
-  industry = "",
-  location = ""
+  industry = ""
 }: AutomatedValueChainBuilderProps) {
   const { t } = useTranslation();
   
