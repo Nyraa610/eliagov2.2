@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Language",
@@ -134,7 +133,12 @@
       "probability": "Probability",
       "actions": "Actions",
       "risk": "Risk",
-      "opportunity": "Opportunity"
+      "opportunity": "Opportunity",
+      "emptyState": {
+        "title": "No Risks or Opportunities Added",
+        "description": "Start by adding risks and opportunities manually, or let AI generate them for you based on your business context.",
+        "generateWithAI": "Generate with AI"
+      }
     },
     "valueChain": {
       "title": "Value Chain Modeling",
@@ -267,6 +271,61 @@
       "delete": "Delete",
       "noDocuments": "No documents uploaded",
       "uploadInstructions": "Drag and drop documents or click to browse"
+    },
+    "emptyState": {
+      "title": "Create Your Value Chain",
+      "description": "Build a comprehensive value chain to identify ESG impacts and optimization opportunities.",
+      "generateWithAI": "Generate with AI",
+      "aiDescription": "Let AI analyze your business and generate a detailed value chain model.",
+      "or": "or",
+      "manualDescription": "Use the toolbar above to add nodes and create your value chain manually."
+    }
+  },
+  "admin": {
+    "panel": "Admin Panel",
+    "overview": "Overview",
+    "users": "Users",
+    "training": "Training",
+    "backToDashboard": "Back to Dashboard",
+    "adminPanel": "Administration Panel",
+    "translations": {
+      "title": "Translation Management",
+      "pageTitle": "Translation Management",
+      "pageDescription": "Manage application translations and language settings",
+      "description": "Manage application translations and language settings",
+      "editTab": "Edit Translations",
+      "addTab": "Add New Translations",
+      "missingTab": "Missing Translations",
+      "checkMissing": "Check Missing",
+      "export": "Export",
+      "namespace": "Namespace",
+      "selectNamespace": "Select namespace",
+      "language": "Language",
+      "selectLanguage": "Select language",
+      "search": "Search",
+      "searchPlaceholder": "Search keys or values...",
+      "key": "Key",
+      "value": "Value",
+      "actions": "Actions",
+      "noTranslations": "No translations found",
+      "keyName": "Key Name",
+      "keyNamePlaceholder": "Enter key name (e.g. button.submit)",
+      "valueFor": "Value for {{language}}",
+      "enterTranslation": "Enter translation for {{language}}",
+      "addKey": "Add Translation Key",
+      "refreshMissing": "Refresh Missing Translations",
+      "noMissingFound": "No missing translations found or check has not been run yet.",
+      "missingKeys": "missing keys",
+      "allTranslated": "All keys are translated.",
+      "updateSuccess": "Translation updated successfully",
+      "updateError": "Error updating translation",
+      "errorLoading": "Error loading translations",
+      "errorLoadingNamespaces": "Error loading namespaces",
+      "errorCheckingMissing": "Error checking missing translations",
+      "keyAdded": "Translation key added successfully",
+      "errorAddingKey": "Error adding translation key",
+      "exportSuccess": "Translations exported successfully",
+      "exportError": "Error exporting translations"
     }
   }
 }

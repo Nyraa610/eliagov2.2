@@ -1,3 +1,4 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -22,6 +23,7 @@ import Profile from "@/pages/Profile";
 import Unauthorized from "@/pages/Unauthorized";
 import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
+import TranslationAdmin from "@/pages/admin/TranslationAdmin";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -140,6 +142,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/training",
     element: <ProtectedRoute requiredRole="admin"><AdminTraining /></ProtectedRoute>,
+  },
+  {
+    path: "/admin/translations",
+    element: <ProtectedRoute requiredRole="admin"><TranslationAdmin /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:id?",

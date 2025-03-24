@@ -2,6 +2,7 @@
 import { AutomatedValueChainBuilder } from "../../AutomatedValueChainBuilder";
 import { AIGenerationPrompt } from "@/types/valueChain";
 import { DocumentUploadDialog } from "../../DocumentUploadDialog";
+import { useTranslation } from "react-i18next";
 
 interface DialogManagerProps {
   isUploadDialogOpen: boolean;
@@ -26,6 +27,8 @@ export function DialogManager({
   onDocumentUpload,
   onAutomatedValueChain
 }: DialogManagerProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       <AutomatedValueChainBuilder
