@@ -13,27 +13,24 @@ import {
   BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import FloatingEdge from './FloatingEdge';
 import { CustomNode } from './CustomNode';
 import { CustomToolbar } from './CustomToolbar';
 import { useValueChainNodes } from './useValueChainNodes';
-import { ValueChainData, NodeType } from '@/types/valueChain';
+import { ValueChainData, NodeType, AIGenerationPrompt } from '@/types/valueChain';
+import { EditorContent } from './components/EditorContent';
+import { AutomatedValueChainBuilder } from '../AutomatedValueChainBuilder';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
+import { useAutomatedValueChain } from './hooks/useAutomatedValueChain';
 
 const nodeTypes = {
   custom: CustomNode,
+  valueChainNode: CustomNode
 };
 
 const edgeTypes = {
   floating: FloatingEdge,
-};
-
-const minimapStyle = {
-  height: 120,
-};
-
-const rfStyle = {
-  backgroundColor: '#F0F0F0',
 };
 
 interface ValueChainEditorContainerProps {
@@ -41,84 +38,147 @@ interface ValueChainEditorContainerProps {
 }
 
 const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerProps) => {
-  const { nodes: initialNodes, edges: initialEdges } = useValueChainNodes(
-    initialData?.nodes || [],
-    initialData?.edges || []
-  );
+  const { company } = useCompanyProfile();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialData?.nodes || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData?.edges || []);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [isAutomatedBuilderOpen, setIsAutomatedBuilderOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingProgress, setGeneratingProgress] = useState(0);
+  const reactFlowInstance = useReactFlow();
+  const reactFlowWrapper = useRef(null);
   
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const { fitView } = useReactFlow();
-
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+  const { handleAutomatedValueChain } = useAutomatedValueChain({
+    setIsGenerating,
+    setGeneratingProgress,
+    setNodes,
+    setEdges,
+    setSelectedNode,
+    setIsAIDialogOpen: setIsAutomatedBuilderOpen,
+    company
+  });
+
+  const onNodeClick = useCallback((event, node) => {
+    setSelectedNode(node);
   }, []);
 
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
+  const handleAddNode = useCallback((type: NodeType) => {
+    const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+    const position = reactFlowInstance.project({
+      x: reactFlowBounds.width / 2,
+      y: reactFlowBounds.height / 2,
+    });
+    
+    const newNode = {
+      id: `node-${Date.now()}`,
+      type: 'valueChainNode',
+      position,
+      data: { 
+        label: `${type} Node`, 
+        type: type,
+        description: 'Click to edit'
+      },
+    };
+    
+    setNodes((nds) => [...nds, newNode]);
+  }, [reactFlowInstance, setNodes]);
 
-      if (!reactFlowInstance) return;
+  const handleUpdateNode = useCallback((nodeId, data) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...data,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [setNodes]);
 
-      const type = event.dataTransfer.getData('application/reactflow');
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-      
-      const newNode = {
-        id: `node-${nodes.length + 1}`,
-        type: 'custom',
-        position,
-        data: { 
-          label: `${type || 'New'} node`,
-          type: 'custom' as NodeType
-        },
-      };
+  const handleSave = useCallback(() => {
+    console.log('Save value chain');
+    // Implement save functionality
+  }, []);
 
-      setNodes((nds) => [...nds, newNode]);
-    },
-    [reactFlowInstance, nodes, setNodes]
-  );
+  const handleExport = useCallback(() => {
+    console.log('Export value chain');
+    // Implement export functionality
+  }, []);
+
+  const handleImport = useCallback((e) => {
+    console.log('Import value chain');
+    // Implement import functionality
+  }, []);
+
+  const handleClear = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+    setSelectedNode(null);
+  }, [setNodes, setEdges]);
+
+  const handleZoomIn = useCallback(() => {
+    reactFlowInstance.zoomIn();
+  }, [reactFlowInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    reactFlowInstance.zoomOut();
+  }, [reactFlowInstance]);
+
+  const handleReset = useCallback(() => {
+    reactFlowInstance.fitView();
+  }, [reactFlowInstance]);
 
   useEffect(() => {
-    if (reactFlowInstance && initialNodes.length > 0 && initialEdges.length > 0) {
+    if (nodes.length > 0) {
       setTimeout(() => {
-        fitView();
+        reactFlowInstance.fitView();
       }, 50);
     }
-  }, [reactFlowInstance, initialNodes, initialEdges, fitView]);
+  }, [nodes, reactFlowInstance]);
 
   return (
     <div className="w-full h-full">
-      <ReactFlowProvider>
-        <CustomToolbar />
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          style={rfStyle}
-        >
-          <MiniMap style={minimapStyle} zoomable pannable />
-          <Controls />
-          <Background color="#aaa" variant={BackgroundVariant.Dots} gap={16} size={1} />
-        </ReactFlow>
-      </ReactFlowProvider>
+      <EditorContent
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        selectedNode={selectedNode}
+        handleUpdateNode={handleUpdateNode}
+        handleAddNode={handleAddNode}
+        handleSave={handleSave}
+        handleExport={handleExport}
+        handleImport={handleImport}
+        handleClear={handleClear}
+        handleZoomIn={handleZoomIn}
+        handleZoomOut={handleZoomOut}
+        handleReset={handleReset}
+        isGenerating={isGenerating}
+        generatingProgress={generatingProgress}
+        onAutomatedBuilder={() => setIsAutomatedBuilderOpen(true)}
+        setSelectedNode={setSelectedNode}
+      />
+      
+      <AutomatedValueChainBuilder
+        open={isAutomatedBuilderOpen}
+        onOpenChange={setIsAutomatedBuilderOpen}
+        onGenerate={handleAutomatedValueChain}
+        companyName={company?.name || ""}
+        industry={company?.industry || ""}
+        location={company?.location || ""}
+        isGenerating={isGenerating}
+      />
     </div>
   );
 };

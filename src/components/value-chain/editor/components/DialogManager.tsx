@@ -1,6 +1,7 @@
 
 import { AutomatedValueChainBuilder } from "../../AutomatedValueChainBuilder";
 import { AIGenerationPrompt } from "@/types/valueChain";
+import { DocumentUploadDialog } from "../../DocumentUploadDialog";
 
 interface DialogManagerProps {
   isUploadDialogOpen: boolean;
@@ -37,6 +38,12 @@ export function DialogManager({
         industry={industry}
         location={location}
         isGenerating={isGenerating}
+      />
+      
+      <DocumentUploadDialog
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        onUpload={onDocumentUpload}
       />
     </>
   );

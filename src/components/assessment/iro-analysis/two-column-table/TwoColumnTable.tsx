@@ -10,22 +10,24 @@ import { UseFormReturn } from "react-hook-form";
 import { IROFormValues, IROItem } from "../formSchema";
 import { aiService } from "@/services/aiService";
 import { useToast } from "@/components/ui/use-toast";
+import { useEngagement } from "@/hooks/useEngagement";
+import { useTranslation } from "react-i18next";
 
 // Import components
+import { TableHeader } from "./TableHeader";
+import { EmptyState } from "./EmptyState";
+import { TableToolbar } from "./TableToolbar";
+import { RiskOpportunityCard } from "./RiskOpportunityCard";
+import { ItemDialog } from "./ItemDialog";
+import { AIGenerationDialog } from "./AIGenerationDialog";
 import { 
-  TableHeader, 
-  EmptyState, 
-  TableToolbar,
-  RiskOpportunityCard,
-  ItemDialog,
-  AIGenerationDialog,
   getRiskScoreColor,
   getImpactLabel,
   getLikelihoodLabel,
   setupItemForEditing,
   prepareItemForSaving,
   parseAIGenerationResult
-} from "./";
+} from "./utils";
 
 interface TwoColumnTableProps {
   form: UseFormReturn<IROFormValues>;
@@ -45,6 +47,8 @@ export function TwoColumnTable({
   setEditingIndex
 }: TwoColumnTableProps) {
   const { toast } = useToast();
+  const { trackActivity } = useEngagement();
+  const { t } = useTranslation();
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
@@ -116,35 +120,56 @@ export function TwoColumnTable({
   };
   
   // AI Generation handler
-  const handleGenerateWithAI = async (businessContext: string) => {
-    try {
-      setIsGenerating(true);
-      
-      const result = await aiService.generateIROAnalysis(businessContext);
-      const generatedItems = parseAIGenerationResult(result);
-      
-      if (generatedItems.length > 0) {
-        // Add generated items to existing items
-        form.setValue("items", [...items, ...generatedItems]);
-        
-        toast({
-          title: "AI Generation Complete",
-          description: `Generated ${generatedItems.length} risks and opportunities.`,
-        });
-        
-        setIsAIDialogOpen(false);
-      } else {
-        toast({
-          title: "AI Generation Issue",
-          description: "Could not generate items. Please try again with more detailed context.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error generating IRO analysis:", error);
+  const handleGenerateWithAI = async (context: string) => {
+    if (!context.trim()) {
       toast({
-        title: "Error",
-        description: "Failed to generate risks and opportunities. Please try again.",
+        title: t("common.error"),
+        description: t("assessment.iroAnalysis.aiGeneration.noContextError"),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    try {
+      const result = await aiService.generateIROItems(context);
+      
+      if (!result || !result.result) {
+        throw new Error("AI failed to generate items");
+      }
+      
+      const parsedItems = parseAIGenerationResult(result.result);
+      
+      if (parsedItems.length === 0) {
+        throw new Error("No valid items generated");
+      }
+      
+      // Add the generated items to the form
+      const currentItems = form.getValues().items || [];
+      form.setValue("items", [...currentItems, ...parsedItems]);
+      
+      // Track activity for AI generation
+      trackActivity({
+        activity_type: 'use_ai_generator',
+        points_earned: 10,
+        metadata: { 
+          feature: "iro_analysis",
+          items_count: parsedItems.length
+        }
+      });
+      
+      toast({
+        title: t("common.success"),
+        description: t("assessment.iroAnalysis.aiGeneration.success", {count: parsedItems.length})
+      });
+      
+      setIsAIDialogOpen(false);
+    } catch (error) {
+      console.error("Error generating IRO items:", error);
+      toast({
+        title: t("common.error"),
+        description: t("assessment.iroAnalysis.aiGeneration.error"),
         variant: "destructive"
       });
     } finally {
@@ -152,88 +177,68 @@ export function TwoColumnTable({
     }
   };
   
-  // Render a table row with risk and opportunity side by side
-  const renderTableRow = (index: number) => {
-    const risk = risks[index];
-    const opportunity = opportunities[index];
-    
-    return (
-      <TableRow key={index}>
-        {/* Risk Column */}
-        <TableCell className="w-1/2 align-top border-r">
-          {risk && (
-            <RiskOpportunityCard
-              item={risk}
-              itemIndex={items.indexOf(risk)}
-              totalItems={items.length}
-              getImpactLabel={(value) => getImpactLabel(value, form.getValues())}
-              getLikelihoodLabel={(value) => getLikelihoodLabel(value, form.getValues())}
-              getRiskScoreColor={getRiskScoreColor}
-              handleEditItem={handleEditItem}
-              handleRemoveItem={handleRemoveItem}
-              handleMoveItem={handleMoveItem}
-              setupItemForEditing={setupItemForEditingHandler}
-            />
-          )}
-        </TableCell>
-        
-        {/* Opportunity Column */}
-        <TableCell className="w-1/2 align-top">
-          {opportunity && (
-            <RiskOpportunityCard
-              item={opportunity}
-              itemIndex={items.indexOf(opportunity)}
-              totalItems={items.length}
-              getImpactLabel={(value) => getImpactLabel(value, form.getValues())}
-              getLikelihoodLabel={(value) => getLikelihoodLabel(value, form.getValues())}
-              getRiskScoreColor={getRiskScoreColor}
-              handleEditItem={handleEditItem}
-              handleRemoveItem={handleRemoveItem}
-              handleMoveItem={handleMoveItem}
-              setupItemForEditing={setupItemForEditingHandler}
-            />
-          )}
-        </TableCell>
-      </TableRow>
-    );
-  };
-  
   return (
-    <div>
+    <div className="space-y-4">
       <TableToolbar 
-        onAddItem={() => {
-          setupItemForEditingHandler();
-          openItemDialog();
-        }}
+        onAddItem={openItemDialog} 
         onGenerateAI={() => setIsAIDialogOpen(true)}
         isGenerating={isGenerating}
       />
       
-      <div className="border rounded-md">
+      {items.length === 0 ? (
+        <EmptyState onAddItem={openItemDialog} onGenerateWithAI={() => setIsAIDialogOpen(true)} />
+      ) : (
         <Table>
-          <TableHeader 
-            risksCount={risks.length} 
-            opportunitiesCount={opportunities.length} 
-          />
+          <TableHeader />
           <TableBody>
-            {maxLength === 0 ? (
-              <EmptyState />
-            ) : (
-              Array.from({ length: maxLength }).map((_, index) => renderTableRow(index))
-            )}
+            {Array.from({ length: maxLength }).map((_, rowIndex) => (
+              <TableRow key={`row-${rowIndex}`}>
+                <TableCell>
+                  {rowIndex < risks.length && (
+                    <RiskOpportunityCard
+                      item={risks[rowIndex]}
+                      index={items.indexOf(risks[rowIndex])}
+                      onEdit={handleEditItem}
+                      onRemove={handleRemoveItem}
+                      onMove={handleMoveItem}
+                      scoreColor={getRiskScoreColor(risks[rowIndex].score)}
+                      impactLabel={getImpactLabel(risks[rowIndex].impact)}
+                      likelihoodLabel={getLikelihoodLabel(risks[rowIndex].likelihood)}
+                    />
+                  )}
+                </TableCell>
+                <TableCell>
+                  {rowIndex < opportunities.length && (
+                    <RiskOpportunityCard
+                      item={opportunities[rowIndex]}
+                      index={items.indexOf(opportunities[rowIndex])}
+                      onEdit={handleEditItem}
+                      onRemove={handleRemoveItem}
+                      onMove={handleMoveItem}
+                      scoreColor={getRiskScoreColor(opportunities[rowIndex].score)}
+                      impactLabel={getImpactLabel(opportunities[rowIndex].impact)}
+                      likelihoodLabel={getLikelihoodLabel(opportunities[rowIndex].likelihood)}
+                    />
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-      </div>
+      )}
       
+      {/* Item Dialog */}
       <ItemDialog
-        isOpen={isAddingItem}
-        setIsOpen={setIsAddingItem}
-        form={form}
+        open={isAddingItem}
+        onOpenChange={setIsAddingItem}
+        onClose={handleCloseDialog}
         onSave={handleSaveItem}
-        onCancel={handleCloseDialog}
         editingIndex={editingIndex}
+        form={form}
+        setupItemForEditing={setupItemForEditingHandler}
       />
       
+      {/* AI Generation Dialog */}
       <AIGenerationDialog
         isOpen={isAIDialogOpen}
         setIsOpen={setIsAIDialogOpen}
