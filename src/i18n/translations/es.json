@@ -5,7 +5,15 @@
     "english": "Inglés",
     "french": "Francés",
     "greek": "Griego",
-    "spanish": "Español"
+    "spanish": "Español",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -17,7 +25,9 @@
     "signUp": "Registrarse",
     "alreadyAccount": "¿Ya tiene una cuenta?",
     "signIn": "Iniciar sesión",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "resetPassword": "Restablecer contraseña",
+    "resetPasswordInstructions": "Ingrese su correo electrónico y le enviaremos un enlace para restablecer su contraseña"
   },
   "dashboard": {
     "title": "Panel de Control",
@@ -34,7 +44,9 @@
     "noEnrollments": "Aún no se ha inscrito en ningún curso.",
     "browseAvailable": "Explorar cursos disponibles",
     "loading": "Cargando datos de progreso...",
-    "companyESGProgress": "Progreso ESG de la Empresa"
+    "companyESGProgress": "Progreso ESG de la Empresa",
+    "assessmentOverview": "Resumen de Evaluaciones",
+    "viewCompanyProfile": "Ver Perfil de Empresa"
   },
   "news": {
     "title": "Noticias y Actualizaciones ESG",
@@ -47,7 +59,11 @@
     "assessment": "Evaluación",
     "training": "Formación",
     "dashboard": "Panel de Control",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "valueChain": "Cadena de Valor",
+    "company": "Empresa",
+    "engagement": "Participación",
+    "rewards": "Recompensas"
   },
   "profile": {
     "profile": "Perfil",
@@ -61,7 +77,13 @@
     "saving": "Guardando...",
     "saveProfile": "Guardar perfil",
     "languageSettings": "Configuración de idioma",
-    "changeLanguage": "Cambiar el idioma de la aplicación"
+    "changeLanguage": "Cambiar el idioma de la aplicación",
+    "companySection": "Información de la Empresa",
+    "manageCompany": "Administre la información y configuración de su empresa",
+    "adminSection": "Administración",
+    "adminTools": "Acceda a herramientas y configuraciones de administración",
+    "personalInfo": "Información Personal",
+    "accountSettings": "Configuración de la Cuenta"
   },
   "assessment": {
     "title": "Evaluación ESG",
@@ -102,6 +124,25 @@
       "steps": "Establecimiento de objetivos, desarrollo de estrategia y hoja de ruta de implementación",
       "start": "Crear plan"
     },
+    "iroAnalysis": {
+      "title": "Análisis de Riesgos y Oportunidades",
+      "description": "Identifique y analice los riesgos y oportunidades clave para su organización",
+      "addItem": "Agregar Elemento",
+      "itemType": "Tipo",
+      "description": "Descripción",
+      "impact": "Impacto",
+      "probability": "Probabilidad",
+      "actions": "Acciones",
+      "risk": "Riesgo",
+      "opportunity": "Oportunidad"
+    },
+    "valueChain": {
+      "title": "Modelado de Cadena de Valor",
+      "description": "Mapee su cadena de valor para identificar puntos críticos de sostenibilidad",
+      "start": "Iniciar modelado",
+      "editor": "Editor de Cadena de Valor",
+      "results": "Resultados de Cadena de Valor"
+    },
     "disclaimer": {
       "title": "Información de evaluación",
       "description": "Todas las evaluaciones son confidenciales y están diseñadas para proporcionar perspectivas accionables para su viaje de sostenibilidad. Sus datos solo se utilizarán para generar recomendaciones personalizadas."
@@ -110,6 +151,122 @@
     "form": "Formulario de evaluación",
     "getStarted": "Comenzar",
     "startAssessment": "Iniciar evaluación",
-    "continueAssessment": "Continuar evaluación"
+    "continueAssessment": "Continuar evaluación",
+    "startNewAssessment": "Iniciar nueva evaluación",
+    "viewHistory": "Ver historial de evaluaciones"
+  },
+  "training": {
+    "title": "Formación",
+    "subtitle": "Mejore sus conocimientos sobre sostenibilidad con nuestros cursos",
+    "availableCourses": "Cursos Disponibles",
+    "yourCourses": "Sus Cursos",
+    "certificates": "Certificados",
+    "noCourses": "No hay cursos disponibles",
+    "noEnrollments": "Aún no se ha inscrito en ningún curso",
+    "noCertificates": "Aún no ha obtenido certificados",
+    "enroll": "Inscribirse",
+    "continue": "Continuar",
+    "completed": "Completado",
+    "progress": "Progreso",
+    "courseOverview": "Descripción del Curso",
+    "modules": "Módulos",
+    "quiz": {
+      "title": "Cuestionario",
+      "question": "Pregunta",
+      "of": "de",
+      "next": "Siguiente",
+      "submit": "Enviar",
+      "results": "Resultados",
+      "correct": "Correcto",
+      "incorrect": "Incorrecto",
+      "yourScore": "Su Puntuación",
+      "retry": "Reintentar",
+      "continue": "Continuar"
+    }
+  },
+  "company": {
+    "title": "Empresa",
+    "profile": "Perfil de Empresa",
+    "settings": "Configuración de Empresa",
+    "members": "Miembros",
+    "inviteMember": "Invitar Miembro",
+    "name": "Nombre de Empresa",
+    "industry": "Industria",
+    "size": "Tamaño de Empresa",
+    "website": "Sitio Web",
+    "description": "Descripción",
+    "createCompany": "Crear Empresa",
+    "editCompany": "Editar Empresa",
+    "updateCompany": "Actualizar Empresa",
+    "deleteCompany": "Eliminar Empresa",
+    "companyCreated": "Empresa creada exitosamente",
+    "companyUpdated": "Empresa actualizada exitosamente",
+    "companyDeleted": "Empresa eliminada exitosamente",
+    "apiConnectors": "Conectores API",
+    "userManagement": "Gestión de Usuarios",
+    "generalSettings": "Configuración General"
+  },
+  "engagement": {
+    "title": "Participación",
+    "points": "Puntos",
+    "badges": "Insignias",
+    "activities": "Actividades",
+    "leaderboard": "Tabla de Clasificación",
+    "rewards": "Recompensas",
+    "yourProgress": "Su Progreso",
+    "level": "Nivel",
+    "nextLevel": "Siguiente Nivel",
+    "totalPoints": "Puntos Totales",
+    "totalActivities": "Actividades Totales",
+    "noBadges": "Aún no ha ganado insignias",
+    "noRewards": "No hay recompensas disponibles",
+    "redeem": "Canjear",
+    "redeemed": "Canjeado",
+    "leaderboardScope": {
+      "company": "Empresa",
+      "global": "Global"
+    },
+    "leaderboardPeriod": {
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "allTime": "Todo el tiempo"
+    },
+    "pointsEarned": "Puntos Ganados"
+  },
+  "valueChain": {
+    "title": "Cadena de Valor",
+    "subtitle": "Modele su cadena de valor para identificar puntos críticos de sostenibilidad",
+    "editor": {
+      "title": "Editor de Cadena de Valor",
+      "nodes": "Nodos",
+      "edges": "Conexiones",
+      "save": "Guardar",
+      "export": "Exportar",
+      "import": "Importar",
+      "reset": "Restablecer",
+      "autoLayout": "Diseño Automático",
+      "primaryActivity": "Actividad Primaria",
+      "supportActivity": "Actividad de Soporte",
+      "externalFactor": "Factor Externo"
+    },
+    "aiGeneration": {
+      "title": "Generar con IA",
+      "description": "Use IA para generar una cadena de valor basada en la información de su empresa",
+      "companyInfo": "Información de Empresa",
+      "industry": "Industria",
+      "products": "Productos",
+      "services": "Servicios",
+      "generate": "Generar",
+      "generating": "Generando...",
+      "success": "Cadena de valor generada exitosamente",
+      "error": "Error al generar la cadena de valor"
+    },
+    "documents": {
+      "title": "Documentos",
+      "upload": "Subir",
+      "delete": "Eliminar",
+      "noDocuments": "No hay documentos subidos",
+      "uploadInstructions": "Arrastre y suelte documentos o haga clic para examinar"
+    }
   }
 }

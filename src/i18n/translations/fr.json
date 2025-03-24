@@ -5,7 +5,15 @@
     "english": "Anglais",
     "french": "Français",
     "greek": "Grec",
-    "spanish": "Espagnol"
+    "spanish": "Espagnol",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
   },
   "auth": {
     "login": "Connexion",
@@ -16,7 +24,10 @@
     "noAccount": "Vous n'avez pas de compte?",
     "signUp": "S'inscrire",
     "alreadyAccount": "Vous avez déjà un compte?",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "logout": "Déconnexion",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordInstructions": "Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -33,7 +44,9 @@
     "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment.",
     "browseAvailable": "Parcourir les cours disponibles",
     "loading": "Chargement des données de progression...",
-    "companyESGProgress": "Progression ESG de l'Entreprise"
+    "companyESGProgress": "Progression ESG de l'Entreprise",
+    "assessmentOverview": "Aperçu des évaluations",
+    "viewCompanyProfile": "Voir le profil de l'entreprise"
   },
   "news": {
     "title": "Actualités & Mises à jour ESG",
@@ -46,9 +59,14 @@
     "assessment": "Évaluation",
     "training": "Formation",
     "dashboard": "Tableau de bord",
-    "profile": "Profil"
+    "profile": "Profil",
+    "valueChain": "Chaîne de valeur",
+    "company": "Entreprise",
+    "engagement": "Engagement",
+    "rewards": "Récompenses"
   },
   "profile": {
+    "profile": "Profil",
     "manageAccount": "Gérez vos paramètres de compte et vos informations de profil",
     "administrator": "Administrateur",
     "email": "Email",
@@ -59,7 +77,13 @@
     "saving": "Enregistrement...",
     "saveProfile": "Enregistrer le profil",
     "languageSettings": "Paramètres de langue",
-    "changeLanguage": "Changer la langue de l'application"
+    "changeLanguage": "Changer la langue de l'application",
+    "companySection": "Informations sur l'entreprise",
+    "manageCompany": "Gérez les informations et les paramètres de votre entreprise",
+    "adminSection": "Administration",
+    "adminTools": "Accédez aux outils et paramètres d'administration",
+    "personalInfo": "Informations personnelles",
+    "accountSettings": "Paramètres du compte"
   },
   "assessment": {
     "title": "Évaluation ESG",
@@ -100,6 +124,25 @@
       "steps": "Définition d'objectifs, développement de stratégie et feuille de route de mise en œuvre",
       "start": "Créer un plan"
     },
+    "iroAnalysis": {
+      "title": "Analyse des risques et opportunités",
+      "description": "Identifiez et analysez les principaux risques et opportunités pour votre organisation",
+      "addItem": "Ajouter un élément",
+      "itemType": "Type",
+      "description": "Description",
+      "impact": "Impact",
+      "probability": "Probabilité",
+      "actions": "Actions",
+      "risk": "Risque",
+      "opportunity": "Opportunité"
+    },
+    "valueChain": {
+      "title": "Modélisation de la chaîne de valeur",
+      "description": "Cartographiez votre chaîne de valeur pour identifier les points chauds de durabilité",
+      "start": "Commencer la modélisation",
+      "editor": "Éditeur de chaîne de valeur",
+      "results": "Résultats de la chaîne de valeur"
+    },
     "disclaimer": {
       "title": "Informations sur l'évaluation",
       "description": "Toutes les évaluations sont confidentielles et conçues pour fournir des insights actionnables pour votre parcours de durabilité. Vos données seront uniquement utilisées pour générer des recommandations personnalisées."
@@ -108,6 +151,122 @@
     "form": "Formulaire d'évaluation",
     "getStarted": "Commencer",
     "startAssessment": "Commencer l'évaluation",
-    "continueAssessment": "Continuer l'évaluation"
+    "continueAssessment": "Continuer l'évaluation",
+    "startNewAssessment": "Commencer une nouvelle évaluation",
+    "viewHistory": "Voir l'historique des évaluations"
+  },
+  "training": {
+    "title": "Formation",
+    "subtitle": "Améliorez vos connaissances en développement durable avec nos cours",
+    "availableCourses": "Cours disponibles",
+    "yourCourses": "Vos cours",
+    "certificates": "Certificats",
+    "noCourses": "Aucun cours disponible",
+    "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment",
+    "noCertificates": "Vous n'avez pas encore obtenu de certificats",
+    "enroll": "S'inscrire",
+    "continue": "Continuer",
+    "completed": "Terminé",
+    "progress": "Progression",
+    "courseOverview": "Aperçu du cours",
+    "modules": "Modules",
+    "quiz": {
+      "title": "Quiz",
+      "question": "Question",
+      "of": "sur",
+      "next": "Suivant",
+      "submit": "Soumettre",
+      "results": "Résultats",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "yourScore": "Votre score",
+      "retry": "Réessayer",
+      "continue": "Continuer"
+    }
+  },
+  "company": {
+    "title": "Entreprise",
+    "profile": "Profil de l'entreprise",
+    "settings": "Paramètres de l'entreprise",
+    "members": "Membres",
+    "inviteMember": "Inviter un membre",
+    "name": "Nom de l'entreprise",
+    "industry": "Secteur",
+    "size": "Taille de l'entreprise",
+    "website": "Site web",
+    "description": "Description",
+    "createCompany": "Créer une entreprise",
+    "editCompany": "Modifier l'entreprise",
+    "updateCompany": "Mettre à jour l'entreprise",
+    "deleteCompany": "Supprimer l'entreprise",
+    "companyCreated": "Entreprise créée avec succès",
+    "companyUpdated": "Entreprise mise à jour avec succès",
+    "companyDeleted": "Entreprise supprimée avec succès",
+    "apiConnectors": "Connecteurs API",
+    "userManagement": "Gestion des utilisateurs",
+    "generalSettings": "Paramètres généraux"
+  },
+  "engagement": {
+    "title": "Engagement",
+    "points": "Points",
+    "badges": "Badges",
+    "activities": "Activités",
+    "leaderboard": "Classement",
+    "rewards": "Récompenses",
+    "yourProgress": "Votre progression",
+    "level": "Niveau",
+    "nextLevel": "Niveau suivant",
+    "totalPoints": "Points totaux",
+    "totalActivities": "Activités totales",
+    "noBadges": "Vous n'avez pas encore gagné de badges",
+    "noRewards": "Aucune récompense disponible",
+    "redeem": "Échanger",
+    "redeemed": "Échangé",
+    "leaderboardScope": {
+      "company": "Entreprise",
+      "global": "Global"
+    },
+    "leaderboardPeriod": {
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "allTime": "Tous les temps"
+    },
+    "pointsEarned": "Points gagnés"
+  },
+  "valueChain": {
+    "title": "Chaîne de valeur",
+    "subtitle": "Modélisez votre chaîne de valeur pour identifier les points chauds de durabilité",
+    "editor": {
+      "title": "Éditeur de chaîne de valeur",
+      "nodes": "Nœuds",
+      "edges": "Liens",
+      "save": "Enregistrer",
+      "export": "Exporter",
+      "import": "Importer",
+      "reset": "Réinitialiser",
+      "autoLayout": "Mise en page automatique",
+      "primaryActivity": "Activité primaire",
+      "supportActivity": "Activité de soutien",
+      "externalFactor": "Facteur externe"
+    },
+    "aiGeneration": {
+      "title": "Générer avec l'IA",
+      "description": "Utilisez l'IA pour générer une chaîne de valeur basée sur les informations de votre entreprise",
+      "companyInfo": "Informations sur l'entreprise",
+      "industry": "Secteur",
+      "products": "Produits",
+      "services": "Services",
+      "generate": "Générer",
+      "generating": "Génération en cours...",
+      "success": "Chaîne de valeur générée avec succès",
+      "error": "Erreur lors de la génération de la chaîne de valeur"
+    },
+    "documents": {
+      "title": "Documents",
+      "upload": "Télécharger",
+      "delete": "Supprimer",
+      "noDocuments": "Aucun document téléchargé",
+      "uploadInstructions": "Glissez-déposez des documents ou cliquez pour parcourir"
+    }
   }
 }

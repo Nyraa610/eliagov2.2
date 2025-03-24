@@ -3,10 +3,12 @@ import { useCallback } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export const useEngagement = () => {
   const { toast } = useToast();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Skip tracking for admin routes to avoid permission issues
   const shouldSkipTracking = location.pathname.includes('/admin');
@@ -22,8 +24,8 @@ export const useEngagement = () => {
       
       if (success && showReward) {
         toast({
-          title: "Points Earned!",
-          description: `You earned ${activity.points_earned} points for ${formatActivityType(activity.activity_type)}`,
+          title: t("engagement.pointsEarned"),
+          description: `${activity.points_earned} ${t("engagement.points")} - ${formatActivityType(activity.activity_type)}`,
           duration: 3000,
         });
       }
@@ -34,7 +36,7 @@ export const useEngagement = () => {
       // Return true to prevent errors from cascading through the app
       return true;
     }
-  }, [toast, shouldSkipTracking]);
+  }, [toast, shouldSkipTracking, t]);
 
   // Helper to format activity types for display
   const formatActivityType = (type: string): string => {

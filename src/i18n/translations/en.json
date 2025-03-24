@@ -1,10 +1,19 @@
+
 {
   "common": {
     "language": "Language",
     "english": "English",
     "french": "French",
     "greek": "Greek",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
   },
   "auth": {
     "login": "Login",
@@ -16,7 +25,9 @@
     "signUp": "Sign up",
     "alreadyAccount": "Already have an account?",
     "signIn": "Sign in",
-    "logout": "Logout"
+    "logout": "Logout",
+    "resetPassword": "Reset Password",
+    "resetPasswordInstructions": "Enter your email and we'll send you a link to reset your password"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -33,7 +44,9 @@
     "noEnrollments": "You haven't enrolled in any courses yet.",
     "browseAvailable": "Browse available courses",
     "loading": "Loading progress data...",
-    "companyESGProgress": "Company ESG Progress"
+    "companyESGProgress": "Company ESG Progress",
+    "assessmentOverview": "Assessment Overview",
+    "viewCompanyProfile": "View Company Profile"
   },
   "news": {
     "title": "ESG News & Updates",
@@ -46,7 +59,11 @@
     "assessment": "Assessment",
     "training": "Training",
     "dashboard": "Dashboard",
-    "profile": "Profile"
+    "profile": "Profile",
+    "valueChain": "Value Chain",
+    "company": "Company",
+    "engagement": "Engagement",
+    "rewards": "Rewards"
   },
   "profile": {
     "profile": "Profile",
@@ -60,7 +77,13 @@
     "saving": "Saving...",
     "saveProfile": "Save Profile",
     "languageSettings": "Language Settings",
-    "changeLanguage": "Change the language of the application"
+    "changeLanguage": "Change the language of the application",
+    "companySection": "Company Information",
+    "manageCompany": "Manage your company information and settings",
+    "adminSection": "Administration",
+    "adminTools": "Access admin tools and settings",
+    "personalInfo": "Personal Information",
+    "accountSettings": "Account Settings"
   },
   "assessment": {
     "title": "ESG Assessment",
@@ -101,6 +124,25 @@
       "steps": "Goal setting, strategy development, and implementation roadmap",
       "start": "Create Plan"
     },
+    "iroAnalysis": {
+      "title": "Risks & Opportunities Analysis",
+      "description": "Identify and analyze key risks and opportunities for your organization",
+      "addItem": "Add Item",
+      "itemType": "Type",
+      "description": "Description",
+      "impact": "Impact",
+      "probability": "Probability",
+      "actions": "Actions",
+      "risk": "Risk",
+      "opportunity": "Opportunity"
+    },
+    "valueChain": {
+      "title": "Value Chain Modeling",
+      "description": "Map your value chain to identify sustainability hotspots",
+      "start": "Start Modeling",
+      "editor": "Value Chain Editor",
+      "results": "Value Chain Results"
+    },
     "disclaimer": {
       "title": "Assessment Information",
       "description": "All assessments are confidential and designed to provide actionable insights for your sustainability journey. Your data will only be used to generate personalized recommendations."
@@ -109,6 +151,122 @@
     "form": "Assessment Form",
     "getStarted": "Get Started",
     "startAssessment": "Start Assessment",
-    "continueAssessment": "Continue Assessment"
+    "continueAssessment": "Continue Assessment",
+    "startNewAssessment": "Start New Assessment",
+    "viewHistory": "View Assessment History"
+  },
+  "training": {
+    "title": "Training",
+    "subtitle": "Enhance your sustainability knowledge with our courses",
+    "availableCourses": "Available Courses",
+    "yourCourses": "Your Courses",
+    "certificates": "Certificates",
+    "noCourses": "No courses available",
+    "noEnrollments": "You haven't enrolled in any courses yet",
+    "noCertificates": "You haven't earned any certificates yet",
+    "enroll": "Enroll",
+    "continue": "Continue",
+    "completed": "Completed",
+    "progress": "Progress",
+    "courseOverview": "Course Overview",
+    "modules": "Modules",
+    "quiz": {
+      "title": "Quiz",
+      "question": "Question",
+      "of": "of",
+      "next": "Next",
+      "submit": "Submit",
+      "results": "Results",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "yourScore": "Your Score",
+      "retry": "Retry",
+      "continue": "Continue"
+    }
+  },
+  "company": {
+    "title": "Company",
+    "profile": "Company Profile",
+    "settings": "Company Settings",
+    "members": "Members",
+    "inviteMember": "Invite Member",
+    "name": "Company Name",
+    "industry": "Industry",
+    "size": "Company Size",
+    "website": "Website",
+    "description": "Description",
+    "createCompany": "Create Company",
+    "editCompany": "Edit Company",
+    "updateCompany": "Update Company",
+    "deleteCompany": "Delete Company",
+    "companyCreated": "Company created successfully",
+    "companyUpdated": "Company updated successfully",
+    "companyDeleted": "Company deleted successfully",
+    "apiConnectors": "API Connectors",
+    "userManagement": "User Management",
+    "generalSettings": "General Settings"
+  },
+  "engagement": {
+    "title": "Engagement",
+    "points": "Points",
+    "badges": "Badges",
+    "activities": "Activities",
+    "leaderboard": "Leaderboard",
+    "rewards": "Rewards",
+    "yourProgress": "Your Progress",
+    "level": "Level",
+    "nextLevel": "Next Level",
+    "totalPoints": "Total Points",
+    "totalActivities": "Total Activities",
+    "noBadges": "You haven't earned any badges yet",
+    "noRewards": "No rewards available",
+    "redeem": "Redeem",
+    "redeemed": "Redeemed",
+    "leaderboardScope": {
+      "company": "Company",
+      "global": "Global"
+    },
+    "leaderboardPeriod": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "allTime": "All Time"
+    },
+    "pointsEarned": "Points Earned"
+  },
+  "valueChain": {
+    "title": "Value Chain",
+    "subtitle": "Model your value chain to identify sustainability hotspots",
+    "editor": {
+      "title": "Value Chain Editor",
+      "nodes": "Nodes",
+      "edges": "Edges",
+      "save": "Save",
+      "export": "Export",
+      "import": "Import",
+      "reset": "Reset",
+      "autoLayout": "Auto Layout",
+      "primaryActivity": "Primary Activity",
+      "supportActivity": "Support Activity",
+      "externalFactor": "External Factor"
+    },
+    "aiGeneration": {
+      "title": "Generate with AI",
+      "description": "Use AI to generate a value chain based on your company information",
+      "companyInfo": "Company Information",
+      "industry": "Industry",
+      "products": "Products",
+      "services": "Services",
+      "generate": "Generate",
+      "generating": "Generating...",
+      "success": "Value chain generated successfully",
+      "error": "Error generating value chain"
+    },
+    "documents": {
+      "title": "Documents",
+      "upload": "Upload",
+      "delete": "Delete",
+      "noDocuments": "No documents uploaded",
+      "uploadInstructions": "Drag and drop documents or click to browse"
+    }
   }
 }

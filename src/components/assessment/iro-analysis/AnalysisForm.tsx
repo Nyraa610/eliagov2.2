@@ -9,6 +9,7 @@ import { assessmentService } from "@/services/assessmentService";
 import { FeatureStatus } from "@/types/training";
 import { useToast } from "@/components/ui/use-toast";
 import { useEngagement } from "@/hooks/useEngagement";
+import { useTranslation } from "react-i18next";
 
 interface AnalysisFormProps {
   form: UseFormReturn<IROFormValues>;
@@ -22,6 +23,7 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { trackActivity } = useEngagement();
+  const { t } = useTranslation();
   
   // Function to open dialog for adding new item
   const openItemDialog = () => {
@@ -73,8 +75,8 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
       }).catch(error => {
         console.error("Error autosaving IRO analysis data:", error);
         toast({
-          title: "Autosave Error",
-          description: "Failed to save your progress. Please try again later.",
+          title: t("common.error"),
+          description: t("assessment.errorSaving", "Failed to save your progress. Please try again later."),
           variant: "destructive"
         });
       });
@@ -97,16 +99,15 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
       // Save one final time when component unmounts
       saveFormData();
     };
-  }, [form, analysisStatus, toast]);
+  }, [form, analysisStatus, toast, t]);
   
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Identify Risks & Opportunities</CardTitle>
+          <CardTitle>{t("assessment.iroAnalysis.title")}</CardTitle>
           <CardDescription>
-            Identify and assess key risks and opportunities related to your business operations. 
-            Add items manually or use AI to generate suggestions based on your business context.
+            {t("assessment.iroAnalysis.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,10 +127,10 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
           variant="outline"
           onClick={onPrevious}
         >
-          Previous
+          {t("common.previous", "Previous")}
         </Button>
         <Button onClick={onNext}>
-          Next
+          {t("common.next", "Next")}
         </Button>
       </div>
     </div>
