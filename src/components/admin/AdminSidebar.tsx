@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight, BarChart3, BookOpen, FileText, Home, Settings, ShieldCheck, User, UserPlus, Users, Globe } from 'lucide-react';
-import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarNavItem } from '@/components/ui/sidebar';
+import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarMenuItem, SidebarMenu } from '@/components/ui/sidebar';
 import { useTranslation } from 'react-i18next';
 
 export function AdminSidebar() {
@@ -29,38 +29,42 @@ export function AdminSidebar() {
         </span>
       </SidebarHeader>
       <SidebarContent className="px-4 py-4">
-        <SidebarNavItem>
-          <Link to="/admin/panel" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/panel') && !isActivePath('/admin/panel/') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
-            <Home className="h-4 w-4" />
-            <span>{t('admin.overview')}</span>
-          </Link>
-        </SidebarNavItem>
-        <SidebarNavItem>
-          <Link to="/admin/users" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/users') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
-            <Users className="h-4 w-4" />
-            <span>{t('admin.users')}</span>
-          </Link>
-        </SidebarNavItem>
-        <SidebarNavItem>
-          <Link to="/admin/training" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/training') || isActivePath('/admin/courses') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
-            <BookOpen className="h-4 w-4" />
-            <span>{t('admin.training')}</span>
-          </Link>
-        </SidebarNavItem>
-        <SidebarNavItem>
-          <Link to="/admin/translations" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/translations') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
-            <Globe className="h-4 w-4" />
-            <span>{t('admin.translations.title', 'Translations')}</span>
-          </Link>
-        </SidebarNavItem>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link to="/admin/panel" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/panel') && !isActivePath('/admin/panel/') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+              <Home className="h-4 w-4" />
+              <span>{t('admin.overview')}</span>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link to="/admin/users" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/users') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+              <Users className="h-4 w-4" />
+              <span>{t('admin.users')}</span>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link to="/admin/training" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/training') || isActivePath('/admin/courses') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+              <BookOpen className="h-4 w-4" />
+              <span>{t('admin.training')}</span>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link to="/admin/translations" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/translations') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+              <Globe className="h-4 w-4" />
+              <span>{t('admin.translations.title', 'Translations')}</span>
+            </Link>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="px-4 py-4">
-        <SidebarNavItem>
-          <Link to="/dashboard" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-            <ArrowUpRight className="h-4 w-4" />
-            <span>{t('admin.backToDashboard')}</span>
-          </Link>
-        </SidebarNavItem>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link to="/dashboard" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+              <ArrowUpRight className="h-4 w-4" />
+              <span>{t('admin.backToDashboard')}</span>
+            </Link>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
