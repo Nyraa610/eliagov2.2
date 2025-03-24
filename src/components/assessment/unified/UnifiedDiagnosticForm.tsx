@@ -3,7 +3,6 @@ import { Tabs } from "@/components/ui/tabs";
 import { ESGFormValues } from "../esg-diagnostic/ESGFormSchema";
 import { UnifiedFormProvider } from "./context/UnifiedFormContext";
 import { useUnifiedFormSubmission } from "./hooks/useUnifiedFormSubmission";
-import { UnifiedFormTabs } from "./components/UnifiedFormTabs";
 import { UnifiedFormContent } from "./components/UnifiedFormContent";
 
 interface UnifiedDiagnosticFormProps {
@@ -18,17 +17,24 @@ export function UnifiedDiagnosticForm({ onSubmit, onAnalysisComplete }: UnifiedD
     userCompany,
     activeTab,
     handleTabChange,
-    handleFormSubmit
+    handleFormSubmit,
+    formProgress
   } = useUnifiedFormSubmission(onSubmit, onAnalysisComplete);
+
+  // Define the steps
+  const steps = ["company", "environmental", "social", "governance", "review"];
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <UnifiedFormTabs onValueChange={handleTabChange} />
-      
       <UnifiedFormProvider value={{
         form,
         isSubmitting,
         userCompany,
+        activeTab,
+        setActiveTab: handleTabChange,
+        steps,
+        formProgress,
+        handleSubmit: handleFormSubmit,
         onTabChange: handleTabChange,
         onSubmit: handleFormSubmit
       }}>

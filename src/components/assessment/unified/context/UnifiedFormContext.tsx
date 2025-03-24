@@ -7,6 +7,11 @@ type UnifiedFormContextType = {
   form: UseFormReturn<ESGFormValues>;
   isSubmitting: boolean;
   userCompany: string | null;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  steps: string[];
+  formProgress: number;
+  handleSubmit: (values: ESGFormValues) => void;
   onTabChange: (tab: string) => void;
   onSubmit: (values: ESGFormValues) => void;
 };

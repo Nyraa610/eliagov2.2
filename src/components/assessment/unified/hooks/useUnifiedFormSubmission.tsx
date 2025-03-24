@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +16,7 @@ export const useUnifiedFormSubmission = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCompany, setUserCompany] = useState<string | null>(null);
   const { companyInfo } = useUnifiedAssessment();
+  const [formProgress, setFormProgress] = useState(20); // Initial progress for first tab
   
   const form = useForm<ESGFormValues>({
     resolver: zodResolver(esgFormSchema),
@@ -108,10 +108,11 @@ export const useUnifiedFormSubmission = (
     );
     
     setActiveTab(value);
+    setFormProgress(calculateProgress(value));
   };
 
   const calculateProgress = (currentTab: string) => {
-    const tabs = ["company", "environmental", "social", "governance", "goals"];
+    const tabs = ["company", "environmental", "social", "governance", "review"];
     const currentIndex = tabs.indexOf(currentTab);
     return Math.round(((currentIndex + 1) / tabs.length) * 100);
   };
@@ -208,6 +209,7 @@ GOVERNANCE:
     userCompany,
     activeTab,
     handleTabChange,
-    handleFormSubmit
+    handleFormSubmit,
+    formProgress
   };
 };
