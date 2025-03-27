@@ -100,6 +100,31 @@ export function FrameworkSelection({ onFrameworkSelected }: FrameworkSelectionPr
                 </div>
               </Label>
             </div>
+            
+            <div className={`border rounded-lg p-4 transition-all col-span-1 md:col-span-2 ${selectedFramework === 'elia-carbon' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-400'}`}>
+              <RadioGroupItem value="elia-carbon" id="elia-carbon" className="sr-only" />
+              <Label 
+                htmlFor="elia-carbon" 
+                className="flex items-start cursor-pointer h-full"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center">
+                    <h4 className="text-base font-medium">Elia Carbon Evaluation</h4>
+                    {selectedFramework === 'elia-carbon' && (
+                      <CheckCircle className="h-5 w-5 text-primary ml-2" />
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    A simplified adaptation of the Bilan Carbone methodology, designed by Elia to be 
+                    more accessible for businesses beginning their carbon accounting journey.
+                  </p>
+                  <div className="mt-2 bg-green-50 text-green-800 text-xs px-2 py-1 rounded inline-flex items-center">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Recommended for beginners
+                  </div>
+                </div>
+              </Label>
+            </div>
           </RadioGroup>
         </div>
         
@@ -110,7 +135,7 @@ export function FrameworkSelection({ onFrameworkSelected }: FrameworkSelectionPr
             size="lg"
             className="px-8"
           >
-            Continue with {selectedFramework === 'ghg-protocol' ? 'GHG Protocol' : selectedFramework === 'bilan-carbone' ? 'Bilan Carbone' : 'Selected Framework'}
+            Continue with {selectedFramework === 'ghg-protocol' ? 'GHG Protocol' : selectedFramework === 'bilan-carbone' ? 'Bilan Carbone' : selectedFramework === 'elia-carbon' ? 'Elia Carbon Evaluation' : 'Selected Framework'}
           </Button>
         </div>
       </CardContent>

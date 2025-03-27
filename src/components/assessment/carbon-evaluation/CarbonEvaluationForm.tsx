@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useProgressTracker } from "./useProgressTracker";
 import { assessmentService } from "@/services/assessmentService";
 import { FrameworkSelection } from "./FrameworkSelection";
+import { EliaCarbonTabs } from "./elia-framework/EliaCarbonTabs";
 
 interface CarbonEvaluationFormProps {
   evalStatus: FeatureStatus;
@@ -39,7 +40,7 @@ export function CarbonEvaluationForm({
       scope2Emissions: "",
       scope3Emissions: "",
       transportationUsage: "",
-      framework: "", // Add this to the schema if needed
+      framework: "",
     },
   });
 
@@ -55,6 +56,13 @@ export function CarbonEvaluationForm({
         if (savedProgress.form_data.framework) {
           setFramework(savedProgress.form_data.framework);
           setFrameworkSelected(true);
+          
+          // Set the appropriate starting tab based on the framework
+          if (savedProgress.form_data.framework === 'elia-carbon') {
+            setActiveTab("framing");
+          } else {
+            setActiveTab("company-info");
+          }
         }
       }
     };
@@ -81,7 +89,7 @@ export function CarbonEvaluationForm({
   // Handler for tab changes to update status
   const handleTabChange = (tab: string) => {
     // If this is the first tab and status is not-started, change to in-progress
-    if (tab === "company-info" && evalStatus === "not-started") {
+    if ((tab === "company-info" || tab === "framing") && evalStatus === "not-started") {
       setEvalStatus("in-progress");
     }
     
@@ -105,6 +113,13 @@ export function CarbonEvaluationForm({
     
     // Update the form with the selected framework
     form.setValue('framework', selectedFramework);
+    
+    // Set the initial tab based on the framework
+    if (selectedFramework === 'elia-carbon') {
+      setActiveTab("framing");
+    } else {
+      setActiveTab("company-info");
+    }
     
     // Save the selection to the assessment progress
     const formValues = form.getValues();
@@ -137,6 +152,14 @@ export function CarbonEvaluationForm({
     >
       {!frameworkSelected ? (
         <FrameworkSelection onFrameworkSelected={handleFrameworkSelected} />
+      ) : framework === 'elia-carbon' ? (
+        <EliaCarbonTabs
+          form={form}
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          onSubmit={onSubmit}
+          onBackToFrameworkSelection={handleBackToFrameworkSelection}
+        />
       ) : (
         <CarbonEvaluationTabs
           form={form}
