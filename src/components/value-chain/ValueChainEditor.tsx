@@ -11,9 +11,11 @@ import { ReactFlowProvider } from "@xyflow/react";
 
 interface ValueChainEditorProps {
   initialData?: ValueChainData | null;
+  onDataChange?: (data: ValueChainData) => void;
+  autoSave?: boolean;
 }
 
-export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
+export function ValueChainEditor({ initialData, onDataChange, autoSave = false }: ValueChainEditorProps) {
   const [loading, setLoading] = useState(initialData === undefined);
   const [valueChainData, setValueChainData] = useState<ValueChainData | null>(initialData || null);
   const { company } = useCompanyProfile();
@@ -30,6 +32,9 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
       try {
         const data = await valueChainService.loadValueChain(company.id);
         setValueChainData(data);
+        if (onDataChange && data) {
+          onDataChange(data);
+        }
       } catch (error) {
         console.error("Error loading value chain:", error);
         setError("Failed to load your company's value chain data. Please try again later.");
@@ -41,7 +46,16 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
     if (company) {
       loadValueChain();
     }
-  }, [company, initialData]);
+  }, [company, initialData, onDataChange]);
+
+  // Handle data changes (for autosave)
+  const handleDataChange = (newData: ValueChainData) => {
+    setValueChainData(newData);
+    
+    if (onDataChange) {
+      onDataChange(newData);
+    }
+  };
 
   if (loading) {
     return (
@@ -65,7 +79,12 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
   return (
     <ReactFlowProvider>
       <div className="h-[1000px] overflow-hidden">
-        <ValueChainEditorContainer initialData={valueChainData} />
+        <ValueChainEditorContainer 
+          initialData={valueChainData}
+          onDataChange={handleDataChange}
+          autoSave={autoSave}
+          company={company}
+        />
       </div>
     </ReactFlowProvider>
   );

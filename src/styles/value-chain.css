@@ -63,3 +63,29 @@
   width: 100%;
   height: 100%;
 }
+
+/* Fix for node positioning */
+.react-flow__node {
+  position: absolute;
+  z-index: 1;
+}
+
+/* Ensure controls and canvas are visible */
+.react-flow__controls {
+  z-index: 5;
+}
+
+.react-flow__edge {
+  z-index: 2;
+}
+
+/* Ensure nodes can be clicked */
+.react-flow__node {
+  cursor: pointer;
+}
+
+/* Make sure the viewport renders properly */
+.react-flow__viewport {
+  transform-origin: 0 0;
+  z-index: 0;
+}

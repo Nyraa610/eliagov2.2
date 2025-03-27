@@ -7,9 +7,30 @@ import { ValueChainActions } from "@/components/value-chain/results/ValueChainAc
 import { ViewValueChainTab } from "@/components/value-chain/results/ViewValueChainTab";
 import { CreateValueChainTab } from "@/components/value-chain/results/CreateValueChainTab";
 import { ValueChainLoading } from "@/components/value-chain/results/ValueChainLoading";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function ValueChainResults() {
-  const { valueChainData, setValueChainData, loading, activeTab, setActiveTab } = useValueChainResults();
+  const { 
+    valueChainData, 
+    setValueChainData, 
+    handleValueChainChange,
+    loading, 
+    activeTab, 
+    setActiveTab,
+    dataChanged
+  } = useValueChainResults();
+
+  // Show toast notification on page load if data was already saved
+  useEffect(() => {
+    if (valueChainData && !loading && !dataChanged) {
+      const timer = setTimeout(() => {
+        toast.info("Value chain data has been loaded successfully. Any changes will be automatically saved.");
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [valueChainData, loading, dataChanged]);
 
   return (
     <UserLayout title="Value Chain Results">
@@ -39,12 +60,18 @@ export default function ValueChainResults() {
             
             {valueChainData && (
               <TabsContent value="view">
-                <ViewValueChainTab valueChainData={valueChainData} />
+                <ViewValueChainTab 
+                  valueChainData={valueChainData}
+                  onValueChainChange={handleValueChainChange} 
+                />
               </TabsContent>
             )}
             
             <TabsContent value="create">
-              <CreateValueChainTab initialData={valueChainData} />
+              <CreateValueChainTab 
+                initialData={valueChainData}
+                onValueChainChange={handleValueChainChange}
+              />
             </TabsContent>
           </Tabs>
         )}

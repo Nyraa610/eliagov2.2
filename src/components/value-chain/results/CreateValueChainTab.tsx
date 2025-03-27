@@ -6,9 +6,10 @@ import { Plus } from "lucide-react";
 
 interface CreateValueChainTabProps {
   initialData: ValueChainData | null;
+  onValueChainChange?: (data: ValueChainData) => void;
 }
 
-export const CreateValueChainTab = ({ initialData }: CreateValueChainTabProps) => {
+export const CreateValueChainTab = ({ initialData, onValueChainChange }: CreateValueChainTabProps) => {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -22,7 +23,11 @@ export const CreateValueChainTab = ({ initialData }: CreateValueChainTabProps) =
       </CardHeader>
       <CardContent className="p-3">
         <div className="h-[1000px] overflow-hidden">
-          <ValueChainEditor initialData={initialData} />
+          <ValueChainEditor 
+            initialData={initialData} 
+            onDataChange={onValueChainChange}
+            autoSave={true}
+          />
         </div>
       </CardContent>
     </Card>

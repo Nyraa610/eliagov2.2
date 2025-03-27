@@ -7,9 +7,10 @@ import { PlantUMLDisplay } from "./PlantUMLDisplay";
 
 interface ViewValueChainTabProps {
   valueChainData: ValueChainData;
+  onValueChainChange?: (data: ValueChainData) => void;
 }
 
-export const ViewValueChainTab = ({ valueChainData }: ViewValueChainTabProps) => {
+export const ViewValueChainTab = ({ valueChainData, onValueChainChange }: ViewValueChainTabProps) => {
   return (
     <>
       <Card>
@@ -24,7 +25,11 @@ export const ViewValueChainTab = ({ valueChainData }: ViewValueChainTabProps) =>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-[1000px] overflow-hidden">
-            <ValueChainEditor initialData={valueChainData} />
+            <ValueChainEditor 
+              initialData={valueChainData} 
+              onDataChange={onValueChainChange}
+              autoSave={true}
+            />
           </div>
         </CardContent>
       </Card>

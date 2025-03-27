@@ -13,6 +13,7 @@ interface UseValueChainActionsProps {
   setEdges: (edges: Edge[] | ((eds: Edge[]) => Edge[])) => void;
   setSelectedNode: (node: Node<NodeData> | null) => void;
   company: Company | null;
+  onSaveSuccess?: (data: ValueChainData) => void;
 }
 
 export function useValueChainActions({
@@ -21,7 +22,8 @@ export function useValueChainActions({
   setNodes,
   setEdges,
   setSelectedNode,
-  company
+  company,
+  onSaveSuccess
 }: UseValueChainActionsProps) {
   const reactFlowInstance = useReactFlow();
 
@@ -41,15 +43,22 @@ export function useValueChainActions({
       
       const success = await valueChainService.saveValueChain(data);
       if (success) {
-        toast.success("Value chain saved successfully");
+        if (onSaveSuccess) {
+          onSaveSuccess(data);
+        } else {
+          toast.success("Value chain saved successfully");
+        }
       } else {
         toast.error("Failed to save value chain");
       }
+      
+      return success ? data : null;
     } catch (error) {
       console.error("Error saving value chain:", error);
       toast.error("Failed to save value chain");
+      return null;
     }
-  }, [nodes, edges, company]);
+  }, [nodes, edges, company, onSaveSuccess]);
 
   const handleExport = useCallback(() => {
     const data: ValueChainData = {
