@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FeatureStatus } from "@/types/training";
 import { CarbonEvaluationForm } from "@/components/assessment/carbon-evaluation/CarbonEvaluationForm";
@@ -53,9 +54,17 @@ export default function CarbonEvaluation() {
   return (
     <UserLayout title={t("assessment.carbonEvaluation.title")}>
       <div className="mb-6">
-        <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
-        </Link>
+        <Button 
+          asChild 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-1 mb-4 px-0"
+        >
+          <Link to="/assessment">
+            <ChevronLeft className="h-4 w-4" />
+            Back to Assessment Overview
+          </Link>
+        </Button>
         <p className="text-gray-600">
           {t("assessment.carbonEvaluation.description")}
         </p>

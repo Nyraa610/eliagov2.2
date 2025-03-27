@@ -1,5 +1,5 @@
 
-import { Building, Car, Factory, Leaf } from "lucide-react";
+import { Building, Car, ChevronLeft, Factory, Leaf } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseFormReturn } from "react-hook-form";
 import { CarbonEvaluationFormValues } from "./formSchema";
@@ -7,6 +7,7 @@ import { CompanyInfoForm } from "./CompanyInfoForm";
 import { DirectEmissionsForm } from "./DirectEmissionsForm";
 import { IndirectEmissionsForm } from "./IndirectEmissionsForm";
 import { TransportationForm } from "./TransportationForm";
+import { Button } from "@/components/ui/button";
 
 interface CarbonEvaluationTabsProps {
   form: UseFormReturn<CarbonEvaluationFormValues>;
@@ -14,6 +15,7 @@ interface CarbonEvaluationTabsProps {
   setActiveTab: (tab: string) => void;
   onSubmit: (values: CarbonEvaluationFormValues) => void;
   framework?: string | null;
+  onBackToFrameworkSelection?: () => void;
 }
 
 export function CarbonEvaluationTabs({ 
@@ -21,7 +23,8 @@ export function CarbonEvaluationTabs({
   activeTab, 
   setActiveTab, 
   onSubmit,
-  framework
+  framework,
+  onBackToFrameworkSelection
 }: CarbonEvaluationTabsProps) {
   const tabs = [
     { id: "company-info", label: "Company Information", icon: <Building className="h-4 w-4 mr-2" /> },
@@ -39,6 +42,18 @@ export function CarbonEvaluationTabs({
 
   return (
     <>
+      {onBackToFrameworkSelection && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4 flex items-center gap-1"
+          onClick={onBackToFrameworkSelection}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Framework Selection
+        </Button>
+      )}
+      
       {framework && (
         <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
           <p className="text-sm font-medium text-primary">

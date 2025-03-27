@@ -123,6 +123,11 @@ export function CarbonEvaluationForm({
     ).catch(error => console.error("Error saving framework selection:", error));
   };
 
+  // Handler to go back to framework selection
+  const handleBackToFrameworkSelection = () => {
+    setFrameworkSelected(false);
+  };
+
   return (
     <AssessmentBase 
       title={t("assessment.carbonEvaluation.title")} 
@@ -139,6 +144,7 @@ export function CarbonEvaluationForm({
           setActiveTab={handleTabChange}
           onSubmit={onSubmit}
           framework={framework}
+          onBackToFrameworkSelection={handleBackToFrameworkSelection}
         />
       )}
     </AssessmentBase>
