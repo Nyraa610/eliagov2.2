@@ -1,7 +1,7 @@
 
 import { ReactNode } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import "../../../styles/value-chain.css";
+import "@/styles/value-chain.css";
 
 interface EditorLayoutProps {
   flowRef: React.RefObject<HTMLDivElement>;
