@@ -47,7 +47,7 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-[600px] w-full" />
+        <Skeleton className="h-[700px] w-full" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export function ValueChainEditor({ initialData }: ValueChainEditorProps) {
 
   return (
     <ReactFlowProvider>
-      <div className="h-[600px] overflow-hidden">
+      <div className="h-[700px] overflow-hidden">
         <ValueChainEditorContainer initialData={valueChainData} />
       </div>
     </ReactFlowProvider>

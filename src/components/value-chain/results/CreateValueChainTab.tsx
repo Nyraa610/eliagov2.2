@@ -11,7 +11,7 @@ interface CreateValueChainTabProps {
 export const CreateValueChainTab = ({ initialData }: CreateValueChainTabProps) => {
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <CardTitle className="text-xl flex items-center gap-2">
           <Plus className="h-5 w-5 text-green-500" />
           Create Your Value Chain
@@ -20,8 +20,8 @@ export const CreateValueChainTab = ({ initialData }: CreateValueChainTabProps) =
           Build a value chain model from scratch or modify an existing one
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="h-[600px] overflow-hidden">
+      <CardContent className="p-3">
+        <div className="h-[700px] overflow-hidden">
           <ValueChainEditor initialData={initialData} />
         </div>
       </CardContent>

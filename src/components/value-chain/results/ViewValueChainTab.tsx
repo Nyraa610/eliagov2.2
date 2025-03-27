@@ -13,7 +13,7 @@ export const ViewValueChainTab = ({ valueChainData }: ViewValueChainTabProps) =>
   return (
     <>
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <CardTitle className="text-xl flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-500" />
             AI Generated Value Chain
@@ -22,8 +22,8 @@ export const ViewValueChainTab = ({ valueChainData }: ViewValueChainTabProps) =>
             Based on your documents and inputs, we've generated a value chain model for your business.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[600px] overflow-hidden">
+        <CardContent className="p-3">
+          <div className="h-[700px] overflow-hidden">
             <ValueChainEditor initialData={valueChainData} />
           </div>
         </CardContent>
