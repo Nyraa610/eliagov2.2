@@ -9,6 +9,7 @@ import { FeatureStatus } from "@/types/training";
 import { useTranslation } from "react-i18next";
 import { useProgressTracker } from "./useProgressTracker";
 import { assessmentService } from "@/services/assessmentService";
+import { FrameworkSelection } from "./FrameworkSelection";
 
 interface CarbonEvaluationFormProps {
   evalStatus: FeatureStatus;
@@ -25,6 +26,8 @@ export function CarbonEvaluationForm({
 }: CarbonEvaluationFormProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("company-info");
+  const [frameworkSelected, setFrameworkSelected] = useState(false);
+  const [framework, setFramework] = useState<string | null>(null);
   
   // Form definition
   const form = useForm<CarbonEvaluationFormValues>({
@@ -36,6 +39,7 @@ export function CarbonEvaluationForm({
       scope2Emissions: "",
       scope3Emissions: "",
       transportationUsage: "",
+      framework: "", // Add this to the schema if needed
     },
   });
 
@@ -46,6 +50,12 @@ export function CarbonEvaluationForm({
       
       if (savedProgress && savedProgress.form_data) {
         form.reset(savedProgress.form_data);
+        
+        // If there was a previously selected framework, show the form directly
+        if (savedProgress.form_data.framework) {
+          setFramework(savedProgress.form_data.framework);
+          setFrameworkSelected(true);
+        }
       }
     };
     
@@ -89,6 +99,30 @@ export function CarbonEvaluationForm({
       .catch(error => console.error("Error saving completed form:", error));
   }
 
+  const handleFrameworkSelected = (selectedFramework: string) => {
+    setFramework(selectedFramework);
+    setFrameworkSelected(true);
+    
+    // Update the form with the selected framework
+    form.setValue('framework', selectedFramework);
+    
+    // Save the selection to the assessment progress
+    const formValues = form.getValues();
+    formValues.framework = selectedFramework;
+    
+    // Update status to in-progress once a framework is selected
+    if (evalStatus === "not-started") {
+      setEvalStatus("in-progress");
+    }
+    
+    assessmentService.saveAssessmentProgress(
+      'carbon_evaluation',
+      'in-progress',
+      progress > 10 ? progress : 10, // Ensure at least 10% progress when framework is selected
+      formValues
+    ).catch(error => console.error("Error saving framework selection:", error));
+  };
+
   return (
     <AssessmentBase 
       title={t("assessment.carbonEvaluation.title")} 
@@ -96,12 +130,17 @@ export function CarbonEvaluationForm({
       status={evalStatus}
       progress={progress}
     >
-      <CarbonEvaluationTabs
-        form={form}
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        onSubmit={onSubmit}
-      />
+      {!frameworkSelected ? (
+        <FrameworkSelection onFrameworkSelected={handleFrameworkSelected} />
+      ) : (
+        <CarbonEvaluationTabs
+          form={form}
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          onSubmit={onSubmit}
+          framework={framework}
+        />
+      )}
     </AssessmentBase>
   );
 }
