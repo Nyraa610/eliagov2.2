@@ -23,6 +23,7 @@ import { EditorContent } from './components/EditorContent';
 import { AutomatedValueChainBuilder } from '../AutomatedValueChainBuilder';
 import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { useAutomatedValueChain } from './hooks/useAutomatedValueChain';
+import { useValueChainActions } from './useValueChainActions';
 
 const nodeTypes = {
   custom: CustomNode,
@@ -63,11 +64,30 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
     company
   });
 
+  const {
+    handleSave,
+    handleExport,
+    handleImport,
+    handleClear,
+    handleZoomIn,
+    handleZoomOut,
+    handleReset
+  } = useValueChainActions({
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    setSelectedNode,
+    company
+  });
+
   const onNodeClick = useCallback((event, node) => {
     setSelectedNode(node);
   }, []);
 
   const handleAddNode = useCallback((type: NodeType) => {
+    if (!reactFlowWrapper.current) return;
+
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
     const position = reactFlowInstance.screenToFlowPosition({
       x: reactFlowBounds.width / 2,
@@ -105,39 +125,6 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
     );
   }, [setNodes]);
 
-  const handleSave = useCallback(() => {
-    console.log('Save value chain');
-    // Implement save functionality
-  }, []);
-
-  const handleExport = useCallback(() => {
-    console.log('Export value chain');
-    // Implement export functionality
-  }, []);
-
-  const handleImport = useCallback((e) => {
-    console.log('Import value chain');
-    // Implement import functionality
-  }, []);
-
-  const handleClear = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
-    setSelectedNode(null);
-  }, [setNodes, setEdges]);
-
-  const handleZoomIn = useCallback(() => {
-    reactFlowInstance.zoomIn();
-  }, [reactFlowInstance]);
-
-  const handleZoomOut = useCallback(() => {
-    reactFlowInstance.zoomOut();
-  }, [reactFlowInstance]);
-
-  const handleReset = useCallback(() => {
-    reactFlowInstance.fitView();
-  }, [reactFlowInstance]);
-
   useEffect(() => {
     if (nodes.length > 0) {
       setTimeout(() => {
@@ -168,6 +155,7 @@ const ValueChainEditorContainer = ({ initialData }: ValueChainEditorContainerPro
         generatingProgress={generatingProgress}
         onAutomatedBuilder={() => setIsAutomatedBuilderOpen(true)}
         setSelectedNode={setSelectedNode}
+        reactFlowWrapper={reactFlowWrapper}
       />
       
       <AutomatedValueChainBuilder

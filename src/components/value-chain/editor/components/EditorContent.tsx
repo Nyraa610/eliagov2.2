@@ -27,6 +27,7 @@ interface EditorContentProps {
   generatingProgress: number;
   onAutomatedBuilder: () => void;
   setSelectedNode: (node: any) => void;
+  reactFlowWrapper: React.RefObject<HTMLDivElement>;
 }
 
 export function EditorContent({
@@ -48,10 +49,9 @@ export function EditorContent({
   isGenerating,
   generatingProgress,
   onAutomatedBuilder,
-  setSelectedNode
+  setSelectedNode,
+  reactFlowWrapper
 }: EditorContentProps) {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-
   return (
     <>
       {!nodes.length && !isGenerating && (

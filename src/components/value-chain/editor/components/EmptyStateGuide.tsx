@@ -1,67 +1,50 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Wand2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sparkles, Plus } from "lucide-react";
 
 interface EmptyStateGuideProps {
   onOpenAutomatedBuilder: () => void;
 }
 
 export function EmptyStateGuide({ onOpenAutomatedBuilder }: EmptyStateGuideProps) {
-  const { t } = useTranslation();
-
   return (
-    <div className="bg-muted/40 rounded-lg p-5 text-center mb-4">
-      <div className="max-w-sm mx-auto space-y-4">
-        <div>
-          <div className="bg-primary/10 p-2 rounded-full inline-block mb-2">
-            <FileText className="h-5 w-5 text-primary" />
+    <Card className="mb-6 border-dashed border-2 max-w-3xl mx-auto">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl">Start Building Your Value Chain</CardTitle>
+        <CardDescription>
+          Create a visualization of your company's value chain to identify activities that create value
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 pb-2">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-start gap-2">
+            <div className="bg-blue-100 rounded-full p-1.5 text-blue-500 mt-0.5">
+              <Plus className="h-4 w-4" />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium">Add activities manually</h4>
+              <p className="text-sm text-muted-foreground">Use the toolbar above to add primary activities, support activities, or external factors</p>
+            </div>
           </div>
-          <h3 className="text-lg font-semibold mb-1">{t("valueChain.emptyState.title", "Create Your Value Chain")}</h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            {t(
-              "valueChain.emptyState.description",
-              "Build a comprehensive value chain to identify ESG impacts and optimization opportunities."
-            )}
-          </p>
-        </div>
-        
-        <div className="grid gap-2">
-          <Button
-            size="sm"
-            className="w-full gap-2"
-            onClick={onOpenAutomatedBuilder}
-          >
-            <Wand2 className="h-4 w-4" /> {t("valueChain.emptyState.generateWithAI", "Generate with AI")}
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            {t(
-              "valueChain.emptyState.aiDescription",
-              "Let AI analyze your business and generate a detailed value chain model."
-            )}
-          </p>
-        </div>
-        
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-muted px-2 text-muted-foreground">
-              {t("valueChain.emptyState.or", "or")}
-            </span>
+          
+          <div className="flex items-start gap-2">
+            <div className="bg-purple-100 rounded-full p-1.5 text-purple-500 mt-0.5">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium">Or generate with AI</h4>
+              <p className="text-sm text-muted-foreground">Our AI can analyze your company information and create a value chain model</p>
+            </div>
           </div>
         </div>
-        
-        <div>
-          <p className="text-xs mb-1">
-            {t("valueChain.emptyState.manualDescription", "Use the toolbar above to add nodes and create your value chain manually.")}
-          </p>
-          <div className="flex justify-center">
-            <ArrowRight className="h-4 w-4 animate-bounce" />
-          </div>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+      <CardFooter>
+        <Button className="gap-2 w-full" onClick={onOpenAutomatedBuilder}>
+          <Sparkles className="h-4 w-4" />
+          Generate with AI
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

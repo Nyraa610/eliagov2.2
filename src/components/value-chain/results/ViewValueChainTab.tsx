@@ -23,7 +23,7 @@ export const ViewValueChainTab = ({ valueChainData }: ViewValueChainTabProps) =>
           </CardDescription>
         </CardHeader>
         <CardContent className="p-3">
-          <div className="h-[700px] overflow-hidden">
+          <div className="h-[1000px] overflow-hidden">
             <ValueChainEditor initialData={valueChainData} />
           </div>
         </CardContent>

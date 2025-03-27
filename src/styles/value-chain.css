@@ -57,3 +57,9 @@
   height: 100% !important;
   width: 100% !important;
 }
+
+/* Ensure the ReactFlow fills the full container */
+.react-flow-wrapper {
+  width: 100%;
+  height: 100%;
+}

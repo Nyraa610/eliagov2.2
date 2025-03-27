@@ -11,7 +11,7 @@ interface EditorLayoutProps {
 export function EditorLayout({ flowRef, flowCanvas, sidePanel }: EditorLayoutProps) {
   return (
     <div className="flex gap-4 h-full">
-      <div ref={flowRef} className="flex-1 border rounded-lg overflow-hidden h-[680px]">
+      <div ref={flowRef} className="flex-1 border rounded-lg overflow-hidden h-[960px]">
         <ReactFlowProvider>
           {flowCanvas}
         </ReactFlowProvider>
