@@ -53,20 +53,25 @@ export default function EmissionFactors() {
   // Fetch all distinct categories for the filter
   const fetchCategories = async () => {
     try {
+      // Fix: Use distinct on the column directly instead of calling distinct() on the query
       const { data, error } = await supabase
         .from('emission_factors')
         .select('category')
         .not('category', 'is', null)
-        .order('category')
-        .distinct();
+        .order('category');
         
       if (error) {
         throw error;
       }
       
-      const uniqueCategories = data
-        .map(item => item.category)
-        .filter((category): category is string => category !== null);
+      // Extract unique categories from the result
+      const uniqueCategories = Array.from(
+        new Set(
+          data
+            .map(item => item.category)
+            .filter((category): category is string => category !== null)
+        )
+      ).sort();
         
       setCategories(uniqueCategories);
     } catch (error) {
