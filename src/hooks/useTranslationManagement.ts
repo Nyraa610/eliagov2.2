@@ -31,12 +31,12 @@ export function useTranslationManagement() {
   } = useTranslationActions();
 
   // Wrapper for updateTranslation that uses current state
-  const updateTranslation = useCallback((key: string, value: string) => {
+  const updateTranslation = useCallback((key: string, value: string): Promise<void> => {
     return updateTranslationBase(selectedLanguage, selectedNamespace, key, value);
   }, [updateTranslationBase, selectedLanguage, selectedNamespace]);
 
   // Wrapper for addTranslationKey that uses current state
-  const addTranslationKey = useCallback((key: string, translations: {[language: string]: string}) => {
+  const addTranslationKey = useCallback((key: string, translations: {[language: string]: string}): Promise<boolean> => {
     return addTranslationKeyBase(selectedNamespace, key, translations);
   }, [addTranslationKeyBase, selectedNamespace]);
 

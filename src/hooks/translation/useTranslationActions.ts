@@ -14,7 +14,7 @@ export function useTranslationActions() {
     selectedNamespace: string,
     key: string,
     value: string
-  ) => {
+  ): Promise<void> => {
     try {
       const fullKey = selectedNamespace ? `${selectedNamespace}.${key}` : key;
       const success = await translationService.updateTranslation({
@@ -28,15 +28,12 @@ export function useTranslationActions() {
           title: t('common.success'),
           description: t('admin.translations.updateSuccess'),
         });
-        
-        return true;
       } else {
         toast({
           title: t('common.error'),
           description: t('admin.translations.updateError'),
           variant: 'destructive'
         });
-        return false;
       }
     } catch (error) {
       toast({
@@ -44,7 +41,6 @@ export function useTranslationActions() {
         description: t('admin.translations.updateError'),
         variant: 'destructive'
       });
-      return false;
     }
   }, [t, toast]);
 
@@ -53,7 +49,7 @@ export function useTranslationActions() {
     selectedNamespace: string,
     key: string,
     translations: {[language: string]: string}
-  ) => {
+  ): Promise<boolean> => {
     try {
       const success = await translationService.addTranslationKey(selectedNamespace, key, translations);
       

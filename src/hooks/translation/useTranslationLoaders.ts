@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   translationService,
+  translationNamespaces,
   TranslationNamespace
 } from '@/services/translationService';
 
@@ -56,7 +57,7 @@ export function useTranslationLoaders() {
       // In a real implementation, this would fetch from the database
       // For now, we'll use the predefined list
       const namespacesData = await Promise.all(
-        translationService.translationNamespaces.map(async name => {
+        translationNamespaces.map(async name => {
           const entries = await translationService.getNamespaceTranslations(name, 'en');
           return { name, entries };
         })
