@@ -72,20 +72,29 @@ serve(async (req) => {
     
     const csvText = await response.text();
     
+    // First, clear the existing emission factors
+    await supabaseClient.from('emission_factors').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    console.log("Cleared existing emission factors");
+    
     // Parse CSV and prepare data for insertion
     const lines = csvText.split('\n');
-    const headers = lines[0].split(';');
+    const headers = lines[0].split(';').map(header => header.trim());
     
-    // Find column indices
-    const codeIndex = headers.findIndex(h => h.includes('Code'));
-    const nameIndex = headers.findIndex(h => h.includes('Nom'));
-    const categoryIndex = headers.findIndex(h => h.includes('Scope') || h.includes('Catégorie'));
-    const subcategoryIndex = headers.findIndex(h => h.includes('Sous-catégorie'));
-    const unitIndex = headers.findIndex(h => h.includes('Unité'));
-    const valueIndex = headers.findIndex(h => h.includes('Valeur'));
-    const uncertaintyIndex = headers.findIndex(h => h.includes('Incertitude'));
+    console.log("CSV Headers:", headers);
     
-    console.log(`Found column indices: code=${codeIndex}, name=${nameIndex}, category=${categoryIndex}, subcategory=${subcategoryIndex}, unit=${unitIndex}, value=${valueIndex}, uncertainty=${uncertaintyIndex}`);
+    // Look for specific headers - adapt based on the actual CSV structure
+    const nameIndex = headers.findIndex(h => h.includes('Nom') || h.includes('Name'));
+    const codeIndex = headers.findIndex(h => h.includes('Code') || h.includes('Identifiant'));
+    const categoryIndex = headers.findIndex(h => h.includes('Catégorie') || h.includes('Category') || h.includes('Scope'));
+    const subcategoryIndex = headers.findIndex(h => h.includes('Sous-catégorie') || h.includes('Subcategory'));
+    const unitIndex = headers.findIndex(h => h.includes('Unité') || h.includes('Unit'));
+    const valueIndex = headers.findIndex(h => h.includes('Valeur') || h.includes('Value') || h.includes('kg CO2'));
+    const uncertaintyIndex = headers.findIndex(h => h.includes('Incertitude') || h.includes('Uncertainty'));
+    const sourceIndex = headers.findIndex(h => h.includes('Source') || h.includes('Origine'));
+    
+    console.log(`Found indices: name=${nameIndex}, code=${codeIndex}, category=${categoryIndex}, ` +
+                `subcategory=${subcategoryIndex}, unit=${unitIndex}, value=${valueIndex}, ` + 
+                `uncertainty=${uncertaintyIndex}, source=${sourceIndex}`);
     
     // Process each row and insert in batches
     const batchSize = 100;
@@ -99,24 +108,32 @@ serve(async (req) => {
       if (!line) continue;
       
       try {
+        // Split by semicolon first
         const columns = line.split(';');
         
         // Clean and prepare data
-        const code = codeIndex >= 0 ? columns[codeIndex]?.trim() : null;
-        const name = nameIndex >= 0 ? columns[nameIndex]?.trim() : 'Unknown';
-        const category = categoryIndex >= 0 ? columns[categoryIndex]?.trim() : null;
-        const subcategory = subcategoryIndex >= 0 ? columns[subcategoryIndex]?.trim() : null;
-        const unit = unitIndex >= 0 ? columns[unitIndex]?.trim() : null;
+        const name = nameIndex >= 0 && columns[nameIndex] ? columns[nameIndex].trim() : 'Unknown';
+        const code = codeIndex >= 0 && columns[codeIndex] ? columns[codeIndex].trim() : null;
+        const category = categoryIndex >= 0 && columns[categoryIndex] ? columns[categoryIndex].trim() : null;
+        const subcategory = subcategoryIndex >= 0 && columns[subcategoryIndex] ? columns[subcategoryIndex].trim() : null;
+        const unit = unitIndex >= 0 && columns[unitIndex] ? columns[unitIndex].trim() : null;
+        const source = sourceIndex >= 0 && columns[sourceIndex] ? columns[sourceIndex].trim() : 'ADEME Base Carbone';
         
         // Convert numeric values, handling comma as decimal separator
         let emissionValue = null;
         if (valueIndex >= 0 && columns[valueIndex]) {
-          emissionValue = parseFloat(columns[valueIndex].replace(',', '.'));
+          const cleanedValue = columns[valueIndex].replace(',', '.').trim();
+          if (!isNaN(parseFloat(cleanedValue))) {
+            emissionValue = parseFloat(cleanedValue);
+          }
         }
         
         let uncertaintyPercent = null;
         if (uncertaintyIndex >= 0 && columns[uncertaintyIndex]) {
-          uncertaintyPercent = parseFloat(columns[uncertaintyIndex].replace(',', '.'));
+          const cleanedUncertainty = columns[uncertaintyIndex].replace(',', '.').replace('%', '').trim();
+          if (!isNaN(parseFloat(cleanedUncertainty))) {
+            uncertaintyPercent = parseFloat(cleanedUncertainty);
+          }
         }
         
         // Skip rows without required data
@@ -129,7 +146,8 @@ serve(async (req) => {
           subcategory,
           unit,
           emission_value: emissionValue,
-          uncertainty_percent: uncertaintyPercent
+          uncertainty_percent: uncertaintyPercent,
+          source
         });
         
         // Insert when batch is full

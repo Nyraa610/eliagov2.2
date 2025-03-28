@@ -5,13 +5,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, AlertCircle } from "lucide-react";
+import { Loader2, Database, AlertCircle, Info } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export function EmissionFactorsImport() {
   const [url, setUrl] = useState("https://www.data.gouv.fr/fr/datasets/r/4437996f-c67a-455c-abaa-774c4c874bab");
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{ success?: boolean; message?: string; error?: string } | null>(null);
+  const [result, setResult] = useState<{ 
+    success?: boolean; 
+    message?: string; 
+    error?: string;
+    details?: {
+      headers?: string[];
+      foundIndices?: Record<string, number>;
+    }
+  } | null>(null);
   const { toast } = useToast();
 
   const handleImport = async () => {
@@ -71,7 +79,7 @@ export function EmissionFactorsImport() {
           ADEME Emission Factors Import
         </CardTitle>
         <CardDescription>
-          Import emission factors from ADEME Base Carbone v17 into the database
+          Import emission factors from ADEME Base Carbone into the database
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -89,6 +97,17 @@ export function EmissionFactorsImport() {
           <p className="text-xs text-muted-foreground">
             Enter the URL to the ADEME Base Carbone CSV file. The default URL is pre-filled.
           </p>
+          
+          <div className="bg-muted p-3 rounded-md mt-2">
+            <div className="flex gap-2 items-center text-sm mb-1">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Expected CSV Format</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The CSV should be semicolon-separated and include columns for: Code, Name, Category, Subcategory, Unit, Value, Uncertainty, and Source.
+              French headers like "Nom", "Valeur", "Unité", etc. are also recognized.
+            </p>
+          </div>
         </div>
 
         {result && (
@@ -97,6 +116,22 @@ export function EmissionFactorsImport() {
             <AlertTitle>{result.success ? "Import Successful" : "Import Failed"}</AlertTitle>
             <AlertDescription>
               {result.message || result.error || "Unknown result"}
+              {result.details && (
+                <div className="mt-2 text-xs">
+                  {result.details.headers && (
+                    <div className="mt-1">
+                      <strong>CSV Headers:</strong> {result.details.headers.join(', ')}
+                    </div>
+                  )}
+                  {result.details.foundIndices && (
+                    <div className="mt-1">
+                      <strong>Detected columns:</strong> {Object.entries(result.details.foundIndices)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}
