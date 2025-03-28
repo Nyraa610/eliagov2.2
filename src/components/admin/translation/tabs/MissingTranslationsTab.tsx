@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "react-i18next";
-import { LanguageInfo } from "@/services/translationService";
+import { LanguageInfo } from "@/services/translation";
 
 interface MissingTranslationsTabProps {
   isLoading: boolean;

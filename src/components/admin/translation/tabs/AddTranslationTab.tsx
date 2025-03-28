@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
-import { LanguageInfo } from "@/services/translationService";
+import { LanguageInfo } from "@/services/translation";
 
 interface AddTranslationTabProps {
   availableLanguages: LanguageInfo[];
