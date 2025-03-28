@@ -82,19 +82,27 @@ serve(async (req) => {
     
     console.log("CSV Headers:", headers);
     
-    // Look for specific headers - adapt based on the actual CSV structure
-    const nameIndex = headers.findIndex(h => h.includes('Nom') || h.includes('Name'));
-    const codeIndex = headers.findIndex(h => h.includes('Code') || h.includes('Identifiant'));
-    const categoryIndex = headers.findIndex(h => h.includes('Catégorie') || h.includes('Category') || h.includes('Scope'));
-    const subcategoryIndex = headers.findIndex(h => h.includes('Sous-catégorie') || h.includes('Subcategory'));
-    const unitIndex = headers.findIndex(h => h.includes('Unité') || h.includes('Unit'));
-    const valueIndex = headers.findIndex(h => h.includes('Valeur') || h.includes('Value') || h.includes('kg CO2'));
-    const uncertaintyIndex = headers.findIndex(h => h.includes('Incertitude') || h.includes('Uncertainty'));
-    const sourceIndex = headers.findIndex(h => h.includes('Source') || h.includes('Origine'));
+    // Map ADEME Base Carbone headers to our database fields
+    // Common headers in both French and English formats
+    const findColumnIndex = (possibleNames) => {
+      return headers.findIndex(h => possibleNames.some(name => 
+        h.toLowerCase().includes(name.toLowerCase())));
+    };
     
-    console.log(`Found indices: name=${nameIndex}, code=${codeIndex}, category=${categoryIndex}, ` +
-                `subcategory=${subcategoryIndex}, unit=${unitIndex}, value=${valueIndex}, ` + 
-                `uncertainty=${uncertaintyIndex}, source=${sourceIndex}`);
+    // Map column indices based on various possible header names
+    const columnIndices = {
+      code: findColumnIndex(['Identifiant', 'Code', 'ID']),
+      name: findColumnIndex(['Nom base', 'Name', 'Nom']),
+      category: findColumnIndex(['Catégorie', 'Category', 'Scope']),
+      subcategory: findColumnIndex(['Sous-catégorie', 'Subcategory', 'Tags']),
+      unit: findColumnIndex(['Unité', 'Unit']),
+      // For emission values, try multiple columns that might contain CO2 values
+      emissionValue: findColumnIndex(['Valeur', 'Value', 'CO2f', 'CO2e', 'Total poste', 'kg CO2']),
+      uncertainty: findColumnIndex(['Incertitude', 'Uncertainty']),
+      source: findColumnIndex(['Source', 'Origine', 'Contributeur'])
+    };
+    
+    console.log("Mapped column indices:", columnIndices);
     
     // Process each row and insert in batches
     const batchSize = 100;
@@ -108,29 +116,47 @@ serve(async (req) => {
       if (!line) continue;
       
       try {
-        // Split by semicolon first
-        const columns = line.split(';');
+        // Split by semicolon and handle quoted values correctly
+        let columns = [];
+        let currentCol = "";
+        let inQuotes = false;
         
-        // Clean and prepare data
-        const name = nameIndex >= 0 && columns[nameIndex] ? columns[nameIndex].trim() : 'Unknown';
-        const code = codeIndex >= 0 && columns[codeIndex] ? columns[codeIndex].trim() : null;
-        const category = categoryIndex >= 0 && columns[categoryIndex] ? columns[categoryIndex].trim() : null;
-        const subcategory = subcategoryIndex >= 0 && columns[subcategoryIndex] ? columns[subcategoryIndex].trim() : null;
-        const unit = unitIndex >= 0 && columns[unitIndex] ? columns[unitIndex].trim() : null;
-        const source = sourceIndex >= 0 && columns[sourceIndex] ? columns[sourceIndex].trim() : 'ADEME Base Carbone';
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          
+          if (char === '"' && (j === 0 || line[j-1] !== '\\')) {
+            inQuotes = !inQuotes;
+          } else if (char === ';' && !inQuotes) {
+            columns.push(currentCol);
+            currentCol = "";
+          } else {
+            currentCol += char;
+          }
+        }
+        
+        // Add the last column
+        columns.push(currentCol);
+        
+        // Extract data based on mapped column indices
+        const name = columnIndices.name >= 0 ? columns[columnIndices.name]?.trim() : 'Unknown';
+        const code = columnIndices.code >= 0 ? columns[columnIndices.code]?.trim() : null;
+        const category = columnIndices.category >= 0 ? columns[columnIndices.category]?.trim() : null;
+        const subcategory = columnIndices.subcategory >= 0 ? columns[columnIndices.subcategory]?.trim() : null;
+        const unit = columnIndices.unit >= 0 ? columns[columnIndices.unit]?.trim() : null;
+        const source = columnIndices.source >= 0 ? columns[columnIndices.source]?.trim() : 'ADEME Base Carbone';
         
         // Convert numeric values, handling comma as decimal separator
         let emissionValue = null;
-        if (valueIndex >= 0 && columns[valueIndex]) {
-          const cleanedValue = columns[valueIndex].replace(',', '.').trim();
+        if (columnIndices.emissionValue >= 0 && columns[columnIndices.emissionValue]) {
+          const cleanedValue = columns[columnIndices.emissionValue].replace(',', '.').trim();
           if (!isNaN(parseFloat(cleanedValue))) {
             emissionValue = parseFloat(cleanedValue);
           }
         }
         
         let uncertaintyPercent = null;
-        if (uncertaintyIndex >= 0 && columns[uncertaintyIndex]) {
-          const cleanedUncertainty = columns[uncertaintyIndex].replace(',', '.').replace('%', '').trim();
+        if (columnIndices.uncertainty >= 0 && columns[columnIndices.uncertainty]) {
+          const cleanedUncertainty = columns[columnIndices.uncertainty].replace(',', '.').replace('%', '').trim();
           if (!isNaN(parseFloat(cleanedUncertainty))) {
             uncertaintyPercent = parseFloat(cleanedUncertainty);
           }
@@ -190,7 +216,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Import completed successfully. Inserted ${insertedCount} emission factors. Failed: ${errorCount}` 
+        message: `Import completed successfully. Inserted ${insertedCount} emission factors. Failed: ${errorCount}`,
+        details: {
+          headers,
+          mappedColumns: columnIndices
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

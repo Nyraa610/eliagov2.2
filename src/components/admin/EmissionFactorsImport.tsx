@@ -17,7 +17,7 @@ export function EmissionFactorsImport() {
     error?: string;
     details?: {
       headers?: string[];
-      foundIndices?: Record<string, number>;
+      mappedColumns?: Record<string, number>;
     }
   } | null>(null);
   const { toast } = useToast();
@@ -104,8 +104,8 @@ export function EmissionFactorsImport() {
               <span className="font-medium">Expected CSV Format</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              The CSV should be semicolon-separated and include columns for: Code, Name, Category, Subcategory, Unit, Value, Uncertainty, and Source.
-              French headers like "Nom", "Valeur", "Unité", etc. are also recognized.
+              The CSV should be semicolon-separated with French or English headers. The importer will automatically detect and map 
+              columns for: Code/ID, Name, Category, Tags/Subcategory, Unit, CO2 Value, Uncertainty, and Source.
             </p>
           </div>
         </div>
@@ -123,11 +123,15 @@ export function EmissionFactorsImport() {
                       <strong>CSV Headers:</strong> {result.details.headers.join(', ')}
                     </div>
                   )}
-                  {result.details.foundIndices && (
+                  {result.details.mappedColumns && (
                     <div className="mt-1">
-                      <strong>Detected columns:</strong> {Object.entries(result.details.foundIndices)
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join(', ')}
+                      <strong>Mapped columns:</strong> 
+                      <ul className="list-disc pl-5 mt-1">
+                        {Object.entries(result.details.mappedColumns)
+                          .map(([key, value]) => value >= 0 ? (
+                            <li key={key}>{key}: column {value} ({result.details?.headers?.[value] || 'unknown'})</li>
+                          ) : null)}
+                      </ul>
                     </div>
                   )}
                 </div>
