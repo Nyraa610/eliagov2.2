@@ -73,9 +73,11 @@ export function TranslationManagement() {
   const handleAddKey = async () => {
     if (!newKeyName) return;
     
-    await addTranslationKey(newKeyName, newKeyValues);
-    setNewKeyName("");
-    setNewKeyValues({});
+    const success = await addTranslationKey(newKeyName, newKeyValues);
+    if (success) {
+      setNewKeyName("");
+      setNewKeyValues({});
+    }
   };
 
   return (
