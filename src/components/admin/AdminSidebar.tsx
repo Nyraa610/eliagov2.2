@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowUpRight, BarChart3, BookOpen, FileText, Home, Settings, ShieldCheck, User, UserPlus, Users, Globe } from 'lucide-react';
+import { ArrowUpRight, BarChart3, BookOpen, FileText, Home, Settings, ShieldCheck, User, UserPlus, Users, Globe, Database } from 'lucide-react';
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarMenuItem, SidebarMenu } from '@/components/ui/sidebar';
 import { useTranslation } from 'react-i18next';
 
@@ -52,6 +52,12 @@ export function AdminSidebar() {
             <Link to="/admin/translations" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/translations') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
               <Globe className="h-4 w-4" />
               <span>{t('admin.translations.title', 'Translations')}</span>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link to="/admin/emission-factors" className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActivePath('/admin/emission-factors') ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'}`}>
+              <Database className="h-4 w-4" />
+              <span>Emission Factors</span>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>

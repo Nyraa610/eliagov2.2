@@ -299,6 +299,48 @@ export type Database = {
         }
         Relationships: []
       }
+      emission_factors: {
+        Row: {
+          category: string | null
+          code: string | null
+          created_at: string
+          emission_value: number | null
+          id: string
+          name: string
+          source: string | null
+          subcategory: string | null
+          uncertainty_percent: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          code?: string | null
+          created_at?: string
+          emission_value?: number | null
+          id?: string
+          name: string
+          source?: string | null
+          subcategory?: string | null
+          uncertainty_percent?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          code?: string | null
+          created_at?: string
+          emission_value?: number | null
+          id?: string
+          name?: string
+          source?: string | null
+          subcategory?: string | null
+          uncertainty_percent?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hubspot_contacts: {
         Row: {
           company_id: string
