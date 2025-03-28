@@ -13,12 +13,19 @@ export function useAdminPermissions() {
     const checkAdminPermissions = async () => {
       try {
         setIsLoading(true);
-        const profile = await supabaseService.getUserProfile();
         
-        // Admin role should have access to everything
-        if (profile?.role === 'admin') {
+        // Check if user has admin role
+        const hasAdminRole = await supabaseService.hasRole('admin');
+        
+        if (hasAdminRole) {
+          console.log("User has admin role, granting all admin permissions");
           setHasTrainingAccess(true);
           setHasUserAccess(true);
+        } else {
+          // If not admin, check specific permissions
+          console.log("User is not admin, checking specific permissions");
+          setHasTrainingAccess(false);
+          setHasUserAccess(false);
         }
       } catch (error) {
         console.error("Error checking admin permissions:", error);

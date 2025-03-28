@@ -24,6 +24,7 @@ import Unauthorized from "@/pages/Unauthorized";
 import AdminPanel from "@/pages/admin/AdminPanel";
 import UserManagement from "@/pages/admin/UserManagement";
 import TranslationAdmin from "@/pages/admin/TranslationAdmin";
+import EmissionFactors from "@/pages/admin/EmissionFactors";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -146,6 +147,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/translations",
     element: <ProtectedRoute requiredRole="admin"><TranslationAdmin /></ProtectedRoute>,
+  },
+  {
+    path: "/admin/emission-factors",
+    element: <ProtectedRoute requiredRole="admin"><EmissionFactors /></ProtectedRoute>,
   },
   {
     path: "/admin/courses/:id?",

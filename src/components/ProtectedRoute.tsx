@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabaseService } from "@/services/base/supabaseService";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const [hasRequiredRole, setHasRequiredRole] = useState<boolean | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Only check for role if authentication is successful and role is required
   useEffect(() => {
@@ -35,17 +37,27 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         
         if (!hasRole) {
           console.log("ProtectedRoute: User doesn't have required role:", requiredRole);
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: `You don't have the required ${requiredRole} role to access this page.`
+          });
         }
       } catch (error: any) {
         console.error("ProtectedRoute: Error checking user role:", error);
         setRoleError(error.message || "Error checking permissions");
+        toast({
+          variant: "destructive",
+          title: "Permission Error",
+          description: error.message || "Error checking access permissions"
+        });
       } finally {
         setIsRoleLoading(false);
       }
     };
     
     checkUserRole();
-  }, [isAuthenticated, requiredRole, user]);
+  }, [isAuthenticated, requiredRole, user, toast]);
 
   // Show loading state while checking authentication or role
   if (authLoading || (requiredRole && isAuthenticated && isRoleLoading)) {
@@ -66,7 +78,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // Role is required but user doesn't have it
-  if (requiredRole && !hasRequiredRole) {
+  if (requiredRole && hasRequiredRole === false) {
     console.log("ProtectedRoute: Doesn't have required role, redirecting to unauthorized");
     return <Navigate to="/unauthorized" replace />;
   }
