@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/components/ui/use-toast';
-import { translationService, TranslationEntry } from '@/services/translationService';
+import { translationService, exportImportService } from '@/services/translation';
 
 export function useTranslationActions() {
   const { t } = useTranslation();
@@ -80,7 +80,7 @@ export function useTranslationActions() {
   // Export all translations
   const exportTranslations = useCallback(async () => {
     try {
-      const data = await translationService.exportTranslations();
+      const data = await exportImportService.exportTranslations();
       const jsonString = JSON.stringify(data, null, 2);
       
       // Create a blob and download it

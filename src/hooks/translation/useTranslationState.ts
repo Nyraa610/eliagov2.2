@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { availableLanguages, translationNamespaces } from '@/services/translationService';
+import { availableLanguages, translationNamespaces } from '@/services/translation';
 
 export function useTranslationState() {
   const { i18n } = useTranslation();

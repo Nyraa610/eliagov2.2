@@ -5,8 +5,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { 
   translationService,
   translationNamespaces,
-  TranslationNamespace
-} from '@/services/translationService';
+  missingTranslationsService,
+  TranslationNamespace,
+  flattenTranslations
+} from '@/services/translation';
 
 export function useTranslationLoaders() {
   const { t } = useTranslation();
@@ -15,23 +17,6 @@ export function useTranslationLoaders() {
   const [namespaces, setNamespaces] = useState<TranslationNamespace[]>([]);
   const [translations, setTranslations] = useState<{[key: string]: string}>({});
   const [missingTranslations, setMissingTranslations] = useState<{[language: string]: string[]}>({});
-
-  // Function to flatten nested translations
-  const flattenTranslations = (obj: any, prefix: string = ''): {[key: string]: string} => {
-    let result: {[key: string]: string} = {};
-    
-    for (const [key, value] of Object.entries(obj)) {
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof value === 'object' && value !== null) {
-        result = { ...result, ...flattenTranslations(value, newKey) };
-      } else {
-        result[newKey] = value as string;
-      }
-    }
-    
-    return result;
-  };
 
   // Load translations for a specific namespace and language
   const loadNamespaceTranslations = useCallback(async (namespace: string, language: string) => {
@@ -79,7 +64,7 @@ export function useTranslationLoaders() {
   const checkMissingTranslations = useCallback(async () => {
     setIsLoading(true);
     try {
-      const missing = await translationService.getMissingTranslations();
+      const missing = await missingTranslationsService.getMissingTranslations();
       setMissingTranslations(missing);
     } catch (error) {
       toast({
