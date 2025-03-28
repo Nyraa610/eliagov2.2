@@ -10,6 +10,7 @@ import { OverviewTab } from "./admin/OverviewTab";
 import { TrainingTab } from "./admin/TrainingTab";
 import { UsersTab } from "./admin/UsersTab";
 import { SettingsTab } from "./admin/SettingsTab";
+import { EmissionFactorsTab } from "./admin/EmissionFactorsTab";
 
 export function AdminSection() {
   const { toast } = useToast();
@@ -40,6 +41,7 @@ export function AdminSection() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="training">Training</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="emission-factors">Emission Factors</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
@@ -64,6 +66,13 @@ export function AdminSection() {
             <UsersTab 
               onNavigate={handleNavigate}
               hasUserAccess={hasUserAccess}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+          
+          <TabsContent value="emission-factors">
+            <EmissionFactorsTab 
+              onNavigate={handleNavigate}
               isLoading={isLoading}
             />
           </TabsContent>

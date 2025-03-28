@@ -1,34 +1,32 @@
 
-import { BookOpen } from "lucide-react";
+import { Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface TrainingTabProps {
+interface EmissionFactorsTabProps {
   onNavigate: (path: string, hasAccess: boolean) => void;
-  hasTrainingAccess: boolean;
   isLoading: boolean;
 }
 
-export function TrainingTab({
+export function EmissionFactorsTab({
   onNavigate,
-  hasTrainingAccess,
   isLoading
-}: TrainingTabProps) {
+}: EmissionFactorsTabProps) {
   return (
     <div className="space-y-4">
       <div className="border rounded-lg p-4">
         <h3 className="font-medium mb-2 flex items-center">
-          <BookOpen className="h-4 w-4 mr-2 text-primary" />
-          Training Management
+          <Database className="h-4 w-4 mr-2 text-primary" />
+          Emission Factors
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Create and manage training content, courses, and modules.
+          Import and manage ADEME Base Carbone emission factors for carbon evaluations.
         </p>
         <Button
-          onClick={() => onNavigate("/admin/training", hasTrainingAccess)}
+          onClick={() => onNavigate("/admin/emission-factors", true)}
           disabled={isLoading}
           size="sm"
         >
-          Go to Training Panel
+          Manage Emission Factors
         </Button>
       </div>
     </div>
