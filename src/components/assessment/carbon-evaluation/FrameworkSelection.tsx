@@ -1,144 +1,126 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Info } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 interface FrameworkSelectionProps {
   onFrameworkSelected: (framework: string) => void;
 }
 
 export function FrameworkSelection({ onFrameworkSelected }: FrameworkSelectionProps) {
-  const [selectedFramework, setSelectedFramework] = useState<string | null>(null);
-
-  const handleFrameworkChange = (value: string) => {
-    setSelectedFramework(value);
-  };
-
-  const handleContinue = () => {
-    if (selectedFramework) {
-      onFrameworkSelected(selectedFramework);
-    }
-  };
-
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-xl">Carbon Footprint Evaluation</CardTitle>
-        <CardDescription>
-          Measure and understand your organization's greenhouse gas emissions
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">What is a Carbon Evaluation?</h3>
-          <p className="text-gray-600">
-            A carbon evaluation, also known as a carbon footprint assessment, measures the total greenhouse 
-            gas emissions caused directly and indirectly by your organization. It helps identify emission 
-            hotspots and opportunities for reduction strategies.
-          </p>
-          
-          <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-            <Info className="h-4 w-4" />
-            <AlertTitle className="text-amber-800">Disclaimer</AlertTitle>
-            <AlertDescription className="text-amber-700">
-              This evaluation provides an estimate with potential error margins. Results may vary based on
-              data quality, methodology specifics, and emission factors used. For regulatory compliance or 
-              official reporting, we recommend working with certified carbon accounting professionals.
-            </AlertDescription>
-          </Alert>
-        </div>
+    <div className="space-y-6">
+      {/* Recommended Learning Card */}
+      <Card className="bg-primary/5 border-primary/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg text-primary">Recommended Learning</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-start">
+            <div className="flex-1">
+              <h3 className="text-base font-medium mb-1">Carbon Assessment 101</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                New to carbon assessments? Learn the fundamentals before starting your evaluation.
+              </p>
+              <Button asChild variant="secondary" size="sm">
+                <Link to="/training/courses/carbon101">
+                  Start Learning
+                </Link>
+              </Button>
+            </div>
+            <div className="hidden sm:block border-l border-primary/10 h-24" />
+            <div className="flex-1">
+              <h4 className="text-sm font-medium mb-1">What you'll learn:</h4>
+              <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                <li>Carbon accounting principles</li>
+                <li>Scopes 1, 2, and 3 emissions</li>
+                <li>Data collection best practices</li>
+                <li>Interpreting and reporting results</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-2">Carbon Evaluation Framework</h2>
+        <p className="text-gray-600 mb-4">
+          Select the carbon accounting methodology that best fits your organization's needs.
+          Different frameworks have varying approaches to measuring and categorizing emissions.
+        </p>
         
-        <div className="pt-4 border-t">
-          <h3 className="text-lg font-medium mb-4">Select a Carbon Accounting Framework</h3>
-          <RadioGroup 
-            value={selectedFramework || ""} 
-            onValueChange={handleFrameworkChange}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            <div className={`border rounded-lg p-4 transition-all ${selectedFramework === 'ghg-protocol' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-400'}`}>
-              <RadioGroupItem value="ghg-protocol" id="ghg-protocol" className="sr-only" />
-              <Label 
-                htmlFor="ghg-protocol" 
-                className="flex items-start cursor-pointer h-full"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <h4 className="text-base font-medium">GHG Protocol</h4>
-                    {selectedFramework === 'ghg-protocol' && (
-                      <CheckCircle className="h-5 w-5 text-primary ml-2" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    The most widely used international accounting framework for governments and 
-                    businesses to understand, quantify, and manage greenhouse gas emissions.
-                  </p>
-                </div>
-              </Label>
-            </div>
-            
-            <div className={`border rounded-lg p-4 transition-all ${selectedFramework === 'bilan-carbone' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-400'}`}>
-              <RadioGroupItem value="bilan-carbone" id="bilan-carbone" className="sr-only" />
-              <Label 
-                htmlFor="bilan-carbone" 
-                className="flex items-start cursor-pointer h-full"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <h4 className="text-base font-medium">Bilan Carbone (ADEME)</h4>
-                    {selectedFramework === 'bilan-carbone' && (
-                      <CheckCircle className="h-5 w-5 text-primary ml-2" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    A methodology developed by the French Environment and Energy Management Agency (ADEME), 
-                    widely used in France and Europe for comprehensive carbon assessments.
-                  </p>
-                </div>
-              </Label>
-            </div>
-            
-            <div className={`border rounded-lg p-4 transition-all col-span-1 md:col-span-2 ${selectedFramework === 'elia-carbon' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-400'}`}>
-              <RadioGroupItem value="elia-carbon" id="elia-carbon" className="sr-only" />
-              <Label 
-                htmlFor="elia-carbon" 
-                className="flex items-start cursor-pointer h-full"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <h4 className="text-base font-medium">Elia Carbon Evaluation</h4>
-                    {selectedFramework === 'elia-carbon' && (
-                      <CheckCircle className="h-5 w-5 text-primary ml-2" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    A simplified adaptation of the Bilan Carbone methodology, designed by Elia to be 
-                    more accessible for businesses beginning their carbon accounting journey.
-                  </p>
-                  <div className="mt-2 bg-green-50 text-green-800 text-xs px-2 py-1 rounded inline-flex items-center">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Recommended for beginners
-                  </div>
-                </div>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
+        <Alert className="mb-6">
+          <AlertTitle>Important Disclaimer</AlertTitle>
+          <AlertDescription>
+            Carbon assessments involve inherent uncertainties and may have error margins of 5-20% depending on data quality.
+            Results should be viewed as estimates to guide decision-making rather than precise measurements.
+          </AlertDescription>
+        </Alert>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="hover:border-primary/50 cursor-pointer transition-colors">
+          <CardHeader>
+            <CardTitle>GHG Protocol</CardTitle>
+            <CardDescription>
+              Global standard for measuring and managing greenhouse gas emissions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Developed by World Resources Institute (WRI) and World Business Council for Sustainable Development (WBCSD).
+              Widely adopted corporate standard that categorizes emissions into three scopes.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => onFrameworkSelected("ghg-protocol")} className="w-full">Select</Button>
+          </CardFooter>
+        </Card>
         
-        <div className="flex justify-end pt-4">
-          <Button 
-            onClick={handleContinue} 
-            disabled={!selectedFramework}
-            size="lg"
-            className="px-8"
-          >
-            Continue with {selectedFramework === 'ghg-protocol' ? 'GHG Protocol' : selectedFramework === 'bilan-carbone' ? 'Bilan Carbone' : selectedFramework === 'elia-carbon' ? 'Elia Carbon Evaluation' : 'Selected Framework'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        <Card className="hover:border-primary/50 cursor-pointer transition-colors">
+          <CardHeader>
+            <CardTitle>Bilan Carbone</CardTitle>
+            <CardDescription>
+              Comprehensive French methodology developed by ADEME
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Detailed approach that considers the entire life cycle of products and services.
+              Well-suited for European organizations and provides excellent guidance for data collection.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => onFrameworkSelected("bilan-carbone")} className="w-full">Select</Button>
+          </CardFooter>
+        </Card>
+        
+        <Card className="hover:border-primary/50 cursor-pointer transition-colors border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle>Elia Carbon Evaluation</CardTitle>
+            <CardDescription>
+              Simplified Bilan Carbone approach for SMEs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Streamlined methodology based on Bilan Carbone, but optimized for small and medium enterprises.
+              Easier data collection with practical guidance at each step.
+            </p>
+            <div className="mt-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800 border-green-200">
+              Recommended for SMEs
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => onFrameworkSelected("elia-carbon")} className="w-full">Select</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
   );
 }
