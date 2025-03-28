@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowUpRight, BarChart3, BookOpen, FileText, Home, Settings, ShieldCheck, User, UserPlus, Users, Globe, Database } from 'lucide-react';
+import { ArrowUpRight, BarChart3, BookOpen, FileText, Home, Settings, ShieldCheck, User, Users, Globe, Database } from 'lucide-react';
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarMenuItem, SidebarMenu } from '@/components/ui/sidebar';
 import { useTranslation } from 'react-i18next';
 

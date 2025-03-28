@@ -6,7 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface AdminLayoutProps {
   title: string;
-  description?: string; // Make description optional
+  description?: string;
   children: React.ReactNode;
 }
 

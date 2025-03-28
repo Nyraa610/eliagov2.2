@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { UserRound, Settings, LogOut, User } from "lucide-react";
+import { LogOut, Settings, User, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
