@@ -46,13 +46,10 @@ export function EngagementTracker() {
     console.log(`EngagementTracker: ${isAdminRoute ? 'Admin route detected' : 'User route detected'}. Path: ${location.pathname}`);
   }, [location.pathname]);
 
-  // Only use our extracted hooks if the user is authenticated
-  if (isAuthenticated) {
-    // Use our extracted hooks
-    useActivityTracking(isAdmin);
-    useAuthTracking(isAdmin);
-    useTeamEngagement(isAdmin);
-  }
+  // Only use hooks if authenticated - this ensures consistent hook execution order
+  const activityTrackingData = useActivityTracking(isAdmin);
+  const authTrackingData = useAuthTracking(isAdmin);
+  const teamEngagementData = useTeamEngagement(isAdmin);
 
   // This component doesn't render anything visible
   return null;
