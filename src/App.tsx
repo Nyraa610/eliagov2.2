@@ -5,62 +5,53 @@ import { Navigation } from './components/Navigation';
 import DocumentCenter from "@/pages/DocumentCenter";
 import NotFound from './pages/NotFound';
 import Assessment from './pages/Assessment';
-import { AdminLayout } from './components/admin/AdminLayout';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
 import { UserLayout } from './components/user/UserLayout';
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { AdminLayout } from './components/admin/AdminLayout';
 
 function App() {
-  const session = useSession()
-  const supabase = useSupabaseClient()
-
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/assessment" element={
-            <ProtectedRoute>
-              <Assessment />
-            </ProtectedRoute>
-          } />
-          <Route path="/documents" element={
-            <ProtectedRoute>
-              <DocumentCenter />
-            </ProtectedRoute>
-          } />
-          <Route path="/login" element={
-            !session ? (
-              <LoginPage />
-            ) : (
-              <Navigate to="/assessment" replace />
-            )
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected routes */}
+            <Route path="/assessment" element={
+              <ProtectedRoute>
+                <Assessment />
+              </ProtectedRoute>
+            } />
+            <Route path="/documents" element={
+              <ProtectedRoute>
+                <DocumentCenter />
+              </ProtectedRoute>
+            } />
+            
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/assessment" replace />} />
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
-
-  function LoginPage() {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded shadow-md w-96">
-          <h2 className="text-2xl font-semibold mb-4">Login</h2>
-          {supabase && (
-            <div>Please log in to continue</div>
-          )}
-        </div>
-      </div>
-    );
-  }
 }
 
+// Protected route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const session = useSession();
-
-  if (!session) {
+  const localAuth = localStorage.getItem('sb-auth-token');
+  
+  // Simple auth check until proper auth context is fully implemented
+  if (!localAuth) {
     return <Navigate to="/login" replace />;
   }
-
+  
   return <>{children}</>;
 }
 

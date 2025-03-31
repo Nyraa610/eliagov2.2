@@ -1,9 +1,8 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuthState } from "@/hooks/useAuthState";
-import { authService } from "@/services/auth/authService";
 
 type AuthContextType = {
   user: User | null;
@@ -11,38 +10,57 @@ type AuthContextType = {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
-  refreshSession: () => Promise<Session | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session, isLoading, isAuthenticated } = useAuthState();
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // First, set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user || null);
+        setIsLoading(false);
+      }
+    );
+
+    // Then check for an existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user || null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Sign in handler
   const signIn = async (email: string, password: string) => {
-    return authService.signIn(email, password);
-  };
-
-  // Sign up handler
-  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
-    return authService.signUp(email, password, metadata);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   // Sign out handler
   const signOut = async () => {
     try {
-      const { error } = await authService.signOut();
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error signing out",
-          description: error.message || "An unexpected error occurred",
-        });
-      }
+      await supabase.auth.signOut();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -52,30 +70,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Refresh session handler
-  const refreshSession = async () => {
-    try {
-      const { session, error } = await authService.refreshSession();
-      
-      if (error) {
-        return null;
-      }
-      
-      return session;
-    } catch (error) {
-      return null;
-    }
-  };
-
   const value = {
     user,
     session,
     isLoading,
-    isAuthenticated,
+    isAuthenticated: !!user,
     signIn,
-    signUp,
     signOut,
-    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,18 +20,18 @@ export default function Login() {
   const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { isAuthenticated, isLoading: authLoading, signIn } = useAuth();
-
-  // Get the redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/dashboard";
-
+  
   // Check if user is already logged in
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      console.log("User already logged in, redirecting to dashboard");
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isAuthenticated, authLoading, navigate]);
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/assessment", { replace: true });
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,7 +39,10 @@ export default function Login() {
     setLoginError(null);
     
     try {
-      const { error } = await signIn(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
       if (error) {
         setLoginError(error.message || "An unknown error occurred during login");
@@ -51,7 +55,7 @@ export default function Login() {
       });
       
       // Navigate to the protected route the user was trying to access, or dashboard
-      navigate(from, { replace: true });
+      navigate("/assessment", { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       setLoginError(error.message || "An unknown error occurred during login");
@@ -59,17 +63,6 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-  
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
@@ -87,7 +80,7 @@ export default function Login() {
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('auth.email')}</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
@@ -99,9 +92,9 @@ export default function Login() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">{t('auth.password')}</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Link to="/reset-password" className="text-xs text-primary hover:underline">
-                      {t('auth.forgotPassword')}
+                      Forgot Password?
                     </Link>
                   </div>
                   <Input 
@@ -120,15 +113,15 @@ export default function Login() {
                 )}
                 
                 <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : t('auth.login')}
+                  {isLoading ? "Logging in..." : "Log In"}
                 </Button>
               </form>
               
               <div className="mt-6 text-center text-sm">
                 <p className="text-muted-foreground">
-                  {t('auth.noAccount')}{" "}
+                  Don't have an account?{" "}
                   <Link to="/register" className="text-primary hover:underline">
-                    {t('auth.signUp')}
+                    Sign Up
                   </Link>
                 </p>
               </div>
