@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { UserActivity } from "./types";
 import { badgeService } from "./badgeService";
@@ -11,15 +10,6 @@ class ActivityService {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return false;
-
-      // Get user's company ID for team activity tracking
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', userData.user.id)
-        .single();
-      
-      const companyId = profileData?.company_id;
 
       // Check if user has permissions before attempting to insert
       const { data: testPerm, error: testError } = await supabase
@@ -38,7 +28,6 @@ class ActivityService {
         .from('user_activities')
         .insert({
           user_id: userData.user.id,
-          company_id: companyId, // Add company ID for team tracking
           activity_type: activity.activity_type,
           points_earned: activity.points_earned,
           metadata: activity.metadata || {}
