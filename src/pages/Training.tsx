@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
+import { engagementService } from "@/services/engagement";
 import { Course, UserEnrollment, Certificate } from "@/types/training";
 import CertificatesSection from "@/components/training/CertificatesSection";
 import AvailableCoursesSection from "@/components/training/AvailableCoursesSection";
@@ -17,6 +18,32 @@ export default function Training() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Track explicit training page visit on component mount
+    const trackPageVisit = async () => {
+      console.log("Explicitly tracking Training page visit");
+      
+      try {
+        const success = await engagementService.trackActivity({
+          activity_type: 'view_training',
+          points_earned: 5,
+          metadata: {
+            path: '/training',
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        if (success) {
+          console.log("Successfully tracked training page visit");
+        } else {
+          console.warn("Failed to track training page visit");
+        }
+      } catch (error) {
+        console.error("Error tracking training visit:", error);
+      }
+    };
+    
+    trackPageVisit();
+    
     const fetchData = async () => {
       setIsLoading(true);
       try {

@@ -29,8 +29,9 @@ export function EngagementTracker() {
     
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      console.log("Auth state changed:", event, "Is authenticated:", !!session);
+      const authenticated = !!session;
+      setIsAuthenticated(authenticated);
+      console.log("Auth state changed:", event, "Is authenticated:", authenticated);
     });
     
     return () => {
@@ -46,10 +47,18 @@ export function EngagementTracker() {
     console.log(`EngagementTracker: ${isAdminRoute ? 'Admin route detected' : 'User route detected'}. Path: ${location.pathname}`);
   }, [location.pathname]);
 
-  // Only use hooks if authenticated - this ensures consistent hook execution order
-  const activityTrackingData = useActivityTracking(isAdmin);
-  const authTrackingData = useAuthTracking(isAdmin);
-  const teamEngagementData = useTeamEngagement(isAdmin);
+  // Only initialize tracking hooks if authenticated (important for consistent hook execution)
+  if (!isAuthenticated) {
+    return null; // Don't render anything for unauthenticated users
+  }
+
+  // Use tracking hooks
+  const activityTracking = useActivityTracking(isAdmin);
+  const authTracking = useAuthTracking(isAdmin);
+  const teamEngagement = useTeamEngagement(isAdmin);
+
+  // Log that tracking is active
+  console.log("Engagement tracking active", { isAdmin, path: location.pathname });
 
   // This component doesn't render anything visible
   return null;

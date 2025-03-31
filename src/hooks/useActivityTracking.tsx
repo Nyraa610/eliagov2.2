@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
@@ -70,12 +69,9 @@ export function useActivityTracking(isAdmin: boolean) {
       }
     };
 
-    // Small delay to ensure auth is checked properly
-    const trackingTimeout = setTimeout(() => {
-      trackPageView();
-    }, 500);
+    // Execute the tracking immediately
+    trackPageView();
 
-    return () => clearTimeout(trackingTimeout);
   }, [location.pathname, isAdmin]);
 
   // Track time spent - skip for admin routes
