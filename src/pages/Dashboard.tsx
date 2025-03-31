@@ -1,5 +1,4 @@
 
-import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { ESGNewsFeed } from "@/components/dashboard/ESGNewsFeed";
 import { CompanyAssessmentOverview } from "@/components/dashboard/CompanyAssessmentOverview";
@@ -20,7 +19,7 @@ const Dashboard = () => {
   } = useDashboardData();
   
   return (
-    <UserLayout title={t('dashboard.title')}>
+    <>
       <DashboardMetrics 
         totalPoints={totalPoints} 
         completedCourses={completedCourses}
@@ -46,7 +45,7 @@ const Dashboard = () => {
       <div className="mt-6">
         <ESGNewsFeed />
       </div>
-    </UserLayout>
+    </>
   );
 };
 

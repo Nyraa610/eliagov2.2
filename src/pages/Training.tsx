@@ -8,7 +8,6 @@ import CertificatesSection from "@/components/training/CertificatesSection";
 import AvailableCoursesSection from "@/components/training/AvailableCoursesSection";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { supabase } from "@/lib/supabase";
 
 export default function Training() {
@@ -173,7 +172,7 @@ export default function Training() {
   };
 
   return (
-    <UserLayout title="ESG Training Center">
+    <>
       <motion.div 
         variants={container}
         initial="hidden"
@@ -221,6 +220,6 @@ export default function Training() {
           </>
         )}
       </motion.div>
-    </UserLayout>
+    </>
   );
 }

@@ -22,6 +22,7 @@ import Unauthorized from './pages/Unauthorized';
 import Profile from './pages/Profile';
 import CompanyProfile from './pages/company/CompanyProfile';
 import CompanySettings from './pages/company/CompanySettings';
+import ActionPlan from './pages/assessment/ActionPlan';
 
 function App() {
   return (
@@ -50,7 +51,7 @@ function App() {
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
                 <Route path="engagement" element={<Engagement />} />
-                <Route path="action-plan" element={<div>Action Plan (Coming Soon)</div>} />
+                <Route path="action-plan" element={<ActionPlan />} />
                 <Route path="profile" element={<Profile />} />
                 
                 {/* Company pages */}

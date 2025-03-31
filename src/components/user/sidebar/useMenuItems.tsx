@@ -82,7 +82,7 @@ export const useMenuItems = () => {
     {
       title: "Company Profile",
       icon: <Building className="h-5 w-5" />,
-      path: "/profile",
+      path: userCompanyId ? `/company/${userCompanyId}` : "/profile",
     },
     {
       title: "Company Settings",
