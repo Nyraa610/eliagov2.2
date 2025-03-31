@@ -4,7 +4,7 @@ import { EmptyStateGuide } from "./EmptyStateGuide";
 import { GenerationProgressBar } from "./GenerationProgressBar";
 import { EditorLayout } from "./EditorLayout";
 import { ValueChainToolbar } from "../../ValueChainToolbar";
-import { NodeEditPanel } from "../../NodeEditPanel";
+import NodeEditPanel from "../../NodeEditPanel";
 import { useRef } from "react";
 
 interface EditorContentProps {
@@ -93,7 +93,7 @@ export function EditorContent({
         sidePanel={
           selectedNode && (
             <NodeEditPanel
-              selectedNode={selectedNode}
+              node={selectedNode}
               onUpdate={handleUpdateNode}
               onClose={() => setSelectedNode(null)}
             />
