@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { UserLayout } from "@/components/user/UserLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,10 +65,10 @@ export default function CompanySettings() {
         {isAdmin && (
           <>
             <TabsContent value="users">
-              <CompanyUserManagement companyId={company.id} />
+              <CompanyUserManagement company={company} />
             </TabsContent>
             <TabsContent value="api">
-              <CompanyAPIConnectors companyId={company.id} />
+              <CompanyAPIConnectors company={company} />
             </TabsContent>
           </>
         )}

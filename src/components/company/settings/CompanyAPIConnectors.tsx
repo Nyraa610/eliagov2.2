@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Company } from "@/services/companyService";
+import { Company } from "@/services/company/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Database, Globe, Link, Server, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
