@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { UserActivity } from "./types";
 import { badgeService } from "./badgeService";
@@ -10,27 +9,14 @@ class ActivityService {
   async trackActivity(activity: UserActivity): Promise<boolean> {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return false;
-
-      // Check if user has permissions before attempting to insert
-      const { data: testPerm, error: testError } = await supabase
-        .from('user_activities')
-        .select('id')
-        .limit(1);
-        
-      if (testError) {
-        console.warn("User may not have correct permissions for tracking activities:", testError.message);
-        // Return true to prevent errors from cascading through the app
-        // This is non-critical functionality
-        return true;
+      if (!userData.user) {
+        console.warn("No authenticated user found when tracking activity");
+        return false;
       }
 
-      console.log("Attempting to insert activity:", {
-        user_id: userData.user.id,
-        activity_type: activity.activity_type,
-        points_earned: activity.points_earned
-      });
+      console.log("Tracking activity with user:", userData.user.id, "Activity:", activity.activity_type);
 
+      // Insert the activity directly without permission check first
       const { error } = await supabase
         .from('user_activities')
         .insert({
@@ -41,34 +27,46 @@ class ActivityService {
         });
 
       if (error) {
-        console.warn("Error tracking activity:", error.message);
-        // Return true to prevent errors from cascading through the app
-        return true;
+        // Log detailed error for debugging
+        console.error("Database error tracking activity:", {
+          errorCode: error.code,
+          errorMessage: error.message,
+          details: error.details,
+          hint: error.hint,
+          activity: activity
+        });
+        return false;
       }
 
-      console.log("Activity tracked successfully:", activity.activity_type);
+      console.log("Activity tracked successfully:", activity.activity_type, "Points:", activity.points_earned);
 
       // Update activity count separately
       await this.incrementActivityCounter(userData.user.id);
 
+      // Check for badges after successful activity tracking
       await badgeService.checkForBadges(userData.user.id);
       return true;
     } catch (error) {
-      console.warn("Exception tracking activity:", error);
-      // Return true to prevent errors from cascading through the app
-      return true;
+      console.error("Exception tracking activity:", error);
+      return false;
     }
   }
 
   async incrementActivityCounter(userId: string): Promise<void> {
     try {
       // Increment activity counter directly in the stats table
-      await supabase.rpc('increment_activity_counter', {
+      const { error } = await supabase.rpc('increment_activity_counter', {
         user_id_param: userId
-      }).throwOnError();
+      });
+      
+      if (error) {
+        console.error("Error incrementing activity counter:", error);
+        return;
+      }
+      
       console.log("Activity counter incremented successfully");
     } catch (error) {
-      console.warn("Error incrementing activity counter:", error);
+      console.error("Error incrementing activity counter:", error);
     }
   }
 

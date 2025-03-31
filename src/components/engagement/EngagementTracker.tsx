@@ -8,18 +8,34 @@ import { supabase } from '@/lib/supabase';
 
 export function EngagementTracker() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const location = useLocation();
 
   // Check if user is authenticated
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      const isUserAuthenticated = !!data.session;
+      setIsAuthenticated(isUserAuthenticated);
+      
+      if (!isUserAuthenticated) {
         console.log("User not authenticated, skipping engagement tracking");
+      } else {
+        console.log("User authenticated, enabling engagement tracking");
       }
     };
     
     checkAuth();
+    
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      console.log("Auth state changed:", event, "Is authenticated:", !!session);
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Check if user is on admin route
@@ -30,10 +46,13 @@ export function EngagementTracker() {
     console.log(`EngagementTracker: ${isAdminRoute ? 'Admin route detected' : 'User route detected'}. Path: ${location.pathname}`);
   }, [location.pathname]);
 
-  // Use our extracted hooks
-  useActivityTracking(isAdmin);
-  useAuthTracking(isAdmin);
-  useTeamEngagement(isAdmin);
+  // Only use our extracted hooks if the user is authenticated
+  if (isAuthenticated) {
+    // Use our extracted hooks
+    useActivityTracking(isAdmin);
+    useAuthTracking(isAdmin);
+    useTeamEngagement(isAdmin);
+  }
 
   // This component doesn't render anything visible
   return null;

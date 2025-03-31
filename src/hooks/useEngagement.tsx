@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
 export const useEngagement = () => {
-  const { toast } = useToast();
+  const { toast, celebrateSuccess } = useToast();
   const location = useLocation();
   const { t } = useTranslation();
   const [teamActivities, setTeamActivities] = useState<any[]>([]);
@@ -16,7 +16,7 @@ export const useEngagement = () => {
   // Skip tracking for admin routes to avoid permission issues
   const shouldSkipTracking = location.pathname.includes('/admin');
 
-  const trackActivity = useCallback(async (activity: UserActivity, showReward = false) => {
+  const trackActivity = useCallback(async (activity: UserActivity, showReward = true) => {
     if (shouldSkipTracking) {
       console.log('Skipping activity tracking for admin route');
       return true;
@@ -46,19 +46,20 @@ export const useEngagement = () => {
       
       const success = await engagementService.trackActivity(enhancedActivity);
       
-      if (success && showReward) {
+      // Always show the toast notification for points earned if showReward is true
+      if (success && showReward && activity.points_earned > 0) {
         toast({
-          title: t("engagement.pointsEarned"),
-          description: `${activity.points_earned} ${t("engagement.points")} - ${formatActivityType(activity.activity_type)}`,
+          title: t("engagement.pointsEarned", "Points Earned!"),
+          description: `+${activity.points_earned} ${t("engagement.points", "points")} - ${formatActivityType(activity.activity_type)}`,
           duration: 3000,
+          variant: "success"
         });
       }
       
       return success;
     } catch (error) {
-      console.warn("Error in trackActivity (non-critical):", error);
-      // Return true to prevent errors from cascading through the app
-      return true;
+      console.error("Error in trackActivity:", error);
+      return false;
     }
   }, [toast, shouldSkipTracking, t, location.pathname]);
 

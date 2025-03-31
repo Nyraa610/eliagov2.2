@@ -1,4 +1,3 @@
-
 import {
   createBrowserRouter,
   RouterProvider,
@@ -39,6 +38,7 @@ import CompanySettings from "@/pages/company/CompanySettings";
 import Engagement from "@/pages/Engagement";
 import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
 import ValueChainResults from "@/pages/assessment/ValueChainResults";
+import { Toaster } from "@/components/ui/toaster";
 
 // Initialize i18n
 import './i18n/i18n';
@@ -195,6 +195,8 @@ function App() {
     <AuthProvider>
       <LanguageProvider>
         <RouterProvider router={router} />
+        {/* Toast notifications */}
+        <Toaster />
       </LanguageProvider>
     </AuthProvider>
   );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
@@ -11,7 +10,10 @@ export function useActivityTracking(isAdmin: boolean) {
 
   // Track page views - skip for admin routes
   useEffect(() => {
-    if (isAdmin) return;
+    if (isAdmin) {
+      console.log("Admin route detected, skipping page view tracking");
+      return;
+    }
     
     const trackPageView = async () => {
       try {
@@ -44,7 +46,7 @@ export function useActivityTracking(isAdmin: boolean) {
           pointsEarned = 2;
         }
         
-        console.log(`Tracking page view: ${location.pathname} as ${activityType}`);
+        console.log(`Tracking page view: ${location.pathname} as ${activityType} for ${pointsEarned} points`);
         
         const success = await engagementService.trackActivity({
           activity_type: activityType,
@@ -53,22 +55,26 @@ export function useActivityTracking(isAdmin: boolean) {
             path: location.pathname,
             timestamp: new Date().toISOString() 
           }
-        }).catch(err => {
-          console.warn("Could not track page view", err);
-          return false;
-        });
+        }, true); // Always show reward notification for page views
         
         if (success) {
-          console.log("Successfully tracked page view");
+          console.log(`Successfully tracked page view: ${activityType}, +${pointsEarned} points`);
+        } else {
+          console.warn(`Failed to track page view: ${activityType}`);
         }
         
         setLastActive(Date.now());
       } catch (error) {
-        console.warn("Page view tracking error:", error);
+        console.error("Page view tracking error:", error);
       }
     };
 
-    trackPageView();
+    // Small delay to ensure auth is checked properly
+    const trackingTimeout = setTimeout(() => {
+      trackPageView();
+    }, 500);
+
+    return () => clearTimeout(trackingTimeout);
   }, [location.pathname, isAdmin]);
 
   // Track time spent - skip for admin routes
