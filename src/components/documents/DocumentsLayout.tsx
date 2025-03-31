@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { documentService, DocumentFolder } from "@/services/document/documentService";
 
 export function DocumentsLayout() {
-  const { company, isLoading } = useCompanyProfile();
+  const { company, loading } = useCompanyProfile();
   const [activeTab, setActiveTab] = useState("documents");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
@@ -45,7 +45,7 @@ export function DocumentsLayout() {
     setBreadcrumb(newBreadcrumb);
   };
   
-  if (isLoading || !company) {
+  if (loading || !company) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { documentService, Deliverable } from "@/services/document/documentService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, FileSpreadsheet, FilePdf } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface DeliverablesListProps {
@@ -27,9 +27,9 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
   
   const getDocumentIcon = (documentType: string) => {
     if (documentType.includes('report') || documentType.includes('pdf')) {
-      return <FilePdf className="h-10 w-10 text-red-500" />;
+      return <FileText className="h-10 w-10 text-red-500" />;
     } else if (documentType.includes('spreadsheet') || documentType.includes('excel')) {
-      return <FileSpreadsheet className="h-10 w-10 text-emerald-500" />;
+      return <FileText className="h-10 w-10 text-emerald-500" />;
     } else {
       return <FileText className="h-10 w-10 text-blue-500" />;
     }

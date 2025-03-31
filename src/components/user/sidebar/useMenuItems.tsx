@@ -1,3 +1,4 @@
+
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
   Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText
@@ -83,10 +84,9 @@ export const useMenuItems = () => {
       path: "/engagement",
     },
     {
-      id: "documents",
-      label: "Document Center",
-      icon: FileText,
-      href: "/documents",
+      title: "Document Center",
+      icon: <FileText className="h-5 w-5" />,
+      path: "/documents",
     },
   ];
   

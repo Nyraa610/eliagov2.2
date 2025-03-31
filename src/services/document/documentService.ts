@@ -1,21 +1,20 @@
 
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
-export type Document = {
+export interface Document {
   id: string;
   name: string;
   file_path: string;
   file_type: string;
   file_size: number;
-  folder_path: string;
+  folder_id: string | null;
   company_id: string;
   created_by: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type DocumentFolder = {
+export interface DocumentFolder {
   id: string;
   name: string;
   company_id: string;
@@ -23,9 +22,9 @@ export type DocumentFolder = {
   created_by: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type Deliverable = {
+export interface Deliverable {
   id: string;
   name: string;
   description: string | null;
@@ -34,337 +33,233 @@ export type Deliverable = {
   company_id: string;
   created_at: string;
   updated_at: string;
-};
+}
 
 export const documentService = {
-  // Document operations
-  async uploadDocument(
-    file: File,
-    folderId: string | null = null,
-    companyId: string
-  ): Promise<Document | null> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        toast.error("Authentication required");
-        return null;
-      }
+  // Document methods
+  async uploadDocument(file: File, companyId: string, folderId: string | null = null): Promise<Document> {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      throw new Error('User not authenticated');
+    }
 
-      const folderInfo = folderId ? await this.getFolder(folderId) : null;
-      const folderPath = folderInfo ? folderInfo.name : "";
+    const filePath = `${companyId}/${new Date().getTime()}_${file.name}`;
+    
+    // Upload file to storage
+    const { error: uploadError } = await supabase.storage
+      .from('company_documents_storage')
+      .upload(filePath, file);
       
-      // Create path in storage
-      const timestamp = new Date().getTime();
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `${companyId}/${folderPath ? folderPath + '/' : ''}${timestamp}-${safeFileName}`;
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      throw new Error('Error uploading file');
+    }
+    
+    // Get file URL
+    const { data: urlData } = supabase.storage
+      .from('company_documents_storage')
+      .getPublicUrl(filePath);
       
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('company_documents_storage')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-      
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        toast.error(`Failed to upload: ${uploadError.message}`);
-        return null;
-      }
-      
-      // Get the URL of the uploaded file
-      const { data: urlData } = supabase.storage
-        .from('company_documents_storage')
-        .getPublicUrl(filePath);
-      
-      if (!urlData) {
-        toast.error("Failed to get file URL");
-        return null;
-      }
-      
-      // Create document record in database
-      const document = {
+    if (!urlData) {
+      throw new Error('Failed to get file URL');
+    }
+    
+    // Create document record in database
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
         name: file.name,
         file_path: urlData.publicUrl,
         file_type: file.type,
         file_size: file.size,
-        folder_path: folderPath,
+        folder_id: folderId,
         company_id: companyId,
         created_by: user.user.id
-      };
+      })
+      .select()
+      .single();
       
-      const { data, error } = await supabase
-        .from('documents')
-        .insert(document)
-        .select('*')
-        .single();
-      
-      if (error) {
-        console.error("Document record error:", error);
-        toast.error(`Failed to save document metadata: ${error.message}`);
-        return null;
-      }
-      
-      toast.success(`Document "${file.name}" uploaded successfully`);
-      return data;
-    } catch (error) {
-      console.error("Upload document error:", error);
-      toast.error("Failed to upload document");
-      return null;
+    if (error) {
+      console.error('Error creating document record:', error);
+      throw new Error('Error creating document record');
     }
+    
+    return data as Document;
   },
   
   async getDocuments(companyId: string, folderId: string | null = null): Promise<Document[]> {
-    try {
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .eq('company_id', companyId);
+    let query = supabase
+      .from('documents')
+      .select('*')
+      .eq('company_id', companyId);
       
-      if (folderId) {
-        const folder = await this.getFolder(folderId);
-        if (folder) {
-          query = query.eq('folder_path', folder.name);
-        }
-      } else {
-        query = query.eq('folder_path', '');
-      }
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    } else {
+      query = query.is('folder_id', null);
+    }
+    
+    const { data, error } = await query.order('name');
+    
+    if (error) {
+      console.error('Error fetching documents:', error);
+      throw new Error('Error fetching documents');
+    }
+    
+    return data as Document[];
+  },
+  
+  async deleteDocument(documentId: string): Promise<void> {
+    // Get the document to find the file path
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('file_path')
+      .eq('id', documentId)
+      .single();
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+    if (fetchError) {
+      console.error('Error fetching document:', fetchError);
+      throw new Error('Error fetching document');
+    }
+    
+    // Extract the path from the URL
+    const filePath = document.file_path.split('/').pop();
+    
+    // Delete the file from storage
+    const { error: storageError } = await supabase.storage
+      .from('company_documents_storage')
+      .remove([filePath]);
       
-      if (error) {
-        console.error("Get documents error:", error);
-        toast.error("Failed to load documents");
-        return [];
-      }
+    if (storageError) {
+      console.error('Error removing file from storage:', storageError);
+      // Continue anyway to delete the database record
+    }
+    
+    // Delete the document record
+    const { error: deleteError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId);
       
-      return data || [];
-    } catch (error) {
-      console.error("Get documents error:", error);
-      toast.error("Failed to load documents");
-      return [];
+    if (deleteError) {
+      console.error('Error deleting document record:', deleteError);
+      throw new Error('Error deleting document record');
     }
   },
   
-  async deleteDocument(id: string): Promise<boolean> {
-    try {
-      const { data: document, error: fetchError } = await supabase
-        .from('documents')
-        .select('file_path')
-        .eq('id', id)
-        .single();
-      
-      if (fetchError || !document) {
-        console.error("Fetch document error:", fetchError);
-        toast.error("Document not found");
-        return false;
-      }
-      
-      // Extract path from URL
-      const url = new URL(document.file_path);
-      const pathSegments = url.pathname.split('/');
-      const storageFilePath = pathSegments.slice(pathSegments.findIndex(s => s === 'company_documents_storage') + 1).join('/');
-      
-      // Delete file from storage
-      const { error: storageError } = await supabase.storage
-        .from('company_documents_storage')
-        .remove([storageFilePath]);
-      
-      if (storageError) {
-        console.error("Delete storage error:", storageError);
-        // Continue with database deletion even if storage deletion fails
-      }
-      
-      // Delete document record from database
-      const { error: deleteError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', id);
-      
-      if (deleteError) {
-        console.error("Delete document error:", deleteError);
-        toast.error("Failed to delete document record");
-        return false;
-      }
-      
-      toast.success("Document deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Delete document error:", error);
-      toast.error("Failed to delete document");
-      return false;
+  // Folder methods
+  async createFolder(name: string, companyId: string, parentId: string | null = null): Promise<DocumentFolder> {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      throw new Error('User not authenticated');
     }
-  },
-  
-  // Folder operations
-  async createFolder(name: string, companyId: string, parentId: string | null = null): Promise<DocumentFolder | null> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        toast.error("Authentication required");
-        return null;
-      }
-      
-      const folder = {
+    
+    const { data, error } = await supabase
+      .from('document_folders')
+      .insert({
         name,
         company_id: companyId,
         parent_id: parentId,
         created_by: user.user.id
-      };
+      })
+      .select()
+      .single();
       
-      const { data, error } = await supabase
-        .from('document_folders')
-        .insert(folder)
-        .select('*')
-        .single();
-      
-      if (error) {
-        console.error("Create folder error:", error);
-        toast.error("Failed to create folder");
-        return null;
-      }
-      
-      toast.success(`Folder "${name}" created successfully`);
-      return data;
-    } catch (error) {
-      console.error("Create folder error:", error);
-      toast.error("Failed to create folder");
-      return null;
+    if (error) {
+      console.error('Error creating folder:', error);
+      throw new Error('Error creating folder');
     }
+    
+    return data as DocumentFolder;
   },
   
   async getFolders(companyId: string, parentId: string | null = null): Promise<DocumentFolder[]> {
-    try {
-      let query = supabase
-        .from('document_folders')
-        .select('*')
-        .eq('company_id', companyId);
+    let query = supabase
+      .from('document_folders')
+      .select('*')
+      .eq('company_id', companyId);
       
-      if (parentId) {
-        query = query.eq('parent_id', parentId);
-      } else {
-        query = query.is('parent_id', null);
+    if (parentId) {
+      query = query.eq('parent_id', parentId);
+    } else {
+      query = query.is('parent_id', null);
+    }
+    
+    const { data, error } = await query.order('name');
+    
+    if (error) {
+      console.error('Error fetching folders:', error);
+      throw new Error('Error fetching folders');
+    }
+    
+    return data as DocumentFolder[];
+  },
+  
+  async getFolder(folderId: string): Promise<DocumentFolder> {
+    const { data, error } = await supabase
+      .from('document_folders')
+      .select('*')
+      .eq('id', folderId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching folder:', error);
+      throw new Error('Error fetching folder');
+    }
+    
+    return data as DocumentFolder;
+  },
+  
+  async deleteFolder(folderId: string): Promise<void> {
+    // Recursively delete subfolders
+    const { data: subfolders } = await supabase
+      .from('document_folders')
+      .select('id')
+      .eq('parent_id', folderId);
+      
+    if (subfolders && subfolders.length > 0) {
+      for (const subfolder of subfolders) {
+        await this.deleteFolder(subfolder.id);
       }
+    }
+    
+    // Delete documents in this folder
+    const { data: documents } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('folder_id', folderId);
       
-      const { data, error } = await query.order('name');
-      
-      if (error) {
-        console.error("Get folders error:", error);
-        toast.error("Failed to load folders");
-        return [];
+    if (documents && documents.length > 0) {
+      for (const document of documents) {
+        await this.deleteDocument(document.id);
       }
+    }
+    
+    // Finally, delete the folder itself
+    const { error } = await supabase
+      .from('document_folders')
+      .delete()
+      .eq('id', folderId);
       
-      return data || [];
-    } catch (error) {
-      console.error("Get folders error:", error);
-      toast.error("Failed to load folders");
-      return [];
+    if (error) {
+      console.error('Error deleting folder:', error);
+      throw new Error('Error deleting folder');
     }
   },
   
-  async getFolder(id: string): Promise<DocumentFolder | null> {
-    try {
-      const { data, error } = await supabase
-        .from('document_folders')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error("Get folder error:", error);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error("Get folder error:", error);
-      return null;
-    }
-  },
-  
-  async deleteFolder(id: string): Promise<boolean> {
-    try {
-      // Check for subfolders
-      const { data: subfolders, error: subfoldersError } = await supabase
-        .from('document_folders')
-        .select('id')
-        .eq('parent_id', id);
-      
-      if (subfoldersError) {
-        console.error("Check subfolders error:", subfoldersError);
-        toast.error("Failed to check subfolders");
-        return false;
-      }
-      
-      if (subfolders && subfolders.length > 0) {
-        toast.error("Cannot delete folder with subfolders. Please delete subfolders first.");
-        return false;
-      }
-      
-      // Check for documents in folder
-      const folder = await this.getFolder(id);
-      if (!folder) {
-        toast.error("Folder not found");
-        return false;
-      }
-      
-      const { data: documents, error: documentsError } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('folder_path', folder.name);
-      
-      if (documentsError) {
-        console.error("Check documents error:", documentsError);
-        toast.error("Failed to check documents in folder");
-        return false;
-      }
-      
-      if (documents && documents.length > 0) {
-        toast.error("Cannot delete folder with documents. Please delete documents first.");
-        return false;
-      }
-      
-      // Delete folder
-      const { error: deleteError } = await supabase
-        .from('document_folders')
-        .delete()
-        .eq('id', id);
-      
-      if (deleteError) {
-        console.error("Delete folder error:", deleteError);
-        toast.error("Failed to delete folder");
-        return false;
-      }
-      
-      toast.success("Folder deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Delete folder error:", error);
-      toast.error("Failed to delete folder");
-      return false;
-    }
-  },
-  
-  // Deliverables operations
+  // Deliverables methods
   async getDeliverables(companyId: string): Promise<Deliverable[]> {
-    try {
-      const { data, error } = await supabase
-        .from('document_deliverables')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('document_deliverables')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error("Get deliverables error:", error);
-        toast.error("Failed to load deliverables");
-        return [];
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error("Get deliverables error:", error);
-      toast.error("Failed to load deliverables");
-      return [];
+    if (error) {
+      console.error('Error fetching deliverables:', error);
+      throw new Error('Error fetching deliverables');
     }
+    
+    return data as Deliverable[];
   }
 };

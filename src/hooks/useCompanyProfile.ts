@@ -9,19 +9,19 @@ import { supabase } from "@/lib/supabase";
 export function useCompanyProfile(id?: string) {
   const [company, setCompany] = useState<Company | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchCompany = async () => {
       if (!id) {
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       
       try {
-        setLoading(true);
+        setIsLoading(true);
         // Get company details
         const data = await companyService.getCompany(id);
         setCompany(data);
@@ -55,7 +55,7 @@ export function useCompanyProfile(id?: string) {
         });
         navigate("/companies");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -73,7 +73,8 @@ export function useCompanyProfile(id?: string) {
   return {
     company,
     isAdmin,
-    loading,
+    isLoading,
+    loading: isLoading, // Add backward compatibility
     handleCompanyUpdate
   };
 }
