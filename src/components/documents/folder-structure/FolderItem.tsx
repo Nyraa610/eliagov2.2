@@ -1,16 +1,18 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { DocumentFolder, documentService } from "@/services/document";
 import { Button } from "@/components/ui/button";
 import { Folder, ChevronRight, ChevronDown } from "lucide-react";
-import { documentService, DocumentFolder } from "@/services/document";
 import { cn } from "@/lib/utils";
+import { SubfolderList } from "./SubfolderList";
+import { SubfolderLoadingState } from "./SubfolderLoadingState";
 
 interface FolderItemProps {
   folder: DocumentFolder;
   companyId: string;
-  expanded: boolean;
-  toggleExpand: () => void;
-  onSelectFolder: (folder: DocumentFolder | null) => void;
+  expanded?: boolean;
+  toggleExpand?: () => void;
+  onSelectFolder: (folder: DocumentFolder) => void;
   currentFolder: DocumentFolder | null;
   level: number;
 }
@@ -18,97 +20,101 @@ interface FolderItemProps {
 export function FolderItem({
   folder,
   companyId,
-  expanded,
+  expanded = false,
   toggleExpand,
   onSelectFolder,
   currentFolder,
-  level
+  level = 0
 }: FolderItemProps) {
   const [subfolders, setSubfolders] = useState<DocumentFolder[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasSubfolders, setHasSubfolders] = useState(false);
-  
-  const loadSubfolders = async () => {
-    if (!expanded) return;
-    setLoading(true);
-    const data = await documentService.getFolders(companyId, folder.id);
-    setSubfolders(data);
-    setLoading(false);
-  };
-  
-  const checkForSubfolders = async () => {
-    const data = await documentService.getFolders(companyId, folder.id);
-    setHasSubfolders(data.length > 0);
-  };
-  
-  useEffect(() => {
-    checkForSubfolders();
-  }, [folder.id, companyId]);
-  
-  useEffect(() => {
-    if (expanded) {
-      loadSubfolders();
-    }
-  }, [expanded, folder.id, companyId]);
-  
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleExpand();
-  };
-  
-  const handleSelect = () => {
-    onSelectFolder(folder);
-  };
+  const [isExpanded, setIsExpanded] = useState(expanded);
+  const [hasLoadedSubfolders, setHasLoadedSubfolders] = useState(false);
   
   const isSelected = currentFolder?.id === folder.id;
   
+  // Allow control from parent if provided
+  useEffect(() => {
+    if (typeof expanded !== 'undefined') {
+      setIsExpanded(expanded);
+    }
+  }, [expanded]);
+  
+  const handleToggleExpand = () => {
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    
+    // Propagate to parent if callback provided
+    if (toggleExpand) {
+      toggleExpand();
+    }
+    
+    // Load subfolders if expanding and not yet loaded
+    if (newExpandedState && !hasLoadedSubfolders) {
+      loadSubfolders();
+    }
+  };
+  
+  const loadSubfolders = async () => {
+    try {
+      setLoading(true);
+      const data = await documentService.getFolders(companyId, folder.id);
+      setSubfolders(data);
+      setHasLoadedSubfolders(true);
+    } catch (error) {
+      console.error("Error loading subfolders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleFolderClick = () => {
+    onSelectFolder(folder);
+  };
+  
   return (
-    <div>
-      <div 
-        className={cn(
-          "flex items-center group rounded-md hover:bg-muted transition-colors",
-          isSelected && "bg-muted"
-        )}
-      >
+    <div className="w-full">
+      <div className="flex items-center">
         <Button 
           variant="ghost" 
           size="sm" 
-          className={cn(
-            "w-full justify-start pl-[calc(1rem*" + level + ")] text-left",
-            isSelected && "bg-muted font-medium" 
-          )}
-          onClick={handleSelect}
+          className="w-6 h-6 p-0 mr-1"
+          onClick={handleToggleExpand}
         >
-          {hasSubfolders ? (
-            <span className="mr-1 text-muted-foreground" onClick={handleToggle}>
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </span>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
           ) : (
-            <span className="ml-4"></span>
+            <ChevronRight className="h-4 w-4" />
           )}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full justify-start text-left h-7 py-1 px-2",
+            isSelected && "bg-muted"
+          )} 
+          onClick={handleFolderClick}
+        >
           <Folder className="h-4 w-4 mr-2 text-blue-500" />
           <span className="truncate">{folder.name}</span>
         </Button>
       </div>
       
-      {expanded && (
-        <div className="ml-2">
+      {isExpanded && (
+        <>
           {loading ? (
             <SubfolderLoadingState />
-          ) : subfolders.length > 0 ? (
-            <SubfolderList 
-              subfolders={subfolders} 
+          ) : (
+            <SubfolderList
+              folders={subfolders}
               companyId={companyId}
               onSelectFolder={onSelectFolder}
               currentFolder={currentFolder}
-              level={level + 1}
+              level={level}
             />
-          ) : null}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

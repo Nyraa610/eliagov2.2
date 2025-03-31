@@ -3,8 +3,11 @@ import React from "react";
 
 export function SubfolderLoadingState() {
   return (
-    <div className="flex justify-center py-2">
-      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></div>
+    <div className="pl-4 py-1">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-primary"></div>
+        <span className="text-xs">Loading subfolders...</span>
+      </div>
     </div>
   );
 }
