@@ -1,11 +1,17 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
-export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean = true, userId: string | null = null) {
+interface TrackingConfig {
+  isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  userId?: string | null;
+}
+
+export function useActivityTracking(config: TrackingConfig = {}) {
+  const { isAdmin = false, isAuthenticated = true, userId = null } = config;
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const location = useLocation();

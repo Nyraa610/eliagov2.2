@@ -2,7 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useEngagement } from '@/hooks/useEngagement';
 
-export function useTeamEngagement(isAdmin: boolean, isAuthenticated: boolean = true) {
+interface TeamEngagementConfig {
+  isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  userId?: string | null;
+}
+
+export function useTeamEngagement(config: TeamEngagementConfig = {}) {
+  const { isAdmin = false, isAuthenticated = true } = config;
   const [teamTracking, setTeamTracking] = useState<boolean>(false);
   const { startTeamTracking } = useEngagement();
 

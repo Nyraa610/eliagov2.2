@@ -3,7 +3,15 @@ import { useEffect } from 'react';
 import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
 
-export function useAuthTracking(isAdmin: boolean, isAuthenticated: boolean = true) {
+interface AuthTrackingConfig {
+  isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  userId?: string | null;
+}
+
+export function useAuthTracking(config: AuthTrackingConfig = {}) {
+  const { isAdmin = false, isAuthenticated = true } = config;
+  
   // Track user login - skip for admin routes or if not authenticated
   useEffect(() => {
     if (isAdmin || !isAuthenticated) return;

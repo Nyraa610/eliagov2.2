@@ -77,10 +77,10 @@ export function EngagementTracker() {
   }, [location.pathname]);
 
   // Initialize tracking hooks only after authentication check
-  // Always call hooks unconditionally but control their behavior via props
-  const activityTracking = useActivityTracking(isAdmin, isAuthenticated, userId);
-  const authTracking = useAuthTracking(isAdmin, isAuthenticated, userId);
-  const teamEngagement = useTeamEngagement(isAdmin, isAuthenticated, userId);
+  // Pass the tracking configuration object to each hook
+  const activityTracking = useActivityTracking({ isAdmin, isAuthenticated, userId });
+  const authTracking = useAuthTracking({ isAdmin, isAuthenticated });
+  const teamEngagement = useTeamEngagement({ isAdmin, isAuthenticated, userId });
 
   // Log that tracking is active (only if authenticated)
   useEffect(() => {
