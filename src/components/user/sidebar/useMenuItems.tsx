@@ -50,16 +50,16 @@ export const useMenuItems = () => {
           path: "/assessment/value-chain",
         },
         {
-          title: "Carbon Evaluation",
-          icon: <Globe className="h-5 w-5" />,
-          path: "/assessment/carbon-evaluation",
-        },
-        {
           title: "Materiality Analysis",
           icon: <Layers className="h-5 w-5" />,
           path: "/assessment/materiality-analysis",
         },
       ],
+    },
+    {
+      title: "Carbon Evaluation",
+      icon: <Globe className="h-5 w-5" />,
+      path: "/carbon-evaluation",
     },
     {
       title: "Action Plan",

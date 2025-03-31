@@ -2,12 +2,10 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { FeatureStatus } from "@/types/training";
 import { CarbonEvaluationForm } from "@/components/assessment/carbon-evaluation/CarbonEvaluationForm";
 import { assessmentService } from "@/services/assessmentService";
 import { useToast } from "@/components/ui/use-toast";
+import { FeatureStatus } from "@/types/training";
 
 export default function CarbonEvaluation() {
   const { t } = useTranslation();
@@ -54,17 +52,6 @@ export default function CarbonEvaluation() {
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-primary mb-2">{t("assessment.carbonEvaluation.title")}</h1>
-        <Button 
-          asChild 
-          variant="ghost" 
-          size="sm" 
-          className="flex items-center gap-1 mb-4 px-0"
-        >
-          <Link to="/assessment">
-            <ChevronLeft className="h-4 w-4" />
-            Back to Assessment Overview
-          </Link>
-        </Button>
         <p className="text-gray-600">
           {t("assessment.carbonEvaluation.description")}
         </p>
