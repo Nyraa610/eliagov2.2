@@ -1,5 +1,6 @@
 
 import { Panel } from "@xyflow/react";
+import { COLOR_PRESETS } from "../../../../../../components/value-chain/node-edit/ColorPicker";
 
 export function FlowLegend() {
   return (
