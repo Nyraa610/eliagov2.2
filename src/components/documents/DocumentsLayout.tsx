@@ -9,48 +9,89 @@ import { CreateFolderDialog } from "./CreateFolderDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Folder, Upload, FileText } from "lucide-react";
-import { toast } from "sonner";
-import { documentService, DocumentFolder } from "@/services/document/documentService";
+import { toast } from "@/components/ui/use-toast";
+import { documentService, DocumentFolder } from "@/services/document";
 
 export function DocumentsLayout() {
-  const { company, loading } = useCompanyProfile();
+  const { company, loading: companyLoading } = useCompanyProfile();
   const [activeTab, setActiveTab] = useState("documents");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<DocumentFolder | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<DocumentFolder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Reset loading state when company changes
+    if (company) {
+      setLoading(false);
+    }
+  }, [company]);
   
   const navigateToFolder = async (folder: DocumentFolder | null) => {
-    setCurrentFolder(folder);
-    
-    // Build breadcrumb
-    if (!folder) {
-      setBreadcrumb([]);
-      return;
-    }
-    
-    const newBreadcrumb = [folder];
-    let parentId = folder.parent_id;
-    
-    while (parentId) {
-      const parent = await documentService.getFolder(parentId);
-      if (parent) {
-        newBreadcrumb.unshift(parent);
-        parentId = parent.parent_id;
-      } else {
-        parentId = null;
+    try {
+      setCurrentFolder(folder);
+      
+      // Build breadcrumb
+      if (!folder) {
+        setBreadcrumb([]);
+        return;
       }
+      
+      const newBreadcrumb = [folder];
+      let parentId = folder.parent_id;
+      
+      while (parentId) {
+        try {
+          const parent = await documentService.getFolder(parentId);
+          if (parent) {
+            newBreadcrumb.unshift(parent);
+            parentId = parent.parent_id;
+          } else {
+            parentId = null;
+          }
+        } catch (err) {
+          console.error("Error fetching parent folder:", err);
+          parentId = null;
+          setError("Failed to retrieve folder structure");
+        }
+      }
+      
+      setBreadcrumb(newBreadcrumb);
+    } catch (err) {
+      console.error("Error navigating to folder:", err);
+      setError("Failed to navigate to folder");
     }
-    
-    setBreadcrumb(newBreadcrumb);
   };
   
-  if (loading || !company) {
+  if (companyLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading company documents...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error: {error}</p>
+          <Button onClick={() => setError(null)}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!company) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">You need to be part of a company to access documents.</p>
         </div>
       </div>
     );

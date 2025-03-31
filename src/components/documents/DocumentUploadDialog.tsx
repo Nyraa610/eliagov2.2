@@ -1,10 +1,12 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DocumentFolder, documentService } from "@/services/document/documentService";
-import { Progress } from "@/components/ui/progress";
-import { Upload, X, FileText } from "lucide-react";
+import { documentService, DocumentFolder } from "@/services/document";
+import { toast } from "@/components/ui/use-toast";
+import { Upload } from "lucide-react";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -19,143 +21,109 @@ export function DocumentUploadDialog({
   companyId,
   currentFolder
 }: DocumentUploadDialogProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (e.dataTransfer.files) {
-      const filesArray = Array.from(e.dataTransfer.files);
-      setFiles(prev => [...prev, ...filesArray]);
-    }
-  };
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setFiles(prev => [...prev, ...filesArray]);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
   };
   
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  const handleSubmit = async () => {
-    if (files.length === 0) return;
+  const handleUpload = async () => {
+    if (!file) {
+      toast({
+        title: "Error",
+        description: "Please select a file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    setUploading(true);
-    
-    let completed = 0;
-    const totalFiles = files.length;
-    
-    for (const file of files) {
-      await documentService.uploadDocument(
-        file,
-        currentFolder?.id || null,
-        companyId
-      );
+    setLoading(true);
+    try {
+      await documentService.uploadDocument(file, companyId, currentFolder?.id || null);
       
-      completed++;
-      setProgress(Math.round((completed / totalFiles) * 100));
-    }
-    
-    // Reset state
-    setTimeout(() => {
-      setUploading(false);
-      setProgress(0);
-      setFiles([]);
+      toast({
+        title: "Document uploaded",
+        description: "The document has been successfully uploaded",
+      });
+      
+      setFile(null);
       onOpenChange(false);
-    }, 1000);
-  };
-  
-  const handleCancel = () => {
-    if (uploading) return;
-    setFiles([]);
-    onOpenChange(false);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload document",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
-    <Dialog open={open} onOpenChange={!uploading ? onOpenChange : undefined}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Documents</DialogTitle>
+          <DialogTitle>Upload Document</DialogTitle>
         </DialogHeader>
         
-        {!uploading ? (
-          <>
-            <div
-              className="border-2 border-dashed rounded-lg p-12 text-center hover:bg-muted/50 transition-colors cursor-pointer"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              onClick={() => document.getElementById('file-upload')?.click()}
-            >
-              <input
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="documentFile">Select File</Label>
+            <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-accent/50 transition-colors">
+              <Input
+                id="documentFile"
                 type="file"
-                id="file-upload"
-                className="hidden"
                 onChange={handleFileChange}
-                multiple
+                className="hidden"
               />
-              <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-1">Drop files here or click to upload</h3>
+              <Label htmlFor="documentFile" className="cursor-pointer flex flex-col items-center gap-2">
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                {file ? (
+                  <span className="text-primary font-medium">{file.name}</span>
+                ) : (
+                  <>
+                    <span className="font-medium">Click to upload or drag and drop</span>
+                    <span className="text-sm text-muted-foreground">PDF, Word, Excel, or image files</span>
+                  </>
+                )}
+              </Label>
+            </div>
+            
+            {currentFolder && (
               <p className="text-sm text-muted-foreground">
-                Upload PDFs, Office documents, images, and other file types
+                This document will be uploaded to: {currentFolder.name}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {currentFolder 
-                  ? `Files will be uploaded to folder: ${currentFolder.name}`
-                  : "Files will be uploaded to the root folder"
-                }
-              </p>
-            </div>
-            
-            {files.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Files to upload ({files.length})</h4>
-                <div className="max-h-40 overflow-y-auto border rounded-md">
-                  {files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border-b last:border-0"
-                    >
-                      <div className="flex items-center">
-                        <FileText className="h-5 w-5 mr-3 text-blue-500" />
-                        <span className="text-sm truncate max-w-[220px]">{file.name}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => removeFile(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
-            
-            <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={files.length === 0}
-              >
-                Upload {files.length > 0 && `(${files.length})`}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="py-8">
-            <Progress value={progress} className="mb-4" />
-            <p className="text-center text-sm text-muted-foreground">
-              Uploading {files.length} file{files.length !== 1 ? 's' : ''}... {progress}%
-            </p>
           </div>
-        )}
+        </div>
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUpload}
+            disabled={loading || !file}
+          >
+            {loading ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Uploading...
+              </>
+            ) : (
+              "Upload Document"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

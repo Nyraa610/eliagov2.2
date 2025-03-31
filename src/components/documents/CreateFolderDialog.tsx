@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { DocumentFolder, documentService } from "@/services/document/documentService";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { documentService, DocumentFolder } from "@/services/document";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateFolderDialogProps {
   open: boolean;
@@ -20,74 +21,88 @@ export function CreateFolderDialog({
   parentFolder
 }: CreateFolderDialogProps) {
   const [folderName, setFolderName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateFolder = async () => {
+    if (!folderName.trim()) {
+      toast({
+        title: "Error",
+        description: "Folder name cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    if (!folderName.trim()) return;
-    
-    setIsCreating(true);
-    
-    await documentService.createFolder(
-      folderName.trim(), 
-      companyId,
-      parentFolder?.id || null
-    );
-    
-    setIsCreating(false);
-    setFolderName("");
-    onOpenChange(false);
-  };
-  
-  const handleCancel = () => {
-    setFolderName("");
-    onOpenChange(false);
+    setLoading(true);
+    try {
+      await documentService.createFolder(folderName, companyId, parentFolder?.id || null);
+      
+      toast({
+        title: "Folder created",
+        description: "The folder has been successfully created",
+      });
+      
+      setFolderName("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create folder",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label htmlFor="folder-name">Folder Name</Label>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="folderName">Folder Name</Label>
             <Input
-              id="folder-name"
+              id="folderName"
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               placeholder="Enter folder name"
-              className="mt-1"
-              autoFocus
-              disabled={isCreating}
             />
+            
             {parentFolder && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Will be created as a subfolder of: {parentFolder.name}
+              <p className="text-sm text-muted-foreground">
+                This folder will be created inside: {parentFolder.name}
               </p>
             )}
           </div>
-          
-          <div className="flex justify-end gap-3 mt-4">
-            <Button
-              type="button"
-              variant="outline" 
-              onClick={handleCancel}
-              disabled={isCreating}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!folderName.trim() || isCreating}
-            >
-              {isCreating ? "Creating..." : "Create Folder"}
-            </Button>
-          </div>
-        </form>
+        </div>
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleCreateFolder}
+            disabled={loading || !folderName.trim()}
+          >
+            {loading ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Creating...
+              </>
+            ) : (
+              "Create Folder"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { documentService, Document, DocumentFolder } from "@/services/document/documentService";
+import { documentService, Document, DocumentFolder } from "@/services/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,7 +8,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 interface DocumentsListProps {
   companyId: string;

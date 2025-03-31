@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { documentService, Deliverable } from "@/services/document/documentService";
+import { documentService, Deliverable } from "@/services/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, FileIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "@/components/ui/use-toast";
 
 interface DeliverablesListProps {
   companyId: string;
@@ -17,32 +18,40 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
   useEffect(() => {
     const loadDeliverables = async () => {
       setLoading(true);
-      const data = await documentService.getDeliverables(companyId);
-      setDeliverables(data);
-      setLoading(false);
+      try {
+        const data = await documentService.getDeliverables(companyId);
+        setDeliverables(data);
+      } catch (error) {
+        console.error("Error loading deliverables:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load deliverables",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     
     loadDeliverables();
   }, [companyId]);
   
-  const getDocumentIcon = (documentType: string) => {
-    if (documentType.includes('report') || documentType.includes('pdf')) {
-      return <FileText className="h-10 w-10 text-red-500" />;
-    } else if (documentType.includes('spreadsheet') || documentType.includes('excel')) {
-      return <FileText className="h-10 w-10 text-emerald-500" />;
+  const getFileIcon = (documentType: string) => {
+    if (documentType === 'carbon_report') {
+      return <FileText className="h-6 w-6 text-green-500" />;
+    } else if (documentType === 'value_chain') {
+      return <FileText className="h-6 w-6 text-blue-500" />;
     } else {
-      return <FileText className="h-10 w-10 text-blue-500" />;
+      return <FileText className="h-6 w-6 text-gray-500" />;
     }
   };
   
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <FileText className="h-5 w-5 text-blue-500" />
-          Elia Go Deliverables
-        </CardTitle>
+      <CardHeader>
+        <CardTitle className="text-lg">Elia Go Deliverables</CardTitle>
       </CardHeader>
+      
       <CardContent>
         {loading ? (
           <div className="flex justify-center py-12">
@@ -50,40 +59,37 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
           </div>
         ) : deliverables.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-1">No deliverables available</h3>
+            <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-medium mb-1">No deliverables yet</h3>
             <p className="text-muted-foreground">
-              Complete assessments and other activities to generate deliverables
+              Complete assessments to generate reports and deliverables
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {deliverables.map(deliverable => (
-              <div 
-                key={deliverable.id} 
-                className="flex flex-col border rounded-lg p-5"
+              <div
+                key={deliverable.id}
+                className="flex flex-col border rounded-lg p-4"
               >
-                <div className="flex items-start gap-4 mb-3">
-                  {getDocumentIcon(deliverable.document_type)}
-                  <div>
-                    <h4 className="font-medium text-lg mb-1">{deliverable.name}</h4>
+                <div className="flex items-start gap-3 mb-3">
+                  {getFileIcon(deliverable.document_type)}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{deliverable.name}</h4>
                     <p className="text-sm text-muted-foreground">
                       Generated {formatDistanceToNow(new Date(deliverable.created_at), { addSuffix: true })}
                     </p>
+                    {deliverable.description && (
+                      <p className="text-sm mt-1">{deliverable.description}</p>
+                    )}
                   </div>
                 </div>
                 
-                {deliverable.description && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {deliverable.description}
-                  </p>
-                )}
-                
-                <div className="mt-auto pt-3">
+                <div className="mt-auto pt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="gap-2 w-full"
+                    className="w-full gap-2"
                     asChild
                   >
                     <a href={deliverable.file_path} target="_blank" rel="noopener noreferrer" download>
