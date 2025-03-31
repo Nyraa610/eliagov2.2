@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useEffect } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
