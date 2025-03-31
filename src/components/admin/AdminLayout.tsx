@@ -1,13 +1,14 @@
 
-import React from "react";
+import React, { ReactNode } from "react";
 import { Navigation } from "@/components/Navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Outlet } from "react-router-dom";
 
-interface AdminLayoutProps {
-  title: string;
+export interface AdminLayoutProps {
+  title?: string;
   description?: string;
-  children: React.ReactNode;
+  children?: ReactNode;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ title, description, children }) => {
@@ -21,15 +22,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ title, description, ch
           
           <main className="flex-1 p-6">
             <div className="max-w-6xl mx-auto space-y-6">
-              <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold text-primary">{title}</h1>
-                {description && (
-                  <p className="text-muted-foreground">{description}</p>
-                )}
-              </div>
+              {title && (
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-3xl font-bold text-primary">{title}</h1>
+                  {description && (
+                    <p className="text-muted-foreground">{description}</p>
+                  )}
+                </div>
+              )}
               
               <div className="space-y-6">
-                {children}
+                {children || <Outlet />}
               </div>
             </div>
           </main>

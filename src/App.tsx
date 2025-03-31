@@ -45,7 +45,7 @@ function App() {
               {/* Admin routes */}
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout />
+                  <AdminLayout title="Admin Dashboard" />
                 </ProtectedRoute>
               }>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
