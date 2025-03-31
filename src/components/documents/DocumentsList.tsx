@@ -1,6 +1,5 @@
 
-// Create the file if it doesn't exist
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { documentService, Document, DocumentFolder } from "@/services/document/documentService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
