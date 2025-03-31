@@ -24,14 +24,19 @@ export function EngagementTracker() {
   // Initialize team activity tracking
   useEffect(() => {
     if (!isAdmin && !teamTracking) {
-      const cleanup = startTeamTracking();
-      if (cleanup) {
-        setTeamTracking(true);
-      }
-      return () => {
-        if (cleanup) cleanup();
-        setTeamTracking(false);
+      const initTeamTracking = async () => {
+        const cleanup = await startTeamTracking();
+        if (cleanup) {
+          setTeamTracking(true);
+          return () => {
+            cleanup();
+            setTeamTracking(false);
+          };
+        }
+        return undefined;
       };
+      
+      initTeamTracking();
     }
   }, [isAdmin, startTeamTracking, teamTracking]);
 

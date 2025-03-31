@@ -1,64 +1,32 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, CalendarDays, Sparkles } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { useEngagement } from "@/hooks/useEngagement";
-import { format } from "date-fns";
+import { useEngagement } from '@/hooks/useEngagement';
+import { formatDistanceToNow } from 'date-fns';
 
-export const TeamActivitiesSection = () => {
-  const { t } = useTranslation();
-  const { getTeamActivities, startTeamTracking, teamActivities } = useEngagement();
-  const [loading, setLoading] = useState(true);
+export function TeamActivitiesSection() {
   const [activities, setActivities] = useState<any[]>([]);
-  const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [loading, setLoading] = useState<boolean>(true);
+  const { getTeamActivities, startTeamTracking, teamActivities } = useEngagement();
   
-  // Format activity type for display
-  const formatActivityType = (type: string): string => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
-
-  // Initialize team activity tracking
   useEffect(() => {
-    const cleanup = startTeamTracking();
-    return () => {
-      if (cleanup) cleanup();
-    };
-  }, [startTeamTracking]);
-  
-  // Load team activities on mount and when period changes
-  useEffect(() => {
-    const loadActivities = async () => {
+    const initTeamActivities = async () => {
       setLoading(true);
       try {
-        const data = await getTeamActivities(50);
+        // Load historical activities
+        const historicalActivities = await getTeamActivities();
+        setActivities(historicalActivities);
         
-        // Filter based on selected time period
-        const now = new Date();
-        const filteredData = data.filter((activity: any) => {
-          const activityDate = new Date(activity.created_at);
-          
-          if (period === 'today') {
-            return activityDate.toDateString() === now.toDateString();
-          } else if (period === 'week') {
-            const oneWeekAgo = new Date(now);
-            oneWeekAgo.setDate(now.getDate() - 7);
-            return activityDate >= oneWeekAgo;
-          } else if (period === 'month') {
-            const oneMonthAgo = new Date(now);
-            oneMonthAgo.setMonth(now.getMonth() - 1);
-            return activityDate >= oneMonthAgo;
+        // Start real-time tracking
+        const cleanup = await startTeamTracking();
+        
+        return () => {
+          if (cleanup) {
+            cleanup();
           }
-          return true;
-        });
-        
-        setActivities(filteredData);
+        };
       } catch (error) {
         console.error("Error loading team activities:", error);
       } finally {
@@ -66,177 +34,71 @@ export const TeamActivitiesSection = () => {
       }
     };
     
-    loadActivities();
-  }, [getTeamActivities, period, teamActivities.length]);
+    initTeamActivities();
+  }, [getTeamActivities, startTeamTracking]);
   
-  // Update activities when new team activities come in realtime
+  // Listen for real-time team activities from the hook
   useEffect(() => {
     if (teamActivities.length > 0) {
-      // Check if the new activity should be included based on time period
-      const now = new Date();
-      const latestActivity = teamActivities[teamActivities.length - 1];
-      const activityDate = new Date(latestActivity.created_at);
-      
-      let shouldInclude = false;
-      if (period === 'today') {
-        shouldInclude = activityDate.toDateString() === now.toDateString();
-      } else if (period === 'week') {
-        const oneWeekAgo = new Date(now);
-        oneWeekAgo.setDate(now.getDate() - 7);
-        shouldInclude = activityDate >= oneWeekAgo;
-      } else if (period === 'month') {
-        const oneMonthAgo = new Date(now);
-        oneMonthAgo.setMonth(now.getMonth() - 1);
-        shouldInclude = activityDate >= oneMonthAgo;
-      }
-      
-      if (shouldInclude) {
-        // Add to activities state
-        setActivities(prev => [latestActivity, ...prev].slice(0, 50));
-      }
+      setActivities(prevActivities => {
+        const newActivities = [...teamActivities, ...prevActivities];
+        // Limit to prevent too many activities
+        return newActivities.slice(0, 50);
+      });
     }
-  }, [teamActivities, period]);
+  }, [teamActivities]);
+
+  const formatActivityType = (type: string) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          {t('engagement.teamActivities', 'Team Activities')}
+          Team Activities
         </CardTitle>
         <CardDescription>
-          {t('engagement.teamActivitiesDesc', 'See what your team is doing')}
+          See what your team members are doing in real-time
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="today" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="today" onClick={() => setPeriod('today')}>
-                {t('engagement.today', 'Today')}
-              </TabsTrigger>
-              <TabsTrigger value="week" onClick={() => setPeriod('week')}>
-                {t('engagement.thisWeek', 'This Week')}
-              </TabsTrigger>
-              <TabsTrigger value="month" onClick={() => setPeriod('month')}>
-                {t('engagement.thisMonth', 'This Month')}
-              </TabsTrigger>
-            </TabsList>
-            
-            <Badge variant="outline" className="ml-auto">
-              {activities.length} {t('engagement.activities', 'activities')}
-            </Badge>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <p>Loading team activities...</p>
           </div>
-          
-          <TabsContent value="today" className="m-0">
-            <ActivityFeed activities={activities} loading={loading} period="today" />
-          </TabsContent>
-          
-          <TabsContent value="week" className="m-0">
-            <ActivityFeed activities={activities} loading={loading} period="week" />
-          </TabsContent>
-          
-          <TabsContent value="month" className="m-0">
-            <ActivityFeed activities={activities} loading={loading} period="month" />
-          </TabsContent>
-        </Tabs>
+        ) : activities.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-muted-foreground">No team activities yet.</p>
+            <p className="text-sm text-muted-foreground mt-2">Activities will appear here when your team members use the platform.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activities.map((activity: any) => (
+              <div key={activity.id} className="flex items-start space-x-4 border-b pb-4 last:border-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={activity.profiles?.avatar_url} />
+                  <AvatarFallback>{(activity.profiles?.full_name || 'User').substring(0, 2)}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {activity.profiles?.full_name || 'Team Member'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatActivityType(activity.activity_type)} (+{activity.points_earned} points)
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {activity.created_at && formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-};
-
-interface ActivityFeedProps {
-  activities: any[];
-  loading: boolean;
-  period: 'today' | 'week' | 'month';
 }
-
-const ActivityFeed = ({ activities, loading, period }: ActivityFeedProps) => {
-  const { t } = useTranslation();
-  
-  // Format activity type for display
-  const formatActivityType = (type: string): string => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
-  
-  // Get user's initials for avatar fallback
-  const getInitials = (name: string) => {
-    if (!name) return '??';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-  
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-pulse flex flex-col gap-2 w-full">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-muted rounded-md"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  
-  if (activities.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <Users className="h-12 w-12 mb-2 opacity-20" />
-        <p className="text-sm">
-          {t('engagement.noTeamActivities', 'No team activities found for this period')}
-        </p>
-      </div>
-    );
-  }
-  
-  return (
-    <ScrollArea className="h-[400px] pr-4">
-      <div className="space-y-4">
-        {activities.map((activity) => {
-          const profile = activity.profiles || {};
-          
-          return (
-            <div 
-              key={activity.id} 
-              className="flex gap-4 p-3 border rounded-lg hover:bg-muted/40 transition-colors"
-            >
-              <Avatar>
-                <AvatarImage src={profile.avatar_url} alt={profile.full_name || "User"} />
-                <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <p className="font-medium text-sm">
-                    {profile.full_name || t('engagement.teamMember', 'Team Member')}
-                  </p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <CalendarDays className="h-3 w-3" />
-                    <span>{format(new Date(activity.created_at), 'MMM d, HH:mm')}</span>
-                  </div>
-                </div>
-                
-                <p className="text-sm text-muted-foreground">
-                  {formatActivityType(activity.activity_type)}
-                </p>
-                
-                <div className="flex items-center gap-1 mt-1">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  <span className="text-xs font-medium text-primary">
-                    {activity.points_earned} {t('engagement.points', 'pts')}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </ScrollArea>
-  );
-};

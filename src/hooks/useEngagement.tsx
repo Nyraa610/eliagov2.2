@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useEffect } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
@@ -62,11 +61,11 @@ export const useEngagement = () => {
 
   // Start tracking team activities with realtime updates
   const startTeamTracking = useCallback(async () => {
-    if (isTrackingTeam) return;
+    if (isTrackingTeam) return () => {};
     
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) return () => {};
       
       // Get user's company ID
       const { data: profileData } = await supabase
@@ -75,7 +74,7 @@ export const useEngagement = () => {
         .eq('id', userData.user.id)
         .single();
       
-      if (!profileData || !profileData.company_id) return;
+      if (!profileData || !profileData.company_id) return () => {};
       
       // Subscribe to team activity changes
       const channel = supabase
@@ -101,6 +100,7 @@ export const useEngagement = () => {
       };
     } catch (error) {
       console.warn("Error tracking team activities:", error);
+      return () => {};
     }
   }, [isTrackingTeam]);
   
