@@ -25,18 +25,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // First, set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log("Auth state changed:", event, newSession ? "Session exists" : "No session");
+        
+        // Update state synchronously first
         setSession(newSession);
         setUser(newSession?.user || null);
-        setIsLoading(false);
+        
+        // Then update loading state
+        if (event === 'INITIAL_SESSION') {
+          setIsLoading(false);
+        }
       }
     );
 
     // Then check for an existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log("Get session result:", data.session ? "Session exists" : "No session");
+        
+        // Only set these if component is still mounted
+        setSession(data.session);
+        setUser(data.session?.user || null);
+      } finally {
+        // Always set loading to false when done
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
 
     return () => {
       subscription.unsubscribe();

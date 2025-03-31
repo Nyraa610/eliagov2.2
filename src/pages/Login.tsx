@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,21 +16,11 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { signIn } = useAuth();
   
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/assessment", { replace: true });
-      }
-    };
-    
-    checkAuth();
-  }, [navigate]);
+  // Removed the automatic redirect on mount that was preventing login
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,10 +28,7 @@ export default function Login() {
     setLoginError(null);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { error } = await signIn(email, password);
       
       if (error) {
         setLoginError(error.message || "An unknown error occurred during login");
