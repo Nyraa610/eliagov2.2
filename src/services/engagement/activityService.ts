@@ -9,13 +9,29 @@ import { badgeService } from "./badgeService";
 class ActivityService {
   async trackActivity(activity: UserActivity): Promise<boolean> {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("Auth error when tracking activity:", userError);
+        return false;
+      }
+      
       if (!userData?.user) {
         console.warn("No authenticated user found when tracking activity");
         return false;
       }
 
       console.log(`Tracking activity: ${activity.activity_type} for user ${userData.user.id}, points: ${activity.points_earned}`);
+
+      // Get the user's profile to retrieve company_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', userData.user.id)
+        .single();
+        
+      if (profileError && profileError.code !== 'PGRST116') { // Not found is okay
+        console.error("Error fetching profile for activity tracking:", profileError);
+      }
 
       // Insert the activity with explicit user_id to satisfy RLS policies
       const { error } = await supabase
@@ -24,7 +40,8 @@ class ActivityService {
           user_id: userData.user.id,
           activity_type: activity.activity_type,
           points_earned: activity.points_earned,
-          metadata: activity.metadata || {}
+          metadata: activity.metadata || {},
+          company_id: profileData?.company_id || null
         });
 
       if (error) {
@@ -41,7 +58,7 @@ class ActivityService {
 
       console.log(`Successfully tracked activity: ${activity.activity_type}, points: ${activity.points_earned}`);
 
-      // Update activity count using the function directly (not via RPC - fixing the issue)
+      // Update activity count
       await this.incrementActivityCounter(userData.user.id);
 
       // Check for badges after successful activity tracking
@@ -55,25 +72,37 @@ class ActivityService {
 
   async incrementActivityCounter(userId: string): Promise<void> {
     try {
-      // Update the user_engagement_stats directly instead of using RPC
-      const { error } = await supabase
+      // Try to insert a new record first
+      const { error: insertError } = await supabase
         .from('user_engagement_stats')
-        .upsert({
+        .insert({
           user_id: userId,
-          activity_count: 1, // Will be incremented on conflict
+          activity_count: 1,
           total_points: 0,
+          time_spent_seconds: 0,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
         });
       
-      if (error) {
-        console.error("Error incrementing activity counter:", error);
+      // If user already exists, update their count instead
+      if (insertError && insertError.code === '23505') { // Unique violation
+        const { error: updateError } = await supabase
+          .from('user_engagement_stats')
+          .update({ 
+            activity_count: supabase.rpc('increment', { x: 1 }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+          
+        if (updateError) {
+          console.error("Error updating activity counter:", updateError);
+          return;
+        }
+      } else if (insertError) {
+        console.error("Error inserting activity counter:", insertError);
         return;
       }
       
-      console.log("Activity counter incremented successfully");
+      console.log("Activity counter incremented successfully for user:", userId);
     } catch (error) {
       console.error("Error incrementing activity counter:", error);
     }

@@ -3,11 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean = true) {
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const location = useLocation();
+  const { toast } = useToast();
 
   // Track page views - skip for admin routes or unauthenticated users
   useEffect(() => {
@@ -18,6 +20,13 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
     
     const trackPageView = async () => {
       try {
+        // Double-check authentication
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          console.log("No valid session found, skipping page view tracking");
+          return;
+        }
+        
         // Base points for any page view
         let pointsEarned = 1;
         let activityType = 'page_view';
@@ -47,12 +56,21 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
           points_earned: pointsEarned,
           metadata: { 
             path: location.pathname,
-            timestamp: new Date().toISOString() 
+            timestamp: new Date().toISOString(),
+            automatic: true
           }
         });
         
         if (success) {
           console.log(`Successfully tracked page view: ${activityType}, +${pointsEarned} points`);
+          // Show a toast notification for significant points
+          if (pointsEarned > 1) {
+            toast({
+              title: "Points Earned",
+              description: `+${pointsEarned} points for visiting ${location.pathname}`,
+              variant: "default"
+            });
+          }
         } else {
           console.warn(`Failed to track page view: ${activityType}`);
         }
@@ -63,10 +81,13 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
       }
     };
 
-    // Execute the tracking immediately
-    trackPageView();
+    // Execute the tracking after a small delay to ensure auth is ready
+    const trackingTimeout = setTimeout(() => {
+      trackPageView();
+    }, 500);
 
-  }, [location.pathname, isAdmin, isAuthenticated]);
+    return () => clearTimeout(trackingTimeout);
+  }, [location.pathname, isAdmin, isAuthenticated, toast]);
 
   // Track time spent - skip for admin routes or unauthenticated users
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
@@ -9,6 +8,7 @@ import AvailableCoursesSection from "@/components/training/AvailableCoursesSecti
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 import { UserLayout } from "@/components/user/UserLayout";
+import { supabase } from "@/lib/supabase";
 
 export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -18,22 +18,42 @@ export default function Training() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Track explicit training page visit on component mount
+    // Track explicit training page visit on component mount with immediate user check
     const trackPageVisit = async () => {
-      console.log("Explicitly tracking Training page visit");
-      
       try {
+        // First check if user is authenticated
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Auth error in Training page:", sessionError);
+          return;
+        }
+        
+        if (!session.session) {
+          console.log("No active session, skipping training visit tracking");
+          return;
+        }
+        
+        console.log("Tracking Training page visit - authenticated user");
+        
+        // Record explicit visit with higher point value
         const success = await engagementService.trackActivity({
           activity_type: 'view_training',
           points_earned: 5,
           metadata: {
             path: '/training',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            explicit: true
           }
         });
         
         if (success) {
-          console.log("Successfully tracked training page visit");
+          console.log("Successfully tracked training page visit with explicit trigger");
+          toast({
+            title: "Engagement",
+            description: "+5 points for visiting Training",
+            variant: "default"
+          });
         } else {
           console.warn("Failed to track training page visit");
         }
@@ -42,6 +62,7 @@ export default function Training() {
       }
     };
     
+    // Execute tracking immediately
     trackPageVisit();
     
     const fetchData = async () => {
