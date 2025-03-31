@@ -1,216 +1,179 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import RegisterConfirmation from "@/pages/RegisterConfirmation";
-import ResetPassword from "@/pages/ResetPassword";
-import Features from "@/pages/Features";
-import Assessment from "@/pages/Assessment";
-import Training from "@/pages/Training";
-import Dashboard from "@/pages/Dashboard";
-import AdminTraining from "@/pages/admin/Training";
-import CourseForm from "@/pages/admin/CourseForm";
-import ModuleManagement from "@/pages/admin/ModuleManagement";
-import ContentManagement from "@/pages/admin/ContentManagement";
-import NotFound from "@/pages/NotFound";
-import CourseView from "@/pages/CourseView";
-import QuizManagement from "@/pages/admin/QuizManagement";
-import Profile from "@/pages/Profile";
-import Unauthorized from "@/pages/Unauthorized";
-import AdminPanel from "@/pages/admin/AdminPanel";
-import UserManagement from "@/pages/admin/UserManagement";
-import TranslationAdmin from "@/pages/admin/TranslationAdmin";
-import EmissionFactors from "@/pages/admin/EmissionFactors";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import CarbonEvaluation from "@/pages/assessment/CarbonEvaluation";
-import MaterialityAnalysis from "@/pages/assessment/MaterialityAnalysis";
-import ActionPlan from "@/pages/assessment/ActionPlan";
-import IRO from "@/pages/assessment/IRO";
-import Companies from "@/pages/company/Companies";
-import CompanyProfile from "@/pages/company/CompanyProfile";
-import NewCompany from "@/pages/company/NewCompany";
-import CompanySettings from "@/pages/company/CompanySettings";
-import Engagement from "@/pages/Engagement";
-import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
-import ValueChainResults from "@/pages/assessment/ValueChainResults";
-import { Toaster } from "@/components/ui/toaster";
-import { EngagementTracker } from "@/components/engagement/EngagementTracker";
-
-// Initialize i18n
-import './i18n/i18n';
-
-// Create a wrapper component for adding EngagementTracker to all routes
-const RouteWrapper = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <>
-      <EngagementTracker />
-      {children}
-    </>
-  );
-};
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RouteWrapper><Index /></RouteWrapper>,
-  },
-  {
-    path: "/login",
-    element: <RouteWrapper><Login /></RouteWrapper>,
-  },
-  {
-    path: "/register",
-    element: <RouteWrapper><Register /></RouteWrapper>,
-  },
-  {
-    path: "/register/confirmation",
-    element: <RouteWrapper><RegisterConfirmation /></RouteWrapper>,
-  },
-  {
-    path: "/reset-password",
-    element: <RouteWrapper><ResetPassword /></RouteWrapper>,
-  },
-  {
-    path: "/features",
-    element: <RouteWrapper><Features /></RouteWrapper>,
-  },
-  {
-    path: "/dashboard",
-    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment",
-    element: <ProtectedRoute><Assessment /></ProtectedRoute>,
-  },
-  {
-    path: "/carbon-footprint",
-    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
-  },
-  {
-    path: "/materiality-analysis",
-    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
-  },
-  {
-    path: "/action-plan",
-    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/carbon-evaluation",
-    element: <ProtectedRoute><CarbonEvaluation /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/materiality-analysis",
-    element: <ProtectedRoute><MaterialityAnalysis /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/action-plan",
-    element: <ProtectedRoute><ActionPlan /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/iro",
-    element: <ProtectedRoute><IRO /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/value-chain",
-    element: <ProtectedRoute><ValueChainModeling /></ProtectedRoute>,
-  },
-  {
-    path: "/assessment/value-chain/results",
-    element: <ProtectedRoute><ValueChainResults /></ProtectedRoute>,
-  },
-  {
-    path: "/training",
-    element: <ProtectedRoute><Training /></ProtectedRoute>,
-  },
-  {
-    path: "/training/courses/:courseId",
-    element: <ProtectedRoute><CourseView /></ProtectedRoute>,
-  },
-  {
-    path: "/profile",
-    element: <ProtectedRoute><Profile /></ProtectedRoute>,
-  },
-  {
-    path: "/engagement",
-    element: <ProtectedRoute><Engagement /></ProtectedRoute>,
-  },
-  {
-    path: "/unauthorized",
-    element: <Unauthorized />,
-  },
-  {
-    path: "/admin/panel",
-    element: <ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/users",
-    element: <ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/training",
-    element: <ProtectedRoute requiredRole="admin"><AdminTraining /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/translations",
-    element: <ProtectedRoute requiredRole="admin"><TranslationAdmin /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/emission-factors",
-    element: <ProtectedRoute requiredRole="admin"><EmissionFactors /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:id?",
-    element: <ProtectedRoute requiredRole="admin"><CourseForm /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules",
-    element: <ProtectedRoute requiredRole="admin"><ModuleManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules/:moduleId/content",
-    element: <ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/admin/courses/:courseId/modules/:moduleId/content/:contentId/quiz",
-    element: <ProtectedRoute requiredRole="admin"><QuizManagement /></ProtectedRoute>,
-  },
-  {
-    path: "/companies",
-    element: <ProtectedRoute><Companies /></ProtectedRoute>,
-  },
-  {
-    path: "/company/new",
-    element: <ProtectedRoute><NewCompany /></ProtectedRoute>,
-  },
-  {
-    path: "/company/:id",
-    element: <ProtectedRoute><CompanyProfile /></ProtectedRoute>,
-  },
-  {
-    path: "/company/:id/settings",
-    element: <ProtectedRoute><CompanySettings /></ProtectedRoute>,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Home } from './pages/Home';
+import { Navigation } from './components/Navigation';
+import { Footer } from './components/Footer';
+import { Pricing } from './pages/Pricing';
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import Account from './pages/Account';
+import Admin from './pages/Admin';
+import Assessment from './pages/Assessment';
+import ValueChain from './pages/ValueChain';
+import Training from './pages/Training';
+import Rewards from './pages/Rewards';
+import Company from './pages/Company';
+import { Engagement } from './pages/Engagement';
+import { AdminLayout } from './components/admin/AdminLayout';
+import Users from './pages/admin/Users';
+import Companies from './pages/admin/Companies';
+import Assessments from './pages/admin/Assessments';
+import EmissionFactors from './pages/admin/EmissionFactors';
+import Courses from './pages/admin/Courses';
+import { UserLayout } from './components/user/UserLayout';
+import { Course } from './pages/Course';
+import { Module } from './pages/Module';
+import { Content } from './pages/Content';
+import { NotFound } from './pages/NotFound';
+import { Sustainability } from './pages/Sustainability';
+import DocumentCenter from "@/pages/DocumentCenter";
 
 function App() {
+  const session = useSession()
+  const supabase = useSupabaseClient()
+
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <RouterProvider router={router} />
-        {/* Toast notifications */}
-        <Toaster />
-      </LanguageProvider>
-    </AuthProvider>
+    <div className="App">
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/sustainability" element={<Sustainability />} />
+          <Route path="/assessment" element={
+            <ProtectedRoute>
+              <Assessment />
+            </ProtectedRoute>
+          } />
+          <Route path="/assessment/value-chain" element={
+            <ProtectedRoute>
+              <ValueChain />
+            </ProtectedRoute>
+          } />
+           <Route path="/training" element={
+            <ProtectedRoute>
+              <Training />
+            </ProtectedRoute>
+          } />
+          <Route path="/rewards" element={
+            <ProtectedRoute>
+              <Rewards />
+            </ProtectedRoute>
+          } />
+          <Route path="/company" element={
+            <ProtectedRoute>
+              <Company />
+            </ProtectedRoute>
+          } />
+           <Route path="/engagement" element={
+            <ProtectedRoute>
+              <Engagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/course/:courseId" element={
+            <ProtectedRoute>
+              <Course />
+            </ProtectedRoute>
+          } />
+           <Route path="/module/:moduleId" element={
+            <ProtectedRoute>
+              <Module />
+            </ProtectedRoute>
+          } />
+           <Route path="/content/:contentId" element={
+            <ProtectedRoute>
+              <Content />
+            </ProtectedRoute>
+          } />
+          <Route path="/account" element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          } />
+           <Route path="/admin/users" element={
+             <ProtectedRoute>
+               <AdminLayout title="Users" description="Manage all users">
+                 <Users />
+               </AdminLayout>
+             </ProtectedRoute>
+           } />
+            <Route path="/admin/companies" element={
+             <ProtectedRoute>
+               <AdminLayout title="Companies" description="Manage all companies">
+                 <Companies />
+               </AdminLayout>
+             </ProtectedRoute>
+           } />
+           <Route path="/admin/assessments" element={
+             <ProtectedRoute>
+               <AdminLayout title="Assessments" description="Manage all assessments">
+                 <Assessments />
+               </AdminLayout>
+             </ProtectedRoute>
+           } />
+            <Route path="/admin/emission-factors" element={
+             <ProtectedRoute>
+               <AdminLayout title="Emission Factors" description="Manage all emission factors">
+                 <EmissionFactors />
+               </AdminLayout>
+             </ProtectedRoute>
+           } />
+           <Route path="/admin/courses" element={
+             <ProtectedRoute>
+               <AdminLayout title="Courses" description="Manage all courses">
+                 <Courses />
+               </AdminLayout>
+             </ProtectedRoute>
+           } />
+          <Route path="/login" element={
+            !session ? (
+              <LoginPage />
+            ) : (
+              <Navigate to="/account" replace />
+            )
+          } />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/documents" element={
+            <ProtectedRoute>
+              <DocumentCenter />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </BrowserRouter>
+      <Footer />
+    </div>
   );
+
+  function LoginPage() {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded shadow-md w-96">
+          <h2 className="text-2xl font-semibold mb-4">Login</h2>
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            providers={['google', 'github']}
+            redirectTo={`${window.location.origin}/account`}
+          />
+        </div>
+      </div>
+    );
+  }
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const session = useSession();
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 export default App;

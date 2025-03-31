@@ -1,7 +1,6 @@
-
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
-  Medal, Settings, Target, Trophy, User, Share2, TrendingUp
+  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -82,6 +81,12 @@ export const useMenuItems = () => {
       title: "Engagement & Rewards",
       icon: <Trophy className="h-5 w-5" />,
       path: "/engagement",
+    },
+    {
+      id: "documents",
+      label: "Document Center",
+      icon: FileText,
+      href: "/documents",
     },
   ];
   
