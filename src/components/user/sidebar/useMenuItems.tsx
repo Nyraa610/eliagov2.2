@@ -87,12 +87,12 @@ export const useMenuItems = () => {
     {
       title: "Company Profile",
       icon: <Building className="h-5 w-5" />,
-      path: "/companies",
+      path: "/profile",
     },
     {
       title: "Company Settings",
       icon: <Settings className="h-5 w-5" />,
-      path: userCompanyId ? `/company/${userCompanyId}/settings` : "/companies",
+      path: userCompanyId ? `/company/${userCompanyId}/settings` : "/profile",
       disabled: !userCompanyId,
     },
     {
