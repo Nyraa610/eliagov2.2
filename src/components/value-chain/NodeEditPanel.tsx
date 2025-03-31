@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ interface NodeEditPanelProps {
 }
 
 const COLOR_PRESETS = [
-  { name: "Default", value: "" },
+  { name: "Default", value: "default" },
   { name: "Blue", value: "#DBEAFE" },
   { name: "Green", value: "#DCFCE7" },
   { name: "Red", value: "#FEE2E2" },
@@ -40,7 +39,7 @@ const COLOR_PRESETS = [
 const NodeEditPanel = ({ node, onClose, onUpdate }: NodeEditPanelProps) => {
   const [label, setLabel] = useState(node.data.label || "");
   const [description, setDescription] = useState(node.data.description || "");
-  const [color, setColor] = useState(node.data.color || "");
+  const [color, setColor] = useState(node.data.color || "default");
   const [customColor, setCustomColor] = useState(color.startsWith("#") && !COLOR_PRESETS.some(preset => preset.value === color) ? color : "#FFFFFF");
   const [activeTab, setActiveTab] = useState<string>("basic");
   
@@ -60,7 +59,7 @@ const NodeEditPanel = ({ node, onClose, onUpdate }: NodeEditPanelProps) => {
     onUpdate(node.id, { 
       label, 
       description: description || undefined,
-      color: color || undefined
+      color: color === "default" ? undefined : color
     });
     onClose();
   };
@@ -231,7 +230,7 @@ const NodeEditPanel = ({ node, onClose, onUpdate }: NodeEditPanelProps) => {
                   {COLOR_PRESETS.map((preset) => (
                     <SelectItem key={preset.name} value={preset.value}>
                       <div className="flex items-center gap-2">
-                        {preset.value ? (
+                        {preset.value !== "default" ? (
                           <div 
                             className="w-4 h-4 rounded-full border"
                             style={{ backgroundColor: preset.value }}
