@@ -7,6 +7,7 @@ import NotFound from './pages/NotFound';
 import Assessment from './pages/Assessment';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
 
@@ -14,30 +15,32 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected routes */}
-            <Route path="/assessment" element={
-              <ProtectedRoute>
-                <Assessment />
-              </ProtectedRoute>
-            } />
-            <Route path="/documents" element={
-              <ProtectedRoute>
-                <DocumentCenter />
-              </ProtectedRoute>
-            } />
-            
-            {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/assessment" replace />} />
-            
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <LanguageProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Protected routes */}
+              <Route path="/assessment" element={
+                <ProtectedRoute>
+                  <Assessment />
+                </ProtectedRoute>
+              } />
+              <Route path="/documents" element={
+                <ProtectedRoute>
+                  <DocumentCenter />
+                </ProtectedRoute>
+              } />
+              
+              {/* Default redirect */}
+              <Route path="/" element={<Navigate to="/assessment" replace />} />
+              
+              {/* 404 route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LanguageProvider>
       </AuthProvider>
     </div>
   );
