@@ -1,5 +1,6 @@
 
 import { TeamActivityItem } from "./TeamActivityItem";
+import { TeamActivitiesSkeleton } from "./TeamActivitiesSkeleton";
 
 interface TeamActivitiesListProps {
   activities: Array<any>;
@@ -8,11 +9,7 @@ interface TeamActivitiesListProps {
 
 export function TeamActivitiesList({ activities, loading }: TeamActivitiesListProps) {
   if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <p>Loading team activities...</p>
-      </div>
-    );
+    return <TeamActivitiesSkeleton />;
   }
 
   if (activities.length === 0) {
