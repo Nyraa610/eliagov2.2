@@ -8,6 +8,7 @@ export interface NodeData extends Record<string, unknown> {
   label: string;
   type: NodeType;
   description?: string;
+  color?: string; // Added color property
 }
 
 // ValueChainNode correctly extends Node with our NodeData type

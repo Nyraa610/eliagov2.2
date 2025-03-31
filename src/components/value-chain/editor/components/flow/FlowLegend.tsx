@@ -21,6 +21,10 @@ export function FlowLegend() {
           <div className="w-3 h-3 bg-purple-400 rounded-sm"></div>
           <span>Custom</span>
         </div>
+        <div className="flex gap-1 items-center ml-3 border-l pl-3">
+          <div className="w-3 h-3 bg-gradient-to-r from-blue-300 via-green-300 to-orange-300 rounded-sm"></div>
+          <span>Custom Color</span>
+        </div>
       </div>
     </Panel>
   );

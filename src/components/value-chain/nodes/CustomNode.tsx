@@ -1,4 +1,3 @@
-
 import { Handle, Position } from "@xyflow/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NodeData } from "@/types/valueChain";
@@ -119,9 +118,22 @@ export function CustomNode({ data, selected, id }: CustomNodeProps) {
     }
   };
 
+  const getTextColor = () => {
+    if (!data.color) return undefined;
+    return isLightColor(data.color) ? '#000000' : '#ffffff';
+  };
+
+  const borderClass = selected ? "border-primary" : "border-purple-400";
+
   return (
     <div className="relative">
-      <Card className={`min-w-[180px] border-2 ${selected ? "border-primary" : "border-purple-400"} bg-purple-50`}>
+      <Card 
+        className={`min-w-[180px] border-2 ${borderClass}`}
+        style={{ 
+          backgroundColor: data.color || '#FAF5FF',
+          color: getTextColor()
+        }}
+      >
         <CardContent className="p-3">
           <div className="font-medium">{data.label}</div>
           {data.description && (
@@ -177,3 +189,27 @@ export function CustomNode({ data, selected, id }: CustomNodeProps) {
     </div>
   );
 }
+
+const isLightColor = (color: string) => {
+  if (color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128;
+  }
+  
+  if (color.startsWith('rgb')) {
+    const match = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+      const r = parseInt(match[1]);
+      const g = parseInt(match[2]);
+      const b = parseInt(match[3]);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128;
+    }
+  }
+  
+  return true;
+};

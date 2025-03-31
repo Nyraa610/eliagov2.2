@@ -1,4 +1,3 @@
-
 import { Handle, Position } from "@xyflow/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NodeData } from "@/types/valueChain";
@@ -71,9 +70,23 @@ export function ExternalFactorNode({ data, selected, id }: ExternalFactorNodePro
     }
   };
 
+  // Determine appropriate text color based on background
+  const getTextColor = () => {
+    if (!data.color) return undefined;
+    return isLightColor(data.color) ? '#000000' : '#ffffff';
+  };
+
+  const borderClass = selected ? "border-primary" : "border-orange-400";
+
   return (
     <div className="relative">
-      <Card className={`min-w-[180px] border-2 ${selected ? "border-primary" : "border-orange-400"} bg-orange-50 rounded-full`}>
+      <Card 
+        className={`min-w-[180px] border-2 ${borderClass} rounded-full`}
+        style={{ 
+          backgroundColor: data.color || '#FFFAF0', // orange-50 equivalent
+          color: getTextColor()
+        }}
+      >
         <CardContent className="p-3">
           <div className="font-medium text-center">{data.label}</div>
           {data.description && (
@@ -107,3 +120,30 @@ export function ExternalFactorNode({ data, selected, id }: ExternalFactorNodePro
     </div>
   );
 }
+
+// Helper function to determine if a color is light or dark
+const isLightColor = (color: string) => {
+  // For hex colors
+  if (color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128;
+  }
+  
+  // For rgb/rgba colors
+  if (color.startsWith('rgb')) {
+    const match = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+      const r = parseInt(match[1]);
+      const g = parseInt(match[2]);
+      const b = parseInt(match[3]);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128;
+    }
+  }
+  
+  return true; // Default to light
+};

@@ -1,4 +1,3 @@
-
 import { Handle, Position } from "@xyflow/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NodeData } from "@/types/valueChain";
@@ -17,7 +16,6 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
 
   const handleConnectLeft = () => {
     const nodes = getNodes();
-    // Find nodes to the left of current node
     const currentNode = nodes.find(node => node.id === id);
     if (!currentNode) return;
     
@@ -27,7 +25,6 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
     );
 
     if (nodesOnLeft.length > 0) {
-      // Sort by distance (closest first)
       nodesOnLeft.sort((a, b) => 
         (currentNode.position.x - a.position.x) - (currentNode.position.x - b.position.x)
       );
@@ -45,7 +42,6 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
 
   const handleConnectRight = () => {
     const nodes = getNodes();
-    // Find nodes to the right of current node
     const currentNode = nodes.find(node => node.id === id);
     if (!currentNode) return;
     
@@ -55,7 +51,6 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
     );
 
     if (nodesOnRight.length > 0) {
-      // Sort by distance (closest first)
       nodesOnRight.sort((a, b) => 
         (a.position.x - currentNode.position.x) - (b.position.x - currentNode.position.x)
       );
@@ -71,9 +66,27 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
     }
   };
 
+  const getTextColor = () => {
+    if (!data.color) return undefined;
+    return isLightColor(data.color) ? '#000000' : '#ffffff';
+  };
+
+  const getBgColor = () => {
+    if (data.color) return data.color;
+    return 'bg-blue-50';
+  };
+
+  const borderClass = selected ? "border-primary" : "border-blue-400";
+
   return (
     <div className="relative">
-      <Card className={`min-w-[180px] border-2 ${selected ? "border-primary" : "border-blue-400"} bg-blue-50`}>
+      <Card 
+        className={`min-w-[180px] border-2 ${borderClass}`}
+        style={{ 
+          backgroundColor: data.color || '#EBF8FF',
+          color: getTextColor()
+        }}
+      >
         <CardContent className="p-3">
           <div className="font-medium">{data.label}</div>
           {data.description && (
@@ -107,3 +120,27 @@ export function PrimaryActivityNode({ data, selected, id }: PrimaryActivityNodeP
     </div>
   );
 }
+
+const isLightColor = (color: string) => {
+  if (color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128;
+  }
+  
+  if (color.startsWith('rgb')) {
+    const match = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+      const r = parseInt(match[1]);
+      const g = parseInt(match[2]);
+      const b = parseInt(match[3]);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128;
+    }
+  }
+  
+  return true;
+};
