@@ -20,6 +20,8 @@ import Training from './pages/Training';
 import Engagement from './pages/Engagement';
 import Unauthorized from './pages/Unauthorized';
 import Profile from './pages/Profile';
+import CompanyProfile from './pages/company/CompanyProfile';
+import CompanySettings from './pages/company/CompanySettings';
 
 function App() {
   return (
@@ -33,12 +35,12 @@ function App() {
               <Route path="/unauthorized" element={<Unauthorized />} />
               
               {/* Protected routes with user layout */}
-              <Route path="/" element={
+              <Route element={
                 <ProtectedRoute>
                   <UserLayout />
                 </ProtectedRoute>
               }>
-                <Route index element={<Dashboard />} />
+                <Route path="/" element={<Dashboard />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="assessment" element={<Assessment />} />
                 <Route path="assessment/value-chain" element={<ValueChainModeling />} />
@@ -51,6 +53,10 @@ function App() {
                 <Route path="action-plan" element={<div>Action Plan (Coming Soon)</div>} />
                 <Route path="profile" element={<Profile />} />
                 
+                {/* Company pages */}
+                <Route path="company/:id" element={<CompanyProfile />} />
+                <Route path="company/:id/settings" element={<CompanySettings />} />
+                
                 {/* Legacy redirects */}
                 <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
@@ -59,15 +65,15 @@ function App() {
               </Route>
               
               {/* Admin routes */}
-              <Route path="/admin" element={
+              <Route element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout title="Admin Dashboard" />
                 </ProtectedRoute>
               }>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<div>Admin Dashboard (Coming Soon)</div>} />
-                <Route path="users" element={<div>User Management (Coming Soon)</div>} />
-                <Route path="settings" element={<div>Admin Settings (Coming Soon)</div>} />
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin/dashboard" element={<div>Admin Dashboard (Coming Soon)</div>} />
+                <Route path="/admin/users" element={<div>User Management (Coming Soon)</div>} />
+                <Route path="/admin/settings" element={<div>Admin Settings (Coming Soon)</div>} />
               </Route>
               
               {/* 404 route */}

@@ -19,6 +19,7 @@ export function UserLayout({ children, title }: UserLayoutProps) {
         
         <main className="flex-1 p-6 pt-24">
           <div className="container mx-auto max-w-6xl">
+            {title && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
             {children || <Outlet />}
           </div>
         </main>

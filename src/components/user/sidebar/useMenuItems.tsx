@@ -50,21 +50,16 @@ export const useMenuItems = () => {
           path: "/assessment/value-chain",
         },
         {
-          title: "Impact, Risks & Opportunities",
-          icon: <TrendingUp className="h-5 w-5" />,
-          path: "/assessment/iro",
+          title: "Carbon Evaluation",
+          icon: <Globe className="h-5 w-5" />,
+          path: "/assessment/carbon-evaluation",
+        },
+        {
+          title: "Materiality Analysis",
+          icon: <Layers className="h-5 w-5" />,
+          path: "/assessment/materiality-analysis",
         },
       ],
-    },
-    {
-      title: "Carbon Footprint",
-      icon: <Globe className="h-5 w-5" />,
-      path: "/assessment/carbon-evaluation",
-    },
-    {
-      title: "Materiality Analysis",
-      icon: <Layers className="h-5 w-5" />,
-      path: "/assessment/materiality-analysis",
     },
     {
       title: "Action Plan",
