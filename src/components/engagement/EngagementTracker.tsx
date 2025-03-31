@@ -1,22 +1,39 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { engagementService } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useEngagement } from '@/hooks/useEngagement';
 
 export function EngagementTracker() {
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [teamTracking, setTeamTracking] = useState<boolean>(false);
   const location = useLocation();
   const { toast } = useToast();
+  const { startTeamTracking } = useEngagement();
 
   // Check if user is on admin route
   useEffect(() => {
     const isAdminRoute = location.pathname.startsWith('/admin');
     setIsAdmin(isAdminRoute);
   }, [location.pathname]);
+
+  // Initialize team activity tracking
+  useEffect(() => {
+    if (!isAdmin && !teamTracking) {
+      const cleanup = startTeamTracking();
+      if (cleanup) {
+        setTeamTracking(true);
+      }
+      return () => {
+        if (cleanup) cleanup();
+        setTeamTracking(false);
+      };
+    }
+  }, [isAdmin, startTeamTracking, teamTracking]);
 
   // Track user login - skip for admin routes
   useEffect(() => {
@@ -29,7 +46,11 @@ export function EngagementTracker() {
           // Record login activity
           await engagementService.trackActivity({
             activity_type: 'login',
-            points_earned: 5
+            points_earned: 5,
+            metadata: {
+              event: 'initial_session_check',
+              timestamp: new Date().toISOString()
+            }
           }).catch(err => {
             console.warn("Could not track login activity", err);
           });
@@ -48,7 +69,12 @@ export function EngagementTracker() {
           try {
             await engagementService.trackActivity({
               activity_type: 'login',
-              points_earned: 5
+              points_earned: 5,
+              metadata: {
+                event: 'auth_state_change',
+                auth_event: event,
+                timestamp: new Date().toISOString()
+              }
             }).catch(err => {
               console.warn("Could not track login activity on auth change", err);
             });
@@ -95,7 +121,10 @@ export function EngagementTracker() {
         await engagementService.trackActivity({
           activity_type: activityType,
           points_earned: pointsEarned,
-          metadata: { path: location.pathname }
+          metadata: { 
+            path: location.pathname,
+            timestamp: new Date().toISOString() 
+          }
         }).catch(err => {
           console.warn("Could not track page view", err);
         });
@@ -124,6 +153,22 @@ export function EngagementTracker() {
         engagementService.trackTimeSpent(cappedTime).catch(err => {
           console.warn("Could not track time spent", err);
         });
+        
+        // Track significant time milestones (e.g., every 30 minutes)
+        if (timeSpentSeconds >= 1800) { // 30 minutes
+          engagementService.trackActivity({
+            activity_type: 'significant_time_spent',
+            points_earned: 3,
+            metadata: {
+              seconds: timeSpentSeconds,
+              minutes: Math.floor(timeSpentSeconds / 60),
+              timestamp: new Date().toISOString()
+            }
+          }).catch(err => {
+            console.warn("Could not track time milestone", err);
+          });
+        }
+        
         setLastActive(now);
       }
     }, 60000); // Check every minute
@@ -137,9 +182,9 @@ export function EngagementTracker() {
   useEffect(() => {
     if (isAdmin) return;
     
-    const handleUserActivity = () => {
+    const handleUserActivity = useCallback(() => {
       setLastActive(Date.now());
-    };
+    }, []);
 
     window.addEventListener('mousemove', handleUserActivity);
     window.addEventListener('keydown', handleUserActivity);

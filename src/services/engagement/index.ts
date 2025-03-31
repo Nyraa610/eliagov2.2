@@ -13,6 +13,7 @@ class EngagementService {
   // Activity tracking
   trackActivity = activityService.trackActivity;
   trackTimeSpent = activityService.trackTimeSpent;
+  getUserActivityHistory = activityService.getUserActivityHistory;
   
   // User stats
   getUserStats = statsService.getUserStats;

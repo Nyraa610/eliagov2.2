@@ -1,8 +1,4 @@
 
-/**
- * Type definitions for engagement service
- */
-
 export interface UserActivity {
   activity_type: string;
   points_earned: number;
@@ -12,40 +8,42 @@ export interface UserActivity {
 export interface UserEngagementStats {
   user_id: string;
   total_points: number;
+  level: number;
   activity_count: number;
   time_spent_seconds: number;
   last_active_at: string;
-  login_streak: number;
-  level: number;
+  login_streak?: number;
+  last_login_date?: string;
   company_id?: string;
 }
 
 export interface Badge {
   id: string;
   name: string;
-  description: string | null;
-  image_url: string | null;
-  criteria: Record<string, any>;
-  created_at: string;
+  description?: string;
+  image_url?: string;
+  criteria: {
+    points_threshold?: number;
+    activities_threshold?: number;
+    specific_activities?: string[];
+  };
 }
 
 export interface UserBadge {
   id: string;
   user_id: string;
   badge_id: string;
+  badge: Badge;
   earned_at: string;
-  badge?: Badge;
 }
 
 export interface Reward {
   id: string;
   name: string;
-  description: string | null;
+  description?: string;
+  image_url?: string;
   points_required: number;
-  image_url: string | null;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface UserReward {
@@ -53,19 +51,18 @@ export interface UserReward {
   user_id: string;
   reward_id: string;
   redeemed_at: string;
-  status: string;
   points_spent: number;
-  reward?: Reward;
+  status: 'pending' | 'approved' | 'rejected' | 'delivered';
 }
 
-export type LeaderboardPeriod = 'weekly' | 'monthly' | 'all-time';
-export type LeaderboardScope = 'company' | 'global';
+export type LeaderboardPeriod = 'daily' | 'weekly' | 'monthly' | 'all-time';
+export type LeaderboardScope = 'global' | 'company' | 'department';
 
 export interface LeaderboardEntry {
   user_id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  company_name: string | null;
+  full_name: string;
+  avatar_url?: string | null;
+  company_name?: string | null;
   total_points: number;
   level: number;
   rank: number;
