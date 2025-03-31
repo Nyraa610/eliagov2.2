@@ -14,14 +14,21 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
   const { toast } = useToast();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   
+  // Use a reference to track if the role check has been performed
+  const roleCheckPerformed = useState<boolean>(false);
+  
   useEffect(() => {
-    const checkRole = async () => {
-      // Only check role if authenticated and a role is required
-      if (!isAuthenticated || !requiredRole || !user) {
-        setHasRequiredRole(!requiredRole);
-        return;
+    // Only check role if authenticated, a role is required, user exists,
+    // and we haven't already performed the role check for this user/role combination
+    if (!isAuthenticated || !requiredRole || !user || roleCheckPerformed[0]) {
+      // If no role is required, set hasRequiredRole to true
+      if (!requiredRole) {
+        setHasRequiredRole(true);
       }
-      
+      return;
+    }
+    
+    const checkRole = async () => {
       try {
         setIsRoleLoading(true);
         console.log(`useAuthProtection: Checking if user has role: ${requiredRole}`);
@@ -29,6 +36,15 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         const hasRole = await supabaseService.hasRole(requiredRole);
         console.log(`useAuthProtection: User has required role: ${hasRole}`);
         setHasRequiredRole(hasRole);
+        roleCheckPerformed[0] = true;
+        
+        if (!hasRole) {
+          toast({
+            variant: "destructive",
+            title: "Access denied",
+            description: `You don't have permission to access this page.`,
+          });
+        }
       } catch (error: any) {
         console.error("useAuthProtection: Error checking role:", error);
         setAuthError(`Error checking role: ${error.message}`);
@@ -45,7 +61,7 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
     };
     
     checkRole();
-  }, [requiredRole, isAuthenticated, user, toast, location.pathname]);
+  }, [requiredRole, isAuthenticated, user, toast, location.pathname, roleCheckPerformed]);
 
   return { 
     isAuthenticated, 

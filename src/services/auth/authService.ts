@@ -1,7 +1,10 @@
 
-import { User, Session } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+
+// Maintain a single active listener
+let activeAuthListener: { subscription: { unsubscribe: () => void } } | null = null;
 
 /**
  * Core authentication service functions
@@ -75,6 +78,23 @@ export const authService = {
   },
 
   /**
+   * Get the current session (with cache mechanism)
+   */
+  getSession: async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        return { session: null, error };
+      }
+      
+      return { session: data.session, error: null };
+    } catch (error) {
+      return { session: null, error };
+    }
+  },
+
+  /**
    * Refresh the current session
    */
   refreshSession: async () => {
@@ -92,27 +112,20 @@ export const authService = {
   },
 
   /**
-   * Get the current session
-   */
-  getSession: async () => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        return { session: null, error };
-      }
-      
-      return { session: data.session, error: null };
-    } catch (error) {
-      return { session: null, error };
-    }
-  },
-
-  /**
    * Subscribe to auth state changes
+   * This creates only one active subscription to prevent multiple redundant listeners
    */
   onAuthStateChange: (callback: (event: string, session: Session | null) => void) => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
-    return subscription;
+    // If there's an active listener, unsubscribe first
+    if (activeAuthListener) {
+      activeAuthListener.subscription.unsubscribe();
+    }
+    
+    // Create a new listener
+    activeAuthListener = {
+      subscription: supabase.auth.onAuthStateChange(callback)
+    };
+    
+    return activeAuthListener.subscription;
   }
 };
