@@ -1,33 +1,23 @@
 
-import React from "react";
-import { Navigation } from "@/components/Navigation";
-import { UserSidebar } from "@/components/user/UserSidebar";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import { Navigation } from '../Navigation';
+import { UserSidebar } from './UserSidebar';
 
-interface UserLayoutProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-export const UserLayout: React.FC<UserLayoutProps> = ({ title, children }) => {
+export function UserLayout() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+    <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="pt-16 flex min-h-[calc(100vh-64px)]">
+      <div className="flex">
         <UserSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-primary">{title}</h1>
-            </div>
-            
-            <div className="space-y-6">
-              {children}
-            </div>
+        <main className="flex-1 p-6 pt-24">
+          <div className="container mx-auto max-w-6xl">
+            <Outlet />
           </div>
         </main>
       </div>
     </div>
   );
-};
+}

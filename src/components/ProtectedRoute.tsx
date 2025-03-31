@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabaseService } from "@/services/base/supabaseService";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

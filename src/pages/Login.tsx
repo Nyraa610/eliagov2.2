@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { signIn } = useAuth();
@@ -41,7 +42,8 @@ export default function Login() {
       });
       
       // Navigate to the protected route the user was trying to access, or dashboard
-      navigate("/assessment", { replace: true });
+      const from = location.state?.from?.pathname || "/assessment";
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       setLoginError(error.message || "An unknown error occurred during login");

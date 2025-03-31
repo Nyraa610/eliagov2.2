@@ -10,6 +10,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -21,20 +22,37 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               
-              {/* Protected routes */}
-              <Route path="/assessment" element={
+              {/* Protected routes with user layout */}
+              <Route path="/" element={
                 <ProtectedRoute>
-                  <Assessment />
+                  <UserLayout />
                 </ProtectedRoute>
-              } />
-              <Route path="/documents" element={
-                <ProtectedRoute>
-                  <DocumentCenter />
-                </ProtectedRoute>
-              } />
+              }>
+                <Route index element={<Navigate to="/assessment" replace />} />
+                <Route path="assessment" element={<Assessment />} />
+                <Route path="assessment/*" element={<Assessment />} />
+                <Route path="documents" element={<DocumentCenter />} />
+                <Route path="dashboard" element={<Navigate to="/assessment" replace />} />
+                <Route path="training" element={<Navigate to="/assessment" replace />} />
+                <Route path="carbon-footprint" element={<Navigate to="/assessment" replace />} />
+                <Route path="materiality-analysis" element={<Navigate to="/assessment" replace />} />
+                <Route path="action-plan" element={<Navigate to="/assessment" replace />} />
+                <Route path="engagement" element={<Navigate to="/assessment" replace />} />
+                <Route path="companies" element={<Navigate to="/assessment" replace />} />
+                <Route path="profile" element={<Navigate to="/assessment" replace />} />
+              </Route>
               
-              {/* Default redirect */}
-              <Route path="/" element={<Navigate to="/assessment" replace />} />
+              {/* Admin routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard" element={<div>Admin Dashboard (Coming Soon)</div>} />
+                <Route path="users" element={<div>User Management (Coming Soon)</div>} />
+                <Route path="settings" element={<div>Admin Settings (Coming Soon)</div>} />
+              </Route>
               
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
@@ -44,18 +62,6 @@ function App() {
       </AuthProvider>
     </div>
   );
-}
-
-// Protected route component
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const localAuth = localStorage.getItem('sb-auth-token');
-  
-  // Simple auth check until proper auth context is fully implemented
-  if (!localAuth) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
 }
 
 export default App;
