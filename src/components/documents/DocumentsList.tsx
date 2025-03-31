@@ -26,7 +26,6 @@ export function DocumentsList({
   const [documents, setDocuments] = useState<Document[]>([]);
   const [folders, setFolders] = useState<DocumentFolder[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   
   useEffect(() => {
     const loadDocuments = async () => {
@@ -58,7 +57,7 @@ export function DocumentsList({
     };
     
     loadDocuments();
-  }, [companyId, currentFolder, toast]);
+  }, [companyId, currentFolder]);
   
   const handleDeleteDocument = async (document: Document) => {
     if (confirm("Are you sure you want to delete this document?")) {
