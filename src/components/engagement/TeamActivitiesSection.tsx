@@ -12,6 +12,8 @@ export function TeamActivitiesSection() {
   const { getTeamActivities, startTeamTracking, teamActivities } = useEngagement();
   
   useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
+    
     const initTeamActivities = async () => {
       setLoading(true);
       try {
@@ -21,12 +23,7 @@ export function TeamActivitiesSection() {
         
         // Start real-time tracking
         const cleanup = await startTeamTracking();
-        
-        return () => {
-          if (cleanup) {
-            cleanup();
-          }
-        };
+        cleanupFn = cleanup;
       } catch (error) {
         console.error("Error loading team activities:", error);
       } finally {
@@ -35,6 +32,12 @@ export function TeamActivitiesSection() {
     };
     
     initTeamActivities();
+    
+    return () => {
+      if (cleanupFn) {
+        cleanupFn();
+      }
+    };
   }, [getTeamActivities, startTeamTracking]);
   
   // Listen for real-time team activities from the hook

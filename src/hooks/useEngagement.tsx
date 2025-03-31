@@ -1,3 +1,4 @@
+
 import { useCallback, useState, useEffect } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
@@ -65,7 +66,7 @@ export const useEngagement = () => {
     
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return () => {};
+      if (!userData?.user) return () => {};
       
       // Get user's company ID
       const { data: profileData } = await supabase
@@ -87,7 +88,7 @@ export const useEngagement = () => {
         }, (payload) => {
           // Only add activities from other team members
           if (payload.new && payload.new.user_id !== userData.user.id) {
-            setTeamActivities((prev) => [...prev, payload.new]);
+            setTeamActivities((prev) => [payload.new, ...prev]);
           }
         })
         .subscribe();
@@ -108,7 +109,7 @@ export const useEngagement = () => {
   const getTeamActivities = useCallback(async (limit = 20) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return [];
+      if (!userData?.user) return [];
       
       // Get user's company ID
       const { data: profileData } = await supabase

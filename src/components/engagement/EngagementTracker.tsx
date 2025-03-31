@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { engagementService } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from 'react-router-dom';
@@ -28,15 +28,27 @@ export function EngagementTracker() {
         const cleanup = await startTeamTracking();
         if (cleanup) {
           setTeamTracking(true);
-          return () => {
-            cleanup();
-            setTeamTracking(false);
-          };
+          return cleanup;
         }
         return undefined;
       };
       
-      initTeamTracking();
+      let cleanupFn: (() => void) | undefined;
+      
+      initTeamTracking()
+        .then(cleanup => {
+          cleanupFn = cleanup;
+        })
+        .catch(error => {
+          console.warn("Error initializing team tracking:", error);
+        });
+      
+      return () => {
+        if (cleanupFn) {
+          cleanupFn();
+          setTeamTracking(false);
+        }
+      };
     }
   }, [isAdmin, startTeamTracking, teamTracking]);
 
@@ -187,9 +199,9 @@ export function EngagementTracker() {
   useEffect(() => {
     if (isAdmin) return;
     
-    const handleUserActivity = useCallback(() => {
+    const handleUserActivity = () => {
       setLastActive(Date.now());
-    }, []);
+    };
 
     window.addEventListener('mousemove', handleUserActivity);
     window.addEventListener('keydown', handleUserActivity);
