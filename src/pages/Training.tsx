@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
@@ -15,6 +16,7 @@ export default function Training() {
   const [enrollments, setEnrollments] = useState<UserEnrollment[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackingSuccess, setTrackingSuccess] = useState<boolean | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -26,15 +28,17 @@ export default function Training() {
         
         if (sessionError) {
           console.error("Auth error in Training page:", sessionError);
+          setTrackingSuccess(false);
           return;
         }
         
         if (!session.session) {
           console.log("No active session, skipping training visit tracking");
+          setTrackingSuccess(false);
           return;
         }
         
-        console.log("Tracking Training page visit - authenticated user");
+        console.log("Tracking Training page visit - authenticated user", session.session.user.id);
         
         // Record explicit visit with higher point value
         const success = await engagementService.trackActivity({
@@ -43,9 +47,12 @@ export default function Training() {
           metadata: {
             path: '/training',
             timestamp: new Date().toISOString(),
-            explicit: true
+            explicit: true,
+            user_id: session.session.user.id
           }
         });
+        
+        setTrackingSuccess(success);
         
         if (success) {
           console.log("Successfully tracked training page visit with explicit trigger");
@@ -56,9 +63,37 @@ export default function Training() {
           });
         } else {
           console.warn("Failed to track training page visit");
+          
+          // Direct database insertion as a fallback
+          const { error: directError } = await supabase
+            .from('user_activities')
+            .insert({
+              user_id: session.session.user.id,
+              activity_type: 'view_training',
+              points_earned: 5,
+              metadata: {
+                path: '/training',
+                timestamp: new Date().toISOString(),
+                explicit: true,
+                fallback: true
+              }
+            });
+            
+          if (directError) {
+            console.error("Direct insertion also failed:", directError);
+          } else {
+            console.log("Direct insertion of activity succeeded");
+            setTrackingSuccess(true);
+            toast({
+              title: "Engagement",
+              description: "+5 points for visiting Training (fallback method)",
+              variant: "default"
+            });
+          }
         }
       } catch (error) {
         console.error("Error tracking training visit:", error);
+        setTrackingSuccess(false);
       }
     };
     
@@ -98,6 +133,16 @@ export default function Training() {
       toast({
         title: "Successfully enrolled",
         description: "You have been enrolled in the course",
+      });
+      
+      // Track enrollment activity
+      engagementService.trackActivity({
+        activity_type: 'enroll_course',
+        points_earned: 10,
+        metadata: {
+          course_id: courseId,
+          timestamp: new Date().toISOString()
+        }
       });
       
       // Refresh enrollments
@@ -149,6 +194,11 @@ export default function Training() {
           <motion.p variants={item} className="text-lg text-gray-600 max-w-2xl mx-auto">
             Enhance your knowledge and earn certificates in sustainability and ESG practices
           </motion.p>
+          {trackingSuccess === false && (
+            <motion.p variants={item} className="text-red-500 mt-2 text-sm">
+              Note: There might be issues with activity tracking. Your session may need refreshing.
+            </motion.p>
+          )}
         </motion.div>
 
         {isLoading ? (

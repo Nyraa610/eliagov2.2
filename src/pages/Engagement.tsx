@@ -1,6 +1,6 @@
 
 import { UserLayout } from "@/components/user/UserLayout";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useEngagement } from "@/hooks/useEngagement";
 import { RewardsSection } from "@/components/engagement/RewardsSection";
 import { LeaderboardSection } from "@/components/engagement/LeaderboardSection";
@@ -9,17 +9,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Gift, History, Trophy, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PersonalActivitiesTab } from "@/components/engagement/tabs/PersonalActivitiesTab";
+import { supabase } from "@/lib/supabase";
 
 export default function Engagement() {
   const { t } = useTranslation();
   const { trackActivity } = useEngagement();
+  const [trackingSuccess, setTrackingSuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Track page view with additional points
-    trackActivity({
-      activity_type: 'visit_engagement_page',
-      points_earned: 3,
-    }, true);
+    // First check if user is authenticated
+    const verifyAndTrackActivity = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (!session.session) {
+          console.log("No active session in Engagement page, skipping activity tracking");
+          return;
+        }
+        
+        console.log("Tracking Engagement page visit - authenticated user", session.session.user.id);
+        
+        // Track page view with additional points and verify it worked
+        const success = await trackActivity({
+          activity_type: 'visit_engagement_page',
+          points_earned: 3,
+          metadata: {
+            explicit: true,
+            path: '/engagement',
+            user_id: session.session.user.id
+          }
+        }, true);
+        
+        setTrackingSuccess(success);
+        
+        if (success) {
+          console.log("Successfully tracked engagement page visit");
+        } else {
+          console.warn("Failed to track engagement page visit - database operation failed");
+        }
+      } catch (error) {
+        console.error("Error tracking engagement visit:", error);
+        setTrackingSuccess(false);
+      }
+    };
+    
+    // Execute tracking immediately
+    verifyAndTrackActivity();
   }, [trackActivity]);
 
   return (
@@ -28,6 +63,11 @@ export default function Engagement() {
         <h1 className="text-2xl font-bold">{t('engagement.subtitle', 'Your ESG Journey')}</h1>
         <p className="text-muted-foreground">
           {t('engagement.description', 'Track your progress, earn rewards, and compete with others on your sustainability journey.')}
+          {trackingSuccess === false && (
+            <span className="text-red-500 ml-2 font-medium">
+              (Activity tracking is currently experiencing issues)
+            </span>
+          )}
         </p>
       </div>
 

@@ -5,7 +5,7 @@ import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
-export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean = true) {
+export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean = true, userId: string | null = null) {
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const location = useLocation();
@@ -13,8 +13,8 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
 
   // Track page views - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin || !isAuthenticated) {
-      console.log(`Skipping page view tracking: ${isAdmin ? 'Admin route' : 'Not authenticated'}`);
+    if (isAdmin || !isAuthenticated || !userId) {
+      console.log(`Skipping page view tracking: ${isAdmin ? 'Admin route' : !isAuthenticated ? 'Not authenticated' : 'No user ID'}`);
       return;
     }
     
@@ -49,7 +49,7 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
           pointsEarned = 2;
         }
         
-        console.log(`Tracking page view: ${location.pathname} as ${activityType} for ${pointsEarned} points`);
+        console.log(`Tracking page view: ${location.pathname} as ${activityType} for ${pointsEarned} points for user ${sessionData.session.user.id}`);
         
         const success = await engagementService.trackActivity({
           activity_type: activityType,
@@ -87,11 +87,11 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
     }, 500);
 
     return () => clearTimeout(trackingTimeout);
-  }, [location.pathname, isAdmin, isAuthenticated, toast]);
+  }, [location.pathname, isAdmin, isAuthenticated, userId, toast]);
 
   // Track time spent - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin || !isAuthenticated) return;
+    if (isAdmin || !isAuthenticated || !userId) return;
     
     const trackInterval = setInterval(() => {
       if (!isTracking) return;
@@ -133,11 +133,11 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
     return () => {
       clearInterval(trackInterval);
     };
-  }, [lastActive, isTracking, isAdmin, isAuthenticated]);
+  }, [lastActive, isTracking, isAdmin, isAuthenticated, userId]);
 
   // Track user interactions - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin || !isAuthenticated) return;
+    if (isAdmin || !isAuthenticated || !userId) return;
     
     const handleUserActivity = () => {
       setLastActive(Date.now());
@@ -154,7 +154,7 @@ export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean =
       window.removeEventListener('click', handleUserActivity);
       window.removeEventListener('scroll', handleUserActivity);
     };
-  }, [isAdmin, isAuthenticated]);
+  }, [isAdmin, isAuthenticated, userId]);
 
   // Pause tracking when tab is not visible
   useEffect(() => {

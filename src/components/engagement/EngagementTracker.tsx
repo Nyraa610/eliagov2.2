@@ -11,6 +11,7 @@ export function EngagementTracker() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const location = useLocation();
   const { toast } = useToast();
 
@@ -22,6 +23,7 @@ export function EngagementTracker() {
         
         if (error) {
           console.error("Auth error in EngagementTracker:", error);
+          setIsInitialized(true);
           return;
         }
         
@@ -30,11 +32,12 @@ export function EngagementTracker() {
         
         if (!isUserAuthenticated) {
           console.log("User not authenticated, skipping engagement tracking");
+          setIsInitialized(true);
         } else {
-          console.log("User authenticated, enabling engagement tracking");
+          console.log("User authenticated, enabling engagement tracking with ID:", data.session.user.id);
+          setUserId(data.session.user.id);
+          setIsInitialized(true);
         }
-        
-        setIsInitialized(true);
       } catch (err) {
         console.error("Error checking authentication:", err);
         setIsInitialized(true); // Mark as initialized even on error
@@ -47,7 +50,8 @@ export function EngagementTracker() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       const authenticated = !!session;
       setIsAuthenticated(authenticated);
-      console.log("Auth state changed:", event, "Is authenticated:", authenticated);
+      setUserId(session?.user?.id || null);
+      console.log("Auth state changed:", event, "Is authenticated:", authenticated, "User ID:", session?.user?.id);
       
       // If user just signed in, show welcome message
       if (event === 'SIGNED_IN' && authenticated) {
@@ -74,16 +78,16 @@ export function EngagementTracker() {
 
   // Initialize tracking hooks only after authentication check
   // Always call hooks unconditionally but control their behavior via props
-  const activityTracking = useActivityTracking(isAdmin, isAuthenticated);
-  const authTracking = useAuthTracking(isAdmin, isAuthenticated);
-  const teamEngagement = useTeamEngagement(isAdmin, isAuthenticated);
+  const activityTracking = useActivityTracking(isAdmin, isAuthenticated, userId);
+  const authTracking = useAuthTracking(isAdmin, isAuthenticated, userId);
+  const teamEngagement = useTeamEngagement(isAdmin, isAuthenticated, userId);
 
   // Log that tracking is active (only if authenticated)
   useEffect(() => {
-    if (isAuthenticated && isInitialized) {
-      console.log("Engagement tracking active", { isAdmin, path: location.pathname });
+    if (isAuthenticated && isInitialized && userId) {
+      console.log("Engagement tracking active", { isAdmin, userId, path: location.pathname });
     }
-  }, [isAuthenticated, isAdmin, location.pathname, isInitialized]);
+  }, [isAuthenticated, isAdmin, location.pathname, isInitialized, userId]);
 
   // This component doesn't render anything visible
   return null;

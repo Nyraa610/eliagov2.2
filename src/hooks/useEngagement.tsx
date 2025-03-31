@@ -1,3 +1,4 @@
+
 import { useCallback, useState, useEffect } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
@@ -6,11 +7,25 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
 export const useEngagement = () => {
-  const { toast, celebrateSuccess } = useToast();
+  const { toast } = useToast();
   const location = useLocation();
   const { t } = useTranslation();
   const [teamActivities, setTeamActivities] = useState<any[]>([]);
   const [isTrackingTeam, setIsTrackingTeam] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get the current user ID on mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id);
+        console.log("useEngagement: User ID set to", data.user.id);
+      }
+    };
+    
+    getCurrentUser();
+  }, []);
 
   // Skip tracking for admin routes to avoid permission issues
   const shouldSkipTracking = location.pathname.includes('/admin');
@@ -26,14 +41,17 @@ export const useEngagement = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
         console.log("User not authenticated, skipping activity tracking");
-        return true;
+        return false;
       }
       
-      // Add timestamp to metadata
+      const currentUserId = session.session.user.id;
+      
+      // Add timestamp and user info to metadata
       const enhancedMetadata = {
         ...activity.metadata,
         timestamp: new Date().toISOString(),
         path: location.pathname,
+        tracked_user_id: currentUserId
       };
       
       const enhancedActivity = {
@@ -159,6 +177,7 @@ export const useEngagement = () => {
     trackActivity,
     teamActivities,
     startTeamTracking,
-    getTeamActivities
+    getTeamActivities,
+    userId
   };
 };

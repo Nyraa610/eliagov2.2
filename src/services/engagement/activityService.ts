@@ -32,9 +32,17 @@ class ActivityService {
       if (profileError && profileError.code !== 'PGRST116') { // Not found is okay
         console.error("Error fetching profile for activity tracking:", profileError);
       }
+      
+      // Enhanced logging for debugging
+      console.log("About to insert user activity with data:", {
+        user_id: userData.user.id,
+        activity_type: activity.activity_type,
+        points_earned: activity.points_earned,
+        company_id: profileData?.company_id || null
+      });
 
       // Insert the activity with explicit user_id to satisfy RLS policies
-      const { error } = await supabase
+      const { data: insertedActivity, error } = await supabase
         .from('user_activities')
         .insert({
           user_id: userData.user.id,
@@ -42,7 +50,8 @@ class ActivityService {
           points_earned: activity.points_earned,
           metadata: activity.metadata || {},
           company_id: profileData?.company_id || null
-        });
+        })
+        .select();
 
       if (error) {
         // Log detailed error for debugging
@@ -56,7 +65,7 @@ class ActivityService {
         return false;
       }
 
-      console.log(`Successfully tracked activity: ${activity.activity_type}, points: ${activity.points_earned}`);
+      console.log(`Successfully tracked activity:`, insertedActivity);
 
       // Update activity count
       await this.incrementActivityCounter(userData.user.id);
@@ -72,8 +81,10 @@ class ActivityService {
 
   async incrementActivityCounter(userId: string): Promise<void> {
     try {
+      console.log(`Incrementing activity counter for user ${userId}`);
+      
       // Try to insert a new record first
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('user_engagement_stats')
         .insert({
           user_id: userId,
@@ -81,28 +92,49 @@ class ActivityService {
           total_points: 0,
           time_spent_seconds: 0,
           updated_at: new Date().toISOString()
-        });
+        })
+        .select();
+      
+      if (insertData) {
+        console.log("Successfully created new engagement stats record:", insertData);
+        return;
+      }
       
       // If user already exists, update their count instead
       if (insertError && insertError.code === '23505') { // Unique violation
-        const { error: updateError } = await supabase
+        console.log("User stats already exist, incrementing count");
+        
+        // Query first to ensure the record exists
+        const { data: checkData } = await supabase
           .from('user_engagement_stats')
-          .update({ 
-            activity_count: supabase.rpc('increment', { x: 1 }),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
+          .select('*')
+          .eq('user_id', userId)
+          .single();
           
-        if (updateError) {
-          console.error("Error updating activity counter:", updateError);
-          return;
+        if (checkData) {
+          // Update the existing record
+          const { data: updateData, error: updateError } = await supabase
+            .from('user_engagement_stats')
+            .update({ 
+              activity_count: checkData.activity_count + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId)
+            .select();
+            
+          if (updateError) {
+            console.error("Error updating activity counter:", updateError);
+            return;
+          }
+          
+          console.log("Activity counter incremented successfully:", updateData);
+        } else {
+          console.error("Could not find user stats record to update");
         }
       } else if (insertError) {
         console.error("Error inserting activity counter:", insertError);
         return;
       }
-      
-      console.log("Activity counter incremented successfully for user:", userId);
     } catch (error) {
       console.error("Error incrementing activity counter:", error);
     }
@@ -115,25 +147,51 @@ class ActivityService {
 
       console.log(`Tracking time spent: ${seconds} seconds for user ${userData.user.id}`);
 
+      // First check if the user has a stats entry
+      const { data: checkData } = await supabase
+        .from('user_engagement_stats')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .single();
+        
+      if (!checkData) {
+        // Create a new entry if none exists
+        const { error: insertError } = await supabase
+          .from('user_engagement_stats')
+          .insert({
+            user_id: userData.user.id,
+            time_spent_seconds: seconds,
+            last_active_at: new Date().toISOString(),
+            activity_count: 0,
+            total_points: 0
+          });
+          
+        if (insertError) {
+          console.warn("Error creating time spent record:", insertError.message);
+          return false;
+        }
+        
+        return true;
+      }
+      
+      // Update existing entry
       const { error } = await supabase
         .from('user_engagement_stats')
         .update({ 
-          time_spent_seconds: supabase.rpc('increment', { x: seconds }),
+          time_spent_seconds: checkData.time_spent_seconds + seconds,
           last_active_at: new Date().toISOString()
         })
         .eq('user_id', userData.user.id);
 
       if (error) {
         console.warn("Error tracking time spent:", error.message);
-        // Return true to prevent errors from cascading through the app
-        return true;
+        return false;
       }
 
       return true;
     } catch (error) {
       console.warn("Exception tracking time spent:", error);
-      // Return true to prevent errors from cascading through the app
-      return true;
+      return false;
     }
   }
   
