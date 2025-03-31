@@ -1,5 +1,4 @@
 
-import { UserLayout } from "@/components/user/UserLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Plus } from "lucide-react";
 import { useValueChainResults } from "@/hooks/useValueChainResults";
@@ -33,7 +32,8 @@ export default function ValueChainResults() {
   }, [valueChainData, loading, dataChanged]);
 
   return (
-    <UserLayout title="Value Chain Results">
+    <>
+      <h1 className="text-2xl font-bold text-primary mb-4">Value Chain Results</h1>
       <div className="flex flex-col gap-6">
         <ValueChainActions 
           valueChainData={valueChainData} 
@@ -76,6 +76,6 @@ export default function ValueChainResults() {
           </Tabs>
         )}
       </div>
-    </UserLayout>
+    </>
   );
 }

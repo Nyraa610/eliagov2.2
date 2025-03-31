@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -52,8 +51,9 @@ export default function CarbonEvaluation() {
   };
 
   return (
-    <UserLayout title={t("assessment.carbonEvaluation.title")}>
+    <>
       <div className="mb-6">
+        <h1 className="text-2xl font-bold text-primary mb-2">{t("assessment.carbonEvaluation.title")}</h1>
         <Button 
           asChild 
           variant="ghost" 
@@ -76,6 +76,6 @@ export default function CarbonEvaluation() {
         progress={progress}
         setProgress={handleProgressChange}
       />
-    </UserLayout>
+    </>
   );
 }

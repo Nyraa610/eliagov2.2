@@ -59,19 +59,12 @@ export const useMenuItems = () => {
     {
       title: "Carbon Footprint",
       icon: <Globe className="h-5 w-5" />,
-      path: "/carbon-footprint",
+      path: "/assessment/carbon-evaluation",
     },
     {
       title: "Materiality Analysis",
       icon: <Layers className="h-5 w-5" />,
-      path: "/materiality-analysis",
-      submenu: [
-        {
-          title: "Impact, Risks & Opportunities",
-          icon: <TrendingUp className="h-5 w-5" />,
-          path: "/assessment/iro",
-        },
-      ],
+      path: "/assessment/materiality-analysis",
     },
     {
       title: "Action Plan",

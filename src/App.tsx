@@ -11,6 +11,10 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import MaterialityAnalysis from './pages/assessment/MaterialityAnalysis';
+import CarbonEvaluation from './pages/assessment/CarbonEvaluation';
+import ValueChainModeling from './pages/assessment/ValueChainModeling';
+import ValueChainResults from './pages/assessment/ValueChainResults';
 
 function App() {
   return (
@@ -29,13 +33,17 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<Navigate to="/assessment" replace />} />
-                <Route path="assessment" element={<Assessment />} />
-                <Route path="assessment/*" element={<Assessment />} />
-                <Route path="documents" element={<DocumentCenter />} />
                 <Route path="dashboard" element={<Navigate to="/assessment" replace />} />
+                <Route path="assessment" element={<Assessment />} />
+                <Route path="assessment/value-chain" element={<ValueChainModeling />} />
+                <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
+                <Route path="assessment/carbon-evaluation" element={<CarbonEvaluation />} />
+                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
+                <Route path="documents" element={<DocumentCenter />} />
                 <Route path="training" element={<Navigate to="/assessment" replace />} />
-                <Route path="carbon-footprint" element={<Navigate to="/assessment" replace />} />
-                <Route path="materiality-analysis" element={<Navigate to="/assessment" replace />} />
+                <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
+                <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment" replace />} />
                 <Route path="engagement" element={<Navigate to="/assessment" replace />} />
                 <Route path="companies" element={<Navigate to="/assessment" replace />} />

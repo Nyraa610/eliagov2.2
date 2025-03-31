@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -51,8 +50,9 @@ export default function MaterialityAnalysis() {
   };
 
   return (
-    <UserLayout title={t("assessment.materialityAnalysis.title")}>
+    <>
       <div className="mb-6">
+        <h1 className="text-2xl font-bold text-primary mb-2">{t("assessment.materialityAnalysis.title")}</h1>
         <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
         </Link>
@@ -67,6 +67,6 @@ export default function MaterialityAnalysis() {
         progress={progress}
         setProgress={handleProgressChange}
       />
-    </UserLayout>
+    </>
   );
 }

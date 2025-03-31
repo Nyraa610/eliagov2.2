@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { FeatureStatus } from "@/types/training";
 import { AssessmentOverview } from "@/components/assessment/overview/AssessmentOverview";
@@ -74,8 +73,9 @@ export default function Assessment() {
   }, [diagStatus, showCelebration, celebrateCompletion]);
 
   return (
-    <UserLayout title={t("assessment.title")}>
+    <>
       <div className="mb-6">
+        <h1 className="text-2xl font-bold text-primary mb-2">{t("assessment.title")}</h1>
         <p className="text-gray-600">
           Complete your company's ESG/RSE assessment with the help of Elia, our AI assistant.
         </p>
@@ -117,6 +117,6 @@ export default function Assessment() {
         points={100}
         onAnimationComplete={() => setShowCelebration(false)}
       />
-    </UserLayout>
+    </>
   );
 }

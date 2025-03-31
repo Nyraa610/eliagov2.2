@@ -1,5 +1,4 @@
 
-import { UserLayout } from "@/components/user/UserLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { DocumentUploadDialog } from "@/components/value-chain/DocumentUploadDialog";
@@ -37,18 +36,20 @@ export default function ValueChainModeling() {
 
   if (loading) {
     return (
-      <UserLayout title="Value Chain Modeling">
+      <>
+        <h1 className="text-2xl font-bold text-primary mb-4">Value Chain Modeling</h1>
         <div className="space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-[600px] w-full" />
         </div>
-      </UserLayout>
+      </>
     );
   }
 
   return (
-    <UserLayout title="Value Chain Modeling">
+    <>
+      <h1 className="text-2xl font-bold text-primary mb-4">Value Chain Modeling</h1>
       <ValueChainHeader />
       
       <IntroductionCard 
@@ -96,6 +97,6 @@ export default function ValueChainModeling() {
         hasDocuments={uploadedDocuments.length > 0}
         documents={uploadedDocuments}
       />
-    </UserLayout>
+    </>
   );
 }
