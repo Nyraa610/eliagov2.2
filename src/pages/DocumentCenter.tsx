@@ -3,6 +3,8 @@ import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 
 export default function DocumentCenter() {
   return (
-    <DocumentsLayout />
+    <div className="container mx-auto py-8 px-4">
+      <DocumentsLayout />
+    </div>
   );
 }

@@ -1,5 +1,4 @@
 
-import { UserLayout } from "@/components/user/UserLayout";
 import { useEffect, useState } from "react";
 import { useEngagement } from "@/hooks/useEngagement";
 import { RewardsSection } from "@/components/engagement/RewardsSection";
@@ -58,9 +57,9 @@ export default function Engagement() {
   }, [trackActivity]);
 
   return (
-    <UserLayout title={t('engagement.title', 'Engagement & Rewards')}>
+    <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">{t('engagement.subtitle', 'Your ESG Journey')}</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('engagement.title', 'Engagement & Rewards')}</h1>
         <p className="text-muted-foreground">
           {t('engagement.description', 'Track your progress, earn rewards, and compete with others on your sustainability journey.')}
           {trackingSuccess === false && (
@@ -107,6 +106,6 @@ export default function Engagement() {
           <LeaderboardSection />
         </TabsContent>
       </Tabs>
-    </UserLayout>
+    </div>
   );
 }

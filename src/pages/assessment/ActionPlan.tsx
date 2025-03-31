@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -158,11 +157,12 @@ export default function ActionPlan() {
   }
 
   return (
-    <UserLayout title={t("assessment.actionPlan.title")}>
+    <div className="container mx-auto py-8 px-4">
       <div className="mb-6">
         <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
         </Link>
+        <h1 className="text-3xl font-bold mb-2">{t("assessment.actionPlan.title")}</h1>
         <p className="text-gray-600">
           {t("assessment.actionPlan.description")}
         </p>
@@ -181,6 +181,6 @@ export default function ActionPlan() {
           onSubmit={onSubmit}
         />
       </AssessmentBase>
-    </UserLayout>
+    </div>
   );
 }

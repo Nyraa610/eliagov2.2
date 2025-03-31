@@ -17,15 +17,23 @@ export default function CompanyProfile() {
   const [activeTab, setActiveTab] = useState("overview");
 
   if (loading) {
-    return <CompanyProfileLoading />;
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <CompanyProfileLoading />
+      </div>
+    );
   }
 
   if (!company) {
-    return <CompanyNotFound />;
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <CompanyNotFound />
+      </div>
+    );
   }
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto py-8 px-4">
       <CompanyProfileHeader company={company} isAdmin={isAdmin} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

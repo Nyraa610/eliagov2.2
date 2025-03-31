@@ -48,10 +48,10 @@ function App() {
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
                 <Route path="assessment/carbon-evaluation" element={<CarbonEvaluation />} />
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                <Route path="action-plan" element={<ActionPlan />} />
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
                 <Route path="engagement" element={<Engagement />} />
-                <Route path="action-plan" element={<ActionPlan />} />
                 <Route path="profile" element={<Profile />} />
                 
                 {/* Company pages */}
