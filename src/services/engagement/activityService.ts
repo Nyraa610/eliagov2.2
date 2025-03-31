@@ -100,12 +100,20 @@ class ActivityService {
     }
   }
   
-  async getUserActivityHistory(userId: string, limit = 20): Promise<any[]> {
+  async getUserActivityHistory(userId?: string, limit = 20): Promise<any[]> {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const targetUserId = userId || userData.user?.id;
+      
+      if (!targetUserId) {
+        console.warn("No user ID provided for activity history");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('user_activities')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', targetUserId)
         .order('created_at', { ascending: false })
         .limit(limit);
         

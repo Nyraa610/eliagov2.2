@@ -5,10 +5,10 @@ import { useEngagement } from "@/hooks/useEngagement";
 import { RewardsSection } from "@/components/engagement/RewardsSection";
 import { LeaderboardSection } from "@/components/engagement/LeaderboardSection";
 import { TeamActivitiesSection } from "@/components/engagement/TeamActivitiesSection";
-import { ActivitiesTab } from "@/components/engagement/tabs/ActivitiesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Gift, Trophy, Users } from "lucide-react";
+import { BarChart, Gift, History, Trophy, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PersonalActivitiesTab } from "@/components/engagement/tabs/PersonalActivitiesTab";
 
 export default function Engagement() {
   const { t } = useTranslation();
@@ -31,11 +31,11 @@ export default function Engagement() {
         </p>
       </div>
 
-      <Tabs defaultValue="activities" className="space-y-6">
+      <Tabs defaultValue="personal" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="activities" className="flex items-center justify-center gap-2">
-            <BarChart className="h-4 w-4" />
-            {t('engagement.activities', 'Activities')}
+          <TabsTrigger value="personal" className="flex items-center justify-center gap-2">
+            <History className="h-4 w-4" />
+            {t('engagement.personal', 'Personal')}
           </TabsTrigger>
           <TabsTrigger value="team" className="flex items-center justify-center gap-2">
             <Users className="h-4 w-4" />
@@ -51,8 +51,8 @@ export default function Engagement() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="activities">
-          <ActivitiesTab />
+        <TabsContent value="personal">
+          <PersonalActivitiesTab />
         </TabsContent>
         
         <TabsContent value="team">
