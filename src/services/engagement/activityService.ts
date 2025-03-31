@@ -100,32 +100,44 @@ class ActivityService {
     }
   }
   
-  async getUserActivityHistory(userId?: string, limit = 20): Promise<any[]> {
+  async getUserActivityHistory(userId?: string, limit = 20, offset = 0): Promise<{ data: any[], count: number }> {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const targetUserId = userId || userData.user?.id;
       
       if (!targetUserId) {
         console.warn("No user ID provided for activity history");
-        return [];
+        return { data: [], count: 0 };
       }
       
+      // Get the count of activities for pagination
+      const { count, error: countError } = await supabase
+        .from('user_activities')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', targetUserId);
+        
+      if (countError) {
+        console.warn("Error counting activity history:", countError);
+        return { data: [], count: 0 };
+      }
+
+      // Get activities with pagination
       const { data, error } = await supabase
         .from('user_activities')
         .select('*')
         .eq('user_id', targetUserId)
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .range(offset, offset + limit - 1);
         
       if (error) {
         console.warn("Error fetching activity history:", error);
-        return [];
+        return { data: [], count: 0 };
       }
       
-      return data || [];
+      return { data: data || [], count: count || 0 };
     } catch (error) {
       console.warn("Exception fetching activity history:", error);
-      return [];
+      return { data: [], count: 0 };
     }
   }
 }
