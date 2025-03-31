@@ -39,34 +39,45 @@ import Engagement from "@/pages/Engagement";
 import ValueChainModeling from "@/pages/assessment/ValueChainModeling";
 import ValueChainResults from "@/pages/assessment/ValueChainResults";
 import { Toaster } from "@/components/ui/toaster";
+import { EngagementTracker } from "@/components/engagement/EngagementTracker";
 
 // Initialize i18n
 import './i18n/i18n';
 
+// Create a wrapper component for adding EngagementTracker to all routes
+const RouteWrapper = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <EngagementTracker />
+      {children}
+    </>
+  );
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: <RouteWrapper><Index /></RouteWrapper>,
   },
   {
     path: "/login",
-    element: <Login />,
+    element: <RouteWrapper><Login /></RouteWrapper>,
   },
   {
     path: "/register",
-    element: <Register />,
+    element: <RouteWrapper><Register /></RouteWrapper>,
   },
   {
     path: "/register/confirmation",
-    element: <RegisterConfirmation />,
+    element: <RouteWrapper><RegisterConfirmation /></RouteWrapper>,
   },
   {
     path: "/reset-password",
-    element: <ResetPassword />,
+    element: <RouteWrapper><ResetPassword /></RouteWrapper>,
   },
   {
     path: "/features",
-    element: <Features />,
+    element: <RouteWrapper><Features /></RouteWrapper>,
   },
   {
     path: "/dashboard",

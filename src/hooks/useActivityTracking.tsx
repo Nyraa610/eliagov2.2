@@ -1,29 +1,23 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
 
-export function useActivityTracking(isAdmin: boolean) {
+export function useActivityTracking(isAdmin: boolean, isAuthenticated: boolean = true) {
   const [lastActive, setLastActive] = useState<number>(Date.now());
   const [isTracking, setIsTracking] = useState<boolean>(true);
   const location = useLocation();
 
-  // Track page views - skip for admin routes
+  // Track page views - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin) {
-      console.log("Admin route detected, skipping page view tracking");
+    if (isAdmin || !isAuthenticated) {
+      console.log(`Skipping page view tracking: ${isAdmin ? 'Admin route' : 'Not authenticated'}`);
       return;
     }
     
     const trackPageView = async () => {
       try {
-        // Check if user is authenticated first
-        const { data: session } = await supabase.auth.getSession();
-        if (!session.session) {
-          console.log("User not authenticated, skipping activity tracking");
-          return;
-        }
-        
         // Base points for any page view
         let pointsEarned = 1;
         let activityType = 'page_view';
@@ -72,11 +66,11 @@ export function useActivityTracking(isAdmin: boolean) {
     // Execute the tracking immediately
     trackPageView();
 
-  }, [location.pathname, isAdmin]);
+  }, [location.pathname, isAdmin, isAuthenticated]);
 
-  // Track time spent - skip for admin routes
+  // Track time spent - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin) return;
+    if (isAdmin || !isAuthenticated) return;
     
     const trackInterval = setInterval(() => {
       if (!isTracking) return;
@@ -118,11 +112,11 @@ export function useActivityTracking(isAdmin: boolean) {
     return () => {
       clearInterval(trackInterval);
     };
-  }, [lastActive, isTracking, isAdmin]);
+  }, [lastActive, isTracking, isAdmin, isAuthenticated]);
 
-  // Track user interactions - skip for admin routes
+  // Track user interactions - skip for admin routes or unauthenticated users
   useEffect(() => {
-    if (isAdmin) return;
+    if (isAdmin || !isAuthenticated) return;
     
     const handleUserActivity = () => {
       setLastActive(Date.now());
@@ -139,7 +133,7 @@ export function useActivityTracking(isAdmin: boolean) {
       window.removeEventListener('click', handleUserActivity);
       window.removeEventListener('scroll', handleUserActivity);
     };
-  }, [isAdmin]);
+  }, [isAdmin, isAuthenticated]);
 
   // Pause tracking when tab is not visible
   useEffect(() => {

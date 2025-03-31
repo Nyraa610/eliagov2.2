@@ -3,10 +3,10 @@ import { useEffect } from 'react';
 import { engagementService } from '@/services/engagement';
 import { supabase } from '@/lib/supabase';
 
-export function useAuthTracking(isAdmin: boolean) {
-  // Track user login - skip for admin routes
+export function useAuthTracking(isAdmin: boolean, isAuthenticated: boolean = true) {
+  // Track user login - skip for admin routes or if not authenticated
   useEffect(() => {
-    if (isAdmin) return;
+    if (isAdmin || !isAuthenticated) return;
     
     const checkUserAuth = async () => {
       try {
@@ -38,7 +38,7 @@ export function useAuthTracking(isAdmin: boolean) {
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && !isAdmin) {
+        if (event === 'SIGNED_IN') {
           try {
             console.log("Tracking login activity (auth state change)");
             
@@ -63,5 +63,5 @@ export function useAuthTracking(isAdmin: boolean) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [isAdmin]);
+  }, [isAdmin, isAuthenticated]);
 }

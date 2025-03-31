@@ -47,18 +47,18 @@ export function EngagementTracker() {
     console.log(`EngagementTracker: ${isAdminRoute ? 'Admin route detected' : 'User route detected'}. Path: ${location.pathname}`);
   }, [location.pathname]);
 
-  // Only initialize tracking hooks if authenticated (important for consistent hook execution)
-  if (!isAuthenticated) {
-    return null; // Don't render anything for unauthenticated users
-  }
+  // Initialize tracking hooks - IMPORTANT: Always call hooks unconditionally
+  // But we'll control their behavior based on authentication status inside them
+  const activityTracking = useActivityTracking(isAdmin, isAuthenticated);
+  const authTracking = useAuthTracking(isAdmin, isAuthenticated);
+  const teamEngagement = useTeamEngagement(isAdmin, isAuthenticated);
 
-  // Use tracking hooks
-  const activityTracking = useActivityTracking(isAdmin);
-  const authTracking = useAuthTracking(isAdmin);
-  const teamEngagement = useTeamEngagement(isAdmin);
-
-  // Log that tracking is active
-  console.log("Engagement tracking active", { isAdmin, path: location.pathname });
+  // Log that tracking is active (only if authenticated)
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("Engagement tracking active", { isAdmin, path: location.pathname });
+    }
+  }, [isAuthenticated, isAdmin, location.pathname]);
 
   // This component doesn't render anything visible
   return null;
