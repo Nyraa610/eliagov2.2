@@ -12,6 +12,8 @@ export function useAuthTracking(isAdmin: boolean) {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
+          console.log("Tracking login activity (initial session check)");
+          
           // Record login activity
           await engagementService.trackActivity({
             activity_type: 'login',
@@ -23,6 +25,8 @@ export function useAuthTracking(isAdmin: boolean) {
           }).catch(err => {
             console.warn("Could not track login activity", err);
           });
+        } else {
+          console.log("No active session found, skipping login tracking");
         }
       } catch (error) {
         console.warn("Auth check error in EngagementTracker:", error);
@@ -36,6 +40,8 @@ export function useAuthTracking(isAdmin: boolean) {
       async (event, session) => {
         if (event === 'SIGNED_IN' && !isAdmin) {
           try {
+            console.log("Tracking login activity (auth state change)");
+            
             await engagementService.trackActivity({
               activity_type: 'login',
               points_earned: 5,

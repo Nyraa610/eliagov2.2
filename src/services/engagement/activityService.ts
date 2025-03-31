@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { UserActivity } from "./types";
 import { badgeService } from "./badgeService";
@@ -24,6 +25,12 @@ class ActivityService {
         return true;
       }
 
+      console.log("Attempting to insert activity:", {
+        user_id: userData.user.id,
+        activity_type: activity.activity_type,
+        points_earned: activity.points_earned
+      });
+
       const { error } = await supabase
         .from('user_activities')
         .insert({
@@ -38,6 +45,8 @@ class ActivityService {
         // Return true to prevent errors from cascading through the app
         return true;
       }
+
+      console.log("Activity tracked successfully:", activity.activity_type);
 
       // Update activity count separately
       await this.incrementActivityCounter(userData.user.id);
@@ -57,6 +66,7 @@ class ActivityService {
       await supabase.rpc('increment_activity_counter', {
         user_id_param: userId
       }).throwOnError();
+      console.log("Activity counter incremented successfully");
     } catch (error) {
       console.warn("Error incrementing activity counter:", error);
     }
@@ -66,6 +76,8 @@ class ActivityService {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return false;
+
+      console.log(`Tracking time spent: ${seconds} seconds for user ${userData.user.id}`);
 
       const { error } = await supabase
         .from('user_engagement_stats')
@@ -99,6 +111,8 @@ class ActivityService {
         return { data: [], count: 0 };
       }
       
+      console.log(`Fetching activity history for user ${targetUserId}, limit ${limit}, offset ${offset}`);
+      
       // Get the count of activities for pagination
       const { count, error: countError } = await supabase
         .from('user_activities')
@@ -123,6 +137,7 @@ class ActivityService {
         return { data: [], count: 0 };
       }
       
+      console.log(`Found ${count || 0} total activities, returning ${data?.length || 0} items`);
       return { data: data || [], count: count || 0 };
     } catch (error) {
       console.warn("Exception fetching activity history:", error);

@@ -15,6 +15,13 @@ export function useActivityTracking(isAdmin: boolean) {
     
     const trackPageView = async () => {
       try {
+        // Check if user is authenticated first
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          console.log("User not authenticated, skipping activity tracking");
+          return;
+        }
+        
         // Base points for any page view
         let pointsEarned = 1;
         let activityType = 'page_view';
@@ -37,7 +44,9 @@ export function useActivityTracking(isAdmin: boolean) {
           pointsEarned = 2;
         }
         
-        await engagementService.trackActivity({
+        console.log(`Tracking page view: ${location.pathname} as ${activityType}`);
+        
+        const success = await engagementService.trackActivity({
           activity_type: activityType,
           points_earned: pointsEarned,
           metadata: { 
@@ -46,7 +55,13 @@ export function useActivityTracking(isAdmin: boolean) {
           }
         }).catch(err => {
           console.warn("Could not track page view", err);
+          return false;
         });
+        
+        if (success) {
+          console.log("Successfully tracked page view");
+        }
+        
         setLastActive(Date.now());
       } catch (error) {
         console.warn("Page view tracking error:", error);
@@ -69,12 +84,17 @@ export function useActivityTracking(isAdmin: boolean) {
       if (timeSpentSeconds > 5) {
         // Cap inactive time at 60 seconds to prevent large time accumulations during breaks
         const cappedTime = Math.min(timeSpentSeconds, 60);
+        
+        console.log(`Tracking time spent: ${cappedTime} seconds`);
+        
         engagementService.trackTimeSpent(cappedTime).catch(err => {
           console.warn("Could not track time spent", err);
         });
         
         // Track significant time milestones (e.g., every 30 minutes)
         if (timeSpentSeconds >= 1800) { // 30 minutes
+          console.log("Tracking significant time milestone");
+          
           engagementService.trackActivity({
             activity_type: 'significant_time_spent',
             points_earned: 3,

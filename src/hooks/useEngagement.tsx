@@ -23,6 +23,13 @@ export const useEngagement = () => {
     }
 
     try {
+      // Check if user is authenticated first
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        console.log("User not authenticated, skipping activity tracking");
+        return true;
+      }
+      
       // Add timestamp to metadata
       const enhancedMetadata = {
         ...activity.metadata,
@@ -34,6 +41,8 @@ export const useEngagement = () => {
         ...activity,
         metadata: enhancedMetadata
       };
+      
+      console.log("Tracking activity:", enhancedActivity);
       
       const success = await engagementService.trackActivity(enhancedActivity);
       
@@ -77,6 +86,8 @@ export const useEngagement = () => {
       
       if (!profileData || !profileData.company_id) return () => {};
       
+      console.log("Starting team activity tracking for company:", profileData.company_id);
+      
       // Subscribe to team activity changes
       const channel = supabase
         .channel('team-activities')
@@ -119,6 +130,8 @@ export const useEngagement = () => {
         .single();
       
       if (!profileData || !profileData.company_id) return [];
+      
+      console.log("Getting team activities for company:", profileData.company_id);
       
       const { data } = await supabase
         .from('user_activities')
