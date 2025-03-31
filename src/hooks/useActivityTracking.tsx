@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { engagementService } from '@/services/engagement';
@@ -55,7 +56,7 @@ export function useActivityTracking(isAdmin: boolean) {
             path: location.pathname,
             timestamp: new Date().toISOString() 
           }
-        }, true); // Always show reward notification for page views
+        });
         
         if (success) {
           console.log(`Successfully tracked page view: ${activityType}, +${pointsEarned} points`);
