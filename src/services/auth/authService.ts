@@ -122,10 +122,21 @@ export const authService = {
     }
     
     // Create a new listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
+    
+    // Store the new listener
     activeAuthListener = {
-      subscription: supabase.auth.onAuthStateChange(callback)
+      subscription: subscription
     };
     
-    return activeAuthListener.subscription;
+    // Return an object with unsubscribe method to match the expected return type
+    return {
+      unsubscribe: () => {
+        if (activeAuthListener) {
+          activeAuthListener.subscription.unsubscribe();
+          activeAuthListener = null;
+        }
+      }
+    };
   }
 };
