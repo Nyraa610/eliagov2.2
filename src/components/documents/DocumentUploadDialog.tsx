@@ -64,6 +64,9 @@ export function DocumentUploadDialog({
     setError(null);
     
     try {
+      // Ensure storage bucket exists before upload
+      await documentService.ensureStorageBucketExists();
+      
       // Simulate progress
       let progressInterval = setInterval(() => {
         setProgress(prev => {
