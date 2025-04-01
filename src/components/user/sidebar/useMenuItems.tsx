@@ -1,31 +1,33 @@
 
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
-  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText
+  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const useMenuItems = () => {
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   useEffect(() => {
-    const fetchUserCompany = async () => {
+    const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('company_id')
+          .select('company_id, role')
           .eq('id', user.id)
           .single();
           
-        if (data && data.company_id) {
+        if (data) {
           setUserCompanyId(data.company_id);
+          setUserRole(data.role);
         }
       }
     };
     
-    fetchUserCompany();
+    fetchUserData();
   }, []);
 
   const mainMenuItems = [
@@ -83,11 +85,6 @@ export const useMenuItems = () => {
       title: "Company Profile",
       icon: <Building className="h-5 w-5" />,
       path: userCompanyId ? `/company/${userCompanyId}` : "/profile",
-    },
-    {
-      title: "Company Settings",
-      icon: <Settings className="h-5 w-5" />,
-      path: userCompanyId ? `/company/${userCompanyId}/settings` : "/profile",
       disabled: !userCompanyId,
     },
     {
@@ -97,5 +94,26 @@ export const useMenuItems = () => {
     },
   ];
   
-  return { mainMenuItems, companyHubItems, userCompanyId };
+  const adminItems = [
+    {
+      title: "Admin Panel",
+      icon: <ShieldCheck className="h-5 w-5" />,
+      path: "/admin",
+      disabled: userRole !== 'admin',
+    },
+    {
+      title: "User Management",
+      icon: <User className="h-5 w-5" />,
+      path: "/admin/users",
+      disabled: userRole !== 'admin',
+    },
+  ];
+  
+  return { 
+    mainMenuItems, 
+    companyHubItems, 
+    adminItems,
+    userCompanyId,
+    isAdmin: userRole === 'admin'
+  };
 };

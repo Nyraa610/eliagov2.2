@@ -7,6 +7,7 @@ import { UserProfile } from "@/services/base/profileTypes";
 import { ProfileLoading } from "@/components/profile/ProfileLoading";
 import { ProfileContent } from "@/components/profile/ProfileContent";
 import { useTranslation } from "react-i18next";
+import { Navigation } from "@/components/Navigation";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -49,17 +50,31 @@ export default function Profile() {
   };
 
   if (isLoading) {
-    return <ProfileLoading />;
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-16">
+          <div className="max-w-4xl mx-auto py-8 px-4">
+            <ProfileLoading />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
-      <ProfileContent 
-        profile={profile} 
-        isAdmin={isAdmin}
-        onCompanyCreated={fetchProfile}
-      />
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="pt-16">
+        <div className="max-w-4xl mx-auto py-8 px-4">
+          <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
+          <ProfileContent 
+            profile={profile} 
+            isAdmin={isAdmin}
+            onCompanyCreated={fetchProfile}
+          />
+        </div>
+      </div>
     </div>
   );
 }

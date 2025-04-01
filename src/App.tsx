@@ -9,7 +9,6 @@ import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
-import { AdminLayout } from './components/admin/AdminLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import MaterialityAnalysis from './pages/assessment/MaterialityAnalysis';
 import CarbonEvaluation from './pages/assessment/CarbonEvaluation';
@@ -51,11 +50,6 @@ function App() {
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
                 <Route path="engagement" element={<Engagement />} />
-                <Route path="profile" element={<Profile />} />
-                
-                {/* Company pages */}
-                <Route path="company/:id" element={<CompanyProfile />} />
-                <Route path="company/:id/settings" element={<CompanySettings />} />
                 
                 {/* Assessment module routes */}
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
@@ -68,10 +62,15 @@ function App() {
                 <Route path="assessment/carbon-evaluation" element={<Navigate to="/carbon-evaluation" replace />} />
               </Route>
               
+              {/* Profile and Company pages with custom layout */}
+              <Route path="profile" element={<Profile />} />
+              <Route path="company/:id" element={<CompanyProfile />} />
+              <Route path="company/:id/settings" element={<CompanySettings />} />
+              
               {/* Admin routes */}
               <Route element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout title="Admin Dashboard" />
+                  <UserLayout title="Admin Dashboard" />
                 </ProtectedRoute>
               }>
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

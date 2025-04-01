@@ -15,7 +15,9 @@ export function UserLayout({ children, title }: UserLayoutProps) {
       <Navigation />
       
       <div className="flex">
-        <UserSidebar />
+        <div className="pt-16">
+          <UserSidebar />
+        </div>
         
         <main className="flex-1 p-6 pt-24">
           <div className="container mx-auto max-w-6xl">
