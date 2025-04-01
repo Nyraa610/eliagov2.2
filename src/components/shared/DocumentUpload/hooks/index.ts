@@ -1,6 +1,8 @@
 
-export * from './useDocumentUpload';
-export * from './useBucketManagement';
-export * from './useUploadProgress';
-export * from './useFileState';
-export * from './useFileValidation';
+export { useDocumentUpload } from './useDocumentUpload';
+export { useFileValidation } from './useFileValidation';
+export { useUploadProgress } from './useUploadProgress';
+export { useBucketManagement } from './useBucketManagement';
+export { useFileState } from './useFileState';
+
+export type { UseDocumentUploadOptions } from './useDocumentUpload';

@@ -1,8 +1,8 @@
 
 import { useState, useCallback } from 'react';
-import { genericDocumentService, ValidationRules, UploadedDocument } from '@/services/document/genericDocumentService';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { genericDocumentService, ValidationRules, UploadedDocument } from '@/services/document/genericDocumentService';
 import { useBucketManagement } from './useBucketManagement';
 import { useUploadProgress } from './useUploadProgress';
 import { useFileState } from './useFileState';
@@ -74,8 +74,14 @@ export function useDocumentUpload({
     setIsUploading(true);
     setError(null);
     
+    // Determine which bucket to use
+    const bucketName = isPersonal || documentType === 'standard' 
+      ? 'company_documents_storage' 
+      : documentType === 'value_chain' 
+        ? 'value_chain_documents' 
+        : 'company_documents_storage';
+        
     // Check if bucket exists (or create it)
-    const bucketName = 'company_documents_storage';
     const bucketExists = await ensureBucketExists(bucketName);
     
     if (!bucketExists) {
@@ -96,11 +102,11 @@ export function useDocumentUpload({
       };
       
       // Use company ID for company documents or user ID for personal docs
-      const effectiveCompanyId = companyId || user.id;
+      const effectiveEntityId = companyId || user.id;
       
       const documents = await genericDocumentService.uploadDocuments(
         files,
-        effectiveCompanyId,
+        effectiveEntityId,
         uploadOptions,
         validationRules
       );

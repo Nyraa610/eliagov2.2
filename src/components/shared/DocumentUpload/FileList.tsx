@@ -18,8 +18,6 @@ export function FileList({ files, onRemoveFile, disabled = false }: FileListProp
       return <File className="h-5 w-5 text-red-500" />;
     } else if (file.type.includes('word')) {
       return <File className="h-5 w-5 text-blue-700" />;
-    } else if (file.type.includes('excel')) {
-      return <File className="h-5 w-5 text-green-700" />;
     } else if (file.type.includes('powerpoint')) {
       return <File className="h-5 w-5 text-orange-500" />;
     }
@@ -36,14 +34,15 @@ export function FileList({ files, onRemoveFile, disabled = false }: FileListProp
     }
   };
 
-  const totalSize = files.reduce((total, file) => total + file.size, 0);
-  const totalSizeFormatted = getFileSize(totalSize);
-
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-medium">Selected Files ({files.length})</h4>
-        <span className="text-xs text-muted-foreground">{totalSizeFormatted}</span>
+        <h4 className="text-sm font-medium">Files to upload ({files.length})</h4>
+        <span className="text-xs text-muted-foreground">
+          {files.reduce((total, file) => total + file.size, 0) / (1024 * 1024) < 1 
+            ? `${(files.reduce((total, file) => total + file.size, 0) / 1024).toFixed(1)} KB`
+            : `${(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)} MB`}
+        </span>
       </div>
       <div className="max-h-48 overflow-y-auto space-y-2 border rounded-md p-2">
         {files.map((file, index) => (

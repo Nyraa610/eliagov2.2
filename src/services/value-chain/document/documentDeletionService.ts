@@ -7,77 +7,87 @@ import { toast } from "sonner";
  */
 export const documentDeletionService = {
   /**
-   * Delete a document by ID
-   * 
-   * @param documentId The ID of the document to delete
-   * @returns Promise<boolean> indicating success
+   * Delete a document by its URL or ID
+   * @param document URL or ID of the document to delete
+   * @returns Promise<boolean> True if the document was deleted successfully
    */
-  async deleteDocument(documentId: string): Promise<boolean> {
+  async deleteDocument(document: string): Promise<boolean> {
     try {
-      console.log("Deleting document with ID:", documentId);
+      let documentId: string | null = null;
+      let filePath: string | null = null;
       
-      // First get the document to find the storage path
-      const { data: document, error: fetchError } = await supabase
-        .from('company_documents')
-        .select('url')
-        .eq('id', documentId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching document for deletion:", fetchError);
-        return false;
+      // Check if the input is a URL or an ID
+      if (document.startsWith('http')) {
+        // It's a URL, find the document ID and filepath from the database
+        const { data, error } = await supabase
+          .from('company_documents')
+          .select('id, url')
+          .eq('url', document)
+          .single();
+          
+        if (error || !data) {
+          console.error("Error finding document:", error);
+          return false;
+        }
+        
+        documentId = data.id;
+        // Extract the filepath from the URL
+        const storageUrl = supabase.storage.fromUrl(document);
+        if (storageUrl) {
+          filePath = storageUrl.path;
+        }
+      } else {
+        // It's an ID, get the document details from the database
+        documentId = document;
+        const { data, error } = await supabase
+          .from('company_documents')
+          .select('url')
+          .eq('id', documentId)
+          .single();
+          
+        if (error || !data) {
+          console.error("Error finding document:", error);
+          return false;
+        }
+        
+        // Extract the filepath from the URL
+        const storageUrl = supabase.storage.fromUrl(data.url);
+        if (storageUrl) {
+          filePath = storageUrl.path;
+        }
       }
       
-      if (!document) {
-        console.error("Document not found");
-        return false;
-      }
-      
-      // Parse the URL to get the storage path
-      try {
-        const url = new URL(document.url);
-        const pathParts = url.pathname.split('/');
-        
-        // Path should look like /storage/v1/object/public/value_chain_documents/filename.ext
-        // Extract just the filename part
-        const bucketName = 'value_chain_documents';
-        
-        // Get the filename part (should be the last part of the path)
-        const fileName = pathParts[pathParts.length - 1];
-        
-        console.log("Deleting file from storage:", bucketName, fileName);
-        
-        // Delete the file from storage
-        const { error: storageError } = await supabase
-          .storage
-          .from(bucketName)
-          .remove([fileName]);
-        
+      // If we found a filepath, delete the file from storage
+      if (filePath) {
+        console.log(`Deleting file: ${filePath}`);
+        const { error: storageError } = await supabase.storage
+          .from('value_chain_documents')
+          .remove([filePath]);
+          
         if (storageError) {
           console.error("Error deleting file from storage:", storageError);
           // Continue anyway to delete the database record
         }
-        
-      } catch (urlError) {
-        console.error("Error parsing document URL:", urlError);
-        // Continue anyway to delete the database record
       }
       
-      // Delete the document record
-      const { error: deleteError } = await supabase
-        .from('company_documents')
-        .delete()
-        .eq('id', documentId);
-      
-      if (deleteError) {
-        console.error("Error deleting document record:", deleteError);
-        return false;
+      // Delete the database record
+      if (documentId) {
+        const { error: dbError } = await supabase
+          .from('company_documents')
+          .delete()
+          .eq('id', documentId);
+          
+        if (dbError) {
+          console.error("Error deleting document record:", dbError);
+          return false;
+        }
       }
       
       console.log("Document deleted successfully");
       return true;
     } catch (error) {
-      console.error("Error in deleteDocument:", error);
+      console.error("Error deleting document:", error);
+      toast.error("Failed to delete document");
       return false;
     }
   }

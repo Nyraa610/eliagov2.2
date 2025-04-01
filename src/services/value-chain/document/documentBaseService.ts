@@ -1,85 +1,91 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 /**
- * Base service for document-related operations
+ * Base service with shared document functionality
  */
 export const documentBaseService = {
   /**
-   * Ensure the document storage bucket exists
-   * @returns Promise<boolean> indicating if the bucket exists or was created successfully
+   * Ensure the document storage bucket exists for value chain documents
+   * @returns Promise<boolean> True if the bucket exists or was created
    */
   async ensureDocumentBucketExists(): Promise<boolean> {
     try {
-      // First check if bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      if (bucketsError) throw bucketsError;
+      // Check if the bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       
-      const bucketExists = buckets?.some(b => b.name === 'value_chain_documents');
+      if (listError) {
+        console.error(`Error listing buckets:`, listError);
+        return false;
+      }
+      
+      const bucketExists = buckets.some(bucket => bucket.name === 'value_chain_documents');
       
       if (!bucketExists) {
-        console.log("Bucket doesn't exist, attempting to create it using edge function");
+        // Attempt to create the bucket using an edge function which has admin rights
+        console.log(`Value chain documents bucket doesn't exist, creating it using edge function...`);
         
         try {
-          // Try to call the edge function to create bucket with admin privileges
           const { error: functionError } = await supabase.functions.invoke('initialize-storage', {
             body: { bucketName: 'value_chain_documents' }
           });
           
           if (functionError) {
-            console.error("Error calling edge function:", functionError);
+            console.error(`Error invoking edge function to create bucket:`, functionError);
+            toast.error(`Error initializing storage. Please contact support.`);
             return false;
           }
           
-          console.log("Storage initialized via edge function");
+          console.log(`Successfully created value_chain_documents bucket`);
           return true;
         } catch (edgeFunctionError) {
-          console.error("Error with edge function:", edgeFunctionError);
-          
-          // Fallback: try direct creation (may fail due to RLS)
-          console.warn("Falling back to direct bucket creation (may fail due to RLS)");
-          const { error: createBucketError } = await supabase.storage.createBucket('value_chain_documents', {
-            public: true
-          });
-          
-          if (createBucketError) {
-            console.error("Error creating bucket:", createBucketError);
-            return false;
-          }
+          console.error(`Error in edge function:`, edgeFunctionError);
+          return false;
         }
+      } else {
+        console.log(`Value chain documents bucket already exists`);
+        return true;
       }
-      
-      return true;
     } catch (error) {
-      console.error("Error ensuring bucket exists:", error);
+      console.error('Error ensuring document bucket exists:', error);
       return false;
     }
   },
   
   /**
-   * Get the company ID for the current user
-   * @param providedCompanyId Optional company ID to use instead of looking up
+   * Get the user's company ID, either from the provided parameter or the current user
+   * @param companyId Optional company ID to use
    * @returns Promise<string | null> The company ID or null if not found
    */
-  async getUserCompanyId(providedCompanyId?: string): Promise<string | null> {
+  async getUserCompanyId(companyId?: string): Promise<string | null> {
     try {
-      // If company ID is provided, use it directly
-      if (providedCompanyId) return providedCompanyId;
+      // If the company ID is provided, use it
+      if (companyId) {
+        return companyId;
+      }
       
+      // Otherwise, get the user's company ID from their profile
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return null;
+      if (!user.user) {
+        console.error('User not authenticated');
+        return null;
+      }
       
-      // Check if the user has a company ID in their profile
-      const { data: profile } = await supabase
+      // Get the user's profile to find their company ID
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', user.user.id)
         .single();
         
-      return profile?.company_id || null;
+      if (profileError || !profile || !profile.company_id) {
+        console.error('Error getting user company ID:', profileError || 'No company ID found');
+        return null;
+      }
+      
+      return profile.company_id;
     } catch (error) {
-      console.error("Error getting user company ID:", error);
+      console.error('Error in getUserCompanyId:', error);
       return null;
     }
   }

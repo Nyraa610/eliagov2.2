@@ -1,48 +1,52 @@
 
-import { supabase } from "@/lib/supabase";
+import { useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export function useBucketManagement() {
-  /**
-   * Ensure the storage bucket exists
-   * @param bucketName Name of the bucket to check/create
-   * @returns Promise<boolean> indicating if the bucket exists or was created
-   */
-  const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
+  const ensureBucketExists = useCallback(async (bucketName: string): Promise<boolean> => {
     try {
-      // First check if bucket exists
-      const { data, error } = await supabase.storage.listBuckets();
+      console.log(`Ensuring bucket ${bucketName} exists...`);
       
-      if (error) {
-        console.error('Error checking buckets:', error);
+      // Check if the bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error listing buckets:", listError);
         return false;
       }
       
-      // Check if our bucket exists in the list
-      if (!data.find(bucket => bucket.name === bucketName)) {
-        console.log('Bucket not found, attempting to create it');
-        
-        // Create the bucket if it doesn't exist
-        const { error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true
-        });
-        
-        if (createError) {
-          console.error('Error creating bucket:', createError);
+      const bucketExists = buckets.some(bucket => bucket.name === bucketName);
+      
+      if (!bucketExists) {
+        // Try to create the bucket using edge function with admin rights
+        try {
+          const { error: functionError } = await supabase.functions.invoke('initialize-storage', {
+            body: { bucketName }
+          });
+          
+          if (functionError) {
+            console.error(`Error creating bucket ${bucketName}:`, functionError);
+            toast.error("Storage initialization failed. Please try again later.");
+            return false;
+          }
+          
+          console.log(`Successfully created bucket: ${bucketName}`);
+          return true;
+        } catch (error) {
+          console.error(`Error in edge function:`, error);
           return false;
         }
-        
-        console.log(`Created bucket ${bucketName} successfully`);
-      } else {
-        console.log(`Bucket ${bucketName} already exists`);
       }
       
+      console.log(`Bucket ${bucketName} already exists`);
       return true;
-    } catch (err) {
-      console.error('Error ensuring bucket exists:', err);
+    } catch (error) {
+      console.error('Error ensuring bucket exists:', error);
       return false;
     }
-  };
-
+  }, []);
+  
   return {
     ensureBucketExists
   };
