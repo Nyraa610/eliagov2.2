@@ -46,7 +46,6 @@ function App() {
                 <Route path="assessment" element={<Assessment />} />
                 <Route path="assessment/value-chain" element={<ValueChainModeling />} />
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
-                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 <Route path="carbon-evaluation" element={<CarbonEvaluation />} />
                 <Route path="action-plan" element={<ActionPlan />} />
                 <Route path="training" element={<Training />} />
@@ -57,6 +56,9 @@ function App() {
                 {/* Company pages */}
                 <Route path="company/:id" element={<CompanyProfile />} />
                 <Route path="company/:id/settings" element={<CompanySettings />} />
+                
+                {/* Assessment module routes */}
+                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 
                 {/* Legacy redirects */}
                 <Route path="carbon-footprint" element={<Navigate to="/carbon-evaluation" replace />} />
