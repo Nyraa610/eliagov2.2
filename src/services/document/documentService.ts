@@ -11,9 +11,11 @@ import { Document, DocumentFolder, Deliverable } from "./types";
 export const documentService = {
   // Upload methods
   uploadDocument: documentUploadService.uploadDocument,
+  uploadPersonalDocument: documentUploadService.uploadPersonalDocument,
   
   // Retrieval methods
   getDocuments: documentRetrievalService.getDocuments,
+  getPersonalDocuments: documentRetrievalService.getPersonalDocuments,
   getFolders: documentRetrievalService.getFolders,
   getFolder: documentRetrievalService.getFolder,
   getDeliverables: documentRetrievalService.getDeliverables,

@@ -11,9 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Folder, Upload, FileText } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { documentService, DocumentFolder } from "@/services/document";
+import { useAuth } from "@/contexts/AuthContext";
+import { PersonalDocumentsList } from "./list/PersonalDocumentsList";
 
 export function DocumentsLayout() {
   const { company, loading: companyLoading } = useCompanyProfile();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("documents");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
@@ -24,10 +27,10 @@ export function DocumentsLayout() {
   
   useEffect(() => {
     // Reset loading state when company changes
-    if (company) {
+    if (company || user) {
       setLoading(false);
     }
-  }, [company]);
+  }, [company, user]);
   
   const navigateToFolder = async (folder: DocumentFolder | null) => {
     try {
@@ -70,7 +73,7 @@ export function DocumentsLayout() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading company documents...</p>
+          <p className="text-muted-foreground">Loading documents...</p>
         </div>
       </div>
     );
@@ -86,12 +89,39 @@ export function DocumentsLayout() {
       </div>
     );
   }
+
+  // If there's no company but user is logged in, show personal documents view
+  if (!company && user) {
+    return (
+      <>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Personal Documents</h1>
+          <Button 
+            onClick={() => setUploadDialogOpen(true)}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Document
+          </Button>
+        </div>
+
+        <PersonalDocumentsList userId={user.id} />
+        
+        <DocumentUploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          userId={user.id}
+          isPersonal={true}
+        />
+      </>
+    );
+  }
   
-  if (!company) {
+  if (!company && !user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <p className="text-muted-foreground">You need to be part of a company to access documents.</p>
+          <p className="text-muted-foreground">You need to be signed in to access documents.</p>
+          <Button className="mt-4" variant="outline">Sign In</Button>
         </div>
       </div>
     );

@@ -11,15 +11,19 @@ import { Upload } from "lucide-react";
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  companyId: string;
-  currentFolder: DocumentFolder | null;
+  companyId?: string;
+  currentFolder?: DocumentFolder | null;
+  userId?: string;
+  isPersonal?: boolean;
 }
 
 export function DocumentUploadDialog({
   open,
   onOpenChange,
   companyId,
-  currentFolder
+  currentFolder,
+  userId,
+  isPersonal = false
 }: DocumentUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +47,13 @@ export function DocumentUploadDialog({
     
     setLoading(true);
     try {
-      await documentService.uploadDocument(file, companyId, currentFolder?.id || null);
+      if (isPersonal && userId) {
+        await documentService.uploadPersonalDocument(file, userId);
+      } else if (companyId) {
+        await documentService.uploadDocument(file, companyId, currentFolder?.id || null);
+      } else {
+        throw new Error("Missing required information for upload");
+      }
       
       toast({
         title: "Document uploaded",
@@ -94,9 +104,14 @@ export function DocumentUploadDialog({
               </Label>
             </div>
             
-            {currentFolder && (
+            {currentFolder && !isPersonal && (
               <p className="text-sm text-muted-foreground">
                 This document will be uploaded to: {currentFolder.name}
+              </p>
+            )}
+            {isPersonal && (
+              <p className="text-sm text-muted-foreground">
+                This document will be saved to your personal documents.
               </p>
             )}
           </div>

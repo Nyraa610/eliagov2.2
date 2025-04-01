@@ -24,6 +24,22 @@ export const documentRetrievalService = {
     
     return data as Document[];
   },
+
+  async getPersonalDocuments(userId: string): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('created_by', userId)
+      .eq('is_personal', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching personal documents:', error);
+      throw new Error('Error fetching personal documents');
+    }
+    
+    return data as Document[];
+  },
   
   async getFolders(companyId: string, parentId: string | null = null): Promise<DocumentFolder[]> {
     let query = supabase
