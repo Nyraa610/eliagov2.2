@@ -25,15 +25,24 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
     
     try {
       // Ensure bucket exists
-      await documentService.ensureDocumentBucketExists();
+      const bucketExists = await documentService.ensureDocumentBucketExists();
+      if (!bucketExists) {
+        toast.error("Failed to access storage. Please try again later.");
+        return;
+      }
       
       // Upload the document
       const results = await documentService.uploadDocuments([testFile], companyId);
-      console.log("Test document uploaded successfully:", results);
-      toast.success("Test document uploaded successfully");
       
-      // Force page refresh to show the new document
-      window.location.reload();
+      if (results.length > 0) {
+        console.log("Test document uploaded successfully:", results);
+        toast.success("Test document uploaded successfully");
+        
+        // Force page refresh to show the new document
+        window.location.reload();
+      } else {
+        toast.error("Test upload failed");
+      }
     } catch (error) {
       console.error("Test upload failed:", error);
       toast.error("Test upload failed");
@@ -53,15 +62,24 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
     
     try {
       // Ensure bucket exists
-      await documentService.ensureDocumentBucketExists();
+      const bucketExists = await documentService.ensureDocumentBucketExists();
+      if (!bucketExists) {
+        toast.error("Failed to access storage. Please try again later.");
+        return;
+      }
       
       // Upload the personal document - for personal documents, we'll use the user ID as the "company" ID
       const results = await documentService.uploadDocuments([testFile], user.id);
-      console.log("Test personal document uploaded successfully:", results);
-      toast.success("Test personal document uploaded successfully");
       
-      // Force page refresh to show the new document
-      window.location.reload();
+      if (results.length > 0) {
+        console.log("Test personal document uploaded successfully:", results);
+        toast.success("Test personal document uploaded successfully");
+        
+        // Force page refresh to show the new document
+        window.location.reload();
+      } else {
+        toast.error("Test personal upload failed");
+      }
     } catch (error) {
       console.error("Test personal upload failed:", error);
       toast.error("Test personal upload failed");

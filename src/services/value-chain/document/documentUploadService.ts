@@ -31,7 +31,7 @@ export const documentUploadService = {
       // Ensure the bucket exists
       const bucketExists = await documentBaseService.ensureDocumentBucketExists();
       if (!bucketExists) {
-        console.warn("Bucket doesn't exist, but we'll try to upload anyway");
+        throw new Error("Failed to access storage. Please try again later.");
       }
       
       // Upload each file

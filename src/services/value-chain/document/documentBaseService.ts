@@ -12,19 +12,41 @@ export const documentBaseService = {
    */
   async ensureDocumentBucketExists(): Promise<boolean> {
     try {
+      // First check if bucket exists
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
       if (bucketsError) throw bucketsError;
       
       const bucketExists = buckets?.some(b => b.name === 'value_chain_documents');
+      
       if (!bucketExists) {
-        // If creating through the client fails due to RLS, we'll handle this on the server
-        const { error: createBucketError } = await supabase.storage.createBucket('value_chain_documents', {
-          public: true
-        });
+        console.log("Bucket doesn't exist, attempting to create it using edge function");
         
-        if (createBucketError) {
-          console.error("Error creating bucket:", createBucketError);
-          return false;
+        try {
+          // Try to call the edge function to create bucket with admin privileges
+          const { error: functionError } = await supabase.functions.invoke('initialize-storage', {
+            body: { bucketName: 'value_chain_documents' }
+          });
+          
+          if (functionError) {
+            console.error("Error calling edge function:", functionError);
+            return false;
+          }
+          
+          console.log("Storage initialized via edge function");
+          return true;
+        } catch (edgeFunctionError) {
+          console.error("Error with edge function:", edgeFunctionError);
+          
+          // Fallback: try direct creation (may fail due to RLS)
+          console.warn("Falling back to direct bucket creation (may fail due to RLS)");
+          const { error: createBucketError } = await supabase.storage.createBucket('value_chain_documents', {
+            public: true
+          });
+          
+          if (createBucketError) {
+            console.error("Error creating bucket:", createBucketError);
+            return false;
+          }
         }
       }
       

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, FolderOpen, HardDrive, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { InitializeStorageButton } from "@/components/documents/InitializeStorageButton";
 import { Company } from "@/services/company/types";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -27,20 +26,31 @@ export function StorageManagement({ company }: StorageManagementProps) {
     setIsInitializing(true);
     
     try {
-      // Call the edge function to initialize storage
-      const { data, error } = await supabase.functions.invoke("initialize-company-storage", {
-        body: { companyId: company.id, companyName: company.name },
-      });
+      // Initialize all buckets
+      const buckets = ['company_documents_storage', 'value_chain_documents'];
+      const results = await Promise.all(buckets.map(async (bucketName) => {
+        const { data, error } = await supabase.functions.invoke("initialize-storage", {
+          body: { bucketName }
+        });
+        
+        if (error) {
+          console.error(`Error initializing bucket ${bucketName}:`, error);
+          return { bucketName, success: false };
+        }
+        return { bucketName, success: true };
+      }));
       
-      if (error) {
-        console.error("Error initializing storage:", error);
-        toast.error("Failed to initialize storage");
-      } else {
-        console.log("Storage initialization result:", data);
+      const allSuccessful = results.every(r => r.success);
+      
+      if (allSuccessful) {
+        console.log("Storage buckets initialized successfully:", results);
         toast.success("Storage initialized successfully");
+      } else {
+        const failed = results.filter(r => !r.success).map(r => r.bucketName).join(", ");
+        toast.error(`Failed to initialize some buckets: ${failed}`);
       }
     } catch (err) {
-      console.error("Error calling initialize-company-storage function:", err);
+      console.error("Error calling initialize-storage function:", err);
       toast.error("Failed to initialize storage");
     } finally {
       setIsInitializing(false);
