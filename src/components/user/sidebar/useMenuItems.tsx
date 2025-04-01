@@ -1,7 +1,8 @@
 
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
-  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck
+  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck,
+  Users, Database, Translate, File
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -96,16 +97,34 @@ export const useMenuItems = () => {
   
   const adminItems = [
     {
-      title: "Admin Panel",
+      title: "Admin Dashboard",
       icon: <ShieldCheck className="h-5 w-5" />,
       path: "/admin",
-      disabled: userRole !== 'admin',
     },
     {
       title: "User Management",
-      icon: <User className="h-5 w-5" />,
+      icon: <Users className="h-5 w-5" />,
       path: "/admin/users",
-      disabled: userRole !== 'admin',
+    },
+    {
+      title: "Training Management",
+      icon: <BookOpen className="h-5 w-5" />,
+      path: "/admin/training",
+    },
+    {
+      title: "Content Management",
+      icon: <File className="h-5 w-5" />,
+      path: "/admin/content",
+    },
+    {
+      title: "Translations",
+      icon: <Translate className="h-5 w-5" />,
+      path: "/admin/translations",
+    },
+    {
+      title: "Emission Factors",
+      icon: <Database className="h-5 w-5" />,
+      path: "/admin/emission-factors",
     },
   ];
   

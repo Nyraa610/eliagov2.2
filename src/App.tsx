@@ -22,6 +22,12 @@ import Profile from './pages/Profile';
 import CompanyProfile from './pages/company/CompanyProfile';
 import CompanySettings from './pages/company/CompanySettings';
 import ActionPlan from './pages/assessment/ActionPlan';
+import UserManagement from './pages/admin/UserManagement';
+import AdminPanel from './pages/admin/AdminPanel';
+import ContentManagement from './pages/admin/ContentManagement';
+import TrainingAdmin from './pages/admin/Training';
+import TranslationAdmin from './pages/admin/TranslationAdmin';
+import EmissionFactors from './pages/admin/EmissionFactors';
 
 function App() {
   return (
@@ -62,7 +68,7 @@ function App() {
                 <Route path="assessment/carbon-evaluation" element={<Navigate to="/carbon-evaluation" replace />} />
               </Route>
               
-              {/* Profile and Company pages with custom layout */}
+              {/* Profile and Company pages use UserLayout directly */}
               <Route path="profile" element={<Profile />} />
               <Route path="company/:id" element={<CompanyProfile />} />
               <Route path="company/:id/settings" element={<CompanySettings />} />
@@ -73,10 +79,13 @@ function App() {
                   <UserLayout title="Admin Dashboard" />
                 </ProtectedRoute>
               }>
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="/admin/dashboard" element={<div>Admin Dashboard (Coming Soon)</div>} />
-                <Route path="/admin/users" element={<div>User Management (Coming Soon)</div>} />
-                <Route path="/admin/settings" element={<div>Admin Settings (Coming Soon)</div>} />
+                <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+                <Route path="/admin/panel" element={<AdminPanel />} />
+                <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/training" element={<TrainingAdmin />} />
+                <Route path="/admin/content" element={<ContentManagement />} />
+                <Route path="/admin/translations" element={<TranslationAdmin />} />
+                <Route path="/admin/emission-factors" element={<EmissionFactors />} />
               </Route>
               
               {/* 404 route */}

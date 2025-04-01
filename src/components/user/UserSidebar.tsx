@@ -28,6 +28,7 @@ export const UserSidebar = () => {
         "h-[calc(100vh-64px)] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col",
         collapsed ? "w-[70px]" : "w-[240px]"
       )}
+      style={{ marginTop: '64px' }} // Added to position sidebar below header
     >
       <SidebarHeader collapsed={collapsed} toggleSidebar={toggleSidebar} />
       
