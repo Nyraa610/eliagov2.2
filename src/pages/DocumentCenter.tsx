@@ -1,11 +1,16 @@
 
+import { useState } from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { TestUploadButton } from "@/components/documents/TestUploadButton";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
+import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
 
 export default function DocumentCenter() {
   const { user, companyId } = useAuth();
+  const [activeTab, setActiveTab] = useState("company");
   
   return (
     <div className="container mx-auto">
@@ -15,7 +20,35 @@ export default function DocumentCenter() {
           <TestUploadButton companyId={companyId} />
         </Card>
       )}
-      <DocumentsLayout />
+      
+      {user?.id && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Document Center</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="company">Company Documents</TabsTrigger>
+                <TabsTrigger value="personal">Personal Documents</TabsTrigger>
+                <TabsTrigger value="value-chain">Value Chain Documents</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="company" className="space-y-4">
+                <DocumentsLayout />
+              </TabsContent>
+              
+              <TabsContent value="personal" className="space-y-4">
+                {user && <PersonalDocumentsList userId={user.id} />}
+              </TabsContent>
+              
+              <TabsContent value="value-chain" className="space-y-4">
+                {companyId && <ValueChainDocumentsList companyId={companyId} />}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

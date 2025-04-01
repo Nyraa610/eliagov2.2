@@ -10,6 +10,8 @@ import { documentBaseService } from "./documentBaseService";
 export const documentService = {
   // Upload operations
   uploadDocuments: documentUploadService.uploadDocuments,
+  uploadDocument: documentUploadService.uploadDocument,
+  ensureCompanyFolder: documentUploadService.ensureCompanyFolder,
   
   // Retrieval operations
   getDocuments: documentRetrievalService.getDocuments,

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { UploadCloud, Loader2 } from "lucide-react";
 import { documentUploadService } from "@/services/document/documentUploadService";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface TestUploadButtonProps {
   companyId: string;
@@ -29,8 +30,13 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
       // Upload the document
       const result = await documentUploadService.uploadDocument(testFile, companyId);
       console.log("Test document uploaded successfully:", result);
+      toast.success("Test document uploaded successfully");
+      
+      // Force page refresh to show the new document
+      window.location.reload();
     } catch (error) {
       console.error("Test upload failed:", error);
+      toast.error("Test upload failed");
     } finally {
       setIsUploading(false);
     }
@@ -49,8 +55,13 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
       // Upload the personal document
       const result = await documentUploadService.uploadPersonalDocument(testFile, user.id);
       console.log("Test personal document uploaded successfully:", result);
+      toast.success("Test personal document uploaded successfully");
+      
+      // Force page refresh to show the new document
+      window.location.reload();
     } catch (error) {
       console.error("Test personal upload failed:", error);
+      toast.error("Test personal upload failed");
     } finally {
       setIsUploading(false);
     }
