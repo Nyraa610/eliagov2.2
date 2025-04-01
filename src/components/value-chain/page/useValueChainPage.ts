@@ -63,7 +63,8 @@ export function useValueChainPage() {
 
   const handleNavigateToEditor = () => {
     console.log("Navigating to value chain editor");
-    navigate("/assessment/value-chain/results");
+    // Fix the navigation path to match the route in App.tsx
+    navigate("/assessment/value-chain-results");
   };
 
   return {
