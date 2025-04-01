@@ -1,6 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { companyFolderService } from "./companyFolderService";
 
 /**
  * Document types that can be stored in the system
@@ -193,7 +194,16 @@ export const genericDocumentService = {
         throw new Error('Failed to create or access storage bucket');
       }
       
-      console.log('Bucket verified, starting file uploads...');
+      // Ensure company folder exists
+      if (options.isPersonal) {
+        // For personal documents, ensure the personal folder exists
+        await companyFolderService.initializeCompanyFolder(authData.user.id);
+      } else {
+        // For company documents, initialize the company folder
+        await companyFolderService.initializeCompanyFolder(companyId);
+      }
+      
+      console.log('Bucket and folders verified, starting file uploads...');
       
       // Upload all files
       const uploadedDocuments: UploadedDocument[] = [];

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { FolderStructure } from "./FolderStructure";
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Folder, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { documentService, DocumentFolder } from "@/services/document";
+import { documentService, DocumentFolder, companyFolderService } from "@/services/document";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalDocumentsList } from "./list/PersonalDocumentsList";
 
@@ -30,17 +31,29 @@ export function DocumentsLayout() {
     }
   }, [company, user]);
   
+  // Initialize storage when component loads
   useEffect(() => {
     const initializeStorage = async () => {
       try {
+        // 1. Ensure bucket exists
         await documentService.ensureStorageBucketExists();
+        
+        // 2. Initialize company folder if company is available
+        if (company?.id) {
+          await companyFolderService.initializeCompanyFolder(company.id, company.name);
+        }
+        
+        // 3. Initialize user folder if user is available
+        if (user?.id) {
+          await companyFolderService.initializeCompanyFolder(user.id, user.email);
+        }
       } catch (err) {
         console.error("Error initializing storage:", err);
       }
     };
     
     initializeStorage();
-  }, []);
+  }, [company, user]);
   
   const navigateToFolder = async (folder: DocumentFolder | null) => {
     try {
