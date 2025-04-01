@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FileText } from "lucide-react";
 import { DocumentList } from "@/components/value-chain/DocumentList";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SimpleUploadButton } from "@/components/shared/DocumentUpload";
 
 interface Document {
   url: string;
@@ -29,15 +30,38 @@ export function DocumentsSection({
     <div className="mb-6">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-500" />
-            Uploaded Documents
-          </CardTitle>
-          <CardDescription>
-            {companyId 
-              ? "Company documents that will be used to analyze and generate your value chain" 
-              : "Documents that will be used to analyze and generate your value chain"}
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Uploaded Documents
+              </CardTitle>
+              <CardDescription>
+                {companyId 
+                  ? "Company documents that will be used to analyze and generate your value chain" 
+                  : "Documents that will be used to analyze and generate your value chain"}
+              </CardDescription>
+            </div>
+            
+            {companyId && (
+              <SimpleUploadButton
+                companyId={companyId}
+                documentType="value_chain"
+                onUploadComplete={(docs) => {
+                  // Add newly uploaded documents to the list
+                  const newDocs = docs.map(doc => ({
+                    id: doc.id,
+                    name: doc.name,
+                    url: doc.url
+                  }));
+                  
+                  // This will trigger a refresh via parent component
+                }}
+                buttonText="Add Document"
+                size="sm"
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (

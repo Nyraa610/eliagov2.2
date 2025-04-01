@@ -8,7 +8,7 @@ import { CreateFolderDialog } from "./CreateFolderDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Folder, Upload, FileText } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { documentService, DocumentFolder } from "@/services/document";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalDocumentsList } from "./list/PersonalDocumentsList";
@@ -25,20 +25,17 @@ export function DocumentsLayout() {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Reset loading state when company changes
     if (company || user) {
       setLoading(false);
     }
   }, [company, user]);
   
   useEffect(() => {
-    // Ensure storage bucket exists
     const initializeStorage = async () => {
       try {
         await documentService.ensureStorageBucketExists();
       } catch (err) {
         console.error("Error initializing storage:", err);
-        // Don't set error state here as it's not critical for UI display
       }
     };
     
@@ -49,7 +46,6 @@ export function DocumentsLayout() {
     try {
       setCurrentFolder(folder);
       
-      // Build breadcrumb
       if (!folder) {
         setBreadcrumb([]);
         return;
@@ -103,7 +99,6 @@ export function DocumentsLayout() {
     );
   }
 
-  // If there's no company but user is logged in, show personal documents view
   if (!company && user) {
     return (
       <>
@@ -140,7 +135,6 @@ export function DocumentsLayout() {
     );
   }
   
-  // Company documents view
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -206,14 +200,14 @@ export function DocumentsLayout() {
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        companyId={company.id}
+        companyId={company?.id}
         currentFolder={currentFolder}
       />
       
       <CreateFolderDialog
         open={createFolderDialogOpen}
         onOpenChange={setCreateFolderDialogOpen}
-        companyId={company.id}
+        companyId={company?.id}
         parentFolder={currentFolder}
       />
     </>
