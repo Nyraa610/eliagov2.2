@@ -117,6 +117,25 @@ export const useRegistration = () => {
         
         console.log("User profile updated with company info successfully");
         
+        // Step 4: Initialize storage folders for the company
+        try {
+          console.log("Initializing storage folders for company:", company.id);
+          // Call the edge function to initialize company storage
+          const { error: storageError } = await supabase.functions.invoke('initialize-company-storage', {
+            body: { companyId: company.id, companyName: company.name }
+          });
+          
+          if (storageError) {
+            console.error("Error initializing company storage:", storageError);
+            // Non-blocking error - we'll continue even if this fails
+          } else {
+            console.log("Company storage initialized successfully");
+          }
+        } catch (storageError) {
+          console.error("Exception initializing company storage:", storageError);
+          // Non-blocking - continue even if storage init fails
+        }
+        
         toast({
           title: "Registration successful!",
           description: "Please check your email to confirm your account.",

@@ -11,34 +11,67 @@ export const storageBucketService = {
    * @returns Promise<boolean> True if the bucket exists or was created
    */
   async ensureStorageBucketExists(): Promise<boolean> {
+    return this.ensureBucketExists('company_documents_storage');
+  },
+  
+  /**
+   * Ensure the value chain document bucket exists
+   * @returns Promise<boolean> True if the bucket exists or was created
+   */
+  async ensureValueChainBucketExists(): Promise<boolean> {
+    return this.ensureBucketExists('value_chain_documents');
+  },
+  
+  /**
+   * Ensure the training materials bucket exists
+   * @returns Promise<boolean> True if the bucket exists or was created
+   */
+  async ensureTrainingMaterialsBucketExists(): Promise<boolean> {
+    return this.ensureBucketExists('training_materials');
+  },
+  
+  /**
+   * Generic method to ensure a bucket exists
+   * @param bucketName Name of the bucket to check/create
+   * @returns Promise<boolean> True if the bucket exists or was created
+   */
+  async ensureBucketExists(bucketName: string): Promise<boolean> {
     try {
       // Check if the bucket exists
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       
       if (listError) {
-        console.error('Error listing buckets:', listError);
+        console.error(`Error listing buckets:`, listError);
         throw new Error('Failed to check storage buckets');
       }
       
-      const bucketExists = buckets.some(bucket => bucket.name === 'company_documents_storage');
+      const bucketExists = buckets.some(bucket => bucket.name === bucketName);
       
       if (!bucketExists) {
-        // Create the bucket if it doesn't exist
-        const { error: createError } = await supabase.storage.createBucket('company_documents_storage', {
-          public: true
-        });
+        // Attempt to create the bucket using an edge function which has admin rights
+        console.log(`Bucket ${bucketName} doesn't exist, creating it using edge function...`);
         
-        if (createError) {
-          console.error('Error creating bucket:', createError);
-          throw new Error('Failed to create storage bucket');
+        try {
+          const { error: functionError } = await supabase.functions.invoke('initialize-storage', {
+            body: { bucketName }
+          });
+          
+          if (functionError) {
+            console.error(`Error invoking edge function to create bucket ${bucketName}:`, functionError);
+            toast.error(`Error initializing storage. Please contact support.`);
+            return false;
+          }
+          
+          console.log(`Successfully created bucket: ${bucketName}`);
+          return true;
+        } catch (edgeFunctionError) {
+          console.error(`Error in edge function:`, edgeFunctionError);
+          return false;
         }
-        
-        console.log('Created company_documents_storage bucket successfully');
       } else {
-        console.log('company_documents_storage bucket already exists');
+        console.log(`Bucket ${bucketName} already exists`);
+        return true;
       }
-      
-      return true;
     } catch (error) {
       console.error('Error ensuring bucket exists:', error);
       return false;

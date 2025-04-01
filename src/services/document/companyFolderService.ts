@@ -13,29 +13,20 @@ export const companyFolderService = {
    */
   async initializeCompanyFolder(companyId: string, companyName?: string): Promise<boolean> {
     try {
-      // First try to check if the company folder already exists
-      const { data: files, error: listError } = await supabase.storage
-        .from('company_documents_storage')
-        .list(companyId);
+      console.log(`Initializing storage for company: ${companyName || companyId}`);
       
-      // If folder exists, we're done
-      if (!listError && files?.length > 0) {
-        console.log(`Company folder for ${companyId} already exists`);
-        return true;
-      }
-      
-      // If we can't list (likely due to folder not existing), invoke the edge function
+      // First try to invoke the edge function which has admin rights
       const { data, error } = await supabase.functions.invoke('initialize-company-storage', {
         body: { companyId, companyName }
       });
       
       if (error) {
-        console.error('Error initializing company folder:', error);
+        console.error('Error initializing company folder via edge function:', error);
         // Fallback to direct creation if the function fails
         return await this.createCompanyFolderDirectly(companyId);
       }
       
-      console.log('Company folder initialized:', data);
+      console.log('Company folder initialized via edge function:', data);
       return true;
     } catch (error) {
       console.error('Error in initializeCompanyFolder:', error);
@@ -67,6 +58,14 @@ export const companyFolderService = {
       await supabase.storage
         .from('company_documents_storage')
         .upload(`personal/${companyId}/.folder`, new Blob([]), {
+          contentType: 'application/x-directory',
+          upsert: true
+        });
+        
+      // Create value chain folder
+      await supabase.storage
+        .from('value_chain_documents')
+        .upload(`value_chain/${companyId}/.folder`, new Blob([]), {
           contentType: 'application/x-directory',
           upsert: true
         });

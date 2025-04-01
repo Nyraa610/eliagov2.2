@@ -27,7 +27,7 @@ export function StorageManagement({ company }: StorageManagementProps) {
     
     try {
       // Initialize all buckets
-      const buckets = ['company_documents_storage', 'value_chain_documents'];
+      const buckets = ['company_documents_storage', 'value_chain_documents', 'training_materials'];
       const results = await Promise.all(buckets.map(async (bucketName) => {
         const { data, error } = await supabase.functions.invoke("initialize-storage", {
           body: { bucketName }
@@ -40,17 +40,29 @@ export function StorageManagement({ company }: StorageManagementProps) {
         return { bucketName, success: true };
       }));
       
-      const allSuccessful = results.every(r => r.success);
+      const bucketsSuccessful = results.every(r => r.success);
       
-      if (allSuccessful) {
-        console.log("Storage buckets initialized successfully:", results);
+      // Initialize company folders
+      const { data: folderData, error: folderError } = await supabase.functions.invoke("initialize-company-storage", {
+        body: { companyId: company.id, companyName: company.name }
+      });
+      
+      if (folderError) {
+        console.error("Error initializing company folders:", folderError);
+        toast.error("Failed to initialize company folders");
+        setIsInitializing(false);
+        return;
+      }
+      
+      if (bucketsSuccessful) {
+        console.log("Storage initialized successfully:", results);
         toast.success("Storage initialized successfully");
       } else {
         const failed = results.filter(r => !r.success).map(r => r.bucketName).join(", ");
-        toast.error(`Failed to initialize some buckets: ${failed}`);
+        toast.warning(`Partially initialized. Issues with: ${failed}`);
       }
     } catch (err) {
-      console.error("Error calling initialize-storage function:", err);
+      console.error("Error initializing storage:", err);
       toast.error("Failed to initialize storage");
     } finally {
       setIsInitializing(false);
