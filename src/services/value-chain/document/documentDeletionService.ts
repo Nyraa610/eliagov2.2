@@ -8,71 +8,76 @@ import { toast } from "sonner";
 export const documentDeletionService = {
   /**
    * Delete a document by ID
-   * @param id Document ID to delete
-   * @returns True if deletion was successful
+   * 
+   * @param documentId The ID of the document to delete
+   * @returns Promise<boolean> indicating success
    */
-  async deleteDocument(id: string): Promise<boolean> {
+  async deleteDocument(documentId: string): Promise<boolean> {
     try {
-      // First get the document details to know which storage object to remove
+      console.log("Deleting document with ID:", documentId);
+      
+      // First get the document to find the storage path
       const { data: document, error: fetchError } = await supabase
         .from('company_documents')
-        .select('*')
-        .eq('id', id)
+        .select('url')
+        .eq('id', documentId)
         .single();
-        
-      if (fetchError || !document) {
-        console.error("Error fetching document to delete:", fetchError);
-        toast.error("Could not find document to delete");
+      
+      if (fetchError) {
+        console.error("Error fetching document for deletion:", fetchError);
         return false;
       }
       
-      // Extract the file path from the URL (remove the bucket URL prefix)
-      let filePath = '';
-      if (document.url) {
-        // Extract the path after the bucket name in the URL
-        const urlParts = document.url.split('/');
-        const bucketIndex = urlParts.findIndex(part => 
-          part === 'value_chain_documents' || 
-          part === 'company_documents_storage'
-        );
-        
-        if (bucketIndex !== -1 && urlParts.length > bucketIndex + 1) {
-          filePath = urlParts.slice(bucketIndex + 1).join('/');
-        }
+      if (!document) {
+        console.error("Document not found");
+        return false;
       }
       
-      // Delete the document from the database
+      // Parse the URL to get the storage path
+      try {
+        const url = new URL(document.url);
+        const pathParts = url.pathname.split('/');
+        
+        // Path should look like /storage/v1/object/public/value_chain_documents/filename.ext
+        // Extract just the filename part
+        const bucketName = 'value_chain_documents';
+        
+        // Get the filename part (should be the last part of the path)
+        const fileName = pathParts[pathParts.length - 1];
+        
+        console.log("Deleting file from storage:", bucketName, fileName);
+        
+        // Delete the file from storage
+        const { error: storageError } = await supabase
+          .storage
+          .from(bucketName)
+          .remove([fileName]);
+        
+        if (storageError) {
+          console.error("Error deleting file from storage:", storageError);
+          // Continue anyway to delete the database record
+        }
+        
+      } catch (urlError) {
+        console.error("Error parsing document URL:", urlError);
+        // Continue anyway to delete the database record
+      }
+      
+      // Delete the document record
       const { error: deleteError } = await supabase
         .from('company_documents')
         .delete()
-        .eq('id', id);
-        
+        .eq('id', documentId);
+      
       if (deleteError) {
-        console.error("Error deleting document from database:", deleteError);
-        toast.error("Failed to delete document from database");
+        console.error("Error deleting document record:", deleteError);
         return false;
       }
       
-      // If we have a file path, try to delete from storage as well
-      if (filePath) {
-        const bucketName = document.document_type === 'value_chain' 
-          ? 'value_chain_documents' 
-          : 'company_documents_storage';
-          
-        const { error: storageError } = await supabase.storage
-          .from(bucketName)
-          .remove([filePath]);
-          
-        if (storageError) {
-          console.error("Error deleting file from storage:", storageError);
-          toast.warning("Document deleted from database, but file may remain in storage");
-        }
-      }
-      
+      console.log("Document deleted successfully");
       return true;
     } catch (error) {
-      console.error("Error deleting document:", error);
-      toast.error("Failed to delete document");
+      console.error("Error in deleteDocument:", error);
       return false;
     }
   }
