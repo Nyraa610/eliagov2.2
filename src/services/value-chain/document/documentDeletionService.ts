@@ -32,10 +32,7 @@ export const documentDeletionService = {
         
         documentId = data.id;
         // Extract the filepath from the URL
-        const storageUrl = supabase.storage.fromUrl(document);
-        if (storageUrl) {
-          filePath = storageUrl.path;
-        }
+        filePath = extractPathFromUrl(data.url);
       } else {
         // It's an ID, get the document details from the database
         documentId = document;
@@ -51,10 +48,7 @@ export const documentDeletionService = {
         }
         
         // Extract the filepath from the URL
-        const storageUrl = supabase.storage.fromUrl(data.url);
-        if (storageUrl) {
-          filePath = storageUrl.path;
-        }
+        filePath = extractPathFromUrl(data.url);
       }
       
       // If we found a filepath, delete the file from storage
@@ -92,3 +86,44 @@ export const documentDeletionService = {
     }
   }
 };
+
+/**
+ * Helper function to extract the file path from a Supabase Storage URL
+ * @param url The full Supabase storage URL
+ * @returns The file path relative to the bucket or null if path couldn't be extracted
+ */
+function extractPathFromUrl(url: string): string | null {
+  try {
+    if (!url) return null;
+    
+    // Parse the URL
+    const parsedUrl = new URL(url);
+    
+    // Extract the path from the URL
+    const pathParts = parsedUrl.pathname.split('/');
+    
+    // Remove empty parts (like the first slash)
+    const filteredParts = pathParts.filter(part => part !== '');
+    
+    // The first part should be the bucket name
+    if (filteredParts.length < 2) return null;
+    
+    // Skip the bucket name and 'object' part if they exist in the path
+    // and return the rest as the file path
+    let startIndex = 1; // Start after the bucket name
+    
+    // If the path contains 'object' as the second part, skip it
+    if (filteredParts[1] === 'object') {
+      startIndex = 2;
+    }
+    
+    // Join the remaining parts to form the filepath
+    const filePath = filteredParts.slice(startIndex).join('/');
+    
+    console.log('Extracted file path:', filePath);
+    return filePath;
+  } catch (error) {
+    console.error('Error extracting path from URL:', error);
+    return null;
+  }
+}
