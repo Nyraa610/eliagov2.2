@@ -2,7 +2,7 @@
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
   Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck,
-  Users, Database, Translate, File
+  Users, Database, Languages, File
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -118,7 +118,7 @@ export const useMenuItems = () => {
     },
     {
       title: "Translations",
-      icon: <Translate className="h-5 w-5" />,
+      icon: <Languages className="h-5 w-5" />,
       path: "/admin/translations",
     },
     {
