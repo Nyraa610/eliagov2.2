@@ -116,11 +116,19 @@ export const genericDocumentService = {
    */
   async ensureBucketExists(bucketName: string): Promise<boolean> {
     try {
+      console.log(`Checking if bucket ${bucketName} exists...`);
+      
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      if (bucketsError) throw bucketsError;
+      
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+        return false;
+      }
       
       const bucketExists = buckets?.some(b => b.name === bucketName);
       if (!bucketExists) {
+        console.log(`Bucket ${bucketName} not found, creating it...`);
+        
         // Create the bucket if it doesn't exist
         const { error: createError } = await supabase.storage.createBucket(bucketName, {
           public: true
@@ -130,6 +138,7 @@ export const genericDocumentService = {
           console.error("Error creating bucket:", createError);
           return false;
         }
+        
         console.log(`Bucket ${bucketName} created successfully`);
       } else {
         console.log(`Bucket ${bucketName} already exists`);
@@ -152,10 +161,12 @@ export const genericDocumentService = {
     rules: ValidationRules = this.defaultValidationRules
   ): Promise<UploadedDocument[]> {
     try {
-      // Validate authentication
-      const { data: user, error: authError } = await supabase.auth.getUser();
+      console.log('Starting document upload process...');
       
-      if (authError || !user.user) {
+      // Validate authentication
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
         console.error('Authentication error:', authError);
         throw new Error('User not authenticated');
       }
@@ -182,78 +193,89 @@ export const genericDocumentService = {
         throw new Error('Failed to create or access storage bucket');
       }
       
+      console.log('Bucket verified, starting file uploads...');
+      
       // Upload all files
       const uploadedDocuments: UploadedDocument[] = [];
       
       for (const file of validFiles) {
-        // Create a secure file path with sanitized filename
-        const basePath = options.isPersonal 
-          ? `personal/${user.user.id}` 
-          : companyId;
-        
-        const customPathPrefix = options.customPath 
-          ? `${options.customPath}/` 
-          : '';
+        try {
+          // Create a secure file path with sanitized filename
+          const basePath = options.isPersonal 
+            ? `personal/${authData.user.id}` 
+            : companyId;
           
-        const filePath = `${basePath}/${customPathPrefix}${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        
-        // Upload file
-        const { error: uploadError } = await supabase.storage
-          .from(bucketName)
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
+          const customPathPrefix = options.customPath 
+            ? `${options.customPath}/` 
+            : '';
+            
+          const filePath = `${basePath}/${customPathPrefix}${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          
+          console.log(`Uploading ${file.name} to path: ${filePath}`);
+          
+          // Upload file
+          const { error: uploadError } = await supabase.storage
+            .from(bucketName)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error(`Error uploading ${file.name}:`, uploadError);
+            toast.error(`Error uploading ${file.name}`);
+            continue;
+          }
+          
+          // Get file URL
+          const { data: urlData } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(filePath);
+            
+          if (!urlData) {
+            console.error(`Failed to get URL for ${file.name}`);
+            toast.error(`Failed to get URL for ${file.name}`);
+            continue;
+          }
+          
+          console.log(`File uploaded successfully, got URL: ${urlData.publicUrl}`);
+          
+          // Create document record in database
+          const { data, error: dbError } = await supabase
+            .from('company_documents')
+            .insert({
+              name: file.name,
+              url: urlData.publicUrl,
+              file_type: file.type,
+              file_size: file.size,
+              folder_id: options.folderId || null,
+              company_id: options.isPersonal ? null : companyId,
+              uploaded_by: authData.user.id,
+              document_type: options.documentType || 'standard',
+              is_personal: options.isPersonal || false
+            })
+            .select()
+            .single();
+            
+          if (dbError) {
+            console.error(`Error creating document record for ${file.name}:`, dbError);
+            toast.error(`Error saving document information for ${file.name}`);
+            continue;
+          }
+          
+          // Add to results
+          uploadedDocuments.push({
+            id: data.id,
+            name: data.name,
+            url: data.url,
+            fileType: data.file_type,
+            fileSize: data.file_size,
+            createdAt: data.created_at
           });
-          
-        if (uploadError) {
-          console.error(`Error uploading ${file.name}:`, uploadError);
-          toast.error(`Error uploading ${file.name}`);
-          continue;
+        } catch (error) {
+          console.error(`Error processing file ${file.name}:`, error);
+          toast.error(`Failed to process ${file.name}`);
         }
-        
-        // Get file URL
-        const { data: urlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filePath);
-          
-        if (!urlData) {
-          console.error(`Failed to get URL for ${file.name}`);
-          toast.error(`Failed to get URL for ${file.name}`);
-          continue;
-        }
-        
-        // Create document record in database
-        const { data, error: dbError } = await supabase
-          .from('company_documents')
-          .insert({
-            name: file.name,
-            url: urlData.publicUrl,
-            file_type: file.type,
-            file_size: file.size,
-            folder_id: options.folderId || null,
-            company_id: options.isPersonal ? null : companyId,
-            uploaded_by: user.user.id,
-            document_type: options.documentType || 'standard',
-            is_personal: options.isPersonal || false
-          })
-          .select()
-          .single();
-          
-        if (dbError) {
-          console.error(`Error creating document record for ${file.name}:`, dbError);
-          toast.error(`Error saving document information for ${file.name}`);
-          continue;
-        }
-        
-        // Add to results
-        uploadedDocuments.push({
-          id: data.id,
-          name: data.name,
-          url: data.url,
-          fileType: data.file_type,
-          fileSize: data.file_size,
-          createdAt: data.created_at
-        });
       }
       
       // Report results

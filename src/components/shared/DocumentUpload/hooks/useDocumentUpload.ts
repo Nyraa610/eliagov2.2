@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { genericDocumentService, ValidationRules, UploadedDocument } from '@/services/document/genericDocumentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 export interface UseDocumentUploadOptions {
   companyId?: string;
@@ -54,6 +55,43 @@ export function useDocumentUpload({
     setFiles([]);
   }, []);
   
+  // Ensure the storage bucket exists
+  const ensureBucketExists = useCallback(async (bucketName: string) => {
+    try {
+      // First check if bucket exists
+      const { data, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('Error checking buckets:', error);
+        return false;
+      }
+      
+      // Check if our bucket exists in the list
+      if (!data.find(bucket => bucket.name === bucketName)) {
+        console.log('Bucket not found, attempting to create it');
+        
+        // Create the bucket if it doesn't exist
+        const { error: createError } = await supabase.storage.createBucket(bucketName, {
+          public: true
+        });
+        
+        if (createError) {
+          console.error('Error creating bucket:', createError);
+          return false;
+        }
+        
+        console.log(`Created bucket ${bucketName} successfully`);
+      } else {
+        console.log(`Bucket ${bucketName} already exists`);
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error ensuring bucket exists:', err);
+      return false;
+    }
+  }, []);
+  
   // Handle the upload process
   const uploadFiles = useCallback(async () => {
     if (!user) {
@@ -79,6 +117,16 @@ export function useDocumentUpload({
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
+    
+    // Check if bucket exists (or create it)
+    const bucketName = 'company_documents_storage';
+    const bucketExists = await ensureBucketExists(bucketName);
+    
+    if (!bucketExists) {
+      setError('Failed to access storage. Please try again later.');
+      setIsUploading(false);
+      return [];
+    }
     
     // Simulate progress updates
     const progressInterval = setInterval(() => {
@@ -142,7 +190,8 @@ export function useDocumentUpload({
     customPath,
     validationRules,
     onUploadComplete,
-    clearFiles
+    clearFiles,
+    ensureBucketExists
   ]);
   
   return {
