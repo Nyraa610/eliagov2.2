@@ -18,5 +18,6 @@ export const documentService = {
   deleteDocument: documentDeletionService.deleteDocument,
   
   // Base operations
-  ensureDocumentBucketExists: documentBaseService.ensureDocumentBucketExists
+  ensureDocumentBucketExists: documentBaseService.ensureDocumentBucketExists,
+  getUserCompanyId: documentBaseService.getUserCompanyId
 };

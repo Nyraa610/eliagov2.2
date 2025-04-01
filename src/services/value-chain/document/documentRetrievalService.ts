@@ -1,49 +1,36 @@
 
 import { supabase } from "@/lib/supabase";
-import { documentBaseService } from "./documentBaseService";
 
 /**
  * Service for retrieving documents
  */
 export const documentRetrievalService = {
   /**
-   * Get all documents for the current user or specified company
-   * @param companyId Optional company ID to get documents for
-   * @returns Array of document objects with URLs and names
+   * Get documents for a specific company or user
+   * @param companyId Company or user ID to get documents for
+   * @returns Array of document objects
    */
-  async getDocuments(companyId?: string): Promise<{ url: string; name: string; id: string }[]> {
+  async getDocuments(companyId?: string) {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        return [];
+      if (!companyId) {
+        throw new Error("Company ID is required to retrieve documents");
       }
-      
-      // Get user's company if not provided
-      const userCompanyId = await documentBaseService.getUserCompanyId(companyId);
-      if (!userCompanyId) {
-        return [];
-      }
-      
-      // Get documents from the database
+
       const { data, error } = await supabase
         .from('company_documents')
         .select('*')
-        .eq('company_id', userCompanyId)
-        .eq('document_type', 'value_chain');
-        
+        .eq('company_id', companyId)
+        .eq('document_type', 'value_chain')
+        .order('created_at', { ascending: false });
+
       if (error) {
-        console.error("Error fetching documents:", error);
-        return [];
+        console.error("Error retrieving documents:", error);
+        throw error;
       }
-      
-      // Format the response
-      return data.map(doc => ({
-        url: doc.url,
-        name: doc.name,
-        id: doc.id
-      }));
+
+      return data || [];
     } catch (error) {
-      console.error("Error getting documents:", error);
+      console.error("Error in getDocuments:", error);
       return [];
     }
   }

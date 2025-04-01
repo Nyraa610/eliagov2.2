@@ -42,11 +42,13 @@ export const documentBaseService = {
    */
   async getUserCompanyId(providedCompanyId?: string): Promise<string | null> {
     try {
+      // If company ID is provided, use it directly
+      if (providedCompanyId) return providedCompanyId;
+      
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return null;
       
-      if (providedCompanyId) return providedCompanyId;
-      
+      // Check if the user has a company ID in their profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_id')

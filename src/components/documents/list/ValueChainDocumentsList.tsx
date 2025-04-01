@@ -2,124 +2,131 @@
 import { useState, useEffect } from "react";
 import { documentService } from "@/services/value-chain/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, File, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, FileIcon, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+
+interface Document {
+  id: string;
+  name: string;
+  file_type: string;
+  url: string;
+  created_at: string;
+}
 
 interface ValueChainDocumentsListProps {
   companyId: string;
 }
 
 export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListProps) {
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [error, setError] = useState<string | null>(null);
+
+  // Load documents when component mounts
   useEffect(() => {
     const loadDocuments = async () => {
+      if (!companyId) return;
+      
       setLoading(true);
       try {
-        const data = await documentService.getDocuments(companyId);
-        setDocuments(data);
-      } catch (error) {
-        console.error("Error loading value chain documents:", error);
-        toast.error("Failed to load value chain documents");
+        const docs = await documentService.getDocuments(companyId);
+        setDocuments(docs);
+      } catch (err) {
+        console.error("Error loading value chain documents:", err);
+        setError("Failed to load documents");
+        toast.error("Failed to load documents");
       } finally {
         setLoading(false);
       }
     };
-    
-    if (companyId) {
-      loadDocuments();
-    }
+
+    loadDocuments();
   }, [companyId]);
 
-  const handleDeleteDocument = async (document: any) => {
-    if (confirm("Are you sure you want to delete this document?")) {
-      try {
-        await documentService.deleteDocument(document.id);
-        setDocuments(documents.filter(d => d.id !== document.id));
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!window.confirm("Are you sure you want to delete this document?")) {
+      return;
+    }
+
+    try {
+      const success = await documentService.deleteDocument(documentId);
+      
+      if (success) {
+        setDocuments(documents.filter(doc => doc.id !== documentId));
         toast.success("Document deleted successfully");
-      } catch (error) {
-        console.error("Error deleting document:", error);
+      } else {
         toast.error("Failed to delete document");
       }
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      toast.error("Error deleting document");
     }
   };
-  
-  const getFileIcon = (fileType: string = "") => {
-    if (fileType.includes('pdf')) {
-      return <FileText className="h-6 w-6 text-red-500" />;
-    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
-      return <FileText className="h-6 w-6 text-green-500" />;
-    } else if (fileType.includes('word') || fileType.includes('document')) {
-      return <FileText className="h-6 w-6 text-blue-500" />;
-    } else {
-      return <FileText className="h-6 w-6 text-gray-500" />;
-    }
-  };
-  
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-500 mb-2">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
+
+  if (!documents.length) {
+    return (
+      <div className="text-center p-8 border rounded-md bg-muted/20">
+        <p className="text-muted-foreground">No value chain documents found</p>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Value Chain Documents</CardTitle>
+        <CardTitle>Value Chain Documents</CardTitle>
       </CardHeader>
-      
       <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-1">No value chain documents yet</h3>
-            <p className="text-muted-foreground">
-              Upload documents for value chain analysis
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {documents.map((document: any) => (
-              <div
-                key={document.id}
-                className="flex flex-col border rounded-lg p-4"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  {getFileIcon(document.file_type)}
-                  <div className="flex-1">
-                    <h4 className="font-medium">{document.name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Uploaded {document.created_at ? formatDistanceToNow(new Date(document.created_at), { addSuffix: true }) : 'recently'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mt-auto pt-2 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2"
-                    asChild
+        <div className="space-y-2">
+          {documents.map((doc) => (
+            <div 
+              key={doc.id} 
+              className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/20 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <File className="h-5 w-5 text-blue-500" />
+                <div>
+                  <a 
+                    href={doc.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="font-medium hover:underline text-blue-600"
                   >
-                    <a href={document.url} target="_blank" rel="noopener noreferrer" download>
-                      <Download className="h-4 w-4" />
-                      <span>Download</span>
-                    </a>
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => handleDeleteDocument(document)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    {doc.name}
+                  </a>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(doc.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => handleDeleteDocument(doc.id)}
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
