@@ -3,9 +3,10 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, FileIcon } from "lucide-react";
+import { Upload, X, FileIcon, AlertCircle } from "lucide-react";
 import { documentService } from "@/services/document";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -27,12 +28,14 @@ export function DocumentUploadDialog({
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       setFiles(prev => [...prev, ...newFiles]);
+      setError(null);
     }
   };
   
@@ -45,6 +48,7 @@ export function DocumentUploadDialog({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFiles = Array.from(e.dataTransfer.files);
       setFiles(prev => [...prev, ...droppedFiles]);
+      setError(null);
     }
   };
   
@@ -57,6 +61,7 @@ export function DocumentUploadDialog({
     
     setUploading(true);
     setProgress(0);
+    setError(null);
     
     try {
       // Simulate progress
@@ -101,12 +106,9 @@ export function DocumentUploadDialog({
       }, 1000);
     } catch (error) {
       console.error("Error uploading files:", error);
-      toast({
-        title: "Upload failed",
-        description: "There was a problem uploading your files",
-        variant: "destructive",
-      });
+      setError(error instanceof Error ? error.message : 'There was a problem uploading your files');
       setUploading(false);
+      setProgress(0);
     }
   };
   
@@ -119,7 +121,13 @@ export function DocumentUploadDialog({
   };
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(value) => {
+      if (!uploading) {
+        setFiles([]);
+        setError(null);
+        onOpenChange(value);
+      }
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
@@ -131,6 +139,13 @@ export function DocumentUploadDialog({
                 : "Upload documents to root folder"}
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         
         <div 
           className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
@@ -192,7 +207,15 @@ export function DocumentUploadDialog({
         )}
         
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={uploading}>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              if (!uploading) {
+                onOpenChange(false);
+              }
+            }} 
+            disabled={uploading}
+          >
             Cancel
           </Button>
           <Button 

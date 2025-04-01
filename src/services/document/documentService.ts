@@ -12,6 +12,7 @@ export const documentService = {
   // Upload methods
   uploadDocument: documentUploadService.uploadDocument,
   uploadPersonalDocument: documentUploadService.uploadPersonalDocument,
+  ensureStorageBucketExists: documentUploadService.ensureStorageBucketExists,
   
   // Retrieval methods
   getDocuments: documentRetrievalService.getDocuments,

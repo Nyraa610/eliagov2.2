@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { FolderStructure } from "./FolderStructure";
@@ -31,6 +30,20 @@ export function DocumentsLayout() {
       setLoading(false);
     }
   }, [company, user]);
+  
+  useEffect(() => {
+    // Ensure storage bucket exists
+    const initializeStorage = async () => {
+      try {
+        await documentService.ensureStorageBucketExists();
+      } catch (err) {
+        console.error("Error initializing storage:", err);
+        // Don't set error state here as it's not critical for UI display
+      }
+    };
+    
+    initializeStorage();
+  }, []);
   
   const navigateToFolder = async (folder: DocumentFolder | null) => {
     try {
