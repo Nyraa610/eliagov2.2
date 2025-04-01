@@ -35,37 +35,73 @@ serve(async (req) => {
       }
     );
 
-    // Create a placeholder file to initialize the company folder
-    const bucketName = "company_documents_storage";
-    const placeholderPath = `${companyId}/.folder`;
-    
-    // Upload a placeholder file to create the directory structure
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from(bucketName)
-      .upload(placeholderPath, new Uint8Array(0), {
-        contentType: "application/x-directory",
-        upsert: true,
-      });
+    console.log(`Initializing storage for company: ${companyName || companyId}`);
 
-    if (uploadError) {
-      console.error("Error creating company folder:", uploadError);
-      throw new Error(`Failed to create company folder: ${uploadError.message}`);
+    // Initialize all needed buckets
+    const bucketNames = ['company_documents_storage', 'value_chain_documents', 'training_materials'];
+    
+    for (const bucketName of bucketNames) {
+      // Check if bucket exists
+      const { data: buckets, error: bucketsError } = await supabaseAdmin.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error(`Error checking if bucket ${bucketName} exists:`, bucketsError);
+        continue;
+      }
+      
+      const bucketExists = buckets.some(b => b.name === bucketName);
+      
+      // Create bucket if it doesn't exist
+      if (!bucketExists) {
+        console.log(`Creating bucket: ${bucketName}`);
+        const { error: createBucketError } = await supabaseAdmin.storage.createBucket(bucketName, {
+          public: true
+        });
+        
+        if (createBucketError) {
+          console.error(`Error creating bucket ${bucketName}:`, createBucketError);
+        } else {
+          console.log(`Successfully created bucket: ${bucketName}`);
+        }
+      }
     }
 
-    // Also create personal folder if needed
-    const personalFolderPath = `personal/${companyId}/.folder`;
+    // Create all needed folders
+    const folderPaths = [
+      // Company documents
+      `${companyId}/.folder`,
+      `personal/${companyId}/.folder`,
+      // Value chain documents
+      `value_chain/${companyId}/.folder`,
+    ];
     
-    await supabaseAdmin.storage
-      .from(bucketName)
-      .upload(personalFolderPath, new Uint8Array(0), {
-        contentType: "application/x-directory",
-        upsert: true,
-      });
+    for (const path of folderPaths) {
+      // Determine which bucket to use based on path
+      const bucketName = path.startsWith('value_chain/') 
+        ? 'value_chain_documents' 
+        : 'company_documents_storage';
+      
+      console.log(`Creating path: ${path} in bucket: ${bucketName}`);
+      
+      // Upload a placeholder file to create the directory structure
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from(bucketName)
+        .upload(path, new Uint8Array(0), {
+          contentType: "application/x-directory",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error(`Error creating path ${path}:`, uploadError);
+      } else {
+        console.log(`Successfully created path: ${path}`);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Company folder for '${companyName || companyId}' created successfully` 
+        message: `Company storage for '${companyName || companyId}' initialized successfully` 
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" }, 

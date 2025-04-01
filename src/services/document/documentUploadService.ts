@@ -1,6 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { Document } from "./types";
+import { toast } from "sonner";
 
 export const documentUploadService = {
   async ensureStorageBucketExists() {
@@ -38,6 +39,33 @@ export const documentUploadService = {
     }
   },
 
+  async ensureCompanyFolder(companyId: string) {
+    try {
+      // Create a placeholder file to establish folder structure
+      const folderPath = `${companyId}/.folder`;
+      
+      await this.ensureStorageBucketExists();
+      
+      const { error } = await supabase.storage
+        .from('company_documents_storage')
+        .upload(folderPath, new Uint8Array(0), {
+          contentType: 'application/x-directory',
+          upsert: true
+        });
+        
+      if (error) {
+        console.error('Error creating company folder:', error);
+        return false;
+      }
+      
+      console.log(`Company folder for ID ${companyId} initialized`);
+      return true;
+    } catch (error) {
+      console.error('Error initializing company folder:', error);
+      return false;
+    }
+  },
+
   async uploadDocument(file: File, companyId: string, folderId: string | null = null): Promise<Document> {
     try {
       // Ensure the user is authenticated
@@ -49,10 +77,7 @@ export const documentUploadService = {
       }
 
       // Ensure the storage bucket exists
-      const bucketExists = await this.ensureStorageBucketExists();
-      if (!bucketExists) {
-        console.warn('Warning: Storage bucket may not exist, but attempting upload anyway');
-      }
+      await this.ensureCompanyFolder(companyId);
 
       // Create a secure file path with sanitized filename
       const filePath = `${companyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
@@ -80,19 +105,20 @@ export const documentUploadService = {
         throw new Error('Failed to get file URL');
       }
       
+      console.log(`File uploaded successfully, URL: ${urlData.publicUrl}`);
+      
       // Create document record in database with the authenticated user ID
       const { data, error } = await supabase
         .from('company_documents')
         .insert({
           name: file.name,
-          file_path: urlData.publicUrl,
+          url: urlData.publicUrl,
           file_type: file.type,
           file_size: file.size,
           folder_id: folderId,
           company_id: companyId,
           uploaded_by: authData.user.id,
           document_type: 'standard',
-          is_personal: false
         })
         .select()
         .single();
@@ -102,9 +128,11 @@ export const documentUploadService = {
         throw new Error(`Error creating document record: ${error.message}`);
       }
       
+      toast.success(`Document ${file.name} uploaded successfully`);
       return data as Document;
     } catch (error) {
       console.error('Upload document error:', error);
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   },
@@ -126,10 +154,7 @@ export const documentUploadService = {
       }
 
       // Ensure the storage bucket exists
-      const bucketExists = await this.ensureStorageBucketExists();
-      if (!bucketExists) {
-        console.warn('Warning: Storage bucket may not exist, but attempting upload anyway');
-      }
+      await this.ensureStorageBucketExists();
 
       // Create a secure file path with sanitized filename
       const filePath = `personal/${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
@@ -157,12 +182,14 @@ export const documentUploadService = {
         throw new Error('Failed to get file URL');
       }
       
+      console.log(`Personal file uploaded successfully, URL: ${urlData.publicUrl}`);
+      
       // Create document record in database with the authenticated user ID
       const { data, error } = await supabase
         .from('company_documents')
         .insert({
           name: file.name,
-          file_path: urlData.publicUrl,
+          url: urlData.publicUrl,
           file_type: file.type,
           file_size: file.size,
           uploaded_by: userId,
@@ -177,9 +204,11 @@ export const documentUploadService = {
         throw new Error(`Error creating personal document record: ${error.message}`);
       }
       
+      toast.success(`Document ${file.name} uploaded successfully`);
       return data as Document;
     } catch (error) {
       console.error('Upload personal document error:', error);
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }

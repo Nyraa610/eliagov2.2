@@ -1,12 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, FolderOpen, HardDrive } from "lucide-react";
+import { Database, FolderOpen, HardDrive, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { InitializeStorageButton } from "@/components/documents/InitializeStorageButton";
 import { Company } from "@/services/company/types";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface StorageManagementProps {
   company: Company;
@@ -14,6 +16,36 @@ interface StorageManagementProps {
 
 export function StorageManagement({ company }: StorageManagementProps) {
   const navigate = useNavigate();
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  const handleInitializeStorage = async () => {
+    if (!company?.id) {
+      toast.error("Company ID is required to initialize storage");
+      return;
+    }
+    
+    setIsInitializing(true);
+    
+    try {
+      // Call the edge function to initialize storage
+      const { data, error } = await supabase.functions.invoke("initialize-company-storage", {
+        body: { companyId: company.id, companyName: company.name },
+      });
+      
+      if (error) {
+        console.error("Error initializing storage:", error);
+        toast.error("Failed to initialize storage");
+      } else {
+        console.log("Storage initialization result:", data);
+        toast.success("Storage initialized successfully");
+      }
+    } catch (err) {
+      console.error("Error calling initialize-company-storage function:", err);
+      toast.error("Failed to initialize storage");
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   return (
     <Card>
@@ -35,10 +67,19 @@ export function StorageManagement({ company }: StorageManagementProps) {
 
           <div className="flex items-center gap-4">
             <Database className="h-6 w-6 text-primary" />
-            <InitializeStorageButton 
+            <Button 
               variant="outline"
-              className="w-auto"
-            />
+              onClick={handleInitializeStorage}
+              disabled={isInitializing}
+              className="flex items-center gap-2"
+            >
+              {isInitializing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Database className="h-4 w-4" />
+              )}
+              Initialize Storage Buckets
+            </Button>
           </div>
         </div>
 

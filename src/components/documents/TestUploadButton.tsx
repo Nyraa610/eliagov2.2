@@ -1,0 +1,90 @@
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { UploadCloud, Loader2 } from "lucide-react";
+import { documentUploadService } from "@/services/document/documentUploadService";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface TestUploadButtonProps {
+  companyId: string;
+}
+
+export function TestUploadButton({ companyId }: TestUploadButtonProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuth();
+  
+  const handleUpload = async () => {
+    if (!companyId) return;
+    
+    // Create a sample text file
+    const testContent = `This is a test document created at ${new Date().toISOString()}`;
+    const testFile = new File([testContent], "test-document.txt", { type: "text/plain" });
+    
+    setIsUploading(true);
+    
+    try {
+      // Initialize storage
+      await documentUploadService.ensureCompanyFolder(companyId);
+      
+      // Upload the document
+      const result = await documentUploadService.uploadDocument(testFile, companyId);
+      console.log("Test document uploaded successfully:", result);
+    } catch (error) {
+      console.error("Test upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handlePersonalUpload = async () => {
+    if (!user?.id) return;
+    
+    // Create a sample text file
+    const testContent = `This is a test personal document created at ${new Date().toISOString()}`;
+    const testFile = new File([testContent], "test-personal-document.txt", { type: "text/plain" });
+    
+    setIsUploading(true);
+    
+    try {
+      // Upload the personal document
+      const result = await documentUploadService.uploadPersonalDocument(testFile, user.id);
+      console.log("Test personal document uploaded successfully:", result);
+    } catch (error) {
+      console.error("Test personal upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  return (
+    <div className="flex gap-2">
+      <Button 
+        variant="outline" 
+        onClick={handleUpload}
+        disabled={isUploading}
+        className="flex items-center gap-2"
+      >
+        {isUploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <UploadCloud className="h-4 w-4" />
+        )}
+        Test Company Upload
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        onClick={handlePersonalUpload}
+        disabled={isUploading}
+        className="flex items-center gap-2"
+      >
+        {isUploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <UploadCloud className="h-4 w-4" />
+        )}
+        Test Personal Upload
+      </Button>
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Upload } from "lucide-react";
 
 interface EmissionFactorsHeaderProps {
   count: number;
@@ -11,6 +11,7 @@ interface EmissionFactorsHeaderProps {
   handleSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRefresh: () => void;
   emissionFactors: any[];
+  onUpload?: () => void;
 }
 
 export const EmissionFactorsHeader: React.FC<EmissionFactorsHeaderProps> = ({
@@ -20,6 +21,7 @@ export const EmissionFactorsHeader: React.FC<EmissionFactorsHeaderProps> = ({
   handleSearch,
   handleRefresh,
   emissionFactors,
+  onUpload
 }) => {
   return (
     <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center mb-4">
@@ -41,6 +43,11 @@ export const EmissionFactorsHeader: React.FC<EmissionFactorsHeaderProps> = ({
             className="w-full pl-9"
           />
         </div>
+        {onUpload && (
+          <Button variant="outline" onClick={onUpload} className="gap-1">
+            <Upload className="h-4 w-4" /> Upload
+          </Button>
+        )}
         <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
         </Button>
