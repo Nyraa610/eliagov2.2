@@ -4,6 +4,7 @@ import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { RegistryInformation } from "@/components/company/profile/RegistryInformation";
 import { Company } from "@/services/company/types";
 import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGeneralSettings";
+import { StorageManagement } from "@/components/company/settings/StorageManagement";
 
 interface SettingsTabProps {
   company: Company;
@@ -15,17 +16,9 @@ export function SettingsTab({ company, onCompanyUpdate }: SettingsTabProps) {
     <div className="space-y-6">
       <RegistryInformation company={company} onUpdate={() => window.location.reload()} />
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Company Profile</CardTitle>
-          <CardDescription>
-            Update your company's basic information and details
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CompanyProfileForm company={company} onSuccess={onCompanyUpdate} />
-        </CardContent>
-      </Card>
+      <CompanyGeneralSettings company={company} onCompanyUpdate={onCompanyUpdate} />
+      
+      <StorageManagement company={company} />
     </div>
   );
 }

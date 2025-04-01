@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabaseService } from "@/services/base/supabaseService";
 import { UserProfile } from "@/services/base/profileTypes";
-import { UserLayout } from "@/components/user/UserLayout";
 import { ProfileLoading } from "@/components/profile/ProfileLoading";
 import { ProfileContent } from "@/components/profile/ProfileContent";
 import { useTranslation } from "react-i18next";
@@ -50,20 +49,17 @@ export default function Profile() {
   };
 
   if (isLoading) {
-    return (
-      <UserLayout title="Profile Settings">
-        <ProfileLoading />
-      </UserLayout>
-    );
+    return <ProfileLoading />;
   }
 
   return (
-    <UserLayout title="Profile Settings">
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
       <ProfileContent 
         profile={profile} 
         isAdmin={isAdmin}
         onCompanyCreated={fetchProfile}
       />
-    </UserLayout>
+    </div>
   );
 }
