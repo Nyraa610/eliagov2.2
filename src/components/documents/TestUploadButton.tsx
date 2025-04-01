@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, Loader2 } from "lucide-react";
-import { documentUploadService } from "@/services/document/documentUploadService";
+import { documentService } from "@/services/value-chain/document";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -24,12 +24,12 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
     setIsUploading(true);
     
     try {
-      // Initialize storage
-      await documentUploadService.ensureCompanyFolder(companyId);
+      // Ensure bucket exists
+      await documentService.ensureDocumentBucketExists();
       
       // Upload the document
-      const result = await documentUploadService.uploadDocument(testFile, companyId);
-      console.log("Test document uploaded successfully:", result);
+      const results = await documentService.uploadDocuments([testFile], companyId);
+      console.log("Test document uploaded successfully:", results);
       toast.success("Test document uploaded successfully");
       
       // Force page refresh to show the new document
@@ -52,9 +52,12 @@ export function TestUploadButton({ companyId }: TestUploadButtonProps) {
     setIsUploading(true);
     
     try {
-      // Upload the personal document
-      const result = await documentUploadService.uploadPersonalDocument(testFile, user.id);
-      console.log("Test personal document uploaded successfully:", result);
+      // Ensure bucket exists
+      await documentService.ensureDocumentBucketExists();
+      
+      // Upload the personal document - for personal documents, we'll use the user ID as the "company" ID
+      const results = await documentService.uploadDocuments([testFile], user.id);
+      console.log("Test personal document uploaded successfully:", results);
       toast.success("Test personal document uploaded successfully");
       
       // Force page refresh to show the new document
