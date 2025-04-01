@@ -40,8 +40,11 @@ export const documentUploadService = {
 
   async uploadDocument(file: File, companyId: string, folderId: string | null = null): Promise<Document> {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
+      // Ensure the user is authenticated
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
+        console.error('Authentication error:', authError);
         throw new Error('User not authenticated');
       }
 
@@ -51,6 +54,7 @@ export const documentUploadService = {
         console.warn('Warning: Storage bucket may not exist, but attempting upload anyway');
       }
 
+      // Create a secure file path with sanitized filename
       const filePath = `${companyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       console.log(`Uploading file to path: ${filePath}`);
       
@@ -76,7 +80,7 @@ export const documentUploadService = {
         throw new Error('Failed to get file URL');
       }
       
-      // Create document record in database
+      // Create document record in database with the authenticated user ID
       const { data, error } = await supabase
         .from('company_documents')
         .insert({
@@ -86,7 +90,7 @@ export const documentUploadService = {
           file_size: file.size,
           folder_id: folderId,
           company_id: companyId,
-          uploaded_by: user.user.id,
+          uploaded_by: authData.user.id,
           document_type: 'standard',
           is_personal: false
         })
@@ -107,9 +111,18 @@ export const documentUploadService = {
 
   async uploadPersonalDocument(file: File, userId: string): Promise<Document> {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
+      // Ensure the user is authenticated
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
+        console.error('Authentication error:', authError);
         throw new Error('User not authenticated');
+      }
+
+      // Verify the authenticated user matches the requested userId
+      if (authData.user.id !== userId) {
+        console.error('User ID mismatch');
+        throw new Error('Not authorized to upload for this user');
       }
 
       // Ensure the storage bucket exists
@@ -118,6 +131,7 @@ export const documentUploadService = {
         console.warn('Warning: Storage bucket may not exist, but attempting upload anyway');
       }
 
+      // Create a secure file path with sanitized filename
       const filePath = `personal/${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       console.log(`Uploading personal file to path: ${filePath}`);
       
@@ -143,7 +157,7 @@ export const documentUploadService = {
         throw new Error('Failed to get file URL');
       }
       
-      // Create document record in database
+      // Create document record in database with the authenticated user ID
       const { data, error } = await supabase
         .from('company_documents')
         .insert({

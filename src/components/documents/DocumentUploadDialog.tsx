@@ -7,6 +7,7 @@ import { Upload, X, FileIcon, AlertCircle } from "lucide-react";
 import { documentService } from "@/services/document";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext"; // Make sure this import exists
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function DocumentUploadDialog({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth(); // Get authenticated user
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -59,14 +61,16 @@ export function DocumentUploadDialog({
   const handleUpload = async () => {
     if (files.length === 0) return;
     
+    if (!user) {
+      setError("You must be signed in to upload documents");
+      return;
+    }
+    
     setUploading(true);
     setProgress(0);
     setError(null);
     
     try {
-      // Ensure storage bucket exists before upload
-      await documentService.ensureStorageBucketExists();
-      
       // Simulate progress
       let progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -79,6 +83,11 @@ export function DocumentUploadDialog({
       }, 100);
       
       if (isPersonal && userId) {
+        // Verify the authenticated user matches the requested userId
+        if (user.id !== userId) {
+          throw new Error("Not authorized to upload for this user");
+        }
+        
         // Upload personal document
         for (let file of files) {
           await documentService.uploadPersonalDocument(file, userId);
@@ -123,6 +132,9 @@ export function DocumentUploadDialog({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
   
+  // Check if user is authenticated
+  const isAuthenticated = !!user;
+  
   return (
     <Dialog open={open} onOpenChange={(value) => {
       if (!uploading) {
@@ -142,6 +154,13 @@ export function DocumentUploadDialog({
                 : "Upload documents to root folder"}
           </DialogDescription>
         </DialogHeader>
+        
+        {!isAuthenticated && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>You must be signed in to upload documents</AlertDescription>
+          </Alert>
+        )}
         
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -166,7 +185,7 @@ export function DocumentUploadDialog({
             className="hidden" 
             onChange={handleFileChange} 
           />
-          <Button variant="outline" type="button" disabled={uploading}>
+          <Button variant="outline" type="button" disabled={uploading || !isAuthenticated}>
             Select Files
           </Button>
         </div>
@@ -223,7 +242,7 @@ export function DocumentUploadDialog({
           </Button>
           <Button 
             onClick={handleUpload} 
-            disabled={files.length === 0 || uploading}
+            disabled={files.length === 0 || uploading || !isAuthenticated}
             className="gap-1"
           >
             <Upload className="h-4 w-4" />
