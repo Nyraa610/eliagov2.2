@@ -127,6 +127,7 @@ export function DocumentsLayout() {
     );
   }
   
+  // Company documents view
   return (
     <>
       <div className="flex justify-between items-center mb-6">

@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
+import { documentService, Document } from "@/services/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, FileText, Download } from "lucide-react";
+import { FileText, Download, FileIcon, Trash2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/components/ui/use-toast";
-import { Document } from "@/services/document";
-import { documentService } from "@/services/document";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface PersonalDocumentsListProps {
   userId: string;
@@ -15,32 +14,26 @@ interface PersonalDocumentsListProps {
 export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
-    const fetchDocuments = async () => {
+    const loadDocuments = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        // Use the special "personal" mode of getDocuments
-        const docs = await documentService.getPersonalDocuments(userId);
-        setDocuments(docs);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching personal documents:", err);
-        setError("Failed to load your documents");
+        const data = await documentService.getPersonalDocuments(userId);
+        setDocuments(data);
+      } catch (error) {
+        console.error("Error loading personal documents:", error);
         toast({
           title: "Error",
-          description: "Failed to load your documents",
+          description: "Failed to load personal documents",
           variant: "destructive",
         });
       } finally {
         setLoading(false);
       }
     };
-
-    if (userId) {
-      fetchDocuments();
-    }
+    
+    loadDocuments();
   }, [userId]);
 
   const handleDeleteDocument = async (document: Document) => {
@@ -62,81 +55,72 @@ export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
       }
     }
   };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={() => setError(null)}>Try Again</Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  
+  const getFileIcon = (fileType: string) => {
+    if (fileType.includes('pdf')) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
+      return <FileText className="h-6 w-6 text-green-500" />;
+    } else if (fileType.includes('word') || fileType.includes('document')) {
+      return <FileText className="h-6 w-6 text-blue-500" />;
+    } else {
+      return <FileText className="h-6 w-6 text-gray-500" />;
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Documents</CardTitle>
+        <CardTitle className="text-lg">Personal Documents</CardTitle>
       </CardHeader>
+      
       <CardContent>
-        {documents.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <FileText className="mx-auto h-12 w-12 mb-4 opacity-30" />
-            <p>You haven't uploaded any documents yet.</p>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-medium mb-1">No personal documents yet</h3>
+            <p className="text-muted-foreground">
+              Upload documents to keep them organized
+            </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {documents.map((doc) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {documents.map(document => (
               <div
-                key={doc.id}
-                className="flex items-center justify-between p-3 rounded-md bg-card hover:bg-accent/50 border"
+                key={document.id}
+                className="flex flex-col border rounded-lg p-4"
               >
-                <div className="flex items-center">
-                  <FileText className="h-5 w-5 mr-3 text-blue-500" />
-                  <div>
-                    <p className="font-medium">{doc.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString()}
+                <div className="flex items-start gap-3 mb-3">
+                  {getFileIcon(document.file_type)}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{document.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Uploaded {formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:text-primary"
-                    onClick={() => window.open(doc.file_path, "_blank")}
+                
+                <div className="mt-auto pt-2 flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    asChild
                   >
-                    <Download className="h-4 w-4" />
+                    <a href={document.file_path} target="_blank" rel="noopener noreferrer" download>
+                      <Download className="h-4 w-4" />
+                      <span>Download</span>
+                    </a>
                   </Button>
-                  <Button
-                    variant="ghost"
+                  <Button 
+                    variant="destructive" 
                     size="sm"
-                    className="hover:text-destructive"
-                    onClick={() => handleDeleteDocument(doc)}
+                    className="gap-1"
+                    onClick={() => handleDeleteDocument(document)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

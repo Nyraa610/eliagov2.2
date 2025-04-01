@@ -36,10 +36,12 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
     loadDeliverables();
   }, [companyId]);
   
-  const getFileIcon = (documentType: string) => {
-    if (documentType === 'carbon_report') {
+  const getFileIcon = (fileType: string) => {
+    if (fileType === 'application/pdf' || fileType.includes('pdf')) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
       return <FileText className="h-6 w-6 text-green-500" />;
-    } else if (documentType === 'value_chain') {
+    } else if (fileType.includes('word') || fileType.includes('document')) {
       return <FileText className="h-6 w-6 text-blue-500" />;
     } else {
       return <FileText className="h-6 w-6 text-gray-500" />;
@@ -73,7 +75,7 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
                 className="flex flex-col border rounded-lg p-4"
               >
                 <div className="flex items-start gap-3 mb-3">
-                  {getFileIcon(deliverable.document_type)}
+                  {getFileIcon(deliverable.file_type)}
                   <div className="flex-1">
                     <h4 className="font-medium">{deliverable.name}</h4>
                     <p className="text-sm text-muted-foreground">

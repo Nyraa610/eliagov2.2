@@ -32,7 +32,7 @@ export const documentUploadService = {
     
     // Create document record in database
     const { data, error } = await supabase
-      .from('documents')
+      .from('company_documents')
       .insert({
         name: file.name,
         file_path: urlData.publicUrl,
@@ -40,7 +40,8 @@ export const documentUploadService = {
         file_size: file.size,
         folder_id: folderId,
         company_id: companyId,
-        created_by: user.user.id
+        uploaded_by: user.user.id,
+        document_type: 'standard'
       })
       .select()
       .single();
@@ -82,14 +83,14 @@ export const documentUploadService = {
     
     // Create document record in database
     const { data, error } = await supabase
-      .from('documents')
+      .from('company_documents')
       .insert({
         name: file.name,
         file_path: urlData.publicUrl,
         file_type: file.type,
         file_size: file.size,
-        created_by: userId,
-        is_personal: true
+        uploaded_by: userId,
+        document_type: 'personal'
       })
       .select()
       .single();

@@ -5,9 +5,10 @@ import { Document, DocumentFolder, Deliverable } from "./types";
 export const documentRetrievalService = {
   async getDocuments(companyId: string, folderId: string | null = null): Promise<Document[]> {
     let query = supabase
-      .from('documents')
+      .from('company_documents')
       .select('*')
-      .eq('company_id', companyId);
+      .eq('company_id', companyId)
+      .eq('document_type', 'standard');
       
     if (folderId) {
       query = query.eq('folder_id', folderId);
@@ -27,10 +28,10 @@ export const documentRetrievalService = {
 
   async getPersonalDocuments(userId: string): Promise<Document[]> {
     const { data, error } = await supabase
-      .from('documents')
+      .from('company_documents')
       .select('*')
-      .eq('created_by', userId)
-      .eq('is_personal', true)
+      .eq('uploaded_by', userId)
+      .eq('document_type', 'personal')
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -80,9 +81,10 @@ export const documentRetrievalService = {
   
   async getDeliverables(companyId: string): Promise<Deliverable[]> {
     const { data, error } = await supabase
-      .from('document_deliverables')
+      .from('company_documents')
       .select('*')
       .eq('company_id', companyId)
+      .eq('document_type', 'deliverable')
       .order('created_at', { ascending: false });
       
     if (error) {

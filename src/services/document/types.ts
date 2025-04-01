@@ -1,6 +1,4 @@
 
-import { Database } from "@/integrations/supabase/types";
-
 export type Document = {
   id: string;
   name: string;
@@ -31,4 +29,6 @@ export type Deliverable = {
   created_at: string;
   company_id: string;
   category: string;
+  description?: string;
+  document_type?: string;
 };
