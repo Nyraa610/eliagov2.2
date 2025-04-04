@@ -9,14 +9,17 @@ import { useToast } from "@/hooks/use-toast";
 import { supabaseService } from "@/services/base/supabaseService";
 import { useTranslation } from "react-i18next";
 import { UserProfile } from "@/services/base/profileTypes";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 
 interface PersonalInfoFormProps {
   profile: UserProfile | null;
+  onProfileUpdated?: () => void;
 }
 
-export function PersonalInfoForm({ profile }: PersonalInfoFormProps) {
+export function PersonalInfoForm({ profile, onProfileUpdated }: PersonalInfoFormProps) {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [bio, setBio] = useState(profile?.bio || "");
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || null);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -30,14 +33,16 @@ export function PersonalInfoForm({ profile }: PersonalInfoFormProps) {
       });
       
       toast({
-        title: "Profile updated",
         description: "Your profile has been successfully updated",
       });
+      
+      if (onProfileUpdated) {
+        onProfileUpdated();
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
         variant: "destructive",
-        title: "Error",
         description: "Could not update profile",
       });
     } finally {
@@ -45,8 +50,20 @@ export function PersonalInfoForm({ profile }: PersonalInfoFormProps) {
     }
   };
 
+  const handleAvatarUpdated = (newAvatarUrl: string | null) => {
+    setAvatarUrl(newAvatarUrl);
+    if (onProfileUpdated) {
+      onProfileUpdated();
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <AvatarUpload 
+        profile={{ ...profile, avatar_url: avatarUrl } as UserProfile} 
+        onAvatarUpdated={handleAvatarUpdated} 
+      />
+
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">{t("profile.email")}</Label>

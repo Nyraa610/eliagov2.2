@@ -41,7 +41,6 @@ export default function Profile() {
       console.error("Error fetching profile:", error);
       toast({
         variant: "destructive",
-        title: "Error",
         description: "Could not load profile information",
       });
     } finally {
@@ -64,6 +63,7 @@ export default function Profile() {
         profile={profile} 
         isAdmin={isAdmin}
         onCompanyCreated={fetchProfile}
+        onProfileUpdated={fetchProfile}
       />
     </UserLayout>
   );

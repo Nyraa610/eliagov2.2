@@ -9,9 +9,10 @@ interface PersonalInfoCardProps {
   profile: UserProfile | null;
   isAdmin: boolean;
   variants: any;
+  onProfileUpdated: () => void;
 }
 
-export function PersonalInfoCard({ profile, isAdmin, variants }: PersonalInfoCardProps) {
+export function PersonalInfoCard({ profile, isAdmin, variants, onProfileUpdated }: PersonalInfoCardProps) {
   return (
     <motion.div variants={variants}>
       <Card>
@@ -19,7 +20,10 @@ export function PersonalInfoCard({ profile, isAdmin, variants }: PersonalInfoCar
           <ProfileHeader isAdmin={isAdmin} />
         </CardHeader>
         <CardContent className="space-y-6">
-          <PersonalInfoForm profile={profile} />
+          <PersonalInfoForm 
+            profile={profile}
+            onProfileUpdated={onProfileUpdated}
+          />
         </CardContent>
       </Card>
     </motion.div>

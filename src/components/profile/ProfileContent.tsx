@@ -11,9 +11,15 @@ interface ProfileContentProps {
   profile: UserProfile | null;
   isAdmin: boolean;
   onCompanyCreated: () => void;
+  onProfileUpdated: () => void;
 }
 
-export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileContentProps) {
+export function ProfileContent({ 
+  profile, 
+  isAdmin, 
+  onCompanyCreated,
+  onProfileUpdated
+}: ProfileContentProps) {
   const { container, item } = useProfileAnimations();
 
   return (
@@ -26,7 +32,8 @@ export function ProfileContent({ profile, isAdmin, onCompanyCreated }: ProfileCo
       <PersonalInfoCard 
         profile={profile} 
         isAdmin={isAdmin} 
-        variants={item} 
+        variants={item}
+        onProfileUpdated={onProfileUpdated} 
       />
 
       {isAdmin && (

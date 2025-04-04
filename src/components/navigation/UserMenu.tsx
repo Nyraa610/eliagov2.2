@@ -35,7 +35,7 @@ export const UserMenu = ({ userProfile, onLogout }: UserMenuProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border border-primary/10">
             <AvatarImage 
               src={userProfile?.avatar_url || ""} 
               alt={userProfile?.full_name || "User profile"} 
