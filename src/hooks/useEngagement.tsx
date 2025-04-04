@@ -1,10 +1,10 @@
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { engagementService, UserActivity } from '@/services/engagement';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useEngagement = () => {
   const { toast } = useToast();
@@ -12,20 +12,8 @@ export const useEngagement = () => {
   const { t } = useTranslation();
   const [teamActivities, setTeamActivities] = useState<any[]>([]);
   const [isTrackingTeam, setIsTrackingTeam] = useState<boolean>(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Get the current user ID on mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUserId(data.user.id);
-        console.log("useEngagement: User ID set to", data.user.id);
-      }
-    };
-    
-    getCurrentUser();
-  }, []);
+  const { user, companyId } = useAuth(); // Use cached auth data
+  const trackingSet = useRef(new Set<string>()); // Track already-recorded activities
 
   // Skip tracking for admin routes to avoid permission issues
   const shouldSkipTracking = location.pathname.includes('/admin');
@@ -36,22 +24,27 @@ export const useEngagement = () => {
       return true;
     }
 
+    if (!user) {
+      console.log("User not authenticated, skipping activity tracking");
+      return false;
+    }
+    
     try {
-      // Check if user is authenticated first
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        console.log("User not authenticated, skipping activity tracking");
-        return false;
-      }
+      // Create a tracking key to prevent duplicate activities
+      const activityKey = `${activity.activity_type}-${JSON.stringify(activity.metadata || {})}-${new Date().getTime()}`;
       
-      const currentUserId = session.session.user.id;
+      // Skip if we've already tracked this exact activity in this session
+      if (trackingSet.current.has(activityKey)) {
+        console.log("Skipping duplicate activity", activity.activity_type);
+        return true;
+      }
       
       // Add timestamp and user info to metadata
       const enhancedMetadata = {
         ...activity.metadata,
         timestamp: new Date().toISOString(),
         path: location.pathname,
-        tracked_user_id: currentUserId
+        tracked_user_id: user.id
       };
       
       const enhancedActivity = {
@@ -63,14 +56,19 @@ export const useEngagement = () => {
       
       const success = await engagementService.trackActivity(enhancedActivity);
       
-      // Always show the toast notification for points earned if showReward is true
-      if (success && showReward && activity.points_earned > 0) {
-        toast({
-          title: t("engagement.pointsEarned", "Points Earned!"),
-          description: `+${activity.points_earned} ${t("engagement.points", "points")} - ${formatActivityType(activity.activity_type)}`,
-          duration: 3000,
-          variant: "success"
-        });
+      // Record that we tracked this activity
+      if (success) {
+        trackingSet.current.add(activityKey);
+        
+        // Show toast notification for points earned if requested
+        if (showReward && activity.points_earned > 0) {
+          toast({
+            title: t("engagement.pointsEarned", "Points Earned!"),
+            description: `+${activity.points_earned} ${t("engagement.points", "points")} - ${formatActivityType(activity.activity_type)}`,
+            duration: 3000,
+            variant: "success"
+          });
+        }
       }
       
       return success;
@@ -78,7 +76,7 @@ export const useEngagement = () => {
       console.error("Error in trackActivity:", error);
       return false;
     }
-  }, [toast, shouldSkipTracking, t, location.pathname]);
+  }, [toast, shouldSkipTracking, t, location.pathname, user]);
 
   // Helper to format activity types for display
   const formatActivityType = (type: string): string => {
@@ -89,22 +87,10 @@ export const useEngagement = () => {
 
   // Start tracking team activities with realtime updates
   const startTeamTracking = useCallback(async () => {
-    if (isTrackingTeam) return () => {};
+    if (isTrackingTeam || !companyId) return () => {};
     
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return () => {};
-      
-      // Get user's company ID
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', userData.user.id)
-        .single();
-      
-      if (!profileData || !profileData.company_id) return () => {};
-      
-      console.log("Starting team activity tracking for company:", profileData.company_id);
+      console.log("Starting team activity tracking for company:", companyId);
       
       // Subscribe to team activity changes
       const channel = supabase
@@ -113,10 +99,10 @@ export const useEngagement = () => {
           event: 'INSERT',
           schema: 'public',
           table: 'user_activities',
-          filter: `company_id=eq.${profileData.company_id}` 
+          filter: `company_id=eq.${companyId}` 
         }, (payload) => {
           // Only add activities from other team members
-          if (payload.new && payload.new.user_id !== userData.user.id) {
+          if (payload.new && payload.new.user_id !== user?.id) {
             setTeamActivities((prev) => [payload.new, ...prev]);
           }
         })
@@ -132,25 +118,13 @@ export const useEngagement = () => {
       console.warn("Error tracking team activities:", error);
       return () => {};
     }
-  }, [isTrackingTeam]);
+  }, [isTrackingTeam, companyId, user]);
   
   // Get team activities history
   const getTeamActivities = useCallback(async (limit = 20) => {
+    if (!companyId) return [];
+    
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return [];
-      
-      // Get user's company ID
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', userData.user.id)
-        .single();
-      
-      if (!profileData || !profileData.company_id) return [];
-      
-      console.log("Getting team activities for company:", profileData.company_id);
-      
       const { data } = await supabase
         .from('user_activities')
         .select(`
@@ -162,7 +136,7 @@ export const useEngagement = () => {
           created_at,
           profiles:user_id (full_name, avatar_url)
         `)
-        .eq('company_id', profileData.company_id)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
         .limit(limit);
         
@@ -171,13 +145,13 @@ export const useEngagement = () => {
       console.warn("Error getting team activities:", error);
       return [];
     }
-  }, []);
+  }, [companyId]);
   
   return {
     trackActivity,
     teamActivities,
     startTeamTracking,
     getTeamActivities,
-    userId
+    userId: user?.id
   };
 };

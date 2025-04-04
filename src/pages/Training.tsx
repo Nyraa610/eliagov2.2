@@ -1,15 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { trainingService } from "@/services/trainingService";
-import { engagementService } from "@/services/engagement";
 import { Course, UserEnrollment, Certificate } from "@/types/training";
 import CertificatesSection from "@/components/training/CertificatesSection";
 import AvailableCoursesSection from "@/components/training/AvailableCoursesSection";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useEngagement } from "@/hooks/useEngagement";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -19,27 +18,19 @@ export default function Training() {
   const [trackingSuccess, setTrackingSuccess] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { trackActivity } = useEngagement();
+  const { isAuthenticated, user } = useAuth(); // Use the cached auth context
 
   useEffect(() => {
-    // Track explicit training page visit on component mount with immediate user check
+    // Track explicit training page visit only once on component mount
     const trackPageVisit = async () => {
       try {
-        // First check if user is authenticated
-        const { data: session, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Auth error in Training page:", sessionError);
-          setTrackingSuccess(false);
-          return;
-        }
-        
-        if (!session.session) {
+        if (!isAuthenticated || !user) {
           console.log("No active session, skipping training visit tracking");
           setTrackingSuccess(false);
           return;
         }
         
-        console.log("Tracking Training page visit - authenticated user", session.session.user.id);
+        console.log("Tracking Training page visit - authenticated user", user.id);
         
         // Record explicit visit with higher point value
         const success = await trackActivity({
@@ -48,49 +39,16 @@ export default function Training() {
           metadata: {
             path: '/training',
             timestamp: new Date().toISOString(),
-            explicit: true,
-            user_id: session.session.user.id
+            explicit: true
           }
         });
         
         setTrackingSuccess(success);
         
         if (success) {
-          console.log("Successfully tracked training page visit with explicit trigger");
-          toast({
-            title: "Engagement",
-            description: "+5 points for visiting Training",
-            variant: "default"
-          });
+          console.log("Successfully tracked training page visit");
         } else {
           console.warn("Failed to track training page visit");
-          
-          // Direct database insertion as a fallback
-          const { error: directError } = await supabase
-            .from('user_activities')
-            .insert({
-              user_id: session.session.user.id,
-              activity_type: 'view_training',
-              points_earned: 5,
-              metadata: {
-                path: '/training',
-                timestamp: new Date().toISOString(),
-                explicit: true,
-                fallback: true
-              }
-            });
-            
-          if (directError) {
-            console.error("Direct insertion also failed:", directError);
-          } else {
-            console.log("Direct insertion of activity succeeded");
-            setTrackingSuccess(true);
-            toast({
-              title: "Engagement",
-              description: "+5 points for visiting Training (fallback method)",
-              variant: "default"
-            });
-          }
         }
       } catch (error) {
         console.error("Error tracking training visit:", error);
@@ -98,34 +56,42 @@ export default function Training() {
       }
     };
     
-    // Execute tracking immediately
-    trackPageVisit();
+    // Execute tracking once on mount
+    if (isAuthenticated) {
+      trackPageVisit();
+    }
+  }, [isAuthenticated, trackActivity, user]);
+
+  // Use a callback for data fetching to avoid definition in effect
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated) return;
     
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [coursesData, enrollmentsData, certificatesData] = await Promise.all([
-          trainingService.getCourses(),
-          trainingService.getUserEnrollments(),
-          trainingService.getCertificates()
-        ]);
+    setIsLoading(true);
+    try {
+      const [coursesData, enrollmentsData, certificatesData] = await Promise.all([
+        trainingService.getCourses(),
+        trainingService.getUserEnrollments(),
+        trainingService.getCertificates()
+      ]);
 
-        setCourses(coursesData);
-        setEnrollments(enrollmentsData);
-        setCertificates(certificatesData);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error fetching data",
-          description: error.message,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setCourses(coursesData);
+      setEnrollments(enrollmentsData);
+      setCertificates(certificatesData);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error fetching data",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, toast]);
 
+  // Fetch data only once per session
+  useEffect(() => {
     fetchData();
-  }, [toast, trackActivity]);
+  }, [fetchData]);
 
   const enrollInCourse = async (courseId: string) => {
     try {
@@ -139,14 +105,14 @@ export default function Training() {
       // Track enrollment activity
       trackActivity({
         activity_type: 'enroll_course',
-        points_earned: 10,
+        points_earned: 3, // Award 3 points for starting a course
         metadata: {
           course_id: courseId,
           timestamp: new Date().toISOString()
         }
       });
       
-      // Refresh enrollments
+      // Refresh enrollments, but don't refetch everything
       const updatedEnrollments = await trainingService.getUserEnrollments();
       setEnrollments(updatedEnrollments);
     } catch (error: any) {
@@ -158,6 +124,7 @@ export default function Training() {
     }
   };
 
+  // Animation configuration
   const container = {
     hidden: { opacity: 0 },
     show: {
