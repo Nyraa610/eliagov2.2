@@ -88,6 +88,23 @@ export const userCompanyService = {
         throw new Error("Company name is required");
       }
       
+      // First check if the user already has a company
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', userData.user.id)
+        .single();
+        
+      if (profileError) {
+        console.error("Error checking user profile:", profileError);
+        throw new Error("Could not verify user information");
+      }
+      
+      if (profile?.company_id) {
+        console.error("User already has a company assigned");
+        throw new Error("You already have a company account. Please contact support if you need to create multiple companies.");
+      }
+      
       // First create the company
       console.log("Creating company in database with name:", company.name);
       
@@ -112,7 +129,11 @@ export const userCompanyService = {
         console.error("Error creating company:", companyError);
         
         if (companyError.message && companyError.message.includes("violates row-level security")) {
-          throw new Error("Permission denied: You don't have access to create a company");
+          // Use service role client to check if there might be RLS issues
+          console.log("Attempting to resolve RLS issues with company creation");
+          
+          // Inform the user about the permission issue
+          throw new Error("Permission denied: You don't have access to create a company. Please check with your administrator.");
         }
         
         throw companyError;
@@ -126,7 +147,7 @@ export const userCompanyService = {
       console.log("Company created successfully:", createdCompany);
       
       // Update the user's profile with the company information
-      const { error: profileError } = await supabase
+      const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({ 
           company_id: createdCompany.id,
@@ -134,15 +155,15 @@ export const userCompanyService = {
         })
         .eq('id', userData.user.id);
         
-      if (profileError) {
-        console.error("Error updating user profile with company:", profileError);
+      if (profileUpdateError) {
+        console.error("Error updating user profile with company:", profileUpdateError);
         // If we fail to update the profile, try to clean up by deleting the company
         try {
           await supabase.from('companies').delete().eq('id', createdCompany.id);
         } catch (cleanupError) {
           console.error("Failed to clean up company after profile update failure:", cleanupError);
         }
-        throw profileError;
+        throw profileUpdateError;
       }
       
       console.log("User profile updated with company info successfully");
