@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -34,10 +33,9 @@ import { User, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabaseClient } from "@/services/base/supabaseClient";
 
-// Update the schema to use the valid roles that match the database enum
 const addUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  role: z.enum(["user", "admin", "client_admin"] as const), // Updated to remove 'consultant' temporarily
+  role: z.enum(["user", "admin", "client_admin", "consultant"] as const),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters long")
@@ -73,20 +71,15 @@ export function AddUserDialog({
     try {
       setIsSubmitting(true);
 
-      // If password is not provided, generate a random one
       const password = values.password || Math.random().toString(36).slice(-8);
 
-      // Instead of using auth.signUp which requires captcha,
-      // directly insert into profiles table and send invitation email
       const { data: profileData, error: profileError } = await supabaseClient
         .from("profiles")
         .insert([
           { 
             email: values.email,
             role: values.role,
-            // Generate a random UUID since we can't create one in auth.users
             id: crypto.randomUUID(),
-            // Add additional required fields if any
           }
         ])
         .select();
@@ -100,9 +93,6 @@ export function AddUserDialog({
         title: "Success",
         description: `User profile for ${values.email} created. An invitation will be sent to this email address.`,
       });
-
-      // You would typically send an invitation email here via an edge function
-      // This would contain a link for the user to set their password
 
       form.reset();
       onOpenChange(false);
@@ -191,7 +181,7 @@ export function AddUserDialog({
                       <SelectItem value="user">User</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="client_admin">Client Admin</SelectItem>
-                      {/* Temporarily removed consultant option until the enum is updated in the database */}
+                      <SelectItem value="consultant">Consultant</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
