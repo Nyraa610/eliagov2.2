@@ -55,8 +55,15 @@ export function AvatarUpload({ profile, onAvatarUpdated }: AvatarUploadProps) {
 
     setIsUploading(true);
     try {
+      // Log upload attempt for debugging
+      console.log("Starting avatar upload...");
+      
       const avatarUrl = await storageService.uploadImage(file);
+      console.log("Upload successful, avatar URL:", avatarUrl);
+      
       await supabaseService.updateUserProfile({ avatar_url: avatarUrl });
+      console.log("Profile updated with new avatar URL");
+      
       onAvatarUpdated(avatarUrl);
       toast({
         description: t("profile.avatarUpdated"),
@@ -65,7 +72,7 @@ export function AvatarUpload({ profile, onAvatarUpdated }: AvatarUploadProps) {
       console.error("Error uploading avatar:", error);
       toast({
         variant: "destructive",
-        description: t("profile.avatarUploadFailed"),
+        description: "Failed to upload avatar. Please try again.",
       });
     } finally {
       setIsUploading(false);
