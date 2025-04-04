@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -71,14 +72,11 @@ export function AddUserDialog({
     try {
       setIsSubmitting(true);
 
-      // Create a random UUID for the new user
-      const userId = crypto.randomUUID();
-
-      // Create the user profile
+      // Create the user and profile
       const result = await supabaseService.createUserProfile({
         email: values.email,
         role: values.role,
-        id: userId,
+        password: values.password || undefined,
       });
 
       if (result.error) {
@@ -88,7 +86,7 @@ export function AddUserDialog({
 
       toast({
         title: "Success",
-        description: `User profile for ${values.email} created. An invitation will be sent to this email address.`,
+        description: `User account for ${values.email} created successfully.`,
       });
 
       form.reset();
@@ -152,7 +150,7 @@ export function AddUserDialog({
                     />
                   </FormControl>
                   <FormDescription>
-                    Leave blank to auto-generate a password
+                    Leave blank to auto-generate a secure password
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
