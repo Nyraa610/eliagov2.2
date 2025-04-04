@@ -8,9 +8,7 @@ import { DocumentsTab } from "@/components/consultant/DocumentsTab";
 import { AssessmentsTab } from "@/components/consultant/AssessmentsTab";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { supabaseService } from "@/services/base/supabaseService";
-import { UserRole } from "@/services/base/profileTypes";
-import { UserLayout } from "@/components/user/UserLayout";
+import { roleService } from "@/services/base/roleService";
 
 export default function ConsultantDashboard() {
   const { toast } = useToast();
@@ -22,7 +20,7 @@ export default function ConsultantDashboard() {
     const checkConsultantRole = async () => {
       try {
         setIsLoading(true);
-        const hasConsultantRole = await supabaseService.hasRole('consultant' as UserRole);
+        const hasConsultantRole = await roleService.hasRole('consultant');
         
         if (!hasConsultantRole) {
           toast({
@@ -50,16 +48,15 @@ export default function ConsultantDashboard() {
 
   if (isLoading) {
     return (
-      <UserLayout title="Consultant Dashboard">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </UserLayout>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <UserLayout title="Consultant Dashboard">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Consultant Dashboard</h1>
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Consultant Management Portal</CardTitle>
@@ -94,6 +91,6 @@ export default function ConsultantDashboard() {
           </Tabs>
         </CardContent>
       </Card>
-    </UserLayout>
+    </>
   );
 }

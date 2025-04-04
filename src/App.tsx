@@ -72,6 +72,10 @@ function App() {
                 <Route path="deliverables" element={<Deliverables />} />
                 <Route path="engagement" element={<Engagement />} />
                 
+                {/* Consultant routes */}
+                <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
+                <Route path="/consultant/notifications" element={<ConsultantNotifications />} />
+                
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
@@ -81,16 +85,6 @@ function App() {
                 <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
                 <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
-              </Route>
-              
-              {/* Consultant routes - these use their own UserLayout */}
-              <Route element={
-                <ProtectedRoute requiredRole="consultant">
-                  <UserLayout />
-                </ProtectedRoute>
-              }>
-                <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
-                <Route path="/consultant/notifications" element={<ConsultantNotifications />} />
               </Route>
               
               {/* Profile and Company pages use UserLayout directly */}

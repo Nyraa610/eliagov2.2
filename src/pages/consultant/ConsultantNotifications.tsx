@@ -1,18 +1,17 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { NotificationsTab } from "@/components/consultant/NotificationsTab";
 import { useNavigate } from "react-router-dom";
 import { roleService } from "@/services/base/roleService";
 import { useToast } from "@/components/ui/use-toast";
-import { UserLayout } from "@/components/user/UserLayout";
 
 export default function ConsultantNotifications() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkConsultantRole = async () => {
       try {
         setIsLoading(true);
@@ -44,21 +43,20 @@ export default function ConsultantNotifications() {
 
   if (isLoading) {
     return (
-      <UserLayout title="Consultant Notifications">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </UserLayout>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <UserLayout title="Consultant Notifications">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Consultant Notifications</h1>
       <Card>
         <CardContent className="p-6">
           <NotificationsTab />
         </CardContent>
       </Card>
-    </UserLayout>
+    </>
   );
 }
