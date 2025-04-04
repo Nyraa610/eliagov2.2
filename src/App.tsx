@@ -34,6 +34,7 @@ import CarbonEvaluationResults from './pages/assessment/CarbonEvaluationResults'
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
 import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
 import ConsultantNotifications from './pages/consultant/ConsultantNotifications';
+import Companies from './pages/company/Companies';
 
 function App() {
   return (
@@ -76,21 +77,21 @@ function App() {
                 <Route path="consultant/dashboard" element={<ConsultantDashboard />} />
                 <Route path="consultant/notifications" element={<ConsultantNotifications />} />
                 
+                {/* Companies routes */}
+                <Route path="companies" element={<Companies />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="company/:id" element={<CompanyProfile />} />
+                <Route path="company/:id/settings" element={<CompanySettings />} />
+                
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
                 <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
-                <Route path="companies" element={<Navigate to="/profile" replace />} />
                 <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
                 <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
               </Route>
-              
-              {/* Profile and Company pages use UserLayout directly */}
-              <Route path="profile" element={<Profile />} />
-              <Route path="company/:id" element={<CompanyProfile />} />
-              <Route path="company/:id/settings" element={<CompanySettings />} />
               
               {/* Admin routes */}
               <Route element={
