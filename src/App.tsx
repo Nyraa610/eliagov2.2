@@ -84,7 +84,11 @@ function App() {
               </Route>
               
               {/* Consultant routes - these use their own UserLayout */}
-              <Route element={<ProtectedRoute requiredRole="consultant" />}>
+              <Route element={
+                <ProtectedRoute requiredRole="consultant">
+                  <UserLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
                 <Route path="/consultant/notifications" element={<ConsultantNotifications />} />
               </Route>
