@@ -32,6 +32,7 @@ import { UserRole } from "@/services/base/profileTypes";
 import { User, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabaseClient } from "@/services/base/supabaseClient";
+import { supabaseService } from "@/services/base/supabaseService";
 
 const addUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -73,20 +74,15 @@ export function AddUserDialog({
 
       const password = values.password || Math.random().toString(36).slice(-8);
 
-      const { data: profileData, error: profileError } = await supabaseClient
-        .from("profiles")
-        .insert([
-          { 
-            email: values.email,
-            role: values.role,
-            id: crypto.randomUUID(),
-          }
-        ])
-        .select();
+      const result = await supabaseService.createUserProfile({
+        email: values.email,
+        role: values.role,
+        id: crypto.randomUUID(),
+      });
 
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        throw new Error("Failed to create user profile: " + profileError.message);
+      if (result.error) {
+        console.error("Error creating profile:", result.error);
+        throw new Error("Failed to create user profile: " + result.error.message);
       }
 
       toast({

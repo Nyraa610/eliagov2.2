@@ -24,5 +24,43 @@ export const supabaseService = {
   updateUserRole: profileService.updateUserRole,
   
   // Role methods
-  hasRole: roleService.hasRole
+  hasRole: roleService.hasRole,
+  
+  // Admin methods
+  createUserProfile: async (profileData: { 
+    email: string, 
+    role: string, 
+    id: string 
+  }) => {
+    try {
+      // First check if the current user has admin permission
+      const hasAdminRole = await roleService.hasRole('admin');
+      if (!hasAdminRole) {
+        return { 
+          data: null, 
+          error: { message: "Permission denied. Only admins can create user profiles." } 
+        };
+      }
+      
+      // Insert the profile using direct SQL to bypass RLS
+      const { data, error } = await supabaseClient.rpc('admin_create_profile', {
+        p_id: profileData.id,
+        p_email: profileData.email,
+        p_role: profileData.role
+      });
+      
+      if (error) {
+        console.error("Error in admin_create_profile RPC:", error);
+        return { data: null, error };
+      }
+      
+      return { data, error: null };
+    } catch (error: any) {
+      console.error("Exception in createUserProfile:", error);
+      return { 
+        data: null, 
+        error: { message: error.message || "Failed to create user profile" } 
+      };
+    }
+  }
 };
