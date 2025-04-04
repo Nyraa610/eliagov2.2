@@ -7,6 +7,8 @@ interface CompanyInfoDisplayProps {
 }
 
 export function CompanyInfoDisplay({ companyInfo }: CompanyInfoDisplayProps) {
+  if (!companyInfo) return null;
+  
   return (
     <div className="space-y-6">
       <div className="bg-muted p-4 rounded-lg">

@@ -6,6 +6,7 @@ import { CompanyInfoDisplay } from './CompanyInfoDisplay';
 import { CompanyLoadingState } from './CompanyLoadingState';
 import { CompanyErrorState } from './CompanyErrorState';
 import { engagementService } from '@/services/engagement';
+import { EditableCompanyInfoDisplay } from './EditableCompanyInfoDisplay';
 
 interface CompanyOverviewProps {
   onContinue: () => void;
@@ -13,15 +14,17 @@ interface CompanyOverviewProps {
 
 export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
   const { 
-    companyData, 
-    isLoading, 
-    error, 
-    companyId, 
-    fetchCompanyInfo,
-    isEditable,
-    editedCompanyData
+    companyInfo, 
+    userCompany, 
+    analyzingProgress,
+    isLoadingCompanyInfo, 
+    analysisError,
+    handleRetryAnalysis,
+    analyzeCompany,
+    setCompanyInfo
   } = useCompanyAnalysis();
   const [companyIdentifier, setCompanyIdentifier] = useState('');
+  const [isEditable, setIsEditable] = useState(false);
 
   const handleContinue = () => {
     // Track starting assessment with engagement service (award 5 points)
@@ -39,30 +42,46 @@ export function CompanyOverview({ onContinue }: CompanyOverviewProps) {
     onContinue();
   };
 
-  if (isLoading) {
-    return <CompanyLoadingState />;
+  const handleSaveCompanyInfo = (updatedInfo) => {
+    setCompanyInfo(updatedInfo);
+  };
+
+  if (isLoadingCompanyInfo) {
+    return <CompanyLoadingState 
+      userCompany={userCompany} 
+      analyzingProgress={analyzingProgress} 
+    />;
   }
 
-  if (error && !companyData) {
+  if (analysisError && !companyInfo) {
     return (
       <CompanyErrorState 
-        error={error} 
-        companyIdentifier={companyIdentifier}
-        setCompanyIdentifier={setCompanyIdentifier}
-        onSearch={fetchCompanyInfo}
+        error={analysisError} 
+        onRetry={handleRetryAnalysis}
       />
     );
   }
 
   return (
     <div className="space-y-6">
-      <CompanyInfoDisplay 
-        companyData={editedCompanyData || companyData} 
-        companyId={companyId}
-        isEditable={isEditable}
-      />
+      {isEditable && companyInfo ? (
+        <EditableCompanyInfoDisplay 
+          companyInfo={companyInfo}
+          onSave={handleSaveCompanyInfo}
+        />
+      ) : (
+        <CompanyInfoDisplay companyInfo={companyInfo} />
+      )}
       
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <Button 
+          variant="outline" 
+          onClick={() => setIsEditable(!isEditable)} 
+          disabled={!companyInfo}
+        >
+          {isEditable ? 'Cancel Editing' : 'Edit Company Info'}
+        </Button>
+        
         <Button onClick={handleContinue}>
           Continue to Assessment
         </Button>
