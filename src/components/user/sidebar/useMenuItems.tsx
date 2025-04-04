@@ -2,7 +2,7 @@
 import { 
   BarChart3, BookOpen, Building, Globe, Home, Layers, 
   Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck,
-  Users, Database, Languages, File
+  Users, Database, Languages, File, Download, CheckSquare
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -53,9 +53,19 @@ export const useMenuItems = () => {
           path: "/assessment/value-chain",
         },
         {
+          title: "Value Chain Results",
+          icon: <CheckSquare className="h-5 w-5" />,
+          path: "/assessment/value-chain-results",
+        },
+        {
           title: "Materiality Analysis",
           icon: <Layers className="h-5 w-5" />,
           path: "/assessment/materiality-analysis",
+        },
+        {
+          title: "ESG Results",
+          icon: <CheckSquare className="h-5 w-5" />,
+          path: "/assessment/results",
         },
       ],
     },
@@ -63,11 +73,35 @@ export const useMenuItems = () => {
       title: "Carbon Evaluation",
       icon: <Globe className="h-5 w-5" />,
       path: "/carbon-evaluation",
+      submenu: [
+        {
+          title: "Evaluation Form",
+          icon: <BarChart3 className="h-5 w-5" />,
+          path: "/carbon-evaluation",
+        },
+        {
+          title: "Results",
+          icon: <CheckSquare className="h-5 w-5" />,
+          path: "/carbon-evaluation/results",
+        },
+      ],
     },
     {
       title: "Action Plan",
       icon: <Target className="h-5 w-5" />,
       path: "/action-plan",
+      submenu: [
+        {
+          title: "Plan Creation",
+          icon: <Target className="h-5 w-5" />,
+          path: "/action-plan",
+        },
+        {
+          title: "Results",
+          icon: <CheckSquare className="h-5 w-5" />,
+          path: "/action-plan/results",
+        },
+      ],
     },
     {
       title: "Engagement & Rewards",
@@ -78,6 +112,11 @@ export const useMenuItems = () => {
       title: "Document Center",
       icon: <FileText className="h-5 w-5" />,
       path: "/documents",
+    },
+    {
+      title: "Deliverables",
+      icon: <Download className="h-5 w-5" />,
+      path: "/deliverables",
     },
   ];
   

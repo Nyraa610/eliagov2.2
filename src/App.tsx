@@ -28,6 +28,10 @@ import ContentManagement from './pages/admin/ContentManagement';
 import TrainingAdmin from './pages/admin/Training';
 import TranslationAdmin from './pages/admin/TranslationAdmin';
 import EmissionFactors from './pages/admin/EmissionFactors';
+import Deliverables from './pages/Deliverables';
+import ESGDiagnosticResults from './pages/assessment/ESGDiagnosticResults';
+import CarbonEvaluationResults from './pages/assessment/CarbonEvaluationResults';
+import ActionPlanResults from './pages/assessment/ActionPlanResults';
 
 function App() {
   return (
@@ -52,13 +56,17 @@ function App() {
                 <Route path="assessment/value-chain" element={<ValueChainModeling />} />
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
                 <Route path="carbon-evaluation" element={<CarbonEvaluation />} />
+                <Route path="carbon-evaluation/results" element={<CarbonEvaluationResults />} />
                 <Route path="action-plan" element={<ActionPlan />} />
+                <Route path="action-plan/results" element={<ActionPlanResults />} />
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
+                <Route path="deliverables" element={<Deliverables />} />
                 <Route path="engagement" element={<Engagement />} />
                 
                 {/* Assessment module routes */}
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                <Route path="assessment/results" element={<ESGDiagnosticResults />} />
                 
                 {/* Legacy redirects */}
                 <Route path="carbon-footprint" element={<Navigate to="/carbon-evaluation" replace />} />
