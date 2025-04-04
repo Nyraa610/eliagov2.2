@@ -113,5 +113,28 @@ export const assessmentService = {
       toast.error("An error occurred while saving progress");
       return false;
     }
+  },
+
+  /**
+   * Get assessment results for a specific assessment type
+   * For now, this returns the form_data from the assessment progress
+   * In a real implementation, this would fetch actual processed results
+   */
+  getAssessmentResults: async (assessmentType: AssessmentType): Promise<any | null> => {
+    try {
+      const progress = await assessmentService.getAssessmentProgress(assessmentType);
+      
+      if (!progress) {
+        console.log("No assessment progress found");
+        return null;
+      }
+      
+      // For now, we'll just return the form_data field as our results
+      // In a real implementation, this would likely involve more processing
+      return progress.form_data;
+    } catch (error) {
+      console.error(`Error fetching ${assessmentType} results:`, error);
+      return null;
+    }
   }
 };
