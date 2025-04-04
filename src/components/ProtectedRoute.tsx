@@ -1,5 +1,4 @@
-
-import { Navigate, useLocation, Outlet } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { UserRole } from "@/services/base/profileTypes";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +7,7 @@ import { supabaseService } from "@/services/base/supabaseService";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ProtectedRouteProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
   requiredRole?: UserRole;
 }
 
@@ -87,5 +86,5 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   console.log("ProtectedRoute: User authenticated and authorized, rendering children");
-  return children ? <>{children}</> : <Outlet />;
+  return <>{children}</>;
 };

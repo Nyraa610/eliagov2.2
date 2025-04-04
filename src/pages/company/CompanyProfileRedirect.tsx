@@ -4,7 +4,7 @@ import { CompanyProfileRedirect } from "@/components/company/CompanyProfileRedir
 
 export default function CompanyRedirect() {
   return (
-    <UserLayout title="Company Profile">
+    <UserLayout>
       <CompanyProfileRedirect />
     </UserLayout>
   );

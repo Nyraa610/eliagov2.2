@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster"
@@ -23,12 +22,6 @@ import Notifications from './pages/consultant/Notifications';
 import Features from './pages/Features';
 import Deliverables from './pages/Deliverables';
 import CompanyProfileRedirect from './pages/company/CompanyProfileRedirect';
-
-// Define lazy-loaded components
-const LazyCompanyProfileRedirect = React.lazy(() => import('./pages/company/CompanyProfileRedirect'));
-const LazyNewCompany = React.lazy(() => import('./pages/company/NewCompany'));
-const LazyCompanyProfile = React.lazy(() => import('./pages/company/CompanyProfile'));
-const LazyCompanySettings = React.lazy(() => import('./pages/company/CompanySettings'));
 
 function App() {
   const { isLoading } = useAuth();
@@ -67,38 +60,10 @@ function App() {
             
             {/* Company routes */}
             <Route path="/companies" element={<Companies />} />
-            <Route 
-              path="/company/profile" 
-              element={
-                <React.Suspense fallback={<div>Loading...</div>}>
-                  <LazyCompanyProfileRedirect />
-                </React.Suspense>
-              } 
-            />
-            <Route 
-              path="/company/new" 
-              element={
-                <React.Suspense fallback={<div>Loading...</div>}>
-                  <LazyNewCompany />
-                </React.Suspense>
-              } 
-            />
-            <Route 
-              path="/company/:id" 
-              element={
-                <React.Suspense fallback={<div>Loading...</div>}>
-                  <LazyCompanyProfile />
-                </React.Suspense>
-              } 
-            />
-            <Route 
-              path="/company/:id/settings" 
-              element={
-                <React.Suspense fallback={<div>Loading...</div>}>
-                  <LazyCompanySettings />
-                </React.Suspense>
-              } 
-            />
+            <Route path="/company/profile" element={<React.lazy(() => import('./pages/company/CompanyProfileRedirect'))} />
+            <Route path="/company/new" element={<React.lazy(() => import('./pages/company/NewCompany'))} />
+            <Route path="/company/:id" element={<React.lazy(() => import('./pages/company/CompanyProfile'))} />
+            <Route path="/company/:id/settings" element={<React.lazy(() => import('./pages/company/CompanySettings'))} />
           </Route>
 
           {/* Fallback route */}
