@@ -20,9 +20,9 @@ export function AddUserForm({ onOpenChange, onUserAdded }: AddUserFormProps) {
   const { toast } = useToast();
   const { form, onSubmit } = useAddUserForm({
     setIsSubmitting,
-    toast,
     onOpenChange,
     onUserAdded,
+    toast,
   });
 
   return (

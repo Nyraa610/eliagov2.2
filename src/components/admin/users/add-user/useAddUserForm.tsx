@@ -18,12 +18,14 @@ interface UseAddUserFormProps {
   setIsSubmitting: (isSubmitting: boolean) => void;
   onOpenChange: (open: boolean) => void;
   onUserAdded: () => void;
+  toast: any; // Add toast to the interface
 }
 
 export function useAddUserForm({
   setIsSubmitting,
   onOpenChange,
   onUserAdded,
+  toast,
 }: UseAddUserFormProps) {
   const form = useForm<AddUserFormValues>({
     resolver: zodResolver(addUserSchema),
@@ -95,7 +97,6 @@ export function useAddUserForm({
             console.error("Error sending invitation:", inviteError);
             // This is not a fatal error, so we just log it
             toast({
-              title: "Warning",
               description: "User created but invitation email could not be sent.",
               variant: "warning"
             });
@@ -109,7 +110,6 @@ export function useAddUserForm({
       }
 
       toast({
-        title: "Success",
         description: existingProfiles 
           ? `User ${values.email} has been updated and notified.`
           : `User account for ${values.email} created successfully.`,
@@ -121,7 +121,6 @@ export function useAddUserForm({
     } catch (error: any) {
       console.error("Error creating/updating user:", error);
       toast({
-        title: "Error",
         description: error.message || "Failed to manage user",
         variant: "destructive"
       });
