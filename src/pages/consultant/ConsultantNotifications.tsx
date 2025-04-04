@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { NotificationsTab } from "@/components/consultant/NotificationsTab";
 import { useNavigate } from "react-router-dom";
 import { roleService } from "@/services/base/roleService";
 import { useToast } from "@/components/ui/use-toast";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function ConsultantNotifications() {
   const { toast } = useToast();
@@ -44,21 +44,21 @@ export default function ConsultantNotifications() {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Consultant Notifications" description="View and manage notifications">
+      <UserLayout title="Consultant Notifications">
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      </AdminLayout>
+      </UserLayout>
     );
   }
 
   return (
-    <AdminLayout title="Consultant Notifications" description="View and manage notifications">
+    <UserLayout title="Consultant Notifications">
       <Card>
         <CardContent className="p-6">
           <NotificationsTab />
         </CardContent>
       </Card>
-    </AdminLayout>
+    </UserLayout>
   );
 }

@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientManagementTab } from "@/components/consultant/ClientManagementTab";
@@ -11,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabaseService } from "@/services/base/supabaseService";
 import { UserRole } from "@/services/base/profileTypes";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function ConsultantDashboard() {
   const { toast } = useToast();
@@ -50,16 +50,16 @@ export default function ConsultantDashboard() {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Consultant Dashboard" description="Manage your clients and view notifications">
+      <UserLayout title="Consultant Dashboard">
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      </AdminLayout>
+      </UserLayout>
     );
   }
 
   return (
-    <AdminLayout title="Consultant Dashboard" description="Manage your clients and view notifications">
+    <UserLayout title="Consultant Dashboard">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Consultant Management Portal</CardTitle>
@@ -94,6 +94,6 @@ export default function ConsultantDashboard() {
           </Tabs>
         </CardContent>
       </Card>
-    </AdminLayout>
+    </UserLayout>
   );
 }
