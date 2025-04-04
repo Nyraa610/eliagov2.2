@@ -1,136 +1,35 @@
 
-import { useEffect, useState } from "react";
-import { Navigation } from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
-import { supabaseService, UserProfile, UserRole } from "@/services/base/supabaseService";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { UserCheck, Search, RefreshCw, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
+import { RefreshCw, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Navigation } from "@/components/Navigation";
+import { useNavigate } from "react-router-dom";
 import { AddUserDialog } from "@/components/admin/users/AddUserDialog";
+import { UserTable } from "@/components/admin/users/UserTable";
+import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
+import { UserSearchBar } from "@/components/admin/users/UserSearchBar";
+import { useUserManagement } from "@/components/admin/users/useUserManagement";
 
 export default function UserManagement() {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("user");
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const hasAdminRole = await supabaseService.hasRole('admin');
-      setIsAdmin(hasAdminRole);
-      
-      if (!hasAdminRole) {
-        toast({
-          variant: "destructive",
-          title: "Access denied",
-          description: "You don't have permission to access this page.",
-        });
-        navigate("/");
-      } else {
-        fetchUsers();
-      }
-    };
-    
-    checkAdmin();
-  }, [navigate, toast]);
-
-  // Fetch users
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabaseService.getAllProfiles();
-      
-      if (error) throw error;
-      
-      setUsers(data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load users. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filter users based on search query
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  // Handle role update
-  const openRoleDialog = (user: UserProfile) => {
-    setSelectedUser(user);
-    setSelectedRole(user.role);
-    setIsRoleDialogOpen(true);
-  };
-
-  const updateUserRole = async () => {
-    if (!selectedUser) return;
-    
-    try {
-      const success = await supabaseService.updateUserRole(selectedUser.id, selectedRole);
-      
-      if (success) {
-        toast({
-          title: "Role updated",
-          description: `${selectedUser.email}'s role has been updated to ${selectedRole}.`,
-        });
-        
-        // Update user in the list
-        setUsers(users.map(user => 
-          user.id === selectedUser.id ? { ...user, role: selectedRole } : user
-        ));
-        
-        setIsRoleDialogOpen(false);
-      } else {
-        throw new Error("Failed to update role");
-      }
-    } catch (error: any) {
-      console.error("Error updating user role:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update user role. Please try again.",
-      });
-    }
-  };
+  const {
+    isAdmin,
+    loading,
+    users,
+    searchQuery,
+    setSearchQuery,
+    selectedUser,
+    selectedRole,
+    setSelectedRole,
+    isRoleDialogOpen,
+    setIsRoleDialogOpen,
+    isAddUserDialogOpen,
+    setIsAddUserDialogOpen,
+    openRoleDialog,
+    updateUserRole,
+    fetchUsers,
+  } = useUserManagement();
 
   if (!isAdmin) {
     return null;
@@ -179,13 +78,10 @@ export default function UserManagement() {
               <CardDescription>
                 View and manage user accounts and their roles
               </CardDescription>
-              <div className="mt-4 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search users by email or name..." 
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+              <div className="mt-4">
+                <UserSearchBar 
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
                 />
               </div>
             </CardHeader>
@@ -196,57 +92,15 @@ export default function UserManagement() {
                 </div>
               ) : (
                 <>
-                  {filteredUsers.length === 0 ? (
+                  {users.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       {searchQuery ? "No users found matching your search." : "No users found."}
                     </div>
                   ) : (
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead className="w-[100px]">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredUsers.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium">{user.full_name || "—"}</div>
-                                  <div className="text-sm text-muted-foreground">{user.email}</div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                  user.role === "admin" 
-                                    ? "bg-primary/10 text-primary" 
-                                    : user.role === "consultant"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : user.role === "client_admin" 
-                                    ? "bg-amber-100 text-amber-800"
-                                    : "bg-muted text-muted-foreground"
-                                }`}>
-                                  {user.role}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => openRoleDialog(user)}
-                                >
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Manage
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                    <UserTable 
+                      users={users}
+                      onManageUser={openRoleDialog}
+                    />
                   )}
                 </>
               )}
@@ -254,58 +108,14 @@ export default function UserManagement() {
           </Card>
 
           {/* Role Update Dialog */}
-          <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Update User Role</DialogTitle>
-                <DialogDescription>
-                  {selectedUser?.email}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Current Role</label>
-                    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      selectedUser?.role === "admin" 
-                        ? "bg-primary/10 text-primary" 
-                        : selectedUser?.role === "consultant"
-                        ? "bg-blue-100 text-blue-800"
-                        : selectedUser?.role === "client_admin" 
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-muted text-muted-foreground"
-                    }`}>
-                      {selectedUser?.role}
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="role" className="block text-sm font-medium mb-1">
-                      New Role
-                    </label>
-                    <Select value={selectedRole} onValueChange={(value: UserRole) => setSelectedRole(value)}>
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="client_admin">Client Admin</SelectItem>
-                        <SelectItem value="consultant">Consultant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={updateUserRole}>
-                  Update Role
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <UserRoleDialog
+            open={isRoleDialogOpen}
+            onOpenChange={setIsRoleDialogOpen}
+            selectedUser={selectedUser}
+            selectedRole={selectedRole}
+            onRoleChange={setSelectedRole}
+            onUpdateRole={updateUserRole}
+          />
 
           {/* Add User Dialog */}
           <AddUserDialog 
