@@ -103,13 +103,19 @@ export const profileService = {
   
   updateUserRole: async (userId: string, role: UserRole): Promise<boolean> => {
     try {
+      console.log(`profileService: Updating user ${userId} role to ${role}`);
+      
       const { error } = await supabaseClient
         .from('profiles')
         .update({ role })
         .eq('id', userId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("profileService: Error updating user role:", error);
+        throw error;
+      }
       
+      console.log(`profileService: Successfully updated user ${userId} role to ${role}`);
       return true;
     } catch (error) {
       console.error("profileService: Error updating user role:", error);

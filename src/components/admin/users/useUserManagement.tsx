@@ -81,15 +81,21 @@ export function useUserManagement() {
     try {
       setIsUpdatingRole(true);
       
-      // Call the Supabase RPC function to update the user's role
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ role: selectedRole })
-        .eq('id', selectedUser.id)
-        .select();
+      console.log(`Updating user ${selectedUser.id} role to ${selectedRole}`);
       
-      if (error) {
-        throw new Error(`Failed to update role: ${error.message}`);
+      // First try using the supabaseService method which is more reliable
+      const success = await supabaseService.updateUserRole(selectedUser.id, selectedRole);
+      
+      if (!success) {
+        // If that fails, fall back to direct database update
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: selectedRole })
+          .eq('id', selectedUser.id);
+        
+        if (error) {
+          throw new Error(`Failed to update role: ${error.message}`);
+        }
       }
       
       // Show success toast

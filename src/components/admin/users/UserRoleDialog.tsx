@@ -38,6 +38,15 @@ export function UserRoleDialog({
   onUpdateRole,
   isUpdatingRole = false
 }: UserRoleDialogProps) {
+  const handleUpdateRole = async () => {
+    if (selectedUser?.role === selectedRole) {
+      onOpenChange(false);
+      return;
+    }
+    
+    await onUpdateRole();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -85,7 +94,7 @@ export function UserRoleDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUpdatingRole}>
             Cancel
           </Button>
-          <Button onClick={onUpdateRole} disabled={isUpdatingRole}>
+          <Button onClick={handleUpdateRole} disabled={isUpdatingRole || selectedUser?.role === selectedRole}>
             {isUpdatingRole ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
