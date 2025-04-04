@@ -8,7 +8,7 @@ import { useMenuItems } from "./sidebar/useMenuItems";
 export const UserSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
-  const { mainMenuItems, companyHubItems, adminItems, isAdmin } = useMenuItems();
+  const { mainMenuItems, companyHubItems, adminItems, consultantItems, isAdmin, isConsultant } = useMenuItems();
   
   const toggleSubmenu = (menuId: string) => {
     if (expandedSubmenu === menuId) {
@@ -55,6 +55,16 @@ export const UserSidebar = () => {
             expandedSubmenu={expandedSubmenu}
             toggleSubmenu={toggleSubmenu}
             sectionTitle="Administration"
+          />
+        )}
+        
+        {isConsultant && (
+          <MenuItemsList 
+            menuItems={consultantItems} 
+            collapsed={collapsed}
+            expandedSubmenu={expandedSubmenu}
+            toggleSubmenu={toggleSubmenu}
+            sectionTitle="Consultant"
           />
         )}
       </div>

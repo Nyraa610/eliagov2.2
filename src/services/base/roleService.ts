@@ -1,3 +1,4 @@
+
 import { supabaseClient } from "./supabaseClient";
 import { UserRole } from "./profileTypes";
 
@@ -20,7 +21,7 @@ export const roleService = {
       
       console.log(`roleService: Session user ID for role check: ${session.session.user.id}`);
       
-      // First check if the user is admin - admins should have access to everything
+      // First check if the user is admin or consultant - they should have access to everything
       const { data: profileData, error: profileError } = await supabaseClient
         .from('profiles')
         .select('role')
@@ -37,9 +38,9 @@ export const roleService = {
         return false;
       }
       
-      // If user is admin, return true for any role check
-      if (profileData.role === 'admin') {
-        console.log(`roleService: User is admin, granting access to ${role} role`);
+      // If user is admin or consultant, return true for any role check
+      if (profileData.role === 'admin' || profileData.role === 'consultant') {
+        console.log(`roleService: User is ${profileData.role}, granting access to ${role} role`);
         return true;
       }
       

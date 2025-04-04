@@ -1,5 +1,5 @@
 
-export type UserRole = 'admin' | 'user' | 'client_admin';
+export type UserRole = 'admin' | 'user' | 'client_admin' | 'consultant';
 
 export interface UserProfile {
   id: string;

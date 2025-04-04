@@ -107,6 +107,12 @@ export const assessmentService = {
       }
       
       console.log(`Assessment progress saved for ${assessmentType}`);
+      
+      // Create notification for consultants when a form is submitted at 100% progress
+      if (progress === 100) {
+        await createAssessmentNotification(userId, assessmentType);
+      }
+      
       return true;
     } catch (error) {
       console.error("Exception saving assessment progress:", error);
@@ -138,3 +144,63 @@ export const assessmentService = {
     }
   }
 };
+
+// Create a notification for consultants when an assessment is completed
+async function createAssessmentNotification(userId: string, assessmentType: AssessmentType): Promise<void> {
+  try {
+    // Get user details to include in notification
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('full_name, email, company_id')
+      .eq('id', userId)
+      .single();
+    
+    if (!userProfile) {
+      console.error("User profile not found for notification");
+      return;
+    }
+    
+    // Format the assessment type for display
+    const formattedType = assessmentType
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Create notification for all consultants
+    const { data: consultants, error: consultantError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'consultant');
+    
+    if (consultantError) {
+      console.error("Error fetching consultants:", consultantError);
+      return;
+    }
+    
+    // Create a notification for each consultant
+    const notifications = consultants.map(consultant => ({
+      user_id: consultant.id,
+      sender_id: userId,
+      notification_type: 'assessment_completed',
+      title: `Assessment Completed`,
+      message: `${userProfile.full_name || 'A user'} has completed the ${formattedType} assessment.`,
+      metadata: {
+        assessment_type: assessmentType,
+        user_email: userProfile.email,
+        company_id: userProfile.company_id
+      },
+      is_read: false
+    }));
+    
+    if (notifications.length > 0) {
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+      
+      if (notificationError) {
+        console.error("Error creating notification:", notificationError);
+      }
+    }
+  } catch (error) {
+    console.error("Error creating assessment notification:", error);
+  }
+}

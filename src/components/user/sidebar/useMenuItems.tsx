@@ -1,177 +1,223 @@
 
-import { 
-  BarChart3, BookOpen, Building, Globe, Home, Layers, 
-  Medal, Settings, Target, Trophy, User, Share2, TrendingUp, FileText, ShieldCheck,
-  Users, Database, Languages, File, Download, CheckSquare
-} from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useNavigate, useLocation } from "react-router-dom";
+import { roleService } from "@/services/base/roleService";
+import {
+  LayoutDashboard,
+  FileText,
+  BarChart,
+  Book,
+  Award,
+  Settings,
+  Building,
+  Truck,
+  LineChart,
+  ClipboardCheck,
+  CheckSquare,
+  Users,
+  Bell
+} from "lucide-react";
 
-export const useMenuItems = () => {
-  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+export interface MenuItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: JSX.Element;
+  hasSubmenu: boolean;
+  submenuItems?: MenuItem[];
+}
+
+export function useMenuItems() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isConsultant, setIsConsultant] = useState(false);
   
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('company_id, role')
-          .eq('id', user.id)
-          .single();
-          
-        if (data) {
-          setUserCompanyId(data.company_id);
-          setUserRole(data.role);
-        }
+    const checkRoles = async () => {
+      try {
+        const adminCheck = await roleService.hasRole('admin');
+        setIsAdmin(adminCheck);
+        
+        const consultantCheck = await roleService.hasRole('consultant');
+        setIsConsultant(consultantCheck);
+      } catch (error) {
+        console.error("Error checking user roles:", error);
       }
     };
     
-    fetchUserData();
+    checkRoles();
   }, []);
-
-  const mainMenuItems = [
+  
+  const mainMenuItems: MenuItem[] = [
     {
-      title: "Dashboard",
-      icon: <Home className="h-5 w-5" />,
-      path: "/dashboard",
+      id: "dashboard",
+      label: "Dashboard",
+      path: "/",
+      icon: <LayoutDashboard className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
-      title: "Training",
-      icon: <BookOpen className="h-5 w-5" />,
-      path: "/training",
-    },
-    {
-      title: "Assessment",
-      icon: <BarChart3 className="h-5 w-5" />,
+      id: "assessments",
+      label: "Assessments",
       path: "/assessment",
-      submenu: [
+      icon: <ClipboardCheck className="h-4 w-4" />,
+      hasSubmenu: true,
+      submenuItems: [
         {
-          title: "Value Chain Modeling",
-          icon: <Share2 className="h-5 w-5" />,
+          id: "esgDiagnostic",
+          label: "ESG Diagnostic",
+          path: "/assessment/esg-diagnostic",
+          icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "carbonEvaluation",
+          label: "Carbon Evaluation",
+          path: "/assessment/carbon-evaluation",
+          icon: <BarChart className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "actionPlan",
+          label: "Action Plan",
+          path: "/assessment/action-plan",
+          icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "valueChain",
+          label: "Value Chain",
           path: "/assessment/value-chain",
+          icon: <Truck className="h-4 w-4" />,
+          hasSubmenu: false
+        }
+      ]
+    },
+    {
+      id: "results",
+      label: "Results",
+      path: "/assessment/results",
+      icon: <LineChart className="h-4 w-4" />,
+      hasSubmenu: true,
+      submenuItems: [
+        {
+          id: "esgResults",
+          label: "ESG Diagnostic",
+          path: "/assessment/esg-diagnostic-results",
+          icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
         },
         {
-          title: "Value Chain Results",
-          icon: <CheckSquare className="h-5 w-5" />,
+          id: "carbonResults",
+          label: "Carbon Evaluation",
+          path: "/assessment/carbon-evaluation-results",
+          icon: <BarChart className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "actionPlanResults",
+          label: "Action Plan",
+          path: "/assessment/action-plan-results",
+          icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "valueChainResults",
+          label: "Value Chain",
           path: "/assessment/value-chain-results",
-        },
-        {
-          title: "Materiality Analysis",
-          icon: <Layers className="h-5 w-5" />,
-          path: "/assessment/materiality-analysis",
-        },
-        {
-          title: "ESG Results",
-          icon: <CheckSquare className="h-5 w-5" />,
-          path: "/assessment/results",
-        },
-      ],
+          icon: <Truck className="h-4 w-4" />,
+          hasSubmenu: false
+        }
+      ]
     },
     {
-      title: "Carbon Evaluation",
-      icon: <Globe className="h-5 w-5" />,
-      path: "/carbon-evaluation",
-      submenu: [
-        {
-          title: "Evaluation Form",
-          icon: <BarChart3 className="h-5 w-5" />,
-          path: "/carbon-evaluation",
-        },
-        {
-          title: "Results",
-          icon: <CheckSquare className="h-5 w-5" />,
-          path: "/carbon-evaluation/results",
-        },
-      ],
+      id: "training",
+      label: "Training",
+      path: "/training",
+      icon: <Book className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
-      title: "Action Plan",
-      icon: <Target className="h-5 w-5" />,
-      path: "/action-plan",
-      submenu: [
-        {
-          title: "Plan Creation",
-          icon: <Target className="h-5 w-5" />,
-          path: "/action-plan",
-        },
-        {
-          title: "Results",
-          icon: <CheckSquare className="h-5 w-5" />,
-          path: "/action-plan/results",
-        },
-      ],
-    },
-    {
-      title: "Engagement & Rewards",
-      icon: <Trophy className="h-5 w-5" />,
+      id: "engagement",
+      label: "Engagement",
       path: "/engagement",
+      icon: <Award className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
-      title: "Document Center",
-      icon: <FileText className="h-5 w-5" />,
+      id: "documents",
+      label: "Document Center",
       path: "/documents",
+      icon: <FileText className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
-      title: "Deliverables",
-      icon: <Download className="h-5 w-5" />,
+      id: "deliverables",
+      label: "Deliverables",
       path: "/deliverables",
-    },
+      icon: <FileText className="h-4 w-4" />,
+      hasSubmenu: false
+    }
   ];
   
-  const companyHubItems = [
+  const companyHubItems: MenuItem[] = [
     {
-      title: "Company Profile",
-      icon: <Building className="h-5 w-5" />,
-      path: userCompanyId ? `/company/${userCompanyId}` : "/profile",
-      disabled: !userCompanyId,
-    },
-    {
-      title: "Personal Profile",
-      icon: <User className="h-5 w-5" />,
+      id: "profile",
+      label: "User Profile",
       path: "/profile",
+      icon: <Settings className="h-4 w-4" />,
+      hasSubmenu: false
     },
+    {
+      id: "companies",
+      label: "Companies",
+      path: "/companies",
+      icon: <Building className="h-4 w-4" />,
+      hasSubmenu: false
+    }
   ];
   
-  const adminItems = [
+  const adminItems: MenuItem[] = [
     {
-      title: "Admin Dashboard",
-      icon: <ShieldCheck className="h-5 w-5" />,
-      path: "/admin",
+      id: "adminPanel",
+      label: "Admin Panel",
+      path: "/admin/panel",
+      icon: <Settings className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
-      title: "User Management",
-      icon: <Users className="h-5 w-5" />,
+      id: "userManagement",
+      label: "User Management",
       path: "/admin/users",
-    },
-    {
-      title: "Training Management",
-      icon: <BookOpen className="h-5 w-5" />,
-      path: "/admin/training",
-    },
-    {
-      title: "Content Management",
-      icon: <File className="h-5 w-5" />,
-      path: "/admin/content",
-    },
-    {
-      title: "Translations",
-      icon: <Languages className="h-5 w-5" />,
-      path: "/admin/translations",
-    },
-    {
-      title: "Emission Factors",
-      icon: <Database className="h-5 w-5" />,
-      path: "/admin/emission-factors",
-    },
+      icon: <Users className="h-4 w-4" />,
+      hasSubmenu: false
+    }
   ];
   
-  return { 
-    mainMenuItems, 
-    companyHubItems, 
+  const consultantItems: MenuItem[] = [
+    {
+      id: "consultantDashboard",
+      label: "Consultant Dashboard",
+      path: "/consultant/dashboard",
+      icon: <LayoutDashboard className="h-4 w-4" />,
+      hasSubmenu: false
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      path: "/consultant/notifications",
+      icon: <Bell className="h-4 w-4" />,
+      hasSubmenu: false
+    }
+  ];
+  
+  return {
+    mainMenuItems,
+    companyHubItems,
     adminItems,
-    userCompanyId,
-    isAdmin: userRole === 'admin'
+    consultantItems,
+    isAdmin,
+    isConsultant
   };
-};
+}
