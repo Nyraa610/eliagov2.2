@@ -1,11 +1,10 @@
-
 import { motion } from "framer-motion";
 import { RefreshCw, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navigation } from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
-import { AddUserDialog } from "@/components/admin/users/AddUserDialog";
+import { AddUserDialog } from "@/components/admin/users/add-user";
 import { UserTable } from "@/components/admin/users/UserTable";
 import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
 import { UserSearchBar } from "@/components/admin/users/UserSearchBar";
