@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { RefreshCw, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,8 @@ export default function UserManagement() {
     openRoleDialog,
     updateUserRole,
     fetchUsers,
+    deleteUser,
+    isDeleting
   } = useUserManagement();
 
   if (!isAdmin) {
@@ -99,6 +102,7 @@ export default function UserManagement() {
                     <UserTable 
                       users={users}
                       onManageUser={openRoleDialog}
+                      onDeleteUser={deleteUser}
                     />
                   )}
                 </>

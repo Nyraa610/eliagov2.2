@@ -5,9 +5,10 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAddUserForm } from "./useAddUserForm";
 import { EmailField } from "./form-fields/EmailField";
-import { PasswordField } from "./form-fields/PasswordField";
 import { RoleField } from "./form-fields/RoleField";
 import { Form } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 
 interface AddUserFormProps {
   onOpenChange: (open: boolean) => void;
@@ -28,8 +29,28 @@ export function AddUserForm({ onOpenChange, onUserAdded }: AddUserFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <EmailField form={form} />
-        <PasswordField form={form} />
         <RoleField form={form} />
+        
+        <FormField
+          control={form.control}
+          name="sendInvitation"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <FormLabel>Send Invitation</FormLabel>
+                <FormDescription>
+                  Send an email invitation to set up account
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
         <DialogFooter className="pt-4">
           <Button
@@ -40,7 +61,7 @@ export function AddUserForm({ onOpenChange, onUserAdded }: AddUserFormProps) {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create User"}
+            {isSubmitting ? "Processing..." : "Add User"}
           </Button>
         </DialogFooter>
       </form>

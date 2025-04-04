@@ -2,7 +2,9 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { supabaseService, UserProfile, UserRole } from "@/services/base/supabaseService";
+import { supabaseService, UserProfile } from "@/services/base/supabaseService";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export function useUserManagement() {
   const { toast } = useToast();
@@ -12,9 +14,10 @@ export function useUserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("user");
+  const [selectedRole, setSelectedRole] = useState<any>("user");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -102,6 +105,67 @@ export function useUserManagement() {
     }
   };
 
+  // Handle user deletion (revoke access)
+  const deleteUser = async (userToDelete: UserProfile) => {
+    try {
+      setIsDeleting(true);
+      
+      // If the user is associated with a company, remove that association
+      if (userToDelete.company_id) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            company_id: null,
+            is_company_admin: false 
+          })
+          .eq('id', userToDelete.id);
+          
+        if (error) {
+          throw new Error(`Failed to remove user from organization: ${error.message}`);
+        }
+        
+        // Send notification to the user
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: userToDelete.id,
+            notification_type: 'message',
+            title: 'Access Revoked',
+            message: 'Your access to an organization has been revoked by an administrator.',
+            is_read: false
+          });
+      
+        // Update the local state to reflect the changes
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === userToDelete.id 
+              ? { ...user, company_id: null, is_company_admin: false } 
+              : user
+          )
+        );
+        
+        toast({
+          title: "Success",
+          description: `${userToDelete.email} has been removed from the organization.`,
+        });
+      } else {
+        toast({
+          title: "Info",
+          description: `${userToDelete.email} is not associated with any organization.`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error removing user:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to remove user from organization.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return {
     isAdmin,
     loading,
@@ -118,5 +182,7 @@ export function useUserManagement() {
     openRoleDialog,
     updateUserRole,
     fetchUsers,
+    deleteUser,
+    isDeleting
   };
 }
