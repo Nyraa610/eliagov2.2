@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export const useEngagement = () => {
   const { toast } = useToast();
