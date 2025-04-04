@@ -3,7 +3,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { MenuItemsList } from "./sidebar/MenuItemsList";
-import { useMenuItems, MenuItem } from "./sidebar/useMenuItems";
+import { useMenuItems } from "./sidebar/useMenuItems";
+import { MenuItem } from "./sidebar/types/menuItemTypes";
 
 export const UserSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
