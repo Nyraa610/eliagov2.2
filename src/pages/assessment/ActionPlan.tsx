@@ -11,6 +11,7 @@ import { actionPlanSchema, ActionPlanFormValues } from "@/components/assessment/
 import { ActionPlanTabs } from "@/components/assessment/action-plan/ActionPlanTabs";
 import { assessmentService } from "@/services/assessmentService";
 import { useToast } from "@/components/ui/use-toast";
+import { engagementService } from "@/services/engagement";
 
 export default function ActionPlan() {
   const { t } = useTranslation();
@@ -125,6 +126,19 @@ export default function ActionPlan() {
     if (tab === tabs[0] && actionPlanStatus === "not-started") {
       const newStatus: FeatureStatus = "in-progress";
       setActionPlanStatus(newStatus);
+      
+      // Track starting assessment with engagement service (award 5 points)
+      engagementService.trackActivity({
+        activity_type: 'start_assessment',
+        points_earned: 5,
+        metadata: {
+          assessment_type: 'action_plan',
+          timestamp: new Date().toISOString()
+        }
+      }).catch(error => {
+        console.error("Error tracking action plan start:", error);
+      });
+      
       assessmentService.saveAssessmentProgress('action_plan', newStatus, progress, form.getValues())
         .catch(error => console.error("Error saving status change:", error));
     }

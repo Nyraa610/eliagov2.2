@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -6,6 +7,7 @@ import { ESGFormValues, esgFormSchema } from "../../esg-diagnostic/ESGFormSchema
 import { supabase } from "@/lib/supabase";
 import { assessmentService } from "@/services/assessmentService";
 import { useUnifiedAssessment } from "../context/UnifiedAssessmentContext";
+import { engagementService } from "@/services/engagement";
 
 export const useUnifiedFormSubmission = (
   onSubmit: (values: ESGFormValues) => void,
@@ -125,6 +127,18 @@ export const useUnifiedFormSubmission = (
     
     setIsSubmitting(true);
     try {
+      // Track completion of assessment (10 points)
+      engagementService.trackActivity({
+        activity_type: 'complete_assessment',
+        points_earned: 10,
+        metadata: {
+          assessment_type: 'rse_diagnostic',
+          timestamp: new Date().toISOString()
+        }
+      }).catch(error => {
+        console.error("Error tracking assessment completion:", error);
+      });
+      
       // Save form data to Supabase via the assessment service
       await assessmentService.saveAssessmentProgress(
         'rse_diagnostic',

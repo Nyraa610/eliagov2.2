@@ -128,7 +128,7 @@ export function PointsDisplay() {
             Lvl {stats.level}
           </Badge>
           {isCurrentlyActive && (
-            <Clock className="h-3 w-3 text-green-500 ml-1" title="Active time tracking" />
+            <Clock className="h-3 w-3 text-green-500 ml-1" aria-label="Active time tracking" />
           )}
         </div>
       </HoverCardTrigger>
@@ -161,7 +161,7 @@ export function PointsDisplay() {
               <div className="flex justify-between items-center mt-2">
                 <span>Tracking Status:</span>
                 <span className={`flex items-center ${isCurrentlyActive ? 'text-green-500' : 'text-yellow-500'}`}>
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="h-3 w-3 mr-1" aria-label={isCurrentlyActive ? 'Active' : 'Paused (inactive)'} />
                   {isCurrentlyActive ? 'Active' : 'Paused (inactive)'}
                 </span>
               </div>

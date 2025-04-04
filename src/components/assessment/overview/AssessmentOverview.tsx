@@ -6,6 +6,7 @@ import { FeatureStatus } from "@/types/training";
 import { History, HelpCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { assessmentService } from "@/services/assessmentService";
+import { engagementService } from "@/services/engagement";
 
 interface AssessmentOverviewProps {
   diagStatus: FeatureStatus;
@@ -40,6 +41,18 @@ export function AssessmentOverview({
   const handleStartDiagnostic = () => {
     setActiveAssessmentTab("company-info");
     showDiagnostic(true);
+    
+    // Track starting assessment with engagement service (award 5 points)
+    engagementService.trackActivity({
+      activity_type: 'start_assessment',
+      points_earned: 5,
+      metadata: {
+        assessment_type: 'rse_diagnostic',
+        timestamp: new Date().toISOString()
+      }
+    }).catch(error => {
+      console.error("Error tracking assessment start:", error);
+    });
     
     if (diagStatus === "not-started") {
       setDiagStatus("in-progress");
