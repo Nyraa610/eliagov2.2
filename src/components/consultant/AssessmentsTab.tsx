@@ -77,28 +77,57 @@ export function AssessmentsTab() {
     try {
       setLoading(true);
       
-      // Get assessments with user and company information
+      // Get assessments
       const { data, error } = await supabase
         .from('assessment_progress')
         .select(`
-          *,
-          profiles:user_id(email, full_name, company_id),
-          companies:profiles(company_id).companies(name)
+          id, user_id, assessment_type, status, progress, created_at, updated_at, form_data
         `)
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
       
-      // Transform the data to include user and company information
-      const formattedData = data.map(assessment => ({
-        ...assessment,
-        user_email: assessment.profiles?.email,
-        user_name: assessment.profiles?.full_name,
-        company_id: assessment.profiles?.company_id,
-        company_name: assessment.companies?.name
-      }));
+      // For each assessment, get the user and company information separately
+      const enhancedAssessments: Assessment[] = [];
       
-      setAssessments(formattedData);
+      for (const assessment of data) {
+        // Get user information
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('email, full_name, company_id')
+          .eq('id', assessment.user_id)
+          .single();
+        
+        if (userError) {
+          console.error("Error fetching user data:", userError);
+          continue;
+        }
+        
+        // Get company information if company_id exists
+        let companyName = undefined;
+        if (userData.company_id) {
+          const { data: companyData, error: companyError } = await supabase
+            .from('companies')
+            .select('name')
+            .eq('id', userData.company_id)
+            .single();
+          
+          if (!companyError && companyData) {
+            companyName = companyData.name;
+          }
+        }
+        
+        // Add the enhanced assessment to the array
+        enhancedAssessments.push({
+          ...assessment,
+          user_email: userData.email,
+          user_name: userData.full_name,
+          company_id: userData.company_id,
+          company_name: companyName
+        });
+      }
+      
+      setAssessments(enhancedAssessments);
     } catch (error) {
       console.error("Error fetching assessments:", error);
       toast({

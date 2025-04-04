@@ -22,6 +22,21 @@ export const UserSidebar = () => {
     setCollapsed(!collapsed);
   };
 
+  // Map MenuItems to the format expected by MenuItemsList
+  const mapMenuItems = (items: ReturnType<typeof useMenuItems>["mainMenuItems"]) => {
+    return items.map(item => ({
+      title: item.label,
+      icon: item.icon,
+      path: item.path,
+      submenu: item.submenuItems?.map(subItem => ({
+        title: subItem.label,
+        icon: subItem.icon,
+        path: subItem.path
+      })),
+      disabled: false
+    }));
+  };
+
   return (
     <div 
       className={cn(
@@ -34,14 +49,14 @@ export const UserSidebar = () => {
       
       <div className="py-4 flex-1 overflow-y-auto">
         <MenuItemsList 
-          menuItems={mainMenuItems} 
+          menuItems={mapMenuItems(mainMenuItems)} 
           collapsed={collapsed}
           expandedSubmenu={expandedSubmenu}
           toggleSubmenu={toggleSubmenu}
         />
         
         <MenuItemsList 
-          menuItems={companyHubItems} 
+          menuItems={mapMenuItems(companyHubItems)} 
           collapsed={collapsed}
           expandedSubmenu={expandedSubmenu}
           toggleSubmenu={toggleSubmenu}
@@ -50,7 +65,7 @@ export const UserSidebar = () => {
 
         {isAdmin && (
           <MenuItemsList 
-            menuItems={adminItems} 
+            menuItems={mapMenuItems(adminItems)} 
             collapsed={collapsed}
             expandedSubmenu={expandedSubmenu}
             toggleSubmenu={toggleSubmenu}
@@ -60,7 +75,7 @@ export const UserSidebar = () => {
         
         {isConsultant && (
           <MenuItemsList 
-            menuItems={consultantItems} 
+            menuItems={mapMenuItems(consultantItems)} 
             collapsed={collapsed}
             expandedSubmenu={expandedSubmenu}
             toggleSubmenu={toggleSubmenu}
