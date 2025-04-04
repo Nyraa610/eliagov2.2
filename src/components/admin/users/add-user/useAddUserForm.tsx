@@ -43,7 +43,7 @@ export function useAddUserForm({
       // Check if the user already exists in the system
       const { data: existingProfiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, email, role')
         .eq('email', values.email)
         .maybeSingle();
       
@@ -65,55 +65,110 @@ export function useAddUserForm({
           .eq('id', userId);
           
         if (updateError) {
+          console.error("Failed to update user role:", updateError);
           throw new Error("Failed to update user role: " + updateError.message);
         }
+        
+        toast({
+          description: `User ${values.email}'s role has been updated to ${values.role}.`,
+        });
       } else {
         console.log("Creating new user");
-        // Create a new user with a temporary password
-        const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).toUpperCase().slice(2) + "!1";
         
-        // Create the auth user
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: values.email,
-          password: tempPassword,
-          email_confirm: true,
-          user_metadata: {
-            role: values.role
+        // Instead of using admin.createUser directly, use a more reliable approach
+        // by leveraging Supabase's signUp method and custom RPC function
+        
+        try {
+          // First attempt to create the user via a custom RPC function
+          // This requires a server-side function that has proper permissions
+          const { data: userData, error: rpcError } = await supabase.rpc('create_new_user', {
+            user_email: values.email,
+            user_role: values.role
+          });
+          
+          if (rpcError) {
+            console.error("RPC error creating user:", rpcError);
+            // Fall back to the original method if RPC fails
+            throw rpcError;
           }
-        });
-        
-        if (authError) {
-          console.error("Error creating auth user:", authError);
-          throw new Error("Failed to create user: " + authError.message);
+          
+          userId = userData.id;
+          
+          console.log("User created via RPC function:", userId);
+        } catch (rpcFailure) {
+          // Fall back to original method
+          console.log("Falling back to alternative method due to:", rpcFailure);
+          
+          // Create the auth user with a temporary password
+          const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).toUpperCase().slice(2) + "!1";
+          
+          try {
+            // Try using the service role client if available (requires server-side function)
+            const { error: serviceRoleError } = await supabase.functions.invoke('create-user', {
+              body: {
+                email: values.email,
+                password: tempPassword,
+                role: values.role
+              }
+            });
+            
+            if (serviceRoleError) {
+              throw serviceRoleError;
+            }
+            
+            // Fetch the newly created user to get their ID
+            const { data: newUser, error: fetchError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', values.email)
+              .single();
+              
+            if (fetchError) {
+              throw new Error("Failed to fetch newly created user: " + fetchError.message);
+            }
+            
+            userId = newUser.id;
+          } catch (finalError: any) {
+            console.error("All user creation methods failed:", finalError);
+            throw new Error("Unable to create user. Please contact your system administrator.");
+          }
         }
-        
-        userId = authData.user.id;
 
         if (values.sendInvitation) {
-          // Send invitation email
-          const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(values.email);
-          
-          if (inviteError) {
-            console.error("Error sending invitation:", inviteError);
-            // This is not a fatal error, so we just log it
+          try {
+            // Send invitation email
+            const { error: inviteError } = await supabase.functions.invoke('send-invitation', {
+              body: {
+                email: values.email,
+                role: values.role
+              }
+            });
+            
+            if (inviteError) {
+              console.error("Error sending invitation:", inviteError);
+              toast({
+                description: "User created but invitation email could not be sent.",
+                variant: "warning"
+              });
+            }
+          } catch (inviteError) {
+            console.error("Failed to send invitation:", inviteError);
             toast({
               description: "User created but invitation email could not be sent.",
               variant: "warning"
             });
           }
         }
+        
+        toast({
+          description: `User account for ${values.email} created successfully.`,
+        });
       }
 
       // Notify the user
       if (existingProfiles) {
         await sendUserNotification(userId, "You have been added to a new organization");
       }
-
-      toast({
-        description: existingProfiles 
-          ? `User ${values.email} has been updated and notified.`
-          : `User account for ${values.email} created successfully.`,
-      });
 
       form.reset();
       onOpenChange(false);
