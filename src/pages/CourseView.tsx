@@ -12,11 +12,14 @@ import { CourseOverview } from "@/components/training/course-view/CourseOverview
 import { ModuleSidebar } from "@/components/training/course-view/ModuleSidebar";
 import { ContentDisplay } from "@/components/training/course-view/ContentDisplay";
 import { motion } from "framer-motion";
+import { engagementService } from "@/services/engagement";
+import { useEngagement } from "@/hooks/useEngagement";
 
 export default function CourseView() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackActivity } = useEngagement();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -29,6 +32,7 @@ export default function CourseView() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
   const [totalCoursePoints, setTotalCoursePoints] = useState(0);
+  const [hasTrackedCourseStart, setHasTrackedCourseStart] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
@@ -95,6 +99,30 @@ export default function CourseView() {
     fetchCourseData();
   }, [courseId, toast]);
 
+  // Track course start when user navigates to the content tab
+  useEffect(() => {
+    if (activeTab === "content" && course && !hasTrackedCourseStart) {
+      // Track course start (3 points)
+      trackActivity({
+        activity_type: 'start_course',
+        points_earned: 3,
+        metadata: {
+          course_id: courseId,
+          course_title: course.title,
+          timestamp: new Date().toISOString()
+        }
+      }, true);
+      
+      setHasTrackedCourseStart(true);
+      
+      toast({
+        title: "Progress",
+        description: "Course started! +3 points",
+        duration: 3000,
+      });
+    }
+  }, [activeTab, course, courseId, hasTrackedCourseStart, trackActivity, toast]);
+
   const handleModuleSelect = async (module: Module) => {
     setCurrentModule(module);
     setCurrentContent(null);
@@ -143,9 +171,22 @@ export default function CourseView() {
           await trainingService.markModuleAsCompleted(currentModule.id);
           setCompletedModules([...completedModules, currentModule.id]);
           
+          // Track module completion (10 points)
+          trackActivity({
+            activity_type: 'complete_module',
+            points_earned: 10,
+            metadata: {
+              course_id: courseId,
+              course_title: course?.title,
+              module_id: currentModule.id,
+              module_title: currentModule.title,
+              timestamp: new Date().toISOString()
+            }
+          });
+          
           toast({
             title: "Module completed",
-            description: "You've completed this module!",
+            description: "You've completed this module! +10 points",
           });
           
           // Move to next module if available
@@ -211,9 +252,25 @@ export default function CourseView() {
     if (currentContent) {
       setCompletedContent([...completedContent, currentContent.id]);
       
+      // Track quiz completion (15 points)
+      trackActivity({
+        activity_type: 'pass_quiz',
+        points_earned: 15,
+        metadata: {
+          course_id: courseId,
+          course_title: course?.title,
+          module_id: currentModule?.id,
+          module_title: currentModule?.title,
+          quiz_id: currentContent.id,
+          quiz_title: currentContent.title,
+          score: score,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       toast({
         title: "Quiz completed",
-        description: `You scored ${score} points!`,
+        description: `You scored ${score} points! +15 points for completing the quiz`,
       });
       
       // Check if this was the last content item in the module
@@ -224,6 +281,19 @@ export default function CourseView() {
           trainingService.markModuleAsCompleted(currentModule.id)
             .then(() => {
               setCompletedModules([...completedModules, currentModule.id]);
+              
+              // Track module completion (10 points)
+              trackActivity({
+                activity_type: 'complete_module',
+                points_earned: 10,
+                metadata: {
+                  course_id: courseId,
+                  course_title: course?.title,
+                  module_id: currentModule.id,
+                  module_title: currentModule.title,
+                  timestamp: new Date().toISOString()
+                }
+              });
               
               // Move to next module if available
               const currentModuleIndex = modules.findIndex(module => module.id === currentModule.id);

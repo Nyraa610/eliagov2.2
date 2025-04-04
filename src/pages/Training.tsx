@@ -9,6 +9,7 @@ import AvailableCoursesSection from "@/components/training/AvailableCoursesSecti
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useEngagement } from "@/hooks/useEngagement";
 
 export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -17,6 +18,7 @@ export default function Training() {
   const [isLoading, setIsLoading] = useState(true);
   const [trackingSuccess, setTrackingSuccess] = useState<boolean | null>(null);
   const { toast } = useToast();
+  const { trackActivity } = useEngagement();
 
   useEffect(() => {
     // Track explicit training page visit on component mount with immediate user check
@@ -40,7 +42,7 @@ export default function Training() {
         console.log("Tracking Training page visit - authenticated user", session.session.user.id);
         
         // Record explicit visit with higher point value
-        const success = await engagementService.trackActivity({
+        const success = await trackActivity({
           activity_type: 'view_training',
           points_earned: 5,
           metadata: {
@@ -123,7 +125,7 @@ export default function Training() {
     };
 
     fetchData();
-  }, [toast]);
+  }, [toast, trackActivity]);
 
   const enrollInCourse = async (courseId: string) => {
     try {
@@ -135,7 +137,7 @@ export default function Training() {
       });
       
       // Track enrollment activity
-      engagementService.trackActivity({
+      trackActivity({
         activity_type: 'enroll_course',
         points_earned: 10,
         metadata: {

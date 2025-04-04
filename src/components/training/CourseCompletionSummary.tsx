@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,14 +28,14 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
 }) => {
   const [certificate, setCertificate] = useState<{ id: string; certificate_url: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const { toast, celebrateSuccess } = useToast();
+  const { toast } = useToast();
   const { trackActivity } = useEngagement();
   const successRate = Math.round((earnedPoints / totalPoints) * 100);
   const isSuccessful = successRate >= 75;
   const [showAchievement, setShowAchievement] = useState(false);
 
   useEffect(() => {
-    // Track course completion
+    // Track course completion (50 points)
     trackActivity({
       activity_type: 'complete_course',
       points_earned: 50,
@@ -49,10 +48,12 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
     }, true);
     
     // Show achievement toast
-    celebrateSuccess(
-      "Course Completed!",
-      `You've completed ${courseTitle} with a score of ${successRate}%`
-    );
+    toast({
+      title: "Course Completed!",
+      description: `You've completed ${courseTitle} with a score of ${successRate}%. +50 points!`,
+      variant: "celebration",
+      duration: 5000
+    });
     
     // Delayed achievement banner appearance for courses with high scores
     if (successRate > 85) {
@@ -86,7 +87,7 @@ const CourseCompletionSummary: React.FC<CourseCompletionSummaryProps> = ({
       
       return () => clearInterval(interval);
     }
-  }, [isSuccessful, trackActivity, courseId, courseTitle, earnedPoints, successRate, celebrateSuccess]);
+  }, [isSuccessful, trackActivity, courseId, courseTitle, earnedPoints, successRate, toast]);
 
   const handleGenerateCertificate = async () => {
     if (!courseId) return;
