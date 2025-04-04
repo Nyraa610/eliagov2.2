@@ -42,7 +42,7 @@ export const supabaseService = {
         };
       }
       
-      // Insert the profile using direct SQL to bypass RLS
+      // Call the admin_create_profile function with parameters in the correct order (id, email, role)
       const { data, error } = await supabaseClient.rpc('admin_create_profile', {
         p_id: profileData.id,
         p_email: profileData.email,

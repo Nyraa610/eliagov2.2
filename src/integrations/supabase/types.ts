@@ -1021,6 +1021,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_profile: {
+        Args: {
+          p_id: string
+          p_email: string
+          p_role: string
+        }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_company_admin: boolean | null
+          role: Database["public"]["Enums"]["user_role"]
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string

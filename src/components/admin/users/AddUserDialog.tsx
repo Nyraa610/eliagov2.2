@@ -31,7 +31,6 @@ import * as z from "zod";
 import { UserRole } from "@/services/base/profileTypes";
 import { User, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabaseClient } from "@/services/base/supabaseClient";
 import { supabaseService } from "@/services/base/supabaseService";
 
 const addUserSchema = z.object({
@@ -72,12 +71,14 @@ export function AddUserDialog({
     try {
       setIsSubmitting(true);
 
-      const password = values.password || Math.random().toString(36).slice(-8);
+      // Create a random UUID for the new user
+      const userId = crypto.randomUUID();
 
+      // Create the user profile
       const result = await supabaseService.createUserProfile({
         email: values.email,
         role: values.role,
-        id: crypto.randomUUID(),
+        id: userId,
       });
 
       if (result.error) {
