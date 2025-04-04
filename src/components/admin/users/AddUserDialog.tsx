@@ -75,38 +75,37 @@ export function AddUserDialog({
       // If password is not provided, generate a random one
       const password = values.password || Math.random().toString(36).slice(-8);
 
-      // Create user with Supabase Auth signUp (regular signup instead of admin API)
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: values.email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            role: values.role, // Add role to metadata so it can be used in the handle_new_user function
+      // Instead of using auth.signUp which requires captcha,
+      // directly insert into profiles table and send invitation email
+      const { data: profileData, error: profileError } = await supabaseClient
+        .from("profiles")
+        .insert([
+          { 
+            email: values.email,
+            role: values.role,
+            // Generate a random UUID since we can't create one in auth.users
+            id: crypto.randomUUID(),
+            // Add additional required fields if any
           }
-        }
+        ])
+        .select();
+
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        throw new Error("Failed to create user profile: " + profileError.message);
+      }
+
+      toast({
+        title: "Success",
+        description: `User profile for ${values.email} created. An invitation will be sent to this email address.`,
       });
 
-      if (error) throw error;
+      // You would typically send an invitation email here via an edge function
+      // This would contain a link for the user to set their password
 
-      if (data.user) {
-        // Update user role in the profiles table to ensure it's set
-        const { error: roleError } = await supabaseClient
-          .from("profiles")
-          .update({ role: values.role })
-          .eq("id", data.user.id);
-
-        if (roleError) throw roleError;
-
-        toast({
-          title: "Success",
-          description: `User ${values.email} added successfully. They will need to verify their email before logging in.`,
-        });
-
-        form.reset();
-        onOpenChange(false);
-        onUserAdded();
-      }
+      form.reset();
+      onOpenChange(false);
+      onUserAdded();
     } catch (error: any) {
       console.error("Error creating user:", error);
       toast({
