@@ -22,10 +22,19 @@ export const SidebarHeader = ({ collapsed, toggleSidebar }: SidebarHeaderProps) 
           <div className="flex items-center">
             <img 
               src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
-              alt="Logo" 
-              className="h-6 w-6 mr-2" 
+              alt="Elia GO Logo" 
+              className="h-6 w-6" 
             />
-            <span className="font-bold text-primary">ELIA GO</span>
+            
+            {company && (
+              <>
+                <span className="text-xs mx-2">×</span>
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={company.logo_url || undefined} alt={company.name} />
+                  <AvatarFallback className="text-xs">{company.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </>
+            )}
           </div>
         )}
         <Button 
@@ -41,17 +50,10 @@ export const SidebarHeader = ({ collapsed, toggleSidebar }: SidebarHeaderProps) 
       {!collapsed && company && (
         <div className="flex flex-col space-y-2">
           <Separator className="my-2" />
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={company.logo_url || undefined} alt={company.name} />
-              <AvatarFallback>{company.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex items-center">
-              <span className="text-xs">×</span>
-              <span className="text-sm font-medium ml-1 truncate">
-                {company.name}
-              </span>
-            </div>
+          <div className="flex items-center">
+            <span className="text-sm font-medium truncate">
+              {company.name}
+            </span>
           </div>
         </div>
       )}
