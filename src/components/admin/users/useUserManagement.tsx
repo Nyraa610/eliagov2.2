@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabaseService, UserProfile, UserRole } from "@/services/base/supabaseService";
 import { supabase } from "@/lib/supabase";
 import { toast as sonnerToast } from "sonner";
+import { profileService } from "@/services/base/profileService";
 
 export function useUserManagement() {
   const { toast } = useToast();
@@ -83,37 +83,28 @@ export function useUserManagement() {
       
       console.log(`Updating user ${selectedUser.id} role to ${selectedRole}`);
       
-      // First try using the supabaseService method which is more reliable
-      const success = await supabaseService.updateUserRole(selectedUser.id, selectedRole);
+      // First try using the profileService method
+      const success = await profileService.updateUserRole(selectedUser.id, selectedRole);
       
-      if (!success) {
-        // If that fails, fall back to direct database update
-        const { error } = await supabase
-          .from('profiles')
-          .update({ role: selectedRole })
-          .eq('id', selectedUser.id);
+      if (success) {
+        // Show success toast
+        toast({
+          title: "Role updated",
+          description: `${selectedUser.email}'s role has been updated to ${selectedRole}.`,
+        });
         
-        if (error) {
-          throw new Error(`Failed to update role: ${error.message}`);
-        }
+        // Update user in the local state
+        setUsers(users.map(user => 
+          user.id === selectedUser.id ? { ...user, role: selectedRole } : user
+        ));
+        
+        setIsRoleDialogOpen(false);
+        
+        // Refresh the user list to ensure we have the latest data
+        await fetchUsers();
+      } else {
+        throw new Error("Failed to update role: Permission denied");
       }
-      
-      // Show success toast
-      toast({
-        title: "Role updated",
-        description: `${selectedUser.email}'s role has been updated to ${selectedRole}.`,
-      });
-      
-      // Update user in the local state
-      setUsers(users.map(user => 
-        user.id === selectedUser.id ? { ...user, role: selectedRole } : user
-      ));
-      
-      setIsRoleDialogOpen(false);
-      
-      // Refresh the user list to ensure we have the latest data
-      await fetchUsers();
-      
     } catch (error: any) {
       console.error("Error updating user role:", error);
       toast({

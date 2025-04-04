@@ -105,21 +105,41 @@ export const profileService = {
     try {
       console.log(`profileService: Updating user ${userId} role to ${role}`);
       
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({ role })
-        .eq('id', userId);
+      // Use RPC call to ensure proper permissions
+      const { data, error } = await supabaseClient.rpc('update_user_role', {
+        user_id: userId,
+        new_role: role
+      });
         
       if (error) {
         console.error("profileService: Error updating user role:", error);
         throw error;
       }
       
-      console.log(`profileService: Successfully updated user ${userId} role to ${role}`);
+      console.log(`profileService: Successfully updated user ${userId} role to ${role}`, data);
       return true;
     } catch (error) {
       console.error("profileService: Error updating user role:", error);
-      return false;
+      
+      // Try direct update as fallback
+      try {
+        console.log("profileService: Trying direct update as fallback");
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({ role })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error("profileService: Fallback update failed:", updateError);
+          return false;
+        }
+        
+        console.log("profileService: Fallback update succeeded");
+        return true;
+      } catch (fallbackError) {
+        console.error("profileService: Fallback update exception:", fallbackError);
+        return false;
+      }
     }
   }
 };

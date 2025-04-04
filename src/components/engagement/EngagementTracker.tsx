@@ -6,6 +6,7 @@ import { useAuthTracking } from '@/hooks/useAuthTracking';
 import { useTeamEngagement } from '@/hooks/useTeamEngagement';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { timeTrackingService } from '@/services/engagement/timeTrackingService';
 
 export function EngagementTracker() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -88,6 +89,23 @@ export function EngagementTracker() {
       console.log("Engagement tracking active", { isAdmin, userId, path: location.pathname });
     }
   }, [isAuthenticated, isAdmin, location.pathname, isInitialized, userId]);
+
+  // Handle time tracking submission on page unload
+  useEffect(() => {
+    // Only set up unload handler if authenticated and not admin
+    if (isAuthenticated && !isAdmin && userId) {
+      const handleUnload = () => {
+        timeTrackingService.submitTime();
+      };
+      
+      window.addEventListener('beforeunload', handleUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleUnload);
+        timeTrackingService.submitTime();
+      };
+    }
+  }, [isAuthenticated, isAdmin, userId]);
 
   // This component doesn't render anything visible
   return null;
