@@ -91,43 +91,50 @@ export function useMenuItems() {
           path: "/assessment/value-chain",
           icon: <Truck className="h-4 w-4" />,
           hasSubmenu: false
-        }
-      ]
-    },
-    {
-      id: "results",
-      label: "Results",
-      path: "/assessment/results",
-      icon: <LineChart className="h-4 w-4" />,
-      hasSubmenu: true,
-      submenuItems: [
+        },
         {
-          id: "esgResults",
-          label: "ESG Diagnostic",
+          id: "materialityAnalysis",
+          label: "Materiality Analysis",
+          path: "/assessment/materiality-analysis",
+          icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "results",
+          label: "Assessment Results",
           path: "/assessment/esg-diagnostic-results",
-          icon: <CheckSquare className="h-4 w-4" />,
-          hasSubmenu: false
-        },
-        {
-          id: "carbonResults",
-          label: "Carbon Evaluation",
-          path: "/assessment/carbon-evaluation-results",
-          icon: <BarChart className="h-4 w-4" />,
-          hasSubmenu: false
-        },
-        {
-          id: "actionPlanResults",
-          label: "Action Plan",
-          path: "/assessment/action-plan-results",
-          icon: <CheckSquare className="h-4 w-4" />,
-          hasSubmenu: false
-        },
-        {
-          id: "valueChainResults",
-          label: "Value Chain",
-          path: "/assessment/value-chain-results",
-          icon: <Truck className="h-4 w-4" />,
-          hasSubmenu: false
+          icon: <LineChart className="h-4 w-4" />,
+          hasSubmenu: true,
+          submenuItems: [
+            {
+              id: "esgResults",
+              label: "ESG Diagnostic",
+              path: "/assessment/esg-diagnostic-results",
+              icon: <CheckSquare className="h-4 w-4" />,
+              hasSubmenu: false
+            },
+            {
+              id: "carbonResults",
+              label: "Carbon Evaluation",
+              path: "/assessment/carbon-evaluation-results",
+              icon: <BarChart className="h-4 w-4" />,
+              hasSubmenu: false
+            },
+            {
+              id: "actionPlanResults",
+              label: "Action Plan",
+              path: "/assessment/action-plan-results",
+              icon: <CheckSquare className="h-4 w-4" />,
+              hasSubmenu: false
+            },
+            {
+              id: "valueChainResults",
+              label: "Value Chain",
+              path: "/assessment/value-chain-results",
+              icon: <Truck className="h-4 w-4" />,
+              hasSubmenu: false
+            }
+          ]
         }
       ]
     },

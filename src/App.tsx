@@ -52,28 +52,33 @@ function App() {
               }>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="dashboard" element={<Dashboard />} />
+                
+                {/* Assessment module routes - consolidated */}
                 <Route path="assessment" element={<Assessment />} />
+                <Route path="assessment/esg-diagnostic" element={<Assessment />} />
+                <Route path="assessment/esg-diagnostic-results" element={<ESGDiagnosticResults />} />
+                <Route path="assessment/carbon-evaluation" element={<CarbonEvaluation />} />
+                <Route path="assessment/carbon-evaluation-results" element={<CarbonEvaluationResults />} />
+                <Route path="assessment/action-plan" element={<ActionPlan />} />
+                <Route path="assessment/action-plan-results" element={<ActionPlanResults />} />
                 <Route path="assessment/value-chain" element={<ValueChainModeling />} />
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
-                <Route path="carbon-evaluation" element={<CarbonEvaluation />} />
-                <Route path="carbon-evaluation/results" element={<CarbonEvaluationResults />} />
-                <Route path="action-plan" element={<ActionPlan />} />
-                <Route path="action-plan/results" element={<ActionPlanResults />} />
+                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
                 <Route path="deliverables" element={<Deliverables />} />
                 <Route path="engagement" element={<Engagement />} />
                 
-                {/* Assessment module routes */}
-                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
-                <Route path="assessment/results" element={<ESGDiagnosticResults />} />
-                
                 {/* Legacy redirects */}
-                <Route path="carbon-footprint" element={<Navigate to="/carbon-evaluation" replace />} />
+                <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
+                <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
+                <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
                 <Route path="companies" element={<Navigate to="/profile" replace />} />
                 <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
-                <Route path="assessment/carbon-evaluation" element={<Navigate to="/carbon-evaluation" replace />} />
+                <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
+                <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
               </Route>
               
               {/* Profile and Company pages use UserLayout directly */}
