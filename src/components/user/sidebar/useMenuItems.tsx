@@ -180,8 +180,8 @@ export function useMenuItems() {
     },
     {
       id: "companies",
-      label: "Companies",
-      path: "/companies",
+      label: "Company Profile",
+      path: "/company/profile",
       icon: <Building className="h-4 w-4" />,
       hasSubmenu: false
     }
