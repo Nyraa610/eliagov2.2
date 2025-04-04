@@ -34,9 +34,10 @@ import { User, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabaseClient } from "@/services/base/supabaseClient";
 
+// Update the schema to use the valid roles that match the database enum
 const addUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  role: z.enum(["user", "admin", "client_admin", "consultant"] as const),
+  role: z.enum(["user", "admin", "client_admin"] as const), // Updated to remove 'consultant' temporarily
   password: z
     .string()
     .min(8, "Password must be at least 8 characters long")
@@ -190,7 +191,7 @@ export function AddUserDialog({
                       <SelectItem value="user">User</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="client_admin">Client Admin</SelectItem>
-                      <SelectItem value="consultant">Consultant</SelectItem>
+                      {/* Temporarily removed consultant option until the enum is updated in the database */}
                     </SelectContent>
                   </Select>
                   <FormDescription>
