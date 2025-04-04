@@ -35,12 +35,24 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
 
     setIsCreatingCompany(true);
     try {
-      // Simple company creation with just a name
-      await companyService.createCompany({ name: companyName });
+      // Use the userCompanyService.createUserCompany method directly to ensure the user is linked to the company
+      const companyData = { 
+        name: companyName,
+        // Adding additional minimal information to ensure data validation passes
+        country: profile?.country || "Not specified"
+      };
+      
+      console.log("Attempting to create company with data:", companyData);
+      
+      const newCompany = await companyService.createCompany(companyData);
+      
+      console.log("Company created successfully:", newCompany);
+      
       toast({
         title: "Success",
         description: "Company created successfully",
       });
+      
       setCompanyName("");
       // Refresh profile to show the new company
       onCompanyCreated();
@@ -49,7 +61,7 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create company",
+        description: error instanceof Error ? error.message : "Failed to create company",
       });
     } finally {
       setIsCreatingCompany(false);

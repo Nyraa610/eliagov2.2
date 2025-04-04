@@ -110,6 +110,11 @@ export const userCompanyService = {
         
       if (companyError) {
         console.error("Error creating company:", companyError);
+        
+        if (companyError.message && companyError.message.includes("violates row-level security")) {
+          throw new Error("Permission denied: You don't have access to create a company");
+        }
+        
         throw companyError;
       }
       
@@ -131,10 +136,31 @@ export const userCompanyService = {
         
       if (profileError) {
         console.error("Error updating user profile with company:", profileError);
+        // If we fail to update the profile, try to clean up by deleting the company
+        try {
+          await supabase.from('companies').delete().eq('id', createdCompany.id);
+        } catch (cleanupError) {
+          console.error("Failed to clean up company after profile update failure:", cleanupError);
+        }
         throw profileError;
       }
       
       console.log("User profile updated with company info successfully");
+      
+      // Initialize storage for the company
+      try {
+        console.log("Initializing storage for new company");
+        await supabase.functions.invoke('initialize-company-storage', {
+          body: { 
+            companyId: createdCompany.id, 
+            companyName: createdCompany.name 
+          }
+        });
+        console.log("Storage initialization triggered");
+      } catch (storageError) {
+        console.warn("Failed to initialize storage buckets - this is non-fatal:", storageError);
+        // Continue anyway - storage will be initialized when needed
+      }
       
       return createdCompany as Company;
     } catch (error) {
