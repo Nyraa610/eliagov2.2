@@ -73,8 +73,8 @@ function App() {
                 <Route path="engagement" element={<Engagement />} />
                 
                 {/* Consultant routes */}
-                <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
-                <Route path="/consultant/notifications" element={<ConsultantNotifications />} />
+                <Route path="consultant/dashboard" element={<ConsultantDashboard />} />
+                <Route path="consultant/notifications" element={<ConsultantNotifications />} />
                 
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />

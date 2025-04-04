@@ -15,7 +15,9 @@ import {
   ClipboardCheck,
   CheckSquare,
   Users,
-  Bell
+  Bell,
+  Activity,
+  Clipboard
 } from "lucide-react";
 
 export interface MenuItem {
@@ -72,20 +74,6 @@ export function useMenuItems() {
           hasSubmenu: false
         },
         {
-          id: "carbonEvaluation",
-          label: "Carbon Evaluation",
-          path: "/assessment/carbon-evaluation",
-          icon: <BarChart className="h-4 w-4" />,
-          hasSubmenu: false
-        },
-        {
-          id: "actionPlan",
-          label: "Action Plan",
-          path: "/assessment/action-plan",
-          icon: <CheckSquare className="h-4 w-4" />,
-          hasSubmenu: false
-        },
-        {
           id: "valueChain",
           label: "Value Chain",
           path: "/assessment/value-chain",
@@ -137,6 +125,20 @@ export function useMenuItems() {
           ]
         }
       ]
+    },
+    {
+      id: "carbonEvaluation",
+      label: "Carbon Evaluation",
+      path: "/assessment/carbon-evaluation",
+      icon: <BarChart className="h-4 w-4" />,
+      hasSubmenu: false
+    },
+    {
+      id: "actionPlan",
+      label: "Action Plan",
+      path: "/assessment/action-plan",
+      icon: <Clipboard className="h-4 w-4" />,
+      hasSubmenu: false
     },
     {
       id: "training",
