@@ -34,6 +34,8 @@ serve(async (req) => {
       throw new Error('Email and password are required');
     }
 
+    console.log(`Creating user with email: ${email}, role: ${role}`);
+
     // Create user with admin privileges
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -54,7 +56,7 @@ serve(async (req) => {
     const { error: profileError } = await supabaseAdmin.rpc('admin_create_profile', {
       p_id: authData.user.id,
       p_email: email,
-      p_role: role
+      p_role: role // Ensure role is passed correctly
     });
 
     if (profileError) {
@@ -80,7 +82,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in create-user function:", error);
     
     return new Response(

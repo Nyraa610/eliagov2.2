@@ -73,7 +73,7 @@ export function useAddUserForm({
           description: `User ${values.email}'s role has been updated to ${values.role}.`,
         });
       } else {
-        console.log("Creating new user");
+        console.log("Creating new user with role:", values.role);
         
         // Instead of using admin.createUser directly, use a more reliable approach
         // by leveraging Supabase's signUp method and custom RPC function
@@ -108,7 +108,7 @@ export function useAddUserForm({
               body: {
                 email: values.email,
                 password: tempPassword,
-                role: values.role
+                role: values.role  // Make sure to pass the correct role
               }
             });
             
@@ -140,7 +140,7 @@ export function useAddUserForm({
             const { error: inviteError } = await supabase.functions.invoke('send-invitation', {
               body: {
                 email: values.email,
-                role: values.role
+                role: values.role  // Make sure role is passed to invitation
               }
             });
             

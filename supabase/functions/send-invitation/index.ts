@@ -29,6 +29,7 @@ serve(async (req) => {
 
     // Get request body
     const { email, role } = await req.json();
+    console.log(`Sending invitation to ${email} with role ${role}`);
 
     if (!email) {
       throw new Error('Email is required');
