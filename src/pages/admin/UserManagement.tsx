@@ -30,8 +30,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { UserCheck, Search, RefreshCw } from "lucide-react";
+import { UserCheck, Search, RefreshCw, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
+import { AddUserDialog } from "@/components/admin/users/AddUserDialog";
 
 export default function UserManagement() {
   const { toast } = useToast();
@@ -43,6 +44,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>("user");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -120,7 +122,7 @@ export default function UserManagement() {
       } else {
         throw new Error("Failed to update role");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user role:", error);
       toast({
         variant: "destructive",
@@ -157,6 +159,13 @@ export default function UserManagement() {
                 Refresh
               </Button>
               <Button
+                onClick={() => setIsAddUserDialogOpen(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => navigate("/admin/panel")}
               >
                 Back to Admin Panel
@@ -214,6 +223,10 @@ export default function UserManagement() {
                                 <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                   user.role === "admin" 
                                     ? "bg-primary/10 text-primary" 
+                                    : user.role === "consultant"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : user.role === "client_admin" 
+                                    ? "bg-amber-100 text-amber-800"
                                     : "bg-muted text-muted-foreground"
                                 }`}>
                                   {user.role}
@@ -256,6 +269,10 @@ export default function UserManagement() {
                     <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       selectedUser?.role === "admin" 
                         ? "bg-primary/10 text-primary" 
+                        : selectedUser?.role === "consultant"
+                        ? "bg-blue-100 text-blue-800"
+                        : selectedUser?.role === "client_admin" 
+                        ? "bg-amber-100 text-amber-800"
                         : "bg-muted text-muted-foreground"
                     }`}>
                       {selectedUser?.role}
@@ -272,6 +289,8 @@ export default function UserManagement() {
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="client_admin">Client Admin</SelectItem>
+                        <SelectItem value="consultant">Consultant</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -287,6 +306,13 @@ export default function UserManagement() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Add User Dialog */}
+          <AddUserDialog 
+            open={isAddUserDialogOpen}
+            onOpenChange={setIsAddUserDialogOpen}
+            onUserAdded={fetchUsers}
+          />
         </motion.div>
       </div>
     </div>
