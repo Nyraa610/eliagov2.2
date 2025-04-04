@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -83,10 +84,17 @@ export function useUserManagement() {
       
       console.log(`Updating user ${selectedUser.id} role to ${selectedRole}`);
       
-      // First try using the profileService method
-      const success = await profileService.updateUserRole(selectedUser.id, selectedRole);
+      // Use the improved database function to update the role
+      const { data, error } = await supabase.rpc('update_user_role', {
+        user_id: selectedUser.id,
+        new_role: selectedRole
+      });
       
-      if (success) {
+      if (error) {
+        throw new Error(`Failed to update role: ${error.message}`);
+      }
+      
+      if (data) {
         // Show success toast
         toast({
           title: "Role updated",
@@ -103,7 +111,7 @@ export function useUserManagement() {
         // Refresh the user list to ensure we have the latest data
         await fetchUsers();
       } else {
-        throw new Error("Failed to update role: Permission denied");
+        throw new Error("Failed to update role: Operation didn't complete");
       }
     } catch (error: any) {
       console.error("Error updating user role:", error);

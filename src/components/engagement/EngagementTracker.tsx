@@ -90,18 +90,25 @@ export function EngagementTracker() {
     }
   }, [isAuthenticated, isAdmin, location.pathname, isInitialized, userId]);
 
-  // Handle time tracking submission on page unload
+  // Handle time tracking submission on page unload and interval
   useEffect(() => {
-    // Only set up unload handler if authenticated and not admin
+    // Only set up handlers if authenticated and not admin
     if (isAuthenticated && !isAdmin && userId) {
-      const handleUnload = () => {
+      const handleBeforeUnload = () => {
         timeTrackingService.submitTime();
       };
       
-      window.addEventListener('beforeunload', handleUnload);
+      // Set up event listener for page unload
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Submit time at regular intervals and when component unmounts
+      const intervalId = setInterval(() => {
+        timeTrackingService.submitTime();
+      }, 5 * 60 * 1000); // Every 5 minutes
       
       return () => {
-        window.removeEventListener('beforeunload', handleUnload);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(intervalId);
         timeTrackingService.submitTime();
       };
     }

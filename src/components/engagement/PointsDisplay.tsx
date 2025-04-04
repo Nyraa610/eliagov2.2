@@ -25,6 +25,19 @@ export function PointsDisplay() {
     return Math.round((pointsInCurrentLevel / pointsRequiredForLevel) * 100);
   };
 
+  // Format time spent in a human-readable way
+  const formatTimeSpent = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    return hours > 0 ? `${hours}h ${remainingMinutes}m` : `${minutes}m`;
+  };
+
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
@@ -35,9 +48,9 @@ export function PointsDisplay() {
 
     fetchStats();
 
-    // Listen for point changes
+    // Listen for point changes and time changes in real-time
     const channel = supabase
-      .channel('user_points_changes')
+      .channel('user_stats_changes')
       .on(
         'postgres_changes',
         {
@@ -99,7 +112,11 @@ export function PointsDisplay() {
               </div>
               <div className="flex justify-between">
                 <span>Total Time on Platform:</span>
-                <span>{Math.floor(stats.time_spent_seconds / 60)} mins</span>
+                <span>{formatTimeSpent(stats.time_spent_seconds)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time Rewards:</span>
+                <span>+10 pts / 30 mins active</span>
               </div>
             </div>
           </div>

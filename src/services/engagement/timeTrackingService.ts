@@ -10,6 +10,7 @@ class TimeTrackingService {
   private readonly POINT_AWARD_THRESHOLD_MS: number = 30 * 60 * 1000; // 30 minutes in milliseconds
   private readonly POINTS_PER_THRESHOLD: number = 10;
   private readonly ACTIVITY_CHECK_INTERVAL_MS: number = 60 * 1000; // Check every minute
+  private readonly TIME_SUBMISSION_INTERVAL_MS: number = 5 * 60 * 1000; // Submit every 5 minutes
 
   constructor() {
     // Initialize tracking on service creation
@@ -75,9 +76,9 @@ class TimeTrackingService {
         // Reset the last active time to now
         this.lastActiveTime = now;
         
-        // Check if we've reached the threshold to award points
-        if (this.accumulatedTime >= this.POINT_AWARD_THRESHOLD_MS) {
-          this.awardTimePoints();
+        // Check if we've reached the threshold to award points and periodically submit time
+        if (this.accumulatedTime >= this.TIME_SUBMISSION_INTERVAL_MS) {
+          this.submitAccumulatedTime();
         }
       }
     }, this.ACTIVITY_CHECK_INTERVAL_MS);
@@ -94,44 +95,38 @@ class TimeTrackingService {
     if (this.accumulatedTime <= 0) return;
     
     try {
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session || !sessionData.session.user) {
+        console.log("No authenticated user, skipping time tracking");
+        return;
+      }
+      
+      const userId = sessionData.session.user.id;
+      
       // Convert to seconds for database storage
       const seconds = Math.floor(this.accumulatedTime / 1000);
       if (seconds <= 0) return;
       
-      console.log(`Submitting accumulated time: ${seconds} seconds`);
+      console.log(`Submitting accumulated time: ${seconds} seconds for user ${userId}`);
       
-      await engagementService.trackTimeSpent(seconds);
+      // Call our new database function to record time and award points
+      const { data, error } = await supabase.rpc('record_user_activity_time', {
+        p_user_id: userId,
+        p_seconds_active: seconds
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log(`Time tracking submission result:`, data);
       
       // Reset accumulated time after successful submission
       this.accumulatedTime = 0;
     } catch (error) {
       console.error('Error submitting time tracking data:', error);
-    }
-  }
-
-  private async awardTimePoints(): Promise<void> {
-    try {
-      // Calculate how many point awards have been earned
-      const thresholdsPassed = Math.floor(this.accumulatedTime / this.POINT_AWARD_THRESHOLD_MS);
-      if (thresholdsPassed <= 0) return;
-      
-      const pointsEarned = thresholdsPassed * this.POINTS_PER_THRESHOLD;
-      console.log(`Awarding ${pointsEarned} points for ${thresholdsPassed * 30} minutes of active time`);
-      
-      // Track the activity with the appropriate points
-      await engagementService.trackActivity({
-        activity_type: 'active_time_reward',
-        points_earned: pointsEarned,
-        metadata: {
-          minutes_active: thresholdsPassed * 30,
-          thresholds_passed: thresholdsPassed
-        }
-      });
-      
-      // Subtract the rewarded time from accumulated time
-      this.accumulatedTime -= thresholdsPassed * this.POINT_AWARD_THRESHOLD_MS;
-    } catch (error) {
-      console.error('Error awarding time points:', error);
+      // Don't reset accumulation on error so we can try again later
     }
   }
 

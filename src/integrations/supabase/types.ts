@@ -1043,6 +1043,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      record_user_activity_time: {
+        Args: {
+          p_user_id: string
+          p_seconds_active: number
+        }
+        Returns: boolean
+      }
+      update_user_role: {
+        Args: {
+          user_id: string
+          new_role: string
+        }
+        Returns: boolean
+      }
       user_is_company_admin: {
         Args: {
           company_id: string
