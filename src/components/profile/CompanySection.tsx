@@ -38,8 +38,8 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
       // Use the userCompanyService.createUserCompany method directly to ensure the user is linked to the company
       const companyData = { 
         name: companyName,
-        // Adding additional minimal information to ensure data validation passes
-        country: profile?.country || "Not specified"
+        // Using a fixed default country since profile doesn't have a country property
+        country: "Not specified"
       };
       
       console.log("Attempting to create company with data:", companyData);
