@@ -94,6 +94,8 @@ export function EngagementTracker() {
   useEffect(() => {
     // Only set up handlers if authenticated and not admin
     if (isAuthenticated && !isAdmin && userId) {
+      console.log("Setting up time tracking for authenticated user:", userId);
+      
       const handleBeforeUnload = () => {
         timeTrackingService.submitTime();
       };
@@ -101,14 +103,8 @@ export function EngagementTracker() {
       // Set up event listener for page unload
       window.addEventListener('beforeunload', handleBeforeUnload);
       
-      // Submit time at regular intervals and when component unmounts
-      const intervalId = setInterval(() => {
-        timeTrackingService.submitTime();
-      }, 5 * 60 * 1000); // Every 5 minutes
-      
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
-        clearInterval(intervalId);
         timeTrackingService.submitTime();
       };
     }

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Medal } from 'lucide-react';
+import { Medal, Clock } from 'lucide-react';
 import { engagementService, UserEngagementStats } from '@/services/engagement';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 export function PointsDisplay() {
   const [stats, setStats] = useState<UserEngagementStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCurrentlyActive, setIsCurrentlyActive] = useState<boolean>(true);
 
   const getNextLevelPoints = (level: number) => {
     // Simple formula for required points to level up
@@ -37,6 +38,42 @@ export function PointsDisplay() {
     
     return hours > 0 ? `${hours}h ${remainingMinutes}m` : `${minutes}m`;
   };
+
+  // Set up activity tracking for the status indicator
+  useEffect(() => {
+    const handleActivity = () => {
+      setIsCurrentlyActive(true);
+      resetInactivityTimer();
+    };
+    
+    let inactivityTimer: number | null = null;
+    
+    const resetInactivityTimer = () => {
+      if (inactivityTimer) window.clearTimeout(inactivityTimer);
+      
+      inactivityTimer = window.setTimeout(() => {
+        setIsCurrentlyActive(false);
+      }, 5 * 60 * 1000); // 5 minutes of inactivity
+    };
+    
+    // Track user interactions to detect activity
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    
+    // Initialize the timer
+    resetInactivityTimer();
+    
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+      
+      if (inactivityTimer) window.clearTimeout(inactivityTimer);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -90,6 +127,9 @@ export function PointsDisplay() {
           <Badge variant="outline" className="ml-1">
             Lvl {stats.level}
           </Badge>
+          {isCurrentlyActive && (
+            <Clock className="h-3 w-3 text-green-500 ml-1" title="Active time tracking" />
+          )}
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-80 p-4">
@@ -117,6 +157,13 @@ export function PointsDisplay() {
               <div className="flex justify-between">
                 <span>Time Rewards:</span>
                 <span>+10 pts / 30 mins active</span>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span>Tracking Status:</span>
+                <span className={`flex items-center ${isCurrentlyActive ? 'text-green-500' : 'text-yellow-500'}`}>
+                  <Clock className="h-3 w-3 mr-1" />
+                  {isCurrentlyActive ? 'Active' : 'Paused (inactive)'}
+                </span>
               </div>
             </div>
           </div>
