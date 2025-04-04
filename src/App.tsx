@@ -32,6 +32,8 @@ import Deliverables from './pages/Deliverables';
 import ESGDiagnosticResults from './pages/assessment/ESGDiagnosticResults';
 import CarbonEvaluationResults from './pages/assessment/CarbonEvaluationResults';
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
+import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
+import ConsultantNotifications from './pages/consultant/ConsultantNotifications';
 
 function App() {
   return (
@@ -69,6 +71,10 @@ function App() {
                 <Route path="documents" element={<DocumentCenter />} />
                 <Route path="deliverables" element={<Deliverables />} />
                 <Route path="engagement" element={<Engagement />} />
+                
+                {/* Consultant routes */}
+                <Route path="consultant/dashboard" element={<ConsultantDashboard />} />
+                <Route path="consultant/notifications" element={<ConsultantNotifications />} />
                 
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
