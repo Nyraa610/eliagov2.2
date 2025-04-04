@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { supabaseService, UserProfile } from "@/services/base/supabaseService";
+import { supabaseService, UserProfile, UserRole } from "@/services/base/supabaseService";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 export function useUserManagement() {
   const { toast } = useToast();
@@ -14,10 +14,11 @@ export function useUserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [selectedRole, setSelectedRole] = useState<any>("user");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("user");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -78,30 +79,44 @@ export function useUserManagement() {
     if (!selectedUser) return;
     
     try {
-      const success = await supabaseService.updateUserRole(selectedUser.id, selectedRole);
+      setIsUpdatingRole(true);
       
-      if (success) {
-        toast({
-          title: "Role updated",
-          description: `${selectedUser.email}'s role has been updated to ${selectedRole}.`,
-        });
-        
-        // Update user in the list
-        setUsers(users.map(user => 
-          user.id === selectedUser.id ? { ...user, role: selectedRole } : user
-        ));
-        
-        setIsRoleDialogOpen(false);
-      } else {
-        throw new Error("Failed to update role");
+      // Call the Supabase RPC function to update the user's role
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ role: selectedRole })
+        .eq('id', selectedUser.id)
+        .select();
+      
+      if (error) {
+        throw new Error(`Failed to update role: ${error.message}`);
       }
+      
+      // Show success toast
+      toast({
+        title: "Role updated",
+        description: `${selectedUser.email}'s role has been updated to ${selectedRole}.`,
+      });
+      
+      // Update user in the local state
+      setUsers(users.map(user => 
+        user.id === selectedUser.id ? { ...user, role: selectedRole } : user
+      ));
+      
+      setIsRoleDialogOpen(false);
+      
+      // Refresh the user list to ensure we have the latest data
+      await fetchUsers();
+      
     } catch (error: any) {
       console.error("Error updating user role:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update user role. Please try again.",
+        description: error.message || "Failed to update user role. Please try again.",
       });
+    } finally {
+      setIsUpdatingRole(false);
     }
   };
 
@@ -183,6 +198,7 @@ export function useUserManagement() {
     updateUserRole,
     fetchUsers,
     deleteUser,
-    isDeleting
+    isDeleting,
+    isUpdatingRole
   };
 }

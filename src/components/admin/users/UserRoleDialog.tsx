@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserProfile, UserRole } from "@/services/base/supabaseService";
+import { Loader2 } from "lucide-react";
 
 interface UserRoleDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface UserRoleDialogProps {
   selectedRole: UserRole;
   onRoleChange: (role: UserRole) => void;
   onUpdateRole: () => Promise<void>;
+  isUpdatingRole?: boolean;
 }
 
 export function UserRoleDialog({
@@ -33,7 +35,8 @@ export function UserRoleDialog({
   selectedUser,
   selectedRole,
   onRoleChange,
-  onUpdateRole
+  onUpdateRole,
+  isUpdatingRole = false
 }: UserRoleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -79,11 +82,18 @@ export function UserRoleDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUpdatingRole}>
             Cancel
           </Button>
-          <Button onClick={onUpdateRole}>
-            Update Role
+          <Button onClick={onUpdateRole} disabled={isUpdatingRole}>
+            {isUpdatingRole ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Role'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

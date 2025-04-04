@@ -30,7 +30,8 @@ export default function UserManagement() {
     updateUserRole,
     fetchUsers,
     deleteUser,
-    isDeleting
+    isDeleting,
+    isUpdatingRole
   } = useUserManagement();
 
   if (!isAdmin) {
@@ -118,6 +119,7 @@ export default function UserManagement() {
             selectedRole={selectedRole}
             onRoleChange={setSelectedRole}
             onUpdateRole={updateUserRole}
+            isUpdatingRole={isUpdatingRole}
           />
 
           {/* Add User Dialog */}
