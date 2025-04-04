@@ -10,7 +10,6 @@ import { CompanyProfileLoading } from "@/components/company/profile/CompanyProfi
 import { CompanyNotFound } from "@/components/company/profile/CompanyNotFound";
 import { SettingsTab } from "@/components/company/profile/SettingsTab";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
-import { UserLayout } from "@/components/user/UserLayout";
 
 export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
@@ -18,23 +17,15 @@ export default function CompanyProfile() {
   const [activeTab, setActiveTab] = useState("overview");
 
   if (loading) {
-    return (
-      <UserLayout>
-        <CompanyProfileLoading />
-      </UserLayout>
-    );
+    return <CompanyProfileLoading />;
   }
 
   if (!company) {
-    return (
-      <UserLayout>
-        <CompanyNotFound />
-      </UserLayout>
-    );
+    return <CompanyNotFound />;
   }
 
   return (
-    <UserLayout>
+    <>
       <CompanyProfileHeader company={company} isAdmin={isAdmin} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -72,6 +63,6 @@ export default function CompanyProfile() {
           </>
         )}
       </Tabs>
-    </UserLayout>
+    </>
   );
 }

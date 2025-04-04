@@ -77,7 +77,7 @@ function App() {
                 <Route path="consultant/dashboard" element={<ConsultantDashboard />} />
                 <Route path="consultant/notifications" element={<ConsultantNotifications />} />
                 
-                {/* Companies routes */}
+                {/* Companies routes - moved inside the main protected layout */}
                 <Route path="companies" element={<Companies />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="company/:id" element={<CompanyProfile />} />

@@ -7,7 +7,6 @@ import { UserProfile } from "@/services/base/profileTypes";
 import { ProfileLoading } from "@/components/profile/ProfileLoading";
 import { ProfileContent } from "@/components/profile/ProfileContent";
 import { useTranslation } from "react-i18next";
-import { UserLayout } from "@/components/user/UserLayout";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -49,15 +48,11 @@ export default function Profile() {
   };
 
   if (isLoading) {
-    return (
-      <UserLayout>
-        <ProfileLoading />
-      </UserLayout>
-    );
+    return <ProfileLoading />;
   }
 
   return (
-    <UserLayout>
+    <>
       <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
       <ProfileContent 
         profile={profile} 
@@ -65,6 +60,6 @@ export default function Profile() {
         onCompanyCreated={fetchProfile}
         onProfileUpdated={fetchProfile}
       />
-    </UserLayout>
+    </>
   );
 }

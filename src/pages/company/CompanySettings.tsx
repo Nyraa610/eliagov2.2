@@ -7,7 +7,6 @@ import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGen
 import { CompanyAPIConnectors } from "@/components/company/settings/CompanyAPIConnectors";
 import { CompanyUserManagement } from "@/components/company/settings/CompanyUserManagement";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
-import { UserLayout } from "@/components/user/UserLayout";
 
 export default function CompanySettings() {
   const { id } = useParams<{ id: string }>();
@@ -16,30 +15,26 @@ export default function CompanySettings() {
   
   if (loading) {
     return (
-      <UserLayout>
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </UserLayout>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
   
   if (!company) {
     return (
-      <UserLayout>
-        <div className="flex flex-col items-center justify-center p-8">
-          <p className="text-muted-foreground mb-4">The company you are looking for does not exist or you don't have permission to access it.</p>
-          <Button onClick={() => navigate("/profile")}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Profile
-          </Button>
-        </div>
-      </UserLayout>
+      <div className="flex flex-col items-center justify-center p-8">
+        <p className="text-muted-foreground mb-4">The company you are looking for does not exist or you don't have permission to access it.</p>
+        <Button onClick={() => navigate("/profile")}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back to Profile
+        </Button>
+      </div>
     );
   }
 
   return (
-    <UserLayout>
+    <>
       <h1 className="text-2xl font-bold mb-6">{`${company.name} - Settings`}</h1>
       
       <div className="mb-4">
@@ -75,6 +70,6 @@ export default function CompanySettings() {
           </>
         )}
       </Tabs>
-    </UserLayout>
+    </>
   );
 }
