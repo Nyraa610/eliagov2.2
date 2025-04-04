@@ -75,17 +75,22 @@ export function AddUserDialog({
       // If password is not provided, generate a random one
       const password = values.password || Math.random().toString(36).slice(-8);
 
-      // Create user with Supabase Auth
-      const { data, error } = await supabaseClient.auth.admin.createUser({
+      // Create user with Supabase Auth signUp (regular signup instead of admin API)
+      const { data, error } = await supabaseClient.auth.signUp({
         email: values.email,
         password,
-        email_confirm: true, // Auto-confirm email
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            role: values.role, // Add role to metadata so it can be used in the handle_new_user function
+          }
+        }
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Update user role
+        // Update user role in the profiles table to ensure it's set
         const { error: roleError } = await supabaseClient
           .from("profiles")
           .update({ role: values.role })
@@ -95,7 +100,7 @@ export function AddUserDialog({
 
         toast({
           title: "Success",
-          description: `User ${values.email} added successfully with role: ${values.role}`,
+          description: `User ${values.email} added successfully. They will need to verify their email before logging in.`,
         });
 
         form.reset();
