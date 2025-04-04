@@ -19,7 +19,13 @@ export default function ActionPlanResults() {
         setLoading(true);
         // In a real implementation, fetch actual results from the backend
         const data = await assessmentService.getAssessmentResults('action_plan');
-        setResults(data || mockResults);
+        
+        if (data && typeof data === 'object') {
+          setResults(data);
+        } else {
+          setResults(mockResults); // Fallback to mock data
+          console.log("No valid data returned, using mock data");
+        }
       } catch (error) {
         console.error("Failed to fetch results:", error);
         toast({
@@ -94,6 +100,11 @@ export default function ActionPlanResults() {
     );
   }
 
+  // Use safe defaults if data is missing
+  const safeResults = results || mockResults;
+  const goals = Array.isArray(safeResults.goals) ? safeResults.goals : [];
+  const initiatives = Array.isArray(safeResults.initiatives) ? safeResults.initiatives : [];
+
   return (
     <ResultsContainer
       title={t("assessment.actionPlan.resultsTitle")}
@@ -106,25 +117,29 @@ export default function ActionPlanResults() {
             <Target className="h-5 w-5 mr-2 text-primary" />
             {t("assessment.actionPlan.goals")}
           </h3>
-          <div className="grid gap-4">
-            {results.goals.map((goal: any) => (
-              <div key={goal.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{goal.title}</h4>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span>Target: {goal.timeline}</span>
+          {goals.length > 0 ? (
+            <div className="grid gap-4">
+              {goals.map((goal: any) => (
+                <div key={goal.id || `goal-${Math.random()}`} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">{goal.title}</h4>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>Target: {goal.timeline}</span>
+                      </div>
                     </div>
+                    <Badge className={getStatusColor(goal.status)}>
+                      {goal.status === "completed" ? "Completed" : 
+                       goal.status === "in-progress" ? "In Progress" : "Not Started"}
+                    </Badge>
                   </div>
-                  <Badge className={getStatusColor(goal.status)}>
-                    {goal.status === "completed" ? "Completed" : 
-                     goal.status === "in-progress" ? "In Progress" : "Not Started"}
-                  </Badge>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No goals available</p>
+          )}
         </div>
         
         <div>
@@ -132,34 +147,42 @@ export default function ActionPlanResults() {
             <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
             {t("assessment.actionPlan.initiatives")}
           </h3>
-          <div className="space-y-6">
-            {results.initiatives.map((initiative: any) => (
-              <div key={initiative.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="font-medium">{initiative.title}</h4>
-                  <Badge className={getStatusColor(initiative.status)}>
-                    {initiative.status === "completed" ? "Completed" : 
-                     initiative.status === "in-progress" ? "In Progress" : "Not Started"}
-                  </Badge>
+          {initiatives.length > 0 ? (
+            <div className="space-y-6">
+              {initiatives.map((initiative: any) => (
+                <div key={initiative.id || `initiative-${Math.random()}`} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <h4 className="font-medium">{initiative.title}</h4>
+                    <Badge className={getStatusColor(initiative.status)}>
+                      {initiative.status === "completed" ? "Completed" : 
+                       initiative.status === "in-progress" ? "In Progress" : "Not Started"}
+                    </Badge>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">{initiative.description}</p>
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <CalendarDays className="h-4 w-4 mr-1" />
+                    <span>
+                      {initiative.startDate && initiative.endDate ? 
+                        `${new Date(initiative.startDate).toLocaleDateString()} - ${new Date(initiative.endDate).toLocaleDateString()}` :
+                        "Dates not specified"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Owner: {initiative.owner || "Not assigned"}</span>
+                    <span>{initiative.completionPercentage || 0}% complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div 
+                      className="bg-primary h-2.5 rounded-full" 
+                      style={{ width: `${initiative.completionPercentage || 0}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <p className="text-gray-600 text-sm mb-3">{initiative.description}</p>
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <CalendarDays className="h-4 w-4 mr-1" />
-                  <span>{new Date(initiative.startDate).toLocaleDateString()} - {new Date(initiative.endDate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span>Owner: {initiative.owner}</span>
-                  <span>{initiative.completionPercentage}% complete</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                  <div 
-                    className="bg-primary h-2.5 rounded-full" 
-                    style={{ width: `${initiative.completionPercentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No initiatives available</p>
+          )}
         </div>
       </div>
     </ResultsContainer>

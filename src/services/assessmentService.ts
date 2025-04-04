@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { FeatureStatus } from "@/types/training";
 import { toast } from "sonner";
 
-export type AssessmentType = 'rse_diagnostic' | 'carbon_evaluation' | 'materiality_analysis' | 'action_plan' | 'iro_analysis';
+export type AssessmentType = 'rse_diagnostic' | 'carbon_evaluation' | 'materiality_analysis' | 'action_plan' | 'value_chain' | 'iro_analysis';
 
 interface AssessmentProgress {
   id?: string;

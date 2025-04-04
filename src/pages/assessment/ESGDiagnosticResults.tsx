@@ -9,7 +9,10 @@ import { assessmentService } from "@/services/assessmentService";
 export default function ESGDiagnosticResults() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<any>({
+    scores: [],
+    recommendations: []
+  });
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -18,7 +21,19 @@ export default function ESGDiagnosticResults() {
         setLoading(true);
         // In a real implementation, fetch actual results from the backend
         const data = await assessmentService.getAssessmentResults('rse_diagnostic');
-        setResults(data || mockResults);
+        
+        // Make sure we have valid data with the expected structure
+        if (data && typeof data === 'object') {
+          const safeData = {
+            scores: Array.isArray(data.scores) ? data.scores : [],
+            recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
+          };
+          setResults(safeData);
+        } else {
+          // If no valid data, use mock data
+          setResults(mockResults);
+          console.log("No valid data returned, using mock data");
+        }
       } catch (error) {
         console.error("Failed to fetch results:", error);
         toast({
@@ -64,6 +79,10 @@ export default function ESGDiagnosticResults() {
     );
   }
 
+  // Ensure we have arrays to work with, even if empty
+  const scores = Array.isArray(results.scores) ? results.scores : [];
+  const recommendations = Array.isArray(results.recommendations) ? results.recommendations : [];
+
   return (
     <ResultsContainer
       title={t("assessment.esgDiagnostic.resultsTitle")}
@@ -74,32 +93,42 @@ export default function ESGDiagnosticResults() {
         <div>
           <h3 className="text-lg font-medium mb-4">{t("assessment.results.scores")}</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={results.scores}
-                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="category" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip formatter={(value) => [`${value}%`, "Score"]} />
-                <Bar dataKey="score" fill="#8884d8" radius={[4, 4, 0, 0]}>
-                  {results.scores.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={getBarColor(entry.score)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {scores.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={scores}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="category" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip formatter={(value) => [`${value}%`, "Score"]} />
+                  <Bar dataKey="score" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                    {scores.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={getBarColor(entry.score)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+                <p className="text-gray-500">No score data available</p>
+              </div>
+            )}
           </div>
         </div>
         
         <div>
           <h3 className="text-lg font-medium mb-4">{t("assessment.results.recommendations")}</h3>
-          <ul className="space-y-3 list-disc pl-5">
-            {results.recommendations.map((recommendation: string, index: number) => (
-              <li key={index} className="text-gray-700">{recommendation}</li>
-            ))}
-          </ul>
+          {recommendations.length > 0 ? (
+            <ul className="space-y-3 list-disc pl-5">
+              {recommendations.map((recommendation: string, index: number) => (
+                <li key={index} className="text-gray-700">{recommendation}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No recommendations available</p>
+          )}
         </div>
       </div>
     </ResultsContainer>

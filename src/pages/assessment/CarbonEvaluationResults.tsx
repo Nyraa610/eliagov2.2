@@ -18,7 +18,13 @@ export default function CarbonEvaluationResults() {
         setLoading(true);
         // In a real implementation, fetch actual results from the backend
         const data = await assessmentService.getAssessmentResults('carbon_evaluation');
-        setResults(data || mockResults);
+        
+        if (data && typeof data === 'object') {
+          setResults(data);
+        } else {
+          setResults(mockResults); // Fallback to mock data
+          console.log("No valid data returned, using mock data");
+        }
       } catch (error) {
         console.error("Failed to fetch results:", error);
         toast({
@@ -68,6 +74,12 @@ export default function CarbonEvaluationResults() {
     );
   }
 
+  // Use safe defaults if data is missing
+  const safeResults = results || mockResults;
+  const emissionsByScope = Array.isArray(safeResults.emissionsByScope) ? safeResults.emissionsByScope : [];
+  const emissionsBySource = Array.isArray(safeResults.emissionsBySource) ? safeResults.emissionsBySource : [];
+  const recommendations = Array.isArray(safeResults.recommendations) ? safeResults.recommendations : [];
+
   return (
     <ResultsContainer
       title={t("assessment.carbonEvaluation.resultsTitle")}
@@ -78,15 +90,19 @@ export default function CarbonEvaluationResults() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-green-50 rounded-lg p-4 text-center">
             <p className="text-sm text-gray-500 mb-1">{t("assessment.carbonEvaluation.totalEmissions")}</p>
-            <p className="text-3xl font-bold text-green-700">{results.totalEmissions} <span className="text-lg">tCO2e</span></p>
+            <p className="text-3xl font-bold text-green-700">{safeResults.totalEmissions || 0} <span className="text-lg">tCO2e</span></p>
           </div>
           <div className="bg-blue-50 rounded-lg p-4 text-center">
             <p className="text-sm text-gray-500 mb-1">{t("assessment.carbonEvaluation.reductionPotential")}</p>
-            <p className="text-3xl font-bold text-blue-700">{results.reductionPotential} <span className="text-lg">tCO2e</span></p>
+            <p className="text-3xl font-bold text-blue-700">{safeResults.reductionPotential || 0} <span className="text-lg">tCO2e</span></p>
           </div>
           <div className="bg-amber-50 rounded-lg p-4 text-center">
             <p className="text-sm text-gray-500 mb-1">{t("assessment.carbonEvaluation.reductionPercentage")}</p>
-            <p className="text-3xl font-bold text-amber-700">{Math.round((results.reductionPotential / results.totalEmissions) * 100)}%</p>
+            <p className="text-3xl font-bold text-amber-700">
+              {safeResults.totalEmissions && safeResults.reductionPotential 
+                ? Math.round((safeResults.reductionPotential / safeResults.totalEmissions) * 100)
+                : 0}%
+            </p>
           </div>
         </div>
         
@@ -94,61 +110,77 @@ export default function CarbonEvaluationResults() {
           <div>
             <h3 className="text-lg font-medium mb-4">{t("assessment.carbonEvaluation.emissionsByScope")}</h3>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={results.emissionsByScope}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={true}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {results.emissionsByScope.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`${value} tCO2e`, "Emissions"]} />
-                </PieChart>
-              </ResponsiveContainer>
+              {emissionsByScope.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={emissionsByScope}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {emissionsByScope.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} tCO2e`, "Emissions"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+                  <p className="text-gray-500">No emissions data available</p>
+                </div>
+              )}
             </div>
           </div>
           
           <div>
             <h3 className="text-lg font-medium mb-4">{t("assessment.carbonEvaluation.emissionsBySource")}</h3>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={results.emissionsBySource}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {results.emissionsBySource.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                  <Tooltip formatter={(value) => [`${value} tCO2e`, "Emissions"]} />
-                </PieChart>
-              </ResponsiveContainer>
+              {emissionsBySource.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={emissionsBySource}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {emissionsBySource.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip formatter={(value) => [`${value} tCO2e`, "Emissions"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+                  <p className="text-gray-500">No source data available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
         
         <div>
           <h3 className="text-lg font-medium mb-4">{t("assessment.results.recommendations")}</h3>
-          <ul className="space-y-3 list-disc pl-5">
-            {results.recommendations.map((recommendation: string, index: number) => (
-              <li key={index} className="text-gray-700">{recommendation}</li>
-            ))}
-          </ul>
+          {recommendations.length > 0 ? (
+            <ul className="space-y-3 list-disc pl-5">
+              {recommendations.map((recommendation: string, index: number) => (
+                <li key={index} className="text-gray-700">{recommendation}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No recommendations available</p>
+          )}
         </div>
       </div>
     </ResultsContainer>
