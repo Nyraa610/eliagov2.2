@@ -13,11 +13,14 @@ export const authService = {
   /**
    * Sign in with email and password
    */
-  signIn: async (email: string, password: string) => {
+  signIn: async (email: string, password: string, captchaToken?: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          captchaToken
+        }
       });
       
       if (error) {
@@ -33,7 +36,7 @@ export const authService = {
   /**
    * Sign up with email and password
    */
-  signUp: async (email: string, password: string, metadata?: Record<string, any>) => {
+  signUp: async (email: string, password: string, metadata?: Record<string, any>, captchaToken?: string) => {
     try {
       // Format metadata to ensure we have consistent keys
       const formattedMetadata = {
@@ -52,6 +55,7 @@ export const authService = {
         password,
         options: {
           data: formattedMetadata,
+          captchaToken
         },
       });
       

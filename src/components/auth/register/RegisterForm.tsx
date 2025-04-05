@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,19 @@ export function RegisterForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { registerUser, isLoading } = useRegistration();
+
+  // Load Cloudflare Turnstile script
+  useEffect(() => {
+    // Only load if it hasn't been loaded already
+    if (typeof window !== 'undefined' && !window.document.getElementById('turnstile-script')) {
+      const script = document.createElement('script');
+      script.id = 'turnstile-script';
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
 
   // Step 1 form (basic info)
   const basicInfoForm = useForm<Partial<RegistrationFormValues>>({
@@ -92,12 +105,17 @@ export function RegisterForm() {
           isLoading={isLoading} 
         />
       ) : (
-        <AdditionalInfoForm 
-          form={additionalInfoForm} 
-          onSubmit={onAdditionalInfoSubmit} 
-          onBack={goBack}
-          isLoading={isLoading} 
-        />
+        <>
+          {/* Captcha container - will be populated by Turnstile */}
+          <div id="captcha-container" className="flex justify-center my-4"></div>
+          
+          <AdditionalInfoForm 
+            form={additionalInfoForm} 
+            onSubmit={onAdditionalInfoSubmit} 
+            onBack={goBack}
+            isLoading={isLoading} 
+          />
+        </>
       )}
     </div>
   );

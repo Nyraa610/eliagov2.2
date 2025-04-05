@@ -26,6 +26,18 @@ export function useRegistration() {
   const registerUser = async (data: RegistrationFormValues) => {
     setIsLoading(true);
     try {
+      // Add turnstile/hCaptcha support if window.turnstile exists (loaded via script)
+      let captchaToken: string | undefined = undefined;
+      
+      if (typeof window !== 'undefined' && 'turnstile' in window) {
+        // Get token from turnstile container if it exists
+        // @ts-ignore - turnstile is loaded via script
+        const token = window.turnstile?.getResponse?.('#captcha-container');
+        if (token) {
+          captchaToken = token;
+        }
+      }
+
       const { error } = await authService.signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -35,7 +47,7 @@ export function useRegistration() {
         department: data.department,
         persona: data.persona,
         marketingConsent: data.marketingConsent,
-      });
+      }, captchaToken);
 
       if (error) {
         throw error;
