@@ -1,122 +1,123 @@
 
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { t } = useTranslation();
-  const { signIn } = useAuth();
-  
-  // Removed the automatic redirect on mount that was preventing login
+const formSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+export default function Login() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    setLoginError(null);
-    
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(values.email, values.password);
       
       if (error) {
-        setLoginError(error.message || "An unknown error occurred during login");
-        return;
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message || "Invalid email or password",
+        });
+      } else {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
       }
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      
-      // Navigate to the protected route the user was trying to access, or dashboard
-      const from = location.state?.from?.pathname || "/assessment";
-      navigate(from, { replace: true });
     } catch (error: any) {
-      console.error("Login error:", error);
-      setLoginError(error.message || "An unknown error occurred during login");
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "An unexpected error occurred",
+      });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-24">
+      <div className="container mx-auto px-4 py-16 lg:py-24">
         <div className="max-w-md mx-auto">
-          <Card className="border-sage">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-center text-primary">{t('auth.login')}</CardTitle>
+          <Card className="bg-white/60 backdrop-blur-sm border-gray-200 shadow-sm">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
               <CardDescription className="text-center">
-                {t('auth.signIn')}
+                Enter your email and password to access your account
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="example@company.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="your@email.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link to="/reset-password" className="text-xs text-primary hover:underline">
-                      Forgot Password?
-                    </Link>
-                  </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                
-                {loginError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-                    {loginError}
-                  </div>
-                )}
-                
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Log In"}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign in"}
+                  </Button>
+                </form>
+              </Form>
               
-              <div className="mt-6 text-center text-sm">
-                <p className="text-muted-foreground">
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
-                  <Link to="/register" className="text-primary hover:underline">
-                    Sign Up
+                  <Link to="/register" className="text-primary font-medium hover:underline">
+                    Sign up
                   </Link>
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

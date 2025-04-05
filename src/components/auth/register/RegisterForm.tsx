@@ -5,25 +5,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useRegistration } from "@/hooks/useRegistration";
-import { RegisterFormData, basicInfoSchema, additionalInfoSchema } from "./formSchemas";
+import { useRegistration, registrationFormSchema, RegistrationFormValues } from "@/hooks/useRegistration";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { AdditionalInfoForm } from "./AdditionalInfoForm";
 
 export function RegisterForm() {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [basicData, setBasicData] = useState<Partial<RegisterFormData>>({});
+  const [basicData, setBasicData] = useState<Partial<RegistrationFormValues>>({});
   const { toast } = useToast();
   const navigate = useNavigate();
   const { registerUser, isLoading } = useRegistration();
 
   // Step 1 form (basic info)
-  const basicInfoForm = useForm<RegisterFormData>({
-    resolver: zodResolver(basicInfoSchema),
+  const basicInfoForm = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationFormSchema),
     defaultValues: {
       email: "",
       password: "",
-      confirmPassword: "",
       firstName: "",
       lastName: "",
       phone: "",
@@ -33,40 +31,41 @@ export function RegisterForm() {
   });
 
   // Step 2 form (additional info)
-  const additionalInfoForm = useForm<RegisterFormData>({
-    resolver: zodResolver(additionalInfoSchema),
+  const additionalInfoForm = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationFormSchema.pick({
+      department: true,
+      persona: true,
+      marketingConsent: true,
+    })),
     defaultValues: {
       department: "",
       persona: "",
       marketingConsent: false,
-      termsConsent: false,
     },
   });
 
-  const onBasicInfoSubmit = (data: Partial<RegisterFormData>) => {
+  const onBasicInfoSubmit = (data: Partial<RegistrationFormValues>) => {
     setBasicData(data);
     setCurrentStep(2);
   };
 
-  const onAdditionalInfoSubmit = async (data: Partial<RegisterFormData>) => {
+  const onAdditionalInfoSubmit = async (data: Partial<RegistrationFormValues>) => {
     try {
       // Combine data from both forms
-      const combinedData: RegisterFormData = {
+      const combinedData = {
         ...basicData,
         ...data,
-      } as RegisterFormData;
+      } as RegistrationFormValues;
 
       await registerUser(combinedData);
       
-      // Show success message and navigate
-      toast({
-        description: "Registration successful! Please check your email to confirm your account.",
-      });
-      navigate("/register-confirmation");
+      // Navigate to confirmation page
+      navigate("/register/confirmation");
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({
         variant: "destructive",
+        title: "Registration failed",
         description: error?.message || "Failed to register. Please try again.",
       });
     }

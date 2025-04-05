@@ -6,6 +6,8 @@ import DocumentCenter from "@/pages/DocumentCenter";
 import NotFound from './pages/NotFound';
 import Assessment from './pages/Assessment';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import RegisterConfirmation from './pages/RegisterConfirmation';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
@@ -45,6 +47,8 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/register/confirmation" element={<RegisterConfirmation />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               
               {/* Protected routes with user layout */}
