@@ -31,34 +31,12 @@ export const useAuthActions = () => {
     }
   }, [toast]);
 
-  // Manual sign in handler with captcha support
+  // Simple sign in handler without captcha
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      // Check if hCaptcha is enabled in the current environment
-      let turnstileCallback: (() => Promise<string>) | undefined = undefined;
-      
-      // Add turnstile/hCaptcha support if window.turnstile exists (loaded via script)
-      if (typeof window !== 'undefined' && 'turnstile' in window) {
-        turnstileCallback = () => {
-          return new Promise((resolve) => {
-            // @ts-ignore - turnstile is loaded via script
-            window.turnstile.render('#captcha-container', {
-              sitekey: '0x4AAAAAAAMYQz7i9RGGh2lG',
-              callback: function(token: string) {
-                resolve(token);
-              },
-            });
-          });
-        };
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          // Include captcha callback if available
-          captchaToken: turnstileCallback ? await turnstileCallback() : undefined
-        }
+        password
       });
       
       if (error) {

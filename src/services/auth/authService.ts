@@ -1,4 +1,3 @@
-
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -13,14 +12,11 @@ export const authService = {
   /**
    * Sign in with email and password
    */
-  signIn: async (email: string, password: string, captchaToken?: string) => {
+  signIn: async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          captchaToken
-        }
+        password
       });
       
       if (error) {
@@ -36,7 +32,7 @@ export const authService = {
   /**
    * Sign up with email and password
    */
-  signUp: async (email: string, password: string, metadata?: Record<string, any>, captchaToken?: string) => {
+  signUp: async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
       // Format metadata to ensure we have consistent keys
       const formattedMetadata = {
@@ -54,8 +50,7 @@ export const authService = {
         email,
         password,
         options: {
-          data: formattedMetadata,
-          captchaToken
+          data: formattedMetadata
         },
       });
       
