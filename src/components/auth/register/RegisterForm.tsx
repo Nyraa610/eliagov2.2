@@ -17,8 +17,16 @@ export function RegisterForm() {
   const { registerUser, isLoading } = useRegistration();
 
   // Step 1 form (basic info)
-  const basicInfoForm = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationFormSchema),
+  const basicInfoForm = useForm<Partial<RegistrationFormValues>>({
+    resolver: zodResolver(registrationFormSchema.pick({
+      email: true,
+      password: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      company: true,
+      country: true,
+    })),
     defaultValues: {
       email: "",
       password: "",
@@ -31,7 +39,7 @@ export function RegisterForm() {
   });
 
   // Step 2 form (additional info)
-  const additionalInfoForm = useForm<RegistrationFormValues>({
+  const additionalInfoForm = useForm<Partial<RegistrationFormValues>>({
     resolver: zodResolver(registrationFormSchema.pick({
       department: true,
       persona: true,

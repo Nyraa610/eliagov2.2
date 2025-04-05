@@ -1,181 +1,57 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { authService } from "@/services/auth/authService";
 
-// Registration form schema
+// Create a schema for registration form validation
 export const registrationFormSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
-  company: z.string().min(2, "Company name must be at least 2 characters"),
-  country: z.string().min(2, "Please select a valid country"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  country: z.string().optional(),
+  department: z.string().optional(),
+  persona: z.string().optional(),
+  marketingConsent: z.boolean().default(false),
 });
 
+// Extract the type from the schema
 export type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
-export const useRegistration = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export function useRegistration() {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
-
-  const registerUser = async (values: RegistrationFormValues) => {
+  const registerUser = async (data: RegistrationFormValues) => {
     setIsLoading(true);
-    console.log("Starting registration process...");
-    
     try {
-      // Step 1: Sign up the user with Supabase Auth
-      console.log("Attempting to sign up with Supabase...");
-      const { data, error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            first_name: values.firstName,
-            last_name: values.lastName,
-            phone: values.phone,
-            company: values.company,
-            country: values.country,
-          },
-        },
-      });
-
-      console.log("Supabase response received:", { 
-        user: data.user?.id ? `User ID: ${data.user.id}` : "No user created", 
-        error: error ? error.message : "No error"
+      const { error } = await authService.signUp(data.email, data.password, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        company: data.company,
+        country: data.country,
+        department: data.department,
+        persona: data.persona,
+        marketingConsent: data.marketingConsent,
       });
 
       if (error) {
-        console.error("Supabase error:", error);
         throw error;
       }
-      
-      if (!data.user) {
-        throw new Error("User registration failed");
-      }
 
-      // Step 2: Create the company and update profile
-      try {
-        console.log("Creating company:", values.company);
-        
-        // First, wait a moment to ensure the user profile has been created
-        // This is important because the trigger needs to run first
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Create company with minimal data
-        const companyData = {
-          name: values.company,
-          country: values.country
-        };
-        
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .insert([companyData])
-          .select()
-          .single();
-          
-        if (companyError) {
-          console.error("Error creating company:", companyError);
-          throw companyError;
-        }
-        
-        console.log("Company created successfully:", company);
-        
-        // Step 3: Update the user's profile with company info
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            company_id: company.id,
-            is_company_admin: true
-          })
-          .eq('id', data.user.id);
-          
-        if (profileError) {
-          console.error("Error updating user profile with company:", profileError);
-          throw profileError;
-        }
-        
-        console.log("User profile updated with company info successfully");
-        
-        // Step 4: Initialize storage folders for the company
-        try {
-          console.log("Initializing storage folders for company:", company.id);
-          // Call the edge function to initialize company storage
-          const { error: storageError } = await supabase.functions.invoke('initialize-company-storage', {
-            body: { companyId: company.id, companyName: company.name }
-          });
-          
-          if (storageError) {
-            console.error("Error initializing company storage:", storageError);
-            // Non-blocking error - we'll continue even if this fails
-          } else {
-            console.log("Company storage initialized successfully");
-          }
-        } catch (storageError) {
-          console.error("Exception initializing company storage:", storageError);
-          // Non-blocking - continue even if storage init fails
-        }
-        
-        toast({
-          title: "Registration successful!",
-          description: "Please check your email to confirm your account.",
-        });
-        
-        navigate("/register/confirmation");
-      } catch (companyError: any) {
-        console.error("Error in company/profile update:", companyError);
-        
-        // Even if company creation fails, the user account was created
-        toast({
-          variant: "destructive",
-          title: "Registration issue",
-          description: "Your account was created, but there was an issue with company setup. Please try logging in.",
-        });
-        
-        navigate("/login");
-      }
-    } catch (error: any) {
+      return true;
+    } catch (error) {
       console.error("Registration error:", error);
-      
-      let errorMessage = "Something went wrong. Please try again.";
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error_description) {
-        errorMessage = error.error_description;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: errorMessage,
-      });
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
-    isLoading,
     registerUser,
+    isLoading,
   };
-};
+}
