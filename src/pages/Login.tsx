@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,9 +34,12 @@ export default function Login() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
+      console.log("Login attempt for:", values.email);
+      
       const { error } = await signIn(values.email, values.password);
       
       if (error) {
+        console.error("Login error:", error);
         toast({
           variant: "destructive",
           title: "Login failed",
@@ -46,8 +50,12 @@ export default function Login() {
           title: "Login successful",
           description: "Welcome back!",
         });
+        
+        // Navigate to the dashboard after successful login
+        navigate("/");
       }
     } catch (error: any) {
+      console.error("Login exception:", error);
       toast({
         variant: "destructive",
         title: "Login failed",

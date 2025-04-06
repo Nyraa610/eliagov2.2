@@ -34,17 +34,22 @@ export const useAuthActions = () => {
   // Simple sign in handler without captcha
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) {
+        console.error("Sign in error:", error.message);
         return { error };
       }
       
+      console.log("Sign in successful");
       return { error: null };
     } catch (error) {
+      console.error("Exception during sign in:", error);
       return { error };
     }
   }, []);

@@ -1,4 +1,3 @@
-
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -21,11 +20,13 @@ export const authService = {
       });
       
       if (error) {
+        console.error("Sign in error:", error.message);
         return { error };
       }
       
       return { error: null };
     } catch (error) {
+      console.error("Exception during sign in:", error);
       return { error };
     }
   },
@@ -56,11 +57,13 @@ export const authService = {
       });
       
       if (error) {
+        console.error("Sign up error:", error.message);
         return { error };
       }
       
       return { error: null };
     } catch (error) {
+      console.error("Exception during sign up:", error);
       return { error };
     }
   },

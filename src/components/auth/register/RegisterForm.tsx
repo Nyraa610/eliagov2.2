@@ -65,9 +65,16 @@ export function RegisterForm() {
         ...data,
       } as RegistrationFormValues;
 
+      console.log("Submitting registration with data:", combinedData);
+      
       await registerUser(combinedData);
       
       // Navigate to confirmation page
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account.",
+      });
+      
       navigate("/register/confirmation");
     } catch (error: any) {
       console.error("Registration error:", error);

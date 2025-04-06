@@ -26,6 +26,8 @@ export function useRegistration() {
   const registerUser = async (data: RegistrationFormValues) => {
     setIsLoading(true);
     try {
+      console.log("Registering user:", data.email);
+      
       const { error } = await authService.signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -38,6 +40,7 @@ export function useRegistration() {
       });
 
       if (error) {
+        console.error("Registration error:", error);
         throw error;
       }
 
