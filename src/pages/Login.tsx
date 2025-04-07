@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,6 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { Label } from "@/components/ui/label";
+import { emailService } from "@/services/emailService";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -162,7 +166,12 @@ export default function Login() {
                       type="button" 
                       variant="link" 
                       className="p-0 h-auto text-sm text-primary"
-                      onClick={() => document.getElementById('resetPasswordDialog')?.showModal()}
+                      onClick={() => {
+                        const dialog = document.getElementById('resetPasswordDialog');
+                        if (dialog instanceof HTMLDialogElement) {
+                          dialog.showModal();
+                        }
+                      }}
                     >
                       Forgot password?
                     </Button>
@@ -210,7 +219,10 @@ export default function Login() {
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      document.getElementById('resetPasswordDialog')?.close();
+                      const dialog = document.getElementById('resetPasswordDialog');
+                      if (dialog instanceof HTMLDialogElement) {
+                        dialog.close();
+                      }
                     }}
                   >
                     Cancel

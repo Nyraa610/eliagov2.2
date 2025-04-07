@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { emailService } from "@/services/emailService";
 
 // Form validation schema
 const addUserSchema = z.object({
@@ -157,24 +158,26 @@ export function useAddUserForm({
               const { data: session } = await supabase.auth.getSession();
               const { data: inviterProfile } = await supabase
                 .from('profiles')
-                .select('full_name')
+                .select('full_name, company_id')
                 .eq('id', session?.session?.user?.id)
                 .single();
                 
-              const { data: companyData } = await supabase
-                .from('companies')
-                .select('name')
-                .eq('id', inviterProfile?.company_id)
-                .single();
+              if (inviterProfile?.company_id) {
+                const { data: companyData } = await supabase
+                  .from('companies')
+                  .select('name')
+                  .eq('id', inviterProfile.company_id)
+                  .single();
+                  
+                const inviterName = inviterProfile?.full_name || 'An administrator';
+                const companyName = companyData?.name || 'their organization';
                 
-              const inviterName = inviterProfile?.full_name || 'An administrator';
-              const companyName = companyData?.name || 'their organization';
-              
-              await emailService.sendInvitationEmail(
-                values.email,
-                inviterName,
-                companyName
-              );
+                await emailService.sendInvitationEmail(
+                  values.email,
+                  inviterName,
+                  companyName
+                );
+              }
             } catch (emailError) {
               console.error("Failed to send custom invitation email:", emailError);
               // Don't block user creation if email sending fails
