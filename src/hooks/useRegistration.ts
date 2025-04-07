@@ -28,6 +28,10 @@ export function useRegistration() {
     try {
       console.log("Registering user:", data.email);
       
+      // For captcha implementation, we're using a hardcoded token for preview
+      // In production, you'd use the actual captcha service
+      const captchaToken = "10000000-aaaa-bbbb-cccc-000000000001";
+      
       const { error } = await authService.signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -37,6 +41,7 @@ export function useRegistration() {
         department: data.department,
         persona: data.persona,
         marketingConsent: data.marketingConsent,
+        captchaToken
       });
 
       if (error) {

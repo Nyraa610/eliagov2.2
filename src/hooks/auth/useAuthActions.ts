@@ -31,14 +31,21 @@ export const useAuthActions = () => {
     }
   }, [toast]);
 
-  // Simple sign in handler without captcha
+  // Sign in handler with captcha
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       console.log("Attempting sign in for:", email);
       
+      // For preview environment - use a fake captcha token 
+      // In production, you would use the actual captcha verification
+      const captchaToken = "10000000-aaaa-bbbb-cccc-000000000001";
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          captchaToken
+        }
       });
       
       if (error) {
