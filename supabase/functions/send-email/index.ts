@@ -30,12 +30,13 @@ const getSmtpConfig = (): EmailConfig => {
       fromName: Deno.env.get("DEV_EMAIL_FROM_NAME") || "ELIA GO Development"
     };
   } else {
+    // Production configuration - Gmail setup with olive@eliago.com
     return {
-      host: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
-      port: parseInt(Deno.env.get("SMTP_PORT") || "587", 10),
-      username: Deno.env.get("SMTP_USERNAME") || "olive@eliago.com",
-      password: Deno.env.get("SMTP_PASSWORD") || "",
-      from: Deno.env.get("EMAIL_FROM") || "olive@eliago.com",
+      host: "smtp.gmail.com",
+      port: 587,
+      username: "olive@eliago.com",
+      password: Deno.env.get("SMTP_APP_GMAIL_KEY") || "",
+      from: "olive@eliago.com",
       fromName: Deno.env.get("EMAIL_FROM_NAME") || "ELIA GO"
     };
   }
