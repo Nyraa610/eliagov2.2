@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +18,8 @@ const formSchema = z.object({
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const { signIn } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -51,7 +52,6 @@ export default function Login() {
           description: "Welcome back!",
         });
         
-        // Navigate to the dashboard after successful login
         navigate("/");
       }
     } catch (error: any) {
@@ -63,6 +63,54 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !resetEmail.includes('@')) {
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+      });
+      return;
+    }
+    
+    setIsResettingPassword(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      try {
+        const resetLink = `${window.location.origin}/reset-password`;
+        await emailService.sendPasswordResetEmail(resetEmail, resetLink);
+      } catch (emailError) {
+        console.error("Failed to send custom reset email:", emailError);
+      }
+      
+      toast({
+        title: "Password reset email sent",
+        description: "Check your inbox for password reset instructions",
+      });
+      
+      setResetEmail("");
+      setIsResettingPassword(false);
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      toast({
+        variant: "destructive",
+        title: "Password reset failed",
+        description: error.message || "An unexpected error occurred",
+      });
+      setIsResettingPassword(false);
     }
   };
 
@@ -109,6 +157,17 @@ export default function Login() {
                     )}
                   />
                   
+                  <div className="flex justify-end">
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="p-0 h-auto text-sm text-primary"
+                      onClick={() => document.getElementById('resetPasswordDialog')?.showModal()}
+                    >
+                      Forgot password?
+                    </Button>
+                  </div>
+                  
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
@@ -125,6 +184,44 @@ export default function Login() {
               </div>
             </CardContent>
           </Card>
+          
+          <dialog id="resetPasswordDialog" className="modal p-0 rounded-lg shadow-lg backdrop:bg-black/50">
+            <div className="bg-white p-6 w-full max-w-md rounded-lg">
+              <h3 className="text-xl font-bold mb-4">Reset Password</h3>
+              <p className="text-gray-600 mb-4">
+                Enter your email address and we'll send you instructions to reset your password.
+              </p>
+              
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input 
+                    id="reset-email" 
+                    type="email" 
+                    value={resetEmail} 
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      document.getElementById('resetPasswordDialog')?.close();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isResettingPassword}>
+                    {isResettingPassword ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </dialog>
         </div>
       </div>
     </div>

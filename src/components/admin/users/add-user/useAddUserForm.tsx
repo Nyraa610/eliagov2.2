@@ -151,6 +151,34 @@ export function useAddUserForm({
                 variant: "warning"
               });
             }
+
+            // Also send a custom email via our email service
+            try {
+              const { data: session } = await supabase.auth.getSession();
+              const { data: inviterProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', session?.session?.user?.id)
+                .single();
+                
+              const { data: companyData } = await supabase
+                .from('companies')
+                .select('name')
+                .eq('id', inviterProfile?.company_id)
+                .single();
+                
+              const inviterName = inviterProfile?.full_name || 'An administrator';
+              const companyName = companyData?.name || 'their organization';
+              
+              await emailService.sendInvitationEmail(
+                values.email,
+                inviterName,
+                companyName
+              );
+            } catch (emailError) {
+              console.error("Failed to send custom invitation email:", emailError);
+              // Don't block user creation if email sending fails
+            }
           } catch (inviteError) {
             console.error("Failed to send invitation:", inviteError);
             toast({

@@ -118,6 +118,29 @@ const ResetPassword = () => {
         description: "You can now log in with your new password",
       });
       
+      // Send password change confirmation email
+      try {
+        const { error: emailError } = await emailService.sendEmail({
+          to: session.user.email || "",
+          subject: "Your password has been updated",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #4F46E5;">Password Updated</h1>
+              <p>Hello,</p>
+              <p>Your ELIA GO account password has been successfully updated.</p>
+              <p>If you did not make this change, please contact support immediately.</p>
+              <p>Best regards,<br>The ELIA GO Team</p>
+            </div>
+          `
+        });
+        
+        if (emailError) {
+          console.error("Failed to send password change confirmation:", emailError);
+        }
+      } catch (emailError) {
+        console.error("Exception sending password change email:", emailError);
+      }
+      
       // Sign out the user after successful password reset
       await supabase.auth.signOut();
       

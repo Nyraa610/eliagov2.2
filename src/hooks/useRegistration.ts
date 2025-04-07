@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { z } from "zod";
 import { authService } from "@/services/auth/authService";
+import { emailService } from "@/services/emailService";
 
 // Create a schema for registration form validation
 export const registrationFormSchema = z.object({
@@ -42,6 +43,14 @@ export function useRegistration() {
       if (error) {
         console.error("Registration error:", error);
         throw error;
+      }
+
+      // Send welcome email to the user
+      try {
+        await emailService.sendWelcomeEmail(data.email, data.firstName);
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Don't block registration if email sending fails
       }
 
       return true;

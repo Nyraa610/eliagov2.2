@@ -34,5 +34,9 @@ file_size_limit = "50MiB"
 [realtime]
 enabled = true
 
+[functions]
+[functions.send-email]
+verify_jwt = true
+
 [functions.value-chain-generator]
 verify_jwt = true
