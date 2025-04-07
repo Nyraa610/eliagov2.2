@@ -13,6 +13,7 @@ type EmailConfig = {
   username: string;
   password: string;
   from: string;
+  fromName: string;
 };
 
 // Get environment-based SMTP configuration
@@ -25,15 +26,17 @@ const getSmtpConfig = (): EmailConfig => {
       port: parseInt(Deno.env.get("DEV_SMTP_PORT") || "1025", 10),
       username: Deno.env.get("DEV_SMTP_USERNAME") || "",
       password: Deno.env.get("DEV_SMTP_PASSWORD") || "",
-      from: Deno.env.get("DEV_EMAIL_FROM") || "dev@example.com"
+      from: Deno.env.get("DEV_EMAIL_FROM") || "dev@example.com",
+      fromName: Deno.env.get("DEV_EMAIL_FROM_NAME") || "ELIA GO Development"
     };
   } else {
     return {
-      host: Deno.env.get("SMTP_HOST") || "",
+      host: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
       port: parseInt(Deno.env.get("SMTP_PORT") || "587", 10),
-      username: Deno.env.get("SMTP_USERNAME") || "",
+      username: Deno.env.get("SMTP_USERNAME") || "olive@eliago.com",
       password: Deno.env.get("SMTP_PASSWORD") || "",
-      from: Deno.env.get("EMAIL_FROM") || "no-reply@yourdomain.com"
+      from: Deno.env.get("EMAIL_FROM") || "olive@eliago.com",
+      fromName: Deno.env.get("EMAIL_FROM_NAME") || "ELIA GO"
     };
   }
 };
@@ -65,14 +68,11 @@ async function sendEmail(emailRequest: EmailRequest) {
     const connectConfig: any = {
       hostname: config.host,
       port: config.port,
+      username: config.username,
+      password: config.password,
     };
     
-    // Only add auth if credentials are provided
-    if (config.username && config.password) {
-      connectConfig.username = config.username;
-      connectConfig.password = config.password;
-    }
-    
+    // Gmail requires TLS
     await client.connectTLS(connectConfig);
     
     const recipients = Array.isArray(emailRequest.to) 
@@ -97,14 +97,14 @@ async function sendEmail(emailRequest: EmailRequest) {
     })) || [];
     
     const emailResponse = await client.send({
-      from: config.from,
+      from: `${config.fromName} <${config.from}>`,
       to: recipients,
       cc: ccRecipients,
       bcc: bccRecipients,
       subject: emailRequest.subject,
       content: emailRequest.html,
       html: emailRequest.html,
-      replyTo: emailRequest.replyTo,
+      replyTo: emailRequest.replyTo || config.from,
       attachments: attachments,
     });
     
