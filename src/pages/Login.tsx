@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Link, useNavigate } from "react-router-dom";
@@ -85,19 +84,34 @@ export default function Login() {
     setIsResettingPassword(true);
     
     try {
+      console.log("Initiating password reset for:", resetEmail);
+      
+      // Generate the full reset link
+      const origin = window.location.origin;
+      const resetLink = `${origin}/reset-password`;
+      
+      console.log("Reset link will redirect to:", resetLink);
+      
+      // Call Supabase to send the reset email
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: resetLink,
       });
       
       if (error) {
+        console.error("Supabase password reset error:", error);
         throw error;
       }
       
+      // Send a custom email using our email service for better deliverability
       try {
-        const resetLink = `${window.location.origin}/reset-password`;
-        await emailService.sendPasswordResetEmail(resetEmail, resetLink);
+        const { success, error: emailError } = await emailService.sendPasswordResetEmail(resetEmail, resetLink);
+        if (!success && emailError) {
+          console.warn("Custom password reset email failed, but Supabase email was sent:", emailError);
+        }
       } catch (emailError) {
-        console.error("Failed to send custom reset email:", emailError);
+        console.error("Exception sending custom reset email:", emailError);
+        // Don't block the process if the custom email fails
+        // Supabase's built-in reset email should still work
       }
       
       toast({
@@ -106,7 +120,12 @@ export default function Login() {
       });
       
       setResetEmail("");
-      setIsResettingPassword(false);
+      
+      // Close the dialog
+      const dialog = document.getElementById('resetPasswordDialog');
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.close();
+      }
     } catch (error: any) {
       console.error("Password reset error:", error);
       toast({
@@ -114,6 +133,7 @@ export default function Login() {
         title: "Password reset failed",
         description: error.message || "An unexpected error occurred",
       });
+    } finally {
       setIsResettingPassword(false);
     }
   };

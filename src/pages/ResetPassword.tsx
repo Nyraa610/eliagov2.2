@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ const ResetPassword = () => {
         // Check if we have a hash fragment with access_token
         const hash = window.location.hash;
         if (!hash) {
+          console.error("No hash fragment found in URL");
           throw new Error("No hash fragment found in URL");
         }
 
@@ -35,6 +35,7 @@ const ResetPassword = () => {
         console.log("Hash params:", Object.fromEntries(hashParams.entries()));
         
         if (!accessToken) {
+          console.error("No access token found in URL");
           throw new Error("No access token found in URL");
         }
         
@@ -45,6 +46,7 @@ const ResetPassword = () => {
         });
 
         if (error) {
+          console.error("Error setting session:", error);
           throw error;
         }
 
@@ -55,7 +57,7 @@ const ResetPassword = () => {
         toast({
           variant: "destructive",
           title: "Invalid reset link",
-          description: "The password reset link is invalid or has expired.",
+          description: "The password reset link is invalid or has expired. Please request a new one.",
         });
         navigate("/login");
       }
@@ -104,17 +106,24 @@ const ResetPassword = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        throw new Error("No active session found");
+        console.error("No active session found");
+        throw new Error("No active session found. Please try resetting your password again.");
       }
 
+      console.log("Updating password for user:", session.user.email);
+      
+      // Update the user's password
       const { error } = await supabase.auth.updateUser({
         password,
       });
 
       if (error) {
+        console.error("Password update error:", error);
         throw error;
       }
 
+      console.log("Password updated successfully");
+      
       toast({
         title: "Password updated successfully",
         description: "You can now log in with your new password",
@@ -122,25 +131,28 @@ const ResetPassword = () => {
       
       // Send password change confirmation email
       try {
-        const { error: emailError } = await emailService.sendEmail({
-          to: session.user.email || "",
-          subject: "Your password has been updated",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #4F46E5;">Password Updated</h1>
-              <p>Hello,</p>
-              <p>Your ELIA GO account password has been successfully updated.</p>
-              <p>If you did not make this change, please contact support immediately.</p>
-              <p>Best regards,<br>The ELIA GO Team</p>
-            </div>
-          `
-        });
-        
-        if (emailError) {
-          console.error("Failed to send password change confirmation:", emailError);
+        if (session.user.email) {
+          const { error: emailError } = await emailService.sendEmail({
+            to: session.user.email,
+            subject: "Your password has been updated",
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #4F46E5;">Password Updated</h1>
+                <p>Hello,</p>
+                <p>Your ELIA GO account password has been successfully updated.</p>
+                <p>If you did not make this change, please contact support immediately.</p>
+                <p>Best regards,<br>The ELIA GO Team</p>
+              </div>
+            `
+          });
+          
+          if (emailError) {
+            console.error("Failed to send password change confirmation:", emailError);
+          }
         }
       } catch (emailError) {
         console.error("Exception sending password change email:", emailError);
+        // Don't block the flow if email fails
       }
       
       // Sign out the user after successful password reset
@@ -153,7 +165,7 @@ const ResetPassword = () => {
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred. Please try again.",
       });
       setError(error.message || "An unexpected error occurred");
     } finally {

@@ -118,24 +118,34 @@ export const emailService = {
    * Send a password reset email
    */
   sendPasswordResetEmail: async (email: string, resetLink: string): Promise<EmailResponse> => {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #4F46E5;">Reset Your Password</h1>
-        <p>Hello,</p>
-        <p>You recently requested to reset your password for your ELIA GO account. Click the button below to proceed:</p>
-        <p style="text-align: center; margin: 30px 0;">
-          <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-        </p>
-        <p>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
-        <p>This link will expire in 24 hours.</p>
-        <p>Best regards,<br>The ELIA GO Team</p>
-      </div>
-    `;
-    
-    return emailService.sendEmail({
-      to: email,
-      subject: "Reset Your ELIA GO Password",
-      html
-    });
+    try {
+      console.log("Sending password reset email to:", email);
+      console.log("With reset link:", resetLink);
+      
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #4F46E5;">Reset Your Password</h1>
+          <p>Hello,</p>
+          <p>You recently requested to reset your password for your ELIA GO account. Click the button below to proceed:</p>
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
+          </p>
+          <p>If the button above doesn't work, you can also copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${resetLink}</p>
+          <p>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
+          <p>This link will expire in 24 hours.</p>
+          <p>Best regards,<br>The ELIA GO Team</p>
+        </div>
+      `;
+      
+      return await emailService.sendEmail({
+        to: email,
+        subject: "Reset Your ELIA GO Password",
+        html
+      });
+    } catch (error: any) {
+      console.error("Failed to send password reset email:", error);
+      return { success: false, error: error.message || "Failed to send password reset email" };
+    }
   }
 };
