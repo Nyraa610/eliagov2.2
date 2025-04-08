@@ -146,6 +146,15 @@ async function sendEmail(emailRequest: EmailRequest) {
       contentType: attachment.contentType,
     })) || [];
     
+    // Log specific details before attempting to send
+    logEvent('delivery', 'info', `Email details before sending`, {
+      from: `${config.fromName} <${config.from}>`,
+      to: recipients,
+      subject: emailRequest.subject,
+      hasHtml: !!emailRequest.html,
+      hasAttachments: attachments.length > 0
+    });
+    
     const emailResponse = await client.send({
       from: `${config.fromName} <${config.from}>`,
       to: recipients,
