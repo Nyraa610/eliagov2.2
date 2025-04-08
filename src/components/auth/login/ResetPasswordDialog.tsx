@@ -35,7 +35,7 @@ export function ResetPasswordDialog() {
       
       console.log("Reset link will redirect to:", resetLink);
       
-      // Generate a password reset token from Supabase
+      // Try Supabase's built-in password reset first
       const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: resetLink,
       });
@@ -43,51 +43,35 @@ export function ResetPasswordDialog() {
       if (error) {
         console.error("Supabase password reset error:", error);
         
-        // If it's a rate limit error, use our custom email instead
-        if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-          console.log("Supabase rate limit exceeded, using custom email service");
-          
-          // Send a custom email using our email service
-          const { success, error: emailError } = await emailService.sendPasswordResetEmail(resetEmail, resetLink);
-          
-          if (!success) {
-            console.error("Custom password reset email failed:", emailError);
-            throw new Error(emailError || "Failed to send password reset email");
-          }
-          
-          toast({
-            title: "Password reset email sent",
-            description: "Check your inbox for password reset instructions",
-          });
-          
-          setResetEmail("");
-          
-          // Close the dialog
-          const dialog = document.getElementById('resetPasswordDialog');
-          if (dialog instanceof HTMLDialogElement) {
-            dialog.close();
-          }
-          
-          setIsResettingPassword(false);
-          return;
+        // If it's a rate limit error or any other error, fall back to our custom email service
+        console.log("Supabase reset failed, using custom email service as fallback");
+        
+        // Send a custom email using our email service
+        const { success, error: emailError } = await emailService.sendPasswordResetEmail(resetEmail, resetLink);
+        
+        if (!success) {
+          console.error("Custom password reset email failed:", emailError);
+          throw new Error(emailError || "Failed to send password reset email. Please try again later.");
         }
         
-        throw error;
-      }
-      
-      console.log("Supabase password reset successful, now sending custom email");
-      
-      // Send a custom email using our email service for better deliverability
-      try {
-        const { success, error: emailError } = await emailService.sendPasswordResetEmail(resetEmail, resetLink);
-        if (!success && emailError) {
-          console.warn("Custom password reset email failed, but Supabase email was sent:", emailError);
+        toast({
+          title: "Password reset email sent",
+          description: "Check your inbox for password reset instructions",
+        });
+        
+        setResetEmail("");
+        
+        // Close the dialog
+        const dialog = document.getElementById('resetPasswordDialog');
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.close();
         }
-      } catch (emailError) {
-        console.error("Exception sending custom reset email:", emailError);
-        // Don't block the process if the custom email fails
-        // Supabase's built-in reset email should still work
+        
+        setIsResettingPassword(false);
+        return;
       }
+      
+      console.log("Supabase password reset successful");
       
       toast({
         title: "Password reset email sent",
@@ -106,7 +90,7 @@ export function ResetPasswordDialog() {
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred. Please try again later.",
       });
     } finally {
       setIsResettingPassword(false);

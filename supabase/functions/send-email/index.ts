@@ -88,6 +88,12 @@ async function sendEmail(emailRequest: EmailRequest) {
       console.log("Successfully connected to SMTP server using TLS");
     } catch (connError) {
       console.error("TLS connection error:", connError);
+      console.error("Connection config (excluding password):", {
+        hostname: connectConfig.hostname,
+        port: connectConfig.port,
+        username: connectConfig.username,
+        hasPassword: !!connectConfig.password
+      });
       throw new Error(`Failed to connect to SMTP server: ${connError.message}`);
     }
     

@@ -28,8 +28,13 @@ export const usePasswordReset = () => {
         // Parse the hash to get the access token
         const hashParams = new URLSearchParams(hash.substring(1));
         const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
         
-        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+        console.log("Hash params found:", {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          hashLength: hash.length
+        });
         
         if (!accessToken) {
           console.error("No access token found in URL");
@@ -39,7 +44,7 @@ export const usePasswordReset = () => {
         // Set the session with the access token
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: hashParams.get("refresh_token") || "",
+          refresh_token: refreshToken || "",
         });
 
         if (error) {
