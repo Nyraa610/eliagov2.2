@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -26,6 +25,7 @@ export interface EmailResponse {
     recipients: string[];
   };
   error?: string;
+  details?: any;
 }
 
 /**
@@ -39,22 +39,69 @@ export const emailService = {
     try {
       console.log("Sending email to:", options.to);
       
+      const startTime = Date.now();
       const { data, error } = await supabase.functions.invoke("send-email", {
         body: options
       });
+      const duration = Date.now() - startTime;
+      
+      console.log(`Send-email function responded in ${duration}ms`);
       
       if (error) {
         console.error("Error invoking send-email function:", error);
+        console.error("Error details:", {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+          code: error.code,
+          status: error.status
+        });
+        
         toast.error("Failed to send email");
-        return { success: false, error: error.message };
+        return { 
+          success: false, 
+          error: error.message,
+          details: {
+            type: "supabase_function_error",
+            duration,
+            errorInfo: {
+              message: error.message,
+              name: error.name,
+              code: error.code,
+              status: error.status
+            }
+          }
+        };
       }
       
       console.log("Email sent successfully:", data);
-      return data as EmailResponse;
+      return {
+        ...(data as EmailResponse),
+        details: {
+          duration,
+          responseType: "success"
+        }
+      };
     } catch (error: any) {
       console.error("Exception sending email:", error);
+      console.error("Error details:", {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      
       toast.error("Failed to send email");
-      return { success: false, error: error.message || "Unknown error" };
+      return { 
+        success: false, 
+        error: error.message || "Unknown error",
+        details: {
+          type: "exception",
+          errorInfo: {
+            message: error.message,
+            name: error.name
+          }
+        }
+      };
     }
   },
   
@@ -138,14 +185,42 @@ export const emailService = {
         </div>
       `;
       
-      return await emailService.sendEmail({
+      const startTime = Date.now();
+      const response = await emailService.sendEmail({
         to: email,
         subject: "Reset Your ELIA GO Password",
         html
       });
+      const duration = Date.now() - startTime;
+      
+      if (!response.success) {
+        console.error(`Password reset email failed after ${duration}ms:`, response.error);
+      } else {
+        console.log(`Password reset email sent successfully in ${duration}ms`);
+      }
+      
+      return {
+        ...response,
+        details: {
+          ...response.details,
+          emailType: "passwordReset",
+          duration
+        }
+      };
     } catch (error: any) {
       console.error("Failed to send password reset email:", error);
-      return { success: false, error: error.message || "Failed to send password reset email" };
+      return { 
+        success: false, 
+        error: error.message || "Failed to send password reset email",
+        details: {
+          type: "exception",
+          emailType: "passwordReset",
+          errorInfo: {
+            message: error.message,
+            name: error.name
+          }
+        }
+      };
     }
   },
   
@@ -155,6 +230,12 @@ export const emailService = {
   sendTestEmail: async (toEmail: string): Promise<EmailResponse> => {
     try {
       console.log("Sending test email to:", toEmail);
+      
+      const config = {
+        smtpHost: "smtp.gmail.com",
+        smtpPort: 587,
+        username: "olive@eliago.com"
+      };
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -177,14 +258,39 @@ export const emailService = {
         </div>
       `;
       
-      return await emailService.sendEmail({
+      const startTime = Date.now();
+      const response = await emailService.sendEmail({
         to: toEmail,
         subject: "ELIA GO - SMTP Test Email",
         html
       });
+      const duration = Date.now() - startTime;
+      
+      console.log(`Test email ${response.success ? 'success' : 'failed'} in ${duration}ms`);
+      
+      return {
+        ...response,
+        details: {
+          ...response.details,
+          emailType: "test",
+          duration,
+          smtpConfig: config
+        }
+      };
     } catch (error: any) {
       console.error("Failed to send test email:", error);
-      return { success: false, error: error.message || "Failed to send test email" };
+      return { 
+        success: false, 
+        error: error.message || "Failed to send test email",
+        details: {
+          type: "exception",
+          emailType: "test",
+          errorInfo: {
+            message: error.message,
+            name: error.name
+          }
+        }
+      };
     }
   }
 };
