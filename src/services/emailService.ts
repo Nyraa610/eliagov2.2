@@ -147,5 +147,44 @@ export const emailService = {
       console.error("Failed to send password reset email:", error);
       return { success: false, error: error.message || "Failed to send password reset email" };
     }
+  },
+  
+  /**
+   * Send a test email to verify SMTP configuration
+   */
+  sendTestEmail: async (toEmail: string): Promise<EmailResponse> => {
+    try {
+      console.log("Sending test email to:", toEmail);
+      
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #4F46E5;">SMTP Test Successful!</h1>
+          <p>Hello,</p>
+          <p>This is a test email to verify that the SMTP configuration for ELIA GO is working correctly.</p>
+          <p>If you're receiving this email, it means that:</p>
+          <ul>
+            <li>Your Gmail SMTP settings are correctly configured</li>
+            <li>The Supabase Edge Function is working properly</li>
+            <li>Emails can be successfully delivered through your configured SMTP server</li>
+          </ul>
+          <p>Configuration details:</p>
+          <ul>
+            <li>SMTP Provider: Gmail</li>
+            <li>From: olive@eliago.com</li>
+            <li>Test sent: ${new Date().toLocaleString()}</li>
+          </ul>
+          <p>Best regards,<br>The ELIA GO Team</p>
+        </div>
+      `;
+      
+      return await emailService.sendEmail({
+        to: toEmail,
+        subject: "ELIA GO - SMTP Test Email",
+        html
+      });
+    } catch (error: any) {
+      console.error("Failed to send test email:", error);
+      return { success: false, error: error.message || "Failed to send test email" };
+    }
   }
 };

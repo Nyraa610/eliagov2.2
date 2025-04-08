@@ -62,6 +62,13 @@ async function sendEmail(emailRequest: EmailRequest) {
   const config = getSmtpConfig();
   
   console.log(`Connecting to SMTP server ${config.host}:${config.port}`);
+  console.log(`Using credentials for user: ${config.username}`);
+  
+  // Check if password is available (don't log the actual password)
+  if (!config.password) {
+    console.error("SMTP password is not configured!");
+    throw new Error("SMTP password is not available. Please check your configuration.");
+  }
   
   const client = new SmtpClient();
   
@@ -73,8 +80,16 @@ async function sendEmail(emailRequest: EmailRequest) {
       password: config.password,
     };
     
+    console.log("Attempting TLS connection to SMTP server...");
+    
     // Gmail requires TLS
-    await client.connectTLS(connectConfig);
+    try {
+      await client.connectTLS(connectConfig);
+      console.log("Successfully connected to SMTP server using TLS");
+    } catch (connError) {
+      console.error("TLS connection error:", connError);
+      throw new Error(`Failed to connect to SMTP server: ${connError.message}`);
+    }
     
     const recipients = Array.isArray(emailRequest.to) 
       ? emailRequest.to 
@@ -89,6 +104,8 @@ async function sendEmail(emailRequest: EmailRequest) {
       : [];
     
     const allRecipients = [...recipients, ...ccRecipients, ...bccRecipients];
+    
+    console.log(`Sending email to recipients: ${recipients.join(', ')}`);
     
     // Process attachments if any
     const attachments = emailRequest.attachments?.map(attachment => ({
@@ -109,7 +126,10 @@ async function sendEmail(emailRequest: EmailRequest) {
       attachments: attachments,
     });
     
+    console.log("Email sent successfully with message ID:", emailResponse.messageId);
+    
     await client.close();
+    console.log("SMTP connection closed");
     
     return {
       success: true,
@@ -121,6 +141,7 @@ async function sendEmail(emailRequest: EmailRequest) {
     
     try {
       await client.close();
+      console.log("SMTP connection closed after error");
     } catch (closeError) {
       console.error("Error closing SMTP connection:", closeError);
     }
@@ -136,16 +157,23 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Email request received");
+    
     // Parse the email request
     const emailRequest: EmailRequest = await req.json();
     
     // Validate the request
     if (!emailRequest.to || !emailRequest.subject || !emailRequest.html) {
+      console.error("Missing required fields in email request");
       throw new Error("Missing required fields: to, subject, or html");
     }
     
+    console.log(`Processing email request with subject: ${emailRequest.subject}`);
+    
     // Send the email
     const result = await sendEmail(emailRequest);
+    
+    console.log("Email processed successfully");
     
     return new Response(
       JSON.stringify({ success: true, data: result }),
