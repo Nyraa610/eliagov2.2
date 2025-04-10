@@ -32,7 +32,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         setIsRoleLoading(true);
         console.log(`ProtectedRoute: Checking if user has role: ${requiredRole}`);
         
-        const hasRole = await supabaseService.hasRole(requiredRole);
+        // Convert requiredRole to UserRole type if needed
+        const role = typeof requiredRole === 'string' ? requiredRole as UserRole : requiredRole;
+        const hasRole = await supabaseService.hasRole(role);
         setHasRequiredRole(hasRole);
         setRoleChecked(true);
         
