@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   createBrowserRouter,
@@ -25,7 +26,7 @@ const Engagement = React.lazy(() => import('./pages/Engagement'));
 import { AdminPanel, UserManagement, DiagnosticsPage } from './pages/admin';
 import { CompanyManagement } from './pages/admin/CompanyManagement';
 import { CourseManagement } from './pages/admin/CourseManagement';
-import { ModuleManagement } from './pages/admin/ModuleManagement';
+import ModuleManagement from './pages/admin/ModuleManagement';
 import { ContentItemManagement } from './pages/admin/ContentItemManagement';
 import { Certificates } from './pages/Certificates';
 import { EngagementTracker } from './components/engagement/EngagementTracker';
