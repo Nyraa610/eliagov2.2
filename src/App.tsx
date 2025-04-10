@@ -37,6 +37,7 @@ import ActionPlanResults from './pages/assessment/ActionPlanResults';
 import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
 import ConsultantNotifications from './pages/consultant/ConsultantNotifications';
 import Companies from './pages/company/Companies';
+import IRO from './pages/assessment/IRO';
 
 function App() {
   return (
@@ -71,6 +72,7 @@ function App() {
                 <Route path="assessment/value-chain" element={<ValueChainModeling />} />
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                <Route path="assessment/iro" element={<IRO />} />
                 
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
@@ -92,7 +94,7 @@ function App() {
                 <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
                 <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
-                <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
+                <Route path="assessment/iro-analysis-results" element={<Navigate to="/assessment/iro" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
                 <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
               </Route>

@@ -9,7 +9,8 @@ import {
   LineChart,
   ClipboardCheck,
   CheckSquare,
-  Clipboard
+  Clipboard,
+  TrendingUp
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
@@ -48,6 +49,13 @@ export const getMainMenuItems = (): MenuItem[] => {
           label: "Materiality Analysis",
           path: "/assessment/materiality-analysis",
           icon: <CheckSquare className="h-4 w-4" />,
+          hasSubmenu: false
+        },
+        {
+          id: "iroAnalysis",
+          label: "IRO Analysis",
+          path: "/assessment/iro",
+          icon: <TrendingUp className="h-4 w-4" />,
           hasSubmenu: false
         },
         {
