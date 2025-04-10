@@ -1,190 +1,124 @@
 
 import React from 'react';
-import {
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { LoadingScreen } from "@/components/LoadingScreen";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-
-// Import all pages here (dynamic imports)
-const Home = React.lazy(() => import('./pages/Home'));
-const Login = React.lazy(() => import('./pages/Login'));
-const Register = React.lazy(() => import('./pages/Register'));
-const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
-const Profile = React.lazy(() => import('./pages/Profile'));
-const Assessment = React.lazy(() => import('./pages/assessment/Assessment'));
-const ESGDiagnostic = React.lazy(() => import('./pages/assessment/ESGDiagnostic'));
-const ESGDiagnosticResults = React.lazy(() => import('./pages/assessment/ESGDiagnosticResults'));
-const Training = React.lazy(() => import('./pages/Training'));
-const CourseDetails = React.lazy(() => import('./pages/CourseDetails'));
-const ModuleDetails = React.lazy(() => import('./pages/ModuleDetails'));
-const ValueChain = React.lazy(() => import('./pages/ValueChain'));
-const Engagement = React.lazy(() => import('./pages/Engagement'));
-import { AdminPanel, UserManagement, DiagnosticsPage } from './pages/admin';
-import { CompanyManagement } from './pages/admin/CompanyManagement';
-import { CourseManagement } from './pages/admin/CourseManagement';
-import ModuleManagement from './pages/admin/ModuleManagement';
-import { ContentItemManagement } from './pages/admin/ContentItemManagement';
-import { Certificates } from './pages/Certificates';
-import { EngagementTracker } from './components/engagement/EngagementTracker';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigation } from './components/Navigation';
+import DocumentCenter from "@/pages/DocumentCenter";
+import NotFound from './pages/NotFound';
+import Assessment from './pages/Assessment';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import RegisterConfirmation from './pages/RegisterConfirmation';
+import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { UserLayout } from './components/user/UserLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import MaterialityAnalysis from './pages/assessment/MaterialityAnalysis';
+import CarbonEvaluation from './pages/assessment/CarbonEvaluation';
+import ValueChainModeling from './pages/assessment/ValueChainModeling';
+import ValueChainResults from './pages/assessment/ValueChainResults';
+import Dashboard from './pages/Dashboard';
+import Training from './pages/Training';
+import Engagement from './pages/Engagement';
+import Unauthorized from './pages/Unauthorized';
+import Profile from './pages/Profile';
+import CompanyProfile from './pages/company/CompanyProfile';
+import CompanySettings from './pages/company/CompanySettings';
+import ActionPlan from './pages/assessment/ActionPlan';
+import UserManagement from './pages/admin/UserManagement';
+import AdminPanel from './pages/admin/AdminPanel';
+import ContentManagement from './pages/admin/ContentManagement';
+import TrainingAdmin from './pages/admin/Training';
+import TranslationAdmin from './pages/admin/TranslationAdmin';
+import EmissionFactors from './pages/admin/EmissionFactors';
+import Deliverables from './pages/Deliverables';
+import ESGDiagnosticResults from './pages/assessment/ESGDiagnosticResults';
+import CarbonEvaluationResults from './pages/assessment/CarbonEvaluationResults';
+import ActionPlanResults from './pages/assessment/ActionPlanResults';
+import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
+import ConsultantNotifications from './pages/consultant/ConsultantNotifications';
+import Companies from './pages/company/Companies';
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Home />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/login" element={
-          <React.Suspense fallback={<LoadingScreen />}>
-            <Login />
-          </React.Suspense>
-        } />
-        <Route path="/register" element={
-          <React.Suspense fallback={<LoadingScreen />}>
-            <Register />
-          </React.Suspense>
-        } />
-        <Route path="/forgot-password" element={
-          <React.Suspense fallback={<LoadingScreen />}>
-            <ForgotPassword />
-          </React.Suspense>
-        } />
-        <Route path="/reset-password" element={
-          <React.Suspense fallback={<LoadingScreen />}>
-            <ResetPassword />
-          </React.Suspense>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Profile />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/assessment" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Assessment />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/assessment/esg-diagnostic" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ESGDiagnostic />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/assessment/esg-diagnostic/results" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ESGDiagnosticResults />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/training" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Training />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/training/course/:courseId" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <CourseDetails />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/training/module/:moduleId" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ModuleDetails />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/value-chain" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ValueChain />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/engagement" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Engagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/panel" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <AdminPanel />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/users" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <UserManagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/companies" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <CompanyManagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/courses" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <CourseManagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/modules" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ModuleManagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/content-items" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <ContentItemManagement />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/certificates" element={
-          <ProtectedRoute>
-            <React.Suspense fallback={<LoadingScreen />}>
-              <Certificates />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/diagnostics" element={
-          <ProtectedRoute requiredRole="admin">
-            <React.Suspense fallback={<LoadingScreen />}>
-              <DiagnosticsPage />
-            </React.Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/unauthorized" element={<div>Unauthorized</div>} />
-      </Routes>
-      <EngagementTracker />
-    </>
+    <div className="App">
+      <AuthProvider>
+        <LanguageProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/register/confirmation" element={<RegisterConfirmation />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              
+              {/* Protected routes with user layout */}
+              <Route element={
+                <ProtectedRoute>
+                  <UserLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                
+                {/* Assessment module routes - consolidated */}
+                <Route path="assessment" element={<Assessment />} />
+                <Route path="assessment/esg-diagnostic" element={<Assessment />} />
+                <Route path="assessment/esg-diagnostic-results" element={<ESGDiagnosticResults />} />
+                <Route path="assessment/carbon-evaluation" element={<CarbonEvaluation />} />
+                <Route path="assessment/carbon-evaluation-results" element={<CarbonEvaluationResults />} />
+                <Route path="assessment/action-plan" element={<ActionPlan />} />
+                <Route path="assessment/action-plan-results" element={<ActionPlanResults />} />
+                <Route path="assessment/value-chain" element={<ValueChainModeling />} />
+                <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
+                <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
+                
+                <Route path="training" element={<Training />} />
+                <Route path="documents" element={<DocumentCenter />} />
+                <Route path="deliverables" element={<Deliverables />} />
+                <Route path="engagement" element={<Engagement />} />
+                
+                {/* Consultant routes */}
+                <Route path="consultant/dashboard" element={<ConsultantDashboard />} />
+                <Route path="consultant/notifications" element={<ConsultantNotifications />} />
+                
+                {/* Companies routes - moved inside the main protected layout */}
+                <Route path="companies" element={<Companies />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="company/:id" element={<CompanyProfile />} />
+                <Route path="company/:id/settings" element={<CompanySettings />} />
+                
+                {/* Legacy redirects */}
+                <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
+                <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
+                <Route path="carbon-footprint" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
+                <Route path="materiality-analysis" element={<Navigate to="/assessment/materiality-analysis" replace />} />
+                <Route path="assessment/iro" element={<Navigate to="/assessment" replace />} />
+                <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
+                <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
+              </Route>
+              
+              {/* Admin routes */}
+              <Route element={
+                <ProtectedRoute requiredRole="admin">
+                  <UserLayout title="Admin Dashboard" />
+                </ProtectedRoute>
+              }>
+                <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+                <Route path="/admin/panel" element={<AdminPanel />} />
+                <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/training" element={<TrainingAdmin />} />
+                <Route path="/admin/content" element={<ContentManagement />} />
+                <Route path="/admin/translations" element={<TranslationAdmin />} />
+                <Route path="/admin/emission-factors" element={<EmissionFactors />} />
+              </Route>
+              
+              {/* 404 route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LanguageProvider>
+      </AuthProvider>
+    </div>
   );
 }
 
