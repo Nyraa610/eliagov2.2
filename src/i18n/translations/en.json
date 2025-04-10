@@ -172,7 +172,8 @@
     "viewHistory": "View Assessment History",
     "results": {
       "recommendations": "Recommended Actions",
-      "scores": "Performance Scores"
+      "scores": "Performance Scores",
+      "summary": "Executive Summary"
     },
     "esgDiagnostic": {
       "resultsTitle": "ESG Diagnostic Results",
@@ -347,5 +348,9 @@
       "exportSuccess": "Translations exported successfully",
       "exportError": "Error exporting translations"
     }
+  },
+  "deliverables": {
+    "title": "Deliverables & Reports",
+    "description": "Access all your sustainability reports, analyses, and official documents in one place"
   }
 }

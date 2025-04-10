@@ -167,7 +167,8 @@
     "viewHistory": "Ver historial de evaluaciones",
     "results": {
       "recommendations": "Acciones recomendadas",
-      "scores": "Puntuaciones de rendimiento"
+      "scores": "Puntuaciones de rendimiento",
+      "summary": "Resumen ejecutivo"
     },
     "esgDiagnostic": {
       "resultsTitle": "Resultados del diagnóstico ESG",
@@ -287,5 +288,9 @@
       "noDocuments": "No hay documentos subidos",
       "uploadInstructions": "Arrastre y suelte documentos o haga clic para examinar"
     }
+  },
+  "deliverables": {
+    "title": "Entregables e Informes",
+    "description": "Acceda a todos sus informes de sostenibilidad, análisis y documentos oficiales en un solo lugar"
   }
 }

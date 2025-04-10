@@ -15,36 +15,57 @@ export function useCompanyProfile(id?: string) {
 
   useEffect(() => {
     const fetchCompany = async () => {
-      if (!id) {
-        setIsLoading(false);
-        return;
-      }
-      
       try {
         setIsLoading(true);
-        // Get company details
-        const data = await companyService.getCompany(id);
-        setCompany(data);
         
-        // Check if user is admin by looking at their profile
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) {
-          navigate("/login");
-          return;
-        }
-        
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_company_admin')
-          .eq('id', user.user.id)
-          .eq('company_id', id)
-          .single();
-        
-        if (profileError) {
-          console.error("Error checking admin status:", profileError);
-          setIsAdmin(false);
+        if (id) {
+          // Get company details by ID
+          const data = await companyService.getCompany(id);
+          setCompany(data);
+          
+          // Check if user is admin by looking at their profile
+          const { data: user } = await supabase.auth.getUser();
+          if (!user.user) {
+            navigate("/login");
+            return;
+          }
+          
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_company_admin')
+            .eq('id', user.user.id)
+            .eq('company_id', id)
+            .single();
+          
+          if (profileError) {
+            console.error("Error checking admin status:", profileError);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(profile?.is_company_admin || false);
+          }
         } else {
-          setIsAdmin(profile?.is_company_admin || false);
+          // If no ID provided, get the current user's company
+          const { data: user } = await supabase.auth.getUser();
+          if (!user.user) {
+            navigate("/login");
+            return;
+          }
+          
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('company_id, is_company_admin')
+            .eq('id', user.user.id)
+            .single();
+          
+          if (profileError) {
+            console.error("Error getting user profile:", profileError);
+            setCompany(null);
+            setIsAdmin(false);
+          } else if (profile?.company_id) {
+            const companyData = await companyService.getCompany(profile.company_id);
+            setCompany(companyData);
+            setIsAdmin(profile?.is_company_admin || false);
+          }
         }
       } catch (error) {
         console.error("Error fetching company:", error);
@@ -53,7 +74,7 @@ export function useCompanyProfile(id?: string) {
           description: "Failed to load company details.",
           variant: "destructive",
         });
-        navigate("/companies");
+        if (id) navigate("/companies");
       } finally {
         setIsLoading(false);
       }

@@ -31,7 +31,7 @@ export default function Deliverables() {
       } catch (error) {
         console.error("Error fetching user company:", error);
         toast({
-          title: "Error",
+          title: t("common.error"),
           description: "Failed to load company information",
           variant: "destructive"
         });
@@ -41,7 +41,7 @@ export default function Deliverables() {
     };
     
     fetchUserCompany();
-  }, [toast]);
+  }, [toast, t]);
   
   return (
     <div>

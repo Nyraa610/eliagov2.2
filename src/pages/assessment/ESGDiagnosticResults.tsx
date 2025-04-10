@@ -5,10 +5,13 @@ import { ResultsContainer } from "@/components/assessment/results/ResultsContain
 import { useToast } from "@/components/ui/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { assessmentService } from "@/services/assessmentService";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ESGDiagnosticResults() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { company } = useCompanyProfile();
   const [results, setResults] = useState<any>({
     scores: [],
     recommendations: []
@@ -37,8 +40,8 @@ export default function ESGDiagnosticResults() {
       } catch (error) {
         console.error("Failed to fetch results:", error);
         toast({
-          title: "Error",
-          description: "Failed to load assessment results",
+          title: t("common.error"),
+          description: t("assessment.results.loadError"),
           variant: "destructive"
         });
         setResults(mockResults); // Fallback to mock data
@@ -48,7 +51,7 @@ export default function ESGDiagnosticResults() {
     };
     
     fetchResults();
-  }, [toast]);
+  }, [toast, t]);
   
   // Mock data for demonstration
   const mockResults = {
@@ -89,6 +92,19 @@ export default function ESGDiagnosticResults() {
       description={t("assessment.esgDiagnostic.resultsDescription")}
       reportUrl="/reports/esg-diagnostic-report.pdf"
     >
+      {company && (
+        <div className="mb-6 flex items-center">
+          <Avatar className="h-12 w-12 mr-3">
+            <AvatarImage src={company.logo_url || undefined} alt={company.name} />
+            <AvatarFallback>{company.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-medium text-lg">{company.name}</h3>
+            <p className="text-sm text-muted-foreground">{company.industry}</p>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-8">
         <div>
           <h3 className="text-lg font-medium mb-4">{t("assessment.results.scores")}</h3>
@@ -116,6 +132,14 @@ export default function ESGDiagnosticResults() {
               </div>
             )}
           </div>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-medium mb-4">{t("assessment.results.summary")}</h3>
+          <p className="mb-4 text-gray-700">
+            Your organization shows moderate ESG performance with strong environmental practices but room for improvement in social areas. 
+            Governance structures are partially developed and would benefit from further formalization.
+          </p>
         </div>
         
         <div>
