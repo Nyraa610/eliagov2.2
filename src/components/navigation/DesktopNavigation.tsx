@@ -1,4 +1,3 @@
-
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { NotificationButton } from "./NotificationButton";
@@ -53,16 +52,10 @@ export const DesktopNavigation = ({
     );
   }
 
-  // Post-authentication navigation
+  // Post-authentication navigation - simplified
   return (
     <nav className="hidden md:flex items-center space-x-1">
-      <div className="ml-2">
-        <LanguageSelector />
-      </div>
-      <div className="border-l border-gray-200 h-8 mx-1"></div>
-      
-      <NotificationButton />
-      <UserMenu userProfile={userProfile} onLogout={onLogout} />
+      {/* This is now empty as we've removed the duplicates */}
     </nav>
   );
 };

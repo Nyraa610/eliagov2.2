@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sheet"
 import { Menu } from "lucide-react";
 
-import { LanguageSelector } from '@/components/LanguageSelector';
 import { AuthButtons } from './navigation/AuthButtons';
 import { UserMenu } from './navigation/UserMenu';
 import { MobileMenu } from './navigation/MobileMenu';
@@ -25,6 +24,7 @@ import { EngagementTracker } from './engagement/EngagementTracker';
 import { UserProfile } from '@/services/base/profileTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/base/supabaseService';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
