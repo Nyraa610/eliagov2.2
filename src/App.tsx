@@ -28,6 +28,8 @@ import UserManagement from './pages/admin/UserManagement';
 import AdminPanel from './pages/admin/AdminPanel';
 import ContentManagement from './pages/admin/ContentManagement';
 import TrainingAdmin from './pages/admin/Training';
+import CourseForm from './pages/admin/CourseForm';
+import ModuleManagement from './pages/admin/ModuleManagement';
 import TranslationAdmin from './pages/admin/TranslationAdmin';
 import EmissionFactors from './pages/admin/EmissionFactors';
 import Deliverables from './pages/Deliverables';
@@ -89,6 +91,18 @@ function App() {
                 <Route path="company/:id" element={<CompanyProfile />} />
                 <Route path="company/:id/settings" element={<CompanySettings />} />
                 
+                {/* Admin routes integrated into the main layout */}
+                <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+                <Route path="/admin/panel" element={<AdminPanel />} />
+                <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/training" element={<TrainingAdmin />} />
+                <Route path="/admin/courses/new" element={<CourseForm />} />
+                <Route path="/admin/courses/:id" element={<CourseForm />} />
+                <Route path="/admin/courses/:courseId/modules" element={<ModuleManagement />} />
+                <Route path="/admin/content" element={<ContentManagement />} />
+                <Route path="/admin/translations" element={<TranslationAdmin />} />
+                <Route path="/admin/emission-factors" element={<EmissionFactors />} />
+              
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />
                 <Route path="carbon-evaluation/results" element={<Navigate to="/assessment/carbon-evaluation-results" replace />} />
@@ -97,15 +111,6 @@ function App() {
                 <Route path="assessment/iro-analysis-results" element={<Navigate to="/assessment/iro" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
                 <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
-              
-                {/* Admin routes integrated into the main layout */}
-                <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
-                <Route path="/admin/panel" element={<AdminPanel />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/training" element={<TrainingAdmin />} />
-                <Route path="/admin/content" element={<ContentManagement />} />
-                <Route path="/admin/translations" element={<TranslationAdmin />} />
-                <Route path="/admin/emission-factors" element={<EmissionFactors />} />
               </Route>
               
               {/* 404 route */}
