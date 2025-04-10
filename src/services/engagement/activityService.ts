@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { UserActivity } from "./types";
 import { badgeService } from "./badgeService";
@@ -32,24 +31,16 @@ class ActivityService {
       if (profileError && profileError.code !== 'PGRST116') { // Not found is okay
         console.error("Error fetching profile for activity tracking:", profileError);
       }
-      
-      // Enhanced logging for debugging
-      console.log("About to insert user activity with data:", {
-        user_id: userData.user.id,
-        activity_type: activity.activity_type,
-        points_earned: activity.points_earned,
-        company_id: profileData?.company_id || null
-      });
 
-      // Insert the activity with explicit user_id to satisfy RLS policies
+      // Insert the activity without the company_id field that's causing the error
       const { data: insertedActivity, error } = await supabase
         .from('user_activities')
         .insert({
           user_id: userData.user.id,
           activity_type: activity.activity_type,
           points_earned: activity.points_earned,
-          metadata: activity.metadata || {},
-          company_id: profileData?.company_id || null
+          metadata: activity.metadata || {}
+          // Removed company_id field since it's not in the schema
         })
         .select();
 

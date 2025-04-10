@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useEngagement } from '@/hooks/useEngagement';
@@ -12,6 +12,7 @@ export function TeamActivitiesSection() {
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { getTeamActivities, startTeamTracking, teamActivities } = useEngagement();
+  const trackingInitialized = useRef(false);
   
   const loadTeamActivities = async () => {
     setLoading(true);
@@ -31,11 +32,19 @@ export function TeamActivitiesSection() {
     
     const initTeamActivities = async () => {
       try {
+        if (trackingInitialized.current) {
+          return; // Prevent duplicate initialization
+        }
+        
         await loadTeamActivities();
         
-        // Start real-time tracking
-        const cleanup = await startTeamTracking();
-        cleanupFn = cleanup;
+        // Start real-time tracking only once
+        if (!trackingInitialized.current) {
+          console.log("Initializing team activity tracking");
+          const cleanup = await startTeamTracking();
+          cleanupFn = cleanup;
+          trackingInitialized.current = true;
+        }
       } catch (error) {
         console.error("Error initializing team activities:", error);
         setLoading(false);
@@ -46,7 +55,9 @@ export function TeamActivitiesSection() {
     
     return () => {
       if (cleanupFn) {
+        console.log("Cleaning up team activity tracking");
         cleanupFn();
+        trackingInitialized.current = false;
       }
     };
   }, [getTeamActivities, startTeamTracking]);

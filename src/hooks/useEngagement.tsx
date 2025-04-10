@@ -15,6 +15,7 @@ export const useEngagement = () => {
   const [isTrackingTeam, setIsTrackingTeam] = useState<boolean>(false);
   const { user, companyId } = useAuth(); // Use cached auth data
   const trackingSet = useRef(new Set<string>()); // Track already-recorded activities
+  const teamChannel = useRef<any>(null);
 
   // Skip tracking for admin routes to avoid permission issues
   const shouldSkipTracking = location.pathname.includes('/admin');
@@ -88,31 +89,43 @@ export const useEngagement = () => {
 
   // Start tracking team activities with realtime updates
   const startTeamTracking = useCallback(async () => {
-    if (isTrackingTeam || !companyId) return () => {};
+    if (isTrackingTeam || !companyId || !user?.id) {
+      return () => {};
+    }
     
     try {
       console.log("Starting team activity tracking for company:", companyId);
       
+      // Clean up any existing subscription first
+      if (teamChannel.current) {
+        await supabase.removeChannel(teamChannel.current);
+        teamChannel.current = null;
+      }
+      
       // Subscribe to team activity changes
       const channel = supabase
-        .channel('team-activities')
+        .channel(`team-activities-${companyId}`)
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
-          table: 'user_activities',
-          filter: `company_id=eq.${companyId}` 
+          table: 'user_activities'
         }, (payload) => {
           // Only add activities from other team members
-          if (payload.new && payload.new.user_id !== user?.id) {
+          if (payload.new && payload.new.user_id !== user.id) {
             setTeamActivities((prev) => [payload.new, ...prev]);
           }
         })
         .subscribe();
-
+      
+      teamChannel.current = channel;
       setIsTrackingTeam(true);
       
       return () => {
-        supabase.removeChannel(channel);
+        console.log("Cleaning up team activity tracking");
+        if (teamChannel.current) {
+          supabase.removeChannel(teamChannel.current);
+          teamChannel.current = null;
+        }
         setIsTrackingTeam(false);
       };
     } catch (error) {
@@ -137,7 +150,6 @@ export const useEngagement = () => {
           created_at,
           profiles:user_id (full_name, avatar_url)
         `)
-        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
         .limit(limit);
         
@@ -147,6 +159,17 @@ export const useEngagement = () => {
       return [];
     }
   }, [companyId]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (teamChannel.current) {
+        supabase.removeChannel(teamChannel.current);
+        teamChannel.current = null;
+        setIsTrackingTeam(false);
+      }
+    };
+  }, []);
   
   return {
     trackActivity,

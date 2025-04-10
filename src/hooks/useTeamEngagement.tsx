@@ -14,6 +14,7 @@ export function useTeamEngagement(config: TeamEngagementConfig = {}) {
   const [teamTracking, setTeamTracking] = useState<boolean>(false);
   const { startTeamTracking } = useEngagement();
   const initAttempted = useRef(false);
+  const trackingCleanup = useRef<(() => void) | undefined>(undefined);
 
   // Initialize team activity tracking only once
   useEffect(() => {
@@ -28,24 +29,21 @@ export function useTeamEngagement(config: TeamEngagementConfig = {}) {
       const cleanup = await startTeamTracking();
       if (cleanup) {
         setTeamTracking(true);
+        trackingCleanup.current = cleanup;
         return cleanup;
       }
       return undefined;
     };
     
-    let cleanupFn: (() => void) | undefined;
-    
     initTeamTracking()
-      .then(cleanup => {
-        cleanupFn = cleanup;
-      })
       .catch(error => {
         console.warn("Error initializing team tracking:", error);
       });
     
     return () => {
-      if (cleanupFn) {
-        cleanupFn();
+      if (trackingCleanup.current) {
+        trackingCleanup.current();
+        trackingCleanup.current = undefined;
         setTeamTracking(false);
       }
     };
