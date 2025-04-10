@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { UserLayout } from "@/components/user/UserLayout";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -122,23 +121,22 @@ export default function IRO() {
 
   if (isLoading) {
     return (
-      <UserLayout title={t("assessment.iro.title", "Impact, Risks, and Opportunities Analysis")}>
-        <div className="flex items-center justify-center min-h-[300px]">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 w-40 bg-gray-200 rounded"></div>
-          </div>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 w-40 bg-gray-200 rounded"></div>
         </div>
-      </UserLayout>
+      </div>
     );
   }
 
   return (
-    <UserLayout title={t("assessment.iro.title", "Impact, Risks, and Opportunities Analysis")}>
+    <div>
       <div className="mb-6">
         <Link to="/assessment" className="text-primary hover:underline flex items-center mb-4">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Assessment
         </Link>
+        <h1 className="text-2xl font-bold mb-2">{t("assessment.iro.title", "Impact, Risks, and Opportunities Analysis")}</h1>
         <p className="text-gray-600">
           {t("assessment.iro.description", "Identify and assess potential risks and opportunities related to your ESG performance")}
         </p>
@@ -151,6 +149,6 @@ export default function IRO() {
         setProgress={handleProgressChange}
         savedFormData={savedFormData}
       />
-    </UserLayout>
+    </div>
   );
 }

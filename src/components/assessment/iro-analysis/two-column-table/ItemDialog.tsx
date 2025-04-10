@@ -1,5 +1,5 @@
 
-import { IROFormValues, IROItem } from "../formSchema";
+import { IROFormValues, IROItem, calculateRiskScore } from "../formSchema";
 import { UseFormReturn } from "react-hook-form";
 import { 
   Dialog, 
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { v4 as uuidv4 } from "uuid";
 
 interface ItemDialogProps {
   isOpen: boolean;
@@ -40,6 +41,40 @@ export function ItemDialog({
   editingIndex,
   setupItemForEditing
 }: ItemDialogProps) {
+  const handleSaveItem = () => {
+    // Get the current form values
+    const values = form.getValues();
+    const currentItem = values.currentItem;
+    
+    if (!currentItem) return;
+    
+    // Make sure the item has an ID
+    if (!currentItem.id) {
+      currentItem.id = uuidv4();
+    }
+    
+    // Calculate risk score
+    const riskScore = calculateRiskScore(currentItem.impact, currentItem.likelihood);
+    const completeItem = { ...currentItem, riskScore };
+    
+    // Update existing items array
+    const updatedItems = [...(values.items || [])];
+    
+    if (editingIndex !== null) {
+      // Replace existing item
+      updatedItems[editingIndex] = completeItem;
+    } else {
+      // Add new item
+      updatedItems.push(completeItem);
+    }
+    
+    // Update the form
+    form.setValue('items', updatedItems);
+    
+    // Call the parent save function
+    onSave(form.getValues());
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-xl">
@@ -49,7 +84,10 @@ export function ItemDialog({
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={(e) => {
+            e.preventDefault();
+            handleSaveItem();
+          }}>
             <FormField
               control={form.control}
               name="currentItem.issueTitle"
@@ -210,7 +248,7 @@ export function ItemDialog({
         </Form>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={() => onSave(form.getValues())}>Save</Button>
+          <Button onClick={handleSaveItem}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

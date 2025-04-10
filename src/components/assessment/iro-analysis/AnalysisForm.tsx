@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TwoColumnTable } from "./two-column-table/TwoColumnTable";
-import { IROFormValues } from "./formSchema";
+import { IROFormValues, IROItem } from "./formSchema";
 import { assessmentService } from "@/services/assessmentService";
 import { FeatureStatus } from "@/types/training";
 import { useToast } from "@/components/ui/use-toast";
 import { useEngagement } from "@/hooks/useEngagement";
 import { useTranslation } from "react-i18next";
+import { v4 as uuidv4 } from "uuid";
 
 interface AnalysisFormProps {
   form: UseFormReturn<IROFormValues>;
@@ -28,6 +29,21 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
   // Function to open dialog for adding new item
   const openItemDialog = () => {
     setIsAddingItem(true);
+    
+    // Create a default new item
+    const defaultItem: IROItem = {
+      id: uuidv4(),
+      issueTitle: "",
+      description: "",
+      impact: 1,
+      likelihood: 1,
+      type: "risk",
+      category: "",
+      mitigationMeasures: ""
+    };
+    
+    // Set it as current item
+    form.setValue("currentItem", defaultItem);
   };
   
   // Watch for items changes to track activity
@@ -105,9 +121,9 @@ export function AnalysisForm({ form, onPrevious, onNext, analysisStatus }: Analy
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{t("assessment.iroAnalysis.title")}</CardTitle>
+          <CardTitle>{t("assessment.iroAnalysis.title", "Impact, Risks, and Opportunities Analysis")}</CardTitle>
           <CardDescription>
-            {t("assessment.iroAnalysis.description")}
+            {t("assessment.iroAnalysis.description", "Identify and analyze key risks and opportunities related to your ESG performance")}
           </CardDescription>
         </CardHeader>
         <CardContent>
