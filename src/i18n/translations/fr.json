@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Langue",
@@ -97,7 +96,7 @@
       "notStarted": "Non commencé"
     },
     "diagnosticRSE": {
-      "title": "Diagnostic RSE",
+      "title": "Diagnostic ESG",
       "description": "Évaluation approfondie pour évaluer les pratiques actuelles et identifier les opportunités",
       "longDescription": "Ce diagnostic aide à analyser les pratiques actuelles de durabilité de votre entreprise à travers les dimensions environnementales, sociales et de gouvernance pour identifier les forces et les domaines à améliorer.",
       "steps": "Collecte de données, entretiens et analyse",
@@ -108,7 +107,14 @@
       "description": "Un bilan carbone simplifié pour mesurer l'empreinte carbone actuelle de votre entreprise",
       "shortDescription": "Mesurez l'empreinte carbone de votre entreprise",
       "steps": "Collecte de données, calcul des émissions et rapports",
-      "start": "Commencer l'évaluation"
+      "start": "Commencer l'évaluation",
+      "resultsTitle": "Résultats de l'évaluation carbone",
+      "resultsDescription": "Consultez les résultats détaillés de votre évaluation d'empreinte carbone",
+      "totalEmissions": "Émissions carbone totales",
+      "reductionPotential": "Potentiel de réduction",
+      "reductionPercentage": "Réduction potentielle",
+      "emissionsByScope": "Émissions par scope",
+      "emissionsBySource": "Émissions par source"
     },
     "materialityAnalysis": {
       "title": "Analyse de double matérialité",
@@ -141,7 +147,12 @@
       "description": "Cartographiez votre chaîne de valeur pour identifier les points chauds de durabilité",
       "start": "Commencer la modélisation",
       "editor": "Éditeur de chaîne de valeur",
-      "results": "Résultats de la chaîne de valeur"
+      "results": "Résultats de la chaîne de valeur",
+      "resultsTitle": "Résultats de l'analyse de la chaîne de valeur",
+      "resultsDescription": "Analyse complète des points chauds de durabilité de votre chaîne de valeur",
+      "summary": "Résumé de la chaîne de valeur",
+      "hotspots": "Points chauds de durabilité",
+      "documents": "Documents d'analyse"
     },
     "disclaimer": {
       "title": "Informations sur l'évaluation",
@@ -153,7 +164,15 @@
     "startAssessment": "Commencer l'évaluation",
     "continueAssessment": "Continuer l'évaluation",
     "startNewAssessment": "Commencer une nouvelle évaluation",
-    "viewHistory": "Voir l'historique des évaluations"
+    "viewHistory": "Voir l'historique des évaluations",
+    "results": {
+      "recommendations": "Actions recommandées",
+      "scores": "Scores de performance"
+    },
+    "esgDiagnostic": {
+      "resultsTitle": "Résultats du diagnostic ESG",
+      "resultsDescription": "Analyse de performance ESG de votre organisation et améliorations recommandées"
+    }
   },
   "training": {
     "title": "Formation",

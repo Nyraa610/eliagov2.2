@@ -1,4 +1,3 @@
-
 {
   "common": {
     "language": "Idioma",
@@ -97,7 +96,7 @@
       "notStarted": "No iniciado"
     },
     "diagnosticRSE": {
-      "title": "Diagnóstico RSE",
+      "title": "Diagnóstico ESG",
       "description": "Evaluación en profundidad para valorar prácticas actuales e identificar oportunidades",
       "longDescription": "Este diagnóstico ayuda a analizar las prácticas actuales de sostenibilidad de su empresa en las dimensiones ambientales, sociales y de gobernanza para identificar fortalezas y áreas de mejora.",
       "steps": "Recopilación de datos, entrevistas y análisis",
@@ -108,7 +107,14 @@
       "description": "Una evaluación de carbono simplificada para medir la huella de carbono actual de su empresa",
       "shortDescription": "Mida la huella de carbono de su empresa",
       "steps": "Recopilación de datos, cálculo de emisiones e informes",
-      "start": "Iniciar evaluación"
+      "start": "Iniciar evaluación",
+      "resultsTitle": "Resultados de evaluación de carbono",
+      "resultsDescription": "Vea los resultados detallados de su evaluación de huella de carbono",
+      "totalEmissions": "Emisiones totales de carbono",
+      "reductionPotential": "Potencial de reducción",
+      "reductionPercentage": "Reducción potencial",
+      "emissionsByScope": "Emisiones por alcance",
+      "emissionsBySource": "Emisiones por fuente"
     },
     "materialityAnalysis": {
       "title": "Análisis de doble materialidad",
@@ -141,7 +147,12 @@
       "description": "Mapee su cadena de valor para identificar puntos críticos de sostenibilidad",
       "start": "Iniciar modelado",
       "editor": "Editor de Cadena de Valor",
-      "results": "Resultados de Cadena de Valor"
+      "results": "Resultados de Cadena de Valor",
+      "resultsTitle": "Resultados del análisis de cadena de valor",
+      "resultsDescription": "Análisis completo de los puntos críticos de sostenibilidad en su cadena de valor",
+      "summary": "Resumen de cadena de valor",
+      "hotspots": "Puntos críticos de sostenibilidad",
+      "documents": "Documentos de análisis"
     },
     "disclaimer": {
       "title": "Información de evaluación",
@@ -153,7 +164,15 @@
     "startAssessment": "Iniciar evaluación",
     "continueAssessment": "Continuar evaluación",
     "startNewAssessment": "Iniciar nueva evaluación",
-    "viewHistory": "Ver historial de evaluaciones"
+    "viewHistory": "Ver historial de evaluaciones",
+    "results": {
+      "recommendations": "Acciones recomendadas",
+      "scores": "Puntuaciones de rendimiento"
+    },
+    "esgDiagnostic": {
+      "resultsTitle": "Resultados del diagnóstico ESG",
+      "resultsDescription": "Análisis de rendimiento ESG de su organización y mejoras recomendadas"
+    }
   },
   "training": {
     "title": "Formación",

@@ -96,7 +96,7 @@
       "notStarted": "Not Started"
     },
     "diagnosticRSE": {
-      "title": "RSE Diagnostic",
+      "title": "ESG Diagnostic",
       "description": "In-depth assessment to evaluate current practices and identify opportunities",
       "longDescription": "This diagnostic helps analyze your company's current sustainability practices across environmental, social, and governance dimensions to identify strengths and areas for improvement.",
       "steps": "Data collection, interviews, and analysis",
@@ -107,7 +107,14 @@
       "description": "A simplified carbon assessment to measure your company's current carbon footprint",
       "shortDescription": "Measure your company's carbon footprint",
       "steps": "Data collection, emissions calculation, and reporting",
-      "start": "Start Evaluation"
+      "start": "Start Evaluation",
+      "resultsTitle": "Carbon Evaluation Results",
+      "resultsDescription": "View the detailed results of your carbon footprint evaluation",
+      "totalEmissions": "Total Carbon Emissions",
+      "reductionPotential": "Reduction Potential",
+      "reductionPercentage": "Potential Reduction",
+      "emissionsByScope": "Emissions by Scope",
+      "emissionsBySource": "Emissions by Source"
     },
     "materialityAnalysis": {
       "title": "Double Materiality Analysis",
@@ -145,7 +152,12 @@
       "description": "Map your value chain to identify sustainability hotspots",
       "start": "Start Modeling",
       "editor": "Value Chain Editor",
-      "results": "Value Chain Results"
+      "results": "Value Chain Results",
+      "resultsTitle": "Value Chain Analysis Results",
+      "resultsDescription": "Comprehensive analysis of your value chain sustainability hotspots",
+      "summary": "Value Chain Summary",
+      "hotspots": "Sustainability Hotspots",
+      "documents": "Analysis Documents"
     },
     "disclaimer": {
       "title": "Assessment Information",
@@ -157,7 +169,15 @@
     "startAssessment": "Start Assessment",
     "continueAssessment": "Continue Assessment",
     "startNewAssessment": "Start New Assessment",
-    "viewHistory": "View Assessment History"
+    "viewHistory": "View Assessment History",
+    "results": {
+      "recommendations": "Recommended Actions",
+      "scores": "Performance Scores"
+    },
+    "esgDiagnostic": {
+      "resultsTitle": "ESG Diagnostic Results",
+      "resultsDescription": "Your organization's ESG performance analysis and recommended improvements"
+    }
   },
   "training": {
     "title": "Training",
