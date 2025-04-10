@@ -97,14 +97,8 @@ function App() {
                 <Route path="assessment/iro-analysis-results" element={<Navigate to="/assessment/iro" replace />} />
                 <Route path="action-plan" element={<Navigate to="/assessment/action-plan" replace />} />
                 <Route path="action-plan/results" element={<Navigate to="/assessment/action-plan-results" replace />} />
-              </Route>
               
-              {/* Admin routes */}
-              <Route element={
-                <ProtectedRoute requiredRole="admin">
-                  <UserLayout title="Admin Dashboard" />
-                </ProtectedRoute>
-              }>
+                {/* Admin routes integrated into the main layout */}
                 <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
                 <Route path="/admin/panel" element={<AdminPanel />} />
                 <Route path="/admin/users" element={<UserManagement />} />
