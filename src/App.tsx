@@ -1,12 +1,12 @@
 
 import React from 'react';
 import {
-  createBrowserRouter,
-  RouterProvider,
+  Routes,
+  Route,
   Navigate,
 } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Import all pages here (dynamic imports)
 const Home = React.lazy(() => import('./pages/Home'));
@@ -31,249 +31,158 @@ import { ContentItemManagement } from './pages/admin/ContentItemManagement';
 import { Certificates } from './pages/Certificates';
 import { EngagementTracker } from './components/engagement/EngagementTracker';
 
-// Protected route component
-const ProtectedRoute = ({ children, requiredRoles }: {
-  children: React.ReactNode;
-  requiredRoles?: string[];
-}) => {
-  const { isAuthenticated, hasRole, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRoles && !requiredRoles.every(role => hasRole(role))) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Home />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/login",
-    element: (
-      <React.Suspense fallback={<LoadingScreen />}>
-        <Login />
-      </React.Suspense>
-    ),
-  },
-  {
-    path: "/register",
-    element: (
-      <React.Suspense fallback={<LoadingScreen />}>
-        <Register />
-      </React.Suspense>
-    ),
-  },
-  {
-    path: "/forgot-password",
-    element: (
-      <React.Suspense fallback={<LoadingScreen />}>
-        <ForgotPassword />
-      </React.Suspense>
-    ),
-  },
-  {
-    path: "/reset-password",
-    element: (
-      <React.Suspense fallback={<LoadingScreen />}>
-        <ResetPassword />
-      </React.Suspense>
-    ),
-  },
-  {
-    path: "/profile",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Profile />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/assessment",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Assessment />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/assessment/esg-diagnostic",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ESGDiagnostic />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/assessment/esg-diagnostic/results",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ESGDiagnosticResults />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/training",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Training />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/training/course/:courseId",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <CourseDetails />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/training/module/:moduleId",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ModuleDetails />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/value-chain",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ValueChain />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/engagement",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Engagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/panel",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <AdminPanel />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/users",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <UserManagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/companies",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <CompanyManagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/courses",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <CourseManagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/modules",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ModuleManagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/content-items",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <ContentItemManagement />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/certificates",
-    element: (
-      <ProtectedRoute>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <Certificates />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  
-  // Add the diagnostics page route
-  {
-    path: "/admin/diagnostics",
-    element: (
-      <ProtectedRoute requiredRoles={["admin"]}>
-        <React.Suspense fallback={<LoadingScreen />}>
-          <DiagnosticsPage />
-        </React.Suspense>
-      </ProtectedRoute>
-    ),
-  },
-]);
-
 function App() {
   return (
     <>
-      <RouterProvider router={router} />
+      <Routes>
+        <Route path="/" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Home />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/login" element={
+          <React.Suspense fallback={<LoadingScreen />}>
+            <Login />
+          </React.Suspense>
+        } />
+        <Route path="/register" element={
+          <React.Suspense fallback={<LoadingScreen />}>
+            <Register />
+          </React.Suspense>
+        } />
+        <Route path="/forgot-password" element={
+          <React.Suspense fallback={<LoadingScreen />}>
+            <ForgotPassword />
+          </React.Suspense>
+        } />
+        <Route path="/reset-password" element={
+          <React.Suspense fallback={<LoadingScreen />}>
+            <ResetPassword />
+          </React.Suspense>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Profile />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/assessment" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Assessment />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/assessment/esg-diagnostic" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ESGDiagnostic />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/assessment/esg-diagnostic/results" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ESGDiagnosticResults />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/training" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Training />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/training/course/:courseId" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <CourseDetails />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/training/module/:moduleId" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ModuleDetails />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/value-chain" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ValueChain />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/engagement" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Engagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/panel" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <AdminPanel />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <UserManagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/companies" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <CompanyManagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/courses" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <CourseManagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/modules" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ModuleManagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/content-items" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <ContentItemManagement />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/certificates" element={
+          <ProtectedRoute>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <Certificates />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/diagnostics" element={
+          <ProtectedRoute requiredRole="admin">
+            <React.Suspense fallback={<LoadingScreen />}>
+              <DiagnosticsPage />
+            </React.Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/unauthorized" element={<div>Unauthorized</div>} />
+      </Routes>
       <EngagementTracker />
     </>
   );

@@ -10,7 +10,7 @@ type AuthContextType = {
   loading: boolean; // Added for backward compatibility
   isAuthenticated: boolean;
   companyId: string | null;
-  hasRole: (role: string) => boolean; // Added missing method
+  hasRole: (role: string) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<{ error: any | null }>;
   refreshAuthState: () => Promise<void>;
