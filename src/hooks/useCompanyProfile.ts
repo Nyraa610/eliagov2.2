@@ -18,18 +18,21 @@ export function useCompanyProfile(id?: string) {
       try {
         setIsLoading(true);
         
+        // Get the current user
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) {
+          navigate("/login");
+          return;
+        }
+        
+        let companyData: Company | null = null;
+        let userIsAdmin = false;
+        
         if (id) {
           // Get company details by ID
-          const data = await companyService.getCompany(id);
-          setCompany(data);
+          companyData = await companyService.getCompany(id);
           
-          // Check if user is admin by looking at their profile
-          const { data: user } = await supabase.auth.getUser();
-          if (!user.user) {
-            navigate("/login");
-            return;
-          }
-          
+          // Check if user is admin for this company
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('is_company_admin')
@@ -39,18 +42,12 @@ export function useCompanyProfile(id?: string) {
           
           if (profileError) {
             console.error("Error checking admin status:", profileError);
-            setIsAdmin(false);
+            userIsAdmin = false;
           } else {
-            setIsAdmin(profile?.is_company_admin || false);
+            userIsAdmin = profile?.is_company_admin || false;
           }
         } else {
-          // If no ID provided, get the current user's company
-          const { data: user } = await supabase.auth.getUser();
-          if (!user.user) {
-            navigate("/login");
-            return;
-          }
-          
+          // If no ID provided, get the current user's company          
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('company_id, is_company_admin')
@@ -59,14 +56,14 @@ export function useCompanyProfile(id?: string) {
           
           if (profileError) {
             console.error("Error getting user profile:", profileError);
-            setCompany(null);
-            setIsAdmin(false);
           } else if (profile?.company_id) {
-            const companyData = await companyService.getCompany(profile.company_id);
-            setCompany(companyData);
-            setIsAdmin(profile?.is_company_admin || false);
+            companyData = await companyService.getCompany(profile.company_id);
+            userIsAdmin = profile?.is_company_admin || false;
           }
         }
+        
+        setCompany(companyData);
+        setIsAdmin(userIsAdmin);
       } catch (error) {
         console.error("Error fetching company:", error);
         toast({
@@ -74,7 +71,6 @@ export function useCompanyProfile(id?: string) {
           description: "Failed to load company details.",
           variant: "destructive",
         });
-        if (id) navigate("/companies");
       } finally {
         setIsLoading(false);
       }

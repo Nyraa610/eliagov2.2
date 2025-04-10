@@ -45,7 +45,9 @@
     "loading": "Loading progress data...",
     "companyESGProgress": "Company ESG Progress",
     "assessmentOverview": "Assessment Overview",
-    "viewCompanyProfile": "View Company Profile"
+    "viewCompanyProfile": "View Company Profile",
+    "overallProgress": "Overall Progress",
+    "engagement": "Engagement Statistics"
   },
   "news": {
     "title": "ESG News & Updates",
@@ -173,11 +175,8 @@
     "results": {
       "recommendations": "Recommended Actions",
       "scores": "Performance Scores",
-      "summary": "Executive Summary"
-    },
-    "esgDiagnostic": {
-      "resultsTitle": "ESG Diagnostic Results",
-      "resultsDescription": "Your organization's ESG performance analysis and recommended improvements"
+      "summary": "Executive Summary",
+      "downloadReport": "Download Full Report"
     }
   },
   "training": {

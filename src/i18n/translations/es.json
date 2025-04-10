@@ -45,7 +45,9 @@
     "loading": "Cargando datos de progreso...",
     "companyESGProgress": "Progreso ESG de la Empresa",
     "assessmentOverview": "Resumen de Evaluaciones",
-    "viewCompanyProfile": "Ver Perfil de Empresa"
+    "viewCompanyProfile": "Ver Perfil de Empresa",
+    "overallProgress": "Progreso General",
+    "engagement": "Estadísticas de Participación"
   },
   "news": {
     "title": "Noticias y Actualizaciones ESG",
@@ -168,7 +170,8 @@
     "results": {
       "recommendations": "Acciones recomendadas",
       "scores": "Puntuaciones de rendimiento",
-      "summary": "Resumen ejecutivo"
+      "summary": "Resumen ejecutivo",
+      "downloadReport": "Descargar informe completo"
     },
     "esgDiagnostic": {
       "resultsTitle": "Resultados del diagnóstico ESG",

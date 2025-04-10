@@ -7,11 +7,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { assessmentService } from "@/services/assessmentService";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
 
 export default function ESGDiagnosticResults() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { company } = useCompanyProfile();
+  const { company, isLoading: companyLoading } = useCompanyProfile();
   const [results, setResults] = useState<any>({
     scores: [],
     recommendations: []
@@ -74,7 +76,7 @@ export default function ESGDiagnosticResults() {
     return "#22c55e"; // Green
   };
   
-  if (loading) {
+  if (loading || companyLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -153,6 +155,13 @@ export default function ESGDiagnosticResults() {
           ) : (
             <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No recommendations available</p>
           )}
+        </div>
+        
+        <div className="pt-4 flex justify-end">
+          <Button variant="outline" className="flex items-center gap-2">
+            <FileDown size={16} />
+            {t("assessment.results.downloadReport")}
+          </Button>
         </div>
       </div>
     </ResultsContainer>
