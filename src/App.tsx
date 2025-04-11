@@ -40,6 +40,9 @@ import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
 import ConsultantNotifications from './pages/consultant/ConsultantNotifications';
 import Companies from './pages/company/Companies';
 import IRO from './pages/assessment/IRO';
+import Pricing from './pages/Pricing';
+import SubscriptionSuccess from './pages/subscription/Success';
+import SubscriptionManager from './pages/admin/SubscriptionManager';
 
 function App() {
   return (
@@ -53,6 +56,14 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/register/confirmation" element={<RegisterConfirmation />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/pricing" element={<Pricing />} />
+              
+              {/* Protected subscription routes */}
+              <Route path="/subscription/success" element={
+                <ProtectedRoute>
+                  <SubscriptionSuccess />
+                </ProtectedRoute>
+              } />
               
               {/* Protected routes with user layout */}
               <Route element={
@@ -102,6 +113,7 @@ function App() {
                 <Route path="/admin/content" element={<ContentManagement />} />
                 <Route path="/admin/translations" element={<TranslationAdmin />} />
                 <Route path="/admin/emission-factors" element={<EmissionFactors />} />
+                <Route path="/admin/subscriptions" element={<SubscriptionManager />} />
               
                 {/* Legacy redirects */}
                 <Route path="carbon-evaluation" element={<Navigate to="/assessment/carbon-evaluation" replace />} />

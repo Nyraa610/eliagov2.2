@@ -104,6 +104,45 @@ export type Database = {
           },
         ]
       }
+      code_redemptions: {
+        Row: {
+          code_id: string
+          id: string
+          redeemed_at: string | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          code_id: string
+          id?: string
+          redeemed_at?: string | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          code_id?: string
+          id?: string
+          redeemed_at?: string | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_redemptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           country: string | null
@@ -562,6 +601,54 @@ export type Database = {
           },
         ]
       }
+      partner_commissions: {
+        Row: {
+          amount: number
+          code_id: string
+          created_at: string | null
+          id: string
+          paid_at: string | null
+          partner_id: string
+          status: string | null
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          code_id: string
+          created_at?: string | null
+          id?: string
+          paid_at?: string | null
+          partner_id: string
+          status?: string | null
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          code_id?: string
+          created_at?: string | null
+          id?: string
+          paid_at?: string | null
+          partner_id?: string
+          status?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       point_transactions: {
         Row: {
           created_at: string
@@ -635,6 +722,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      promotion_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_amount: number | null
+          discount_percentage: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          is_partner_code: boolean | null
+          max_redemptions: number | null
+          partner_id: string | null
+          redemption_count: number | null
+          stripe_promotion_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_partner_code?: boolean | null
+          max_redemptions?: number | null
+          partner_id?: string | null
+          redemption_count?: number | null
+          stripe_promotion_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_partner_code?: boolean | null
+          max_redemptions?: number | null
+          partner_id?: string | null
+          redemption_count?: number | null
+          stripe_promotion_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       quiz_answers: {
         Row: {
@@ -739,6 +874,48 @@ export type Database = {
           name?: string
           points_required?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          billing_interval: string
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number | null
+          stripe_price_id: string | null
+          trial_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_interval: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price?: number | null
+          stripe_price_id?: string | null
+          trial_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_interval?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number | null
+          stripe_price_id?: string | null
+          trial_days?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -975,6 +1152,59 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       value_chains: {
         Row: {
           company_id: string
@@ -1035,7 +1265,15 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
         }[]
       }
+      can_access_feature: {
+        Args: { feature_name: string }
+        Returns: boolean
+      }
       get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_subscription_level: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

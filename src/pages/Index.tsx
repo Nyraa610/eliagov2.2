@@ -42,9 +42,9 @@ const Index = () => {
                     Start Assessment
                   </Button>
                 </Link>
-                <Link to="/assessment">
+                <Link to="/pricing">
                   <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
-                    Learn More
+                    View Pricing
                   </Button>
                 </Link>
               </motion.div>
@@ -87,6 +87,25 @@ const Index = () => {
                 <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
+          </div>
+        </section>
+        
+        {/* Pricing CTA */}
+        <section className="container mx-auto px-4 py-16 bg-gray-50 rounded-3xl my-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">Simple, Transparent Pricing</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Choose the plan that's right for your organization's sustainability journey.
+              All plans include a 7-day free trial.
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <Link to="/pricing">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
+                View Pricing Plans
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
