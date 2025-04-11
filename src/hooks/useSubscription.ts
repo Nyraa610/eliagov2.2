@@ -45,10 +45,13 @@ export function useSubscription() {
         return;
       }
 
-      // Parse features from JSON string to array
+      // Process plans to ensure features is always a string array
       const processedPlans = data.map(plan => ({
         ...plan,
-        features: Array.isArray(plan.features) ? plan.features : []
+        // Convert features from Json to string[] or use empty array if null/undefined
+        features: Array.isArray(plan.features) 
+          ? plan.features.map(feature => String(feature)) 
+          : []
       }));
 
       setPlans(processedPlans);
