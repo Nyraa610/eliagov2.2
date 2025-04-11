@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -24,19 +23,6 @@ export const MobileMenu = ({
 
   if (!isOpen) return null;
 
-  // Common links for both auth states
-  const commonLinks = (
-    <NavigationLink 
-      to="/pricing" 
-      isActive={isActive("/pricing")} 
-      onClick={onToggle}
-      className="w-full text-left justify-start"
-    >
-      <CreditCard className="h-4 w-4 mr-1" />
-      {t('navigation.plans')}
-    </NavigationLink>
-  );
-
   // Pre-authentication mobile menu
   if (!isAuthenticated) {
     return (
@@ -58,7 +44,15 @@ export const MobileMenu = ({
           >
             {t('navigation.features')}
           </NavigationLink>
-          {commonLinks}
+          <NavigationLink 
+            to="/pricing" 
+            isActive={isActive("/pricing")} 
+            onClick={onToggle}
+            className="w-full text-left justify-start"
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            {t('navigation.plans')}
+          </NavigationLink>
           
           <Link to="/assessment" onClick={onToggle} className="mt-2">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
@@ -84,27 +78,10 @@ export const MobileMenu = ({
     );
   }
 
-  // Post-authentication mobile menu
+  // Post-authentication mobile menu - keep core functionality but remove specific items
   return (
     <div className="md:hidden pb-4">
       <div className="flex flex-col space-y-2">
-        <NavigationLink 
-          to="/dashboard" 
-          isActive={isActive("/dashboard")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.dashboard')}
-        </NavigationLink>
-        <NavigationLink 
-          to="/assessment" 
-          isActive={isActive("/assessment")} 
-          onClick={onToggle}
-          className="w-full text-left justify-start"
-        >
-          {t('navigation.assessment')}
-        </NavigationLink>
-        {commonLinks}
         <NavigationLink 
           to="/profile" 
           isActive={isActive("/profile")} 

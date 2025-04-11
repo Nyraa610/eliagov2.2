@@ -72,7 +72,7 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
         <div className="flex items-center">
           <Link
-            to="/"
+            to={isAuthenticated ? "/dashboard" : "/"}
             className="flex items-center mr-6"
           >
             <img 
