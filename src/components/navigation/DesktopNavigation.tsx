@@ -25,6 +25,16 @@ export const DesktopNavigation = ({
 }: DesktopNavigationProps) => {
   const { t } = useTranslation();
 
+  // Common navigation links that appear in both authenticated and non-authenticated states
+  const commonLinks = (
+    <>
+      <NavigationLink to="/pricing" isActive={isActive("/pricing")}>
+        <CreditCard className="h-4 w-4 mr-1" />
+        {t('navigation.plans')}
+      </NavigationLink>
+    </>
+  );
+
   // Pre-authentication navigation
   if (!isAuthenticated) {
     return (
@@ -35,10 +45,7 @@ export const DesktopNavigation = ({
         <NavigationLink to="/features" isActive={isActive("/features")}>
           {t('navigation.features')}
         </NavigationLink>
-        <NavigationLink to="/pricing" isActive={isActive("/pricing")}>
-          <CreditCard className="h-4 w-4 mr-1" />
-          {t('navigation.plans')}
-        </NavigationLink>
+        {commonLinks}
         
         <div className="ml-2">
           <LanguageSelector />
@@ -66,10 +73,7 @@ export const DesktopNavigation = ({
       <NavigationLink to="/assessment" isActive={isActive("/assessment")}>
         {t('navigation.assessment')}
       </NavigationLink>
-      <NavigationLink to="/pricing" isActive={isActive("/pricing")}>
-        <CreditCard className="h-4 w-4 mr-1" />
-        {t('navigation.plans')}
-      </NavigationLink>
+      {commonLinks}
     </nav>
   );
 };

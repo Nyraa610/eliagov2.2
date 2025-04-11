@@ -43,6 +43,7 @@ import IRO from './pages/assessment/IRO';
 import Pricing from './pages/Pricing';
 import SubscriptionSuccess from './pages/subscription/Success';
 import SubscriptionManager from './pages/admin/SubscriptionManager';
+import Index from './pages/Index';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/register/confirmation" element={<RegisterConfirmation />} />
@@ -71,7 +73,6 @@ function App() {
                   <UserLayout />
                 </ProtectedRoute>
               }>
-                <Route path="/" element={<Dashboard />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 
                 {/* Assessment module routes - consolidated */}
