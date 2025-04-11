@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -82,6 +83,14 @@ export const MobileMenu = ({
   return (
     <div className="md:hidden pb-4">
       <div className="flex flex-col space-y-2">
+        <NavigationLink 
+          to="/dashboard" 
+          isActive={isActive("/dashboard")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.dashboard')}
+        </NavigationLink>
         <NavigationLink 
           to="/profile" 
           isActive={isActive("/profile")} 
