@@ -31,7 +31,7 @@ export default function Pricing() {
         </div>
         
         {/* Stripe Pricing Table */}
-        <div className="w-full flex justify-center">
+        <div className="w-full max-w-5xl mx-auto">
           <stripe-pricing-table 
             pricing-table-id="prctbl_1RCjRMIPLzwJ5m9RmNhmv18P"
             publishable-key="pk_test_51Q2veiIPLzwJ5m9R6ltlPGOF813zFvAuC3ZmCHAjOc8rgOxDxZ0hNA4gQv5fsbKHQDX6amBAln57dRFLwt98Sxrl00t1VnCkps">
