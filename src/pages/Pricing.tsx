@@ -138,6 +138,8 @@ export default function Pricing() {
                       </span>
                     ) : isCurrentPlan(plan.name) ? (
                       "Current Plan"
+                    ) : !isAuthenticated ? (
+                      <>Sign Up <ChevronRight className="h-4 w-4 ml-1" /></>
                     ) : (
                       <>Subscribe <ChevronRight className="h-4 w-4 ml-1" /></>
                     )}
@@ -148,32 +150,34 @@ export default function Pricing() {
           ))}
         </div>
         
-        <div className="mt-12 flex flex-col items-center">
-          <div className="max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Have a promotion code?</h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter code"
-                value={promoCode}
-                onChange={e => setPromoCode(e.target.value.toUpperCase())}
-                className="flex-1"
-              />
-              {promoCode && (
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    toast({
-                      title: "Promotion Code Added",
-                      description: `The code "${promoCode}" will be applied at checkout.`,
-                    });
-                  }}
-                >
-                  Apply
-                </Button>
-              )}
+        {isAuthenticated && (
+          <div className="mt-12 flex flex-col items-center">
+            <div className="max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-2">Have a promotion code?</h3>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter code"
+                  value={promoCode}
+                  onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                  className="flex-1"
+                />
+                {promoCode && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Promotion Code Added",
+                        description: `The code "${promoCode}" will be applied at checkout.`,
+                      });
+                    }}
+                  >
+                    Apply
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         <div className="mt-16 text-center">
           <h2 className="text-2xl font-bold text-primary mb-4">Need a custom enterprise plan?</h2>

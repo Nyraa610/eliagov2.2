@@ -1,143 +1,241 @@
 
-import { Navigation } from "@/components/Navigation";
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Navigation } from '@/components/Navigation';
+import { ArrowRight, Check, BarChart, Shield, Leaf, Users, CreditCard } from "lucide-react";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+    <div className="min-h-screen bg-white">
       <Navigation />
       
-      <main className="pt-24">
-        {/* Hero Section */}
-        <section className="container mx-auto px-4 py-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                Empower Your Business with ESG Excellence
-              </motion.h1>
-              <motion.p 
-                className="text-lg text-gray-600"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                Transform your Mediterranean SME with our comprehensive ESG platform. 
-                Get a detailed diagnosis, understand your impacts, and build a sustainable future.
-              </motion.p>
-              <motion.div 
-                className="flex gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <Link to="/assessment">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-                    Start Assessment
-                  </Button>
-                </Link>
-                <Link to="/pricing">
-                  <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
-                    View Pricing
-                  </Button>
-                </Link>
-              </motion.div>
-            </div>
-            <motion.div 
-              className="relative"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <img
-                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png"
-                alt="ELIA GO"
-                className="w-full rounded-2xl shadow-xl animate-float"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Features Preview */}
-        <section className="container mx-auto px-4 py-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">Why Choose ELIA GO?</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our platform provides comprehensive tools and insights to help your business thrive in the sustainable economy.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                className="p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-200 hover:shadow-lg transition-all"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <h3 className="text-xl font-semibold text-primary mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-        
-        {/* Pricing CTA */}
-        <section className="container mx-auto px-4 py-16 bg-gray-50 rounded-3xl my-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Choose the plan that's right for your organization's sustainability journey.
-              All plans include a 7-day free trial.
-            </p>
-          </div>
-          
-          <div className="flex justify-center">
-            <Link to="/pricing">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-                View Pricing Plans
+      {/* Hero Section */}
+      <section className="pt-24 pb-16 px-4 md:pt-32 md:pb-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-gray-900 mb-6">
+            Your Path to ESG Excellence
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Simplify your sustainability journey with comprehensive ESG analytics and reporting.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/login">
+              <Button size="lg" className="px-8">
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/features">
+              <Button size="lg" variant="outline" className="px-8">
+                Explore Features
               </Button>
             </Link>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+      
+      {/* Features Grid */}
+      <section className="py-16 bg-gray-50 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <BarChart className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">ESG Assessment</h3>
+              <p className="text-gray-600">Comprehensive diagnostic tools to evaluate your company's ESG performance.</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Compliance Management</h3>
+              <p className="text-gray-600">Stay current with regulations and standards across all ESG dimensions.</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div className="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                <Leaf className="h-6 w-6 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Carbon Footprint</h3>
+              <p className="text-gray-600">Track, measure, and reduce your organization's environmental impact.</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Stakeholder Engagement</h3>
+              <p className="text-gray-600">Tools to engage with investors, employees, and the community.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Plans Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Flexible Plans for Every Business</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+            Choose the perfect plan to support your company's sustainability goals.
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h3 className="text-xl font-bold mb-2">Free</h3>
+              <p className="text-gray-500 mb-4">Get started with basic ESG tools</p>
+              <div className="text-3xl font-bold mb-6">$0</div>
+              <ul className="text-left space-y-3 mb-8">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Basic ESG assessment</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Limited reporting templates</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Community support</span>
+                </li>
+              </ul>
+              <Link to="/pricing">
+                <Button variant="outline" className="w-full">Learn More</Button>
+              </Link>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-primary relative">
+              <div className="absolute top-0 right-0 bg-primary text-white px-3 py-1 text-sm font-medium rounded-bl-lg rounded-tr-lg">
+                POPULAR
+              </div>
+              <h3 className="text-xl font-bold mb-2">Kickstart ESG</h3>
+              <p className="text-gray-500 mb-4">Essential tools for SMEs</p>
+              <div className="text-3xl font-bold mb-6">$99<span className="text-base font-normal">/mo</span></div>
+              <ul className="text-left space-y-3 mb-8">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Full ESG assessment suite</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Carbon emission calculator</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Advanced reporting</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Email support</span>
+                </li>
+              </ul>
+              <Link to="/pricing">
+                <Button className="w-full">See Details</Button>
+              </Link>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h3 className="text-xl font-bold mb-2">SustainOps</h3>
+              <p className="text-gray-500 mb-4">Complete sustainability platform</p>
+              <div className="text-3xl font-bold mb-6">$299<span className="text-base font-normal">/mo</span></div>
+              <ul className="text-left space-y-3 mb-8">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Enterprise ESG governance</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Value chain analysis</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Team collaboration tools</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+              <Link to="/pricing">
+                <Button variant="outline" className="w-full">See Details</Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="mt-12">
+            <Link to="/pricing">
+              <Button variant="default" size="lg" className="gap-2">
+                <CreditCard className="h-5 w-5" />
+                View All Plans & Pricing
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section className="py-16 bg-primary text-white px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Start Your ESG Journey?</h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of organizations making progress on their sustainability goals.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/register">
+              <Button size="lg" variant="outline" className="bg-white hover:bg-gray-100 text-primary px-8">
+                Sign Up Free
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button size="lg" variant="ghost" className="text-white border border-white hover:bg-white/10 px-8">
+                Contact Sales
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400 py-12 px-4">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8">
+          <div>
+            <h3 className="text-white text-lg font-medium mb-4">ELIA GO</h3>
+            <p className="mb-4">Your partner in sustainable business transformation.</p>
+          </div>
+          
+          <div>
+            <h4 className="text-white text-base font-medium mb-4">Product</h4>
+            <ul className="space-y-2">
+              <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-white text-base font-medium mb-4">Resources</h4>
+            <ul className="space-y-2">
+              <li><Link to="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+              <li><Link to="/documentation" className="hover:text-white transition-colors">Documentation</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-white text-base font-medium mb-4">Company</h4>
+            <ul className="space-y-2">
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-gray-800 text-center text-sm">
+          &copy; {new Date().getFullYear()} ELIA GO. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
-};
-
-const features = [
-  {
-    title: "ESG Assessment",
-    description: "Get a comprehensive analysis of your company's ESG performance through our advanced diagnostic tools."
-  },
-  {
-    title: "Impact Analysis",
-    description: "Understand your business's environmental and social impacts with detailed insights and recommendations."
-  },
-  {
-    title: "Strategy Development",
-    description: "Create a tailored ESG strategy that aligns with your business goals and stakeholder expectations."
-  },
-  {
-    title: "Training & Education",
-    description: "Access expert-led training modules to build your team's ESG capabilities and knowledge."
-  },
-  {
-    title: "Performance Tracking",
-    description: "Monitor your progress with real-time metrics and comprehensive reporting tools."
-  },
-  {
-    title: "Mediterranean Focus",
-    description: "Specialized insights and solutions designed specifically for Mediterranean SMEs."
-  }
-];
-
-export default Index;
+}

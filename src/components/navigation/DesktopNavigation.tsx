@@ -1,3 +1,4 @@
+
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { NotificationButton } from "./NotificationButton";
@@ -7,7 +8,7 @@ import { NavigationLink } from "./NavigationLink";
 import { UserProfile } from "@/services/base/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Rocket } from "lucide-react";
+import { Rocket, CreditCard } from "lucide-react";
 
 interface DesktopNavigationProps {
   isAuthenticated: boolean | null;
@@ -34,6 +35,10 @@ export const DesktopNavigation = ({
         <NavigationLink to="/features" isActive={isActive("/features")}>
           {t('navigation.features')}
         </NavigationLink>
+        <NavigationLink to="/pricing" isActive={isActive("/pricing")}>
+          <CreditCard className="h-4 w-4 mr-1" />
+          {t('navigation.plans')}
+        </NavigationLink>
         
         <div className="ml-2">
           <LanguageSelector />
@@ -55,7 +60,16 @@ export const DesktopNavigation = ({
   // Post-authentication navigation - simplified
   return (
     <nav className="hidden md:flex items-center space-x-1">
-      {/* This is now empty as we've removed the duplicates */}
+      <NavigationLink to="/dashboard" isActive={isActive("/dashboard")}>
+        {t('navigation.dashboard')}
+      </NavigationLink>
+      <NavigationLink to="/assessment" isActive={isActive("/assessment")}>
+        {t('navigation.assessment')}
+      </NavigationLink>
+      <NavigationLink to="/pricing" isActive={isActive("/pricing")}>
+        <CreditCard className="h-4 w-4 mr-1" />
+        {t('navigation.plans')}
+      </NavigationLink>
     </nav>
   );
 };

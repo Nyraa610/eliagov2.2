@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { NavigationLink } from "./NavigationLink";
-import { Rocket } from "lucide-react";
+import { Rocket, CreditCard } from "lucide-react";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -45,6 +45,15 @@ export const MobileMenu = ({
           >
             {t('navigation.features')}
           </NavigationLink>
+          <NavigationLink 
+            to="/pricing" 
+            isActive={isActive("/pricing")} 
+            onClick={onToggle}
+            className="w-full text-left justify-start"
+          >
+            <CreditCard className="h-4 w-4 mr-1" />
+            {t('navigation.plans')}
+          </NavigationLink>
           
           <Link to="/assessment" onClick={onToggle} className="mt-2">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
@@ -81,6 +90,23 @@ export const MobileMenu = ({
           className="w-full text-left justify-start"
         >
           {t('navigation.dashboard')}
+        </NavigationLink>
+        <NavigationLink 
+          to="/assessment" 
+          isActive={isActive("/assessment")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          {t('navigation.assessment')}
+        </NavigationLink>
+        <NavigationLink 
+          to="/pricing" 
+          isActive={isActive("/pricing")} 
+          onClick={onToggle}
+          className="w-full text-left justify-start"
+        >
+          <CreditCard className="h-4 w-4 mr-1" />
+          {t('navigation.plans')}
         </NavigationLink>
         <NavigationLink 
           to="/profile" 

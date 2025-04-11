@@ -5,6 +5,7 @@ import { RegistryInformation } from "@/components/company/profile/RegistryInform
 import { Company } from "@/services/company/types";
 import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGeneralSettings";
 import { StorageManagement } from "@/components/company/settings/StorageManagement";
+import { SubscriptionManagement } from "@/components/company/settings/SubscriptionManagement";
 
 interface SettingsTabProps {
   company: Company;
@@ -15,6 +16,8 @@ export function SettingsTab({ company, onCompanyUpdate }: SettingsTabProps) {
   return (
     <div className="space-y-6">
       <RegistryInformation company={company} onUpdate={() => window.location.reload()} />
+      
+      <SubscriptionManagement company={company} />
       
       <CompanyGeneralSettings company={company} onCompanyUpdate={onCompanyUpdate} />
       
