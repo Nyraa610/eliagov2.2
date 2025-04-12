@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navigation } from '../Navigation';
 import { UserSidebar } from './UserSidebar';
+import { HotjarTracking } from '../analytics/HotjarTracking';
 
 interface UserLayoutProps {
   children?: ReactNode;
@@ -13,6 +14,8 @@ export function UserLayout({ children, title }: UserLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      {/* Add Hotjar tracking - uncomment and add your Hotjar ID when ready */}
+      {/* <HotjarTracking siteId="YOUR_HOTJAR_SITE_ID" /> */}
       
       <div className="flex">
         <UserSidebar />
