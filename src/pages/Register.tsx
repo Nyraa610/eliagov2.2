@@ -1,11 +1,13 @@
 
 import { Navigation } from "@/components/Navigation";
 import { RegisterForm } from "@/components/auth/register/RegisterForm";
+import { HotjarTracking } from "@/components/analytics/HotjarTracking";
 
 export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
+      <HotjarTracking />
       
       <main className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-lg mx-auto space-y-6">

@@ -1,5 +1,6 @@
 
 import { useEffect, useRef } from 'react';
+import { hotjar } from '@hotjar/browser';
 import { supabase } from '@/lib/supabase';
 
 interface HotjarTrackingProps {
@@ -13,7 +14,7 @@ export const HotjarTracking = ({ siteId, hotjarVersion = 6 }: HotjarTrackingProp
   useEffect(() => {
     // Only run in the browser and if not already initialized
     if (typeof window !== 'undefined' && !initialized.current) {
-      const loadHotjar = async () => {
+      const initHotjar = async () => {
         try {
           // If siteId is not provided, attempt to fetch from Supabase
           let hjid = siteId;
@@ -34,15 +35,8 @@ export const HotjarTracking = ({ siteId, hotjarVersion = 6 }: HotjarTrackingProp
             return;
           }
 
-          // Initialize Hotjar
-          (function(h: any, o: any, t: any, j: any, a: any, r: any) {
-            h.hj = h.hj || function() { (h.hj.q = h.hj.q || []).push(arguments); };
-            h._hjSettings = { hjid, hjsv: hotjarVersion };
-            a = o.getElementsByTagName('head')[0];
-            r = o.createElement('script'); r.async = 1;
-            r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-            a.appendChild(r);
-          })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=', null, null);
+          // Initialize Hotjar using the official package
+          hotjar.init(parseInt(hjid, 10), hotjarVersion);
           
           initialized.current = true;
           console.log(`Hotjar initialized with site ID: ${hjid}`);
@@ -51,7 +45,7 @@ export const HotjarTracking = ({ siteId, hotjarVersion = 6 }: HotjarTrackingProp
         }
       };
       
-      loadHotjar();
+      initHotjar();
     }
   }, [siteId, hotjarVersion]);
 

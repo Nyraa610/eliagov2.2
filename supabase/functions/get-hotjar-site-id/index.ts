@@ -7,7 +7,17 @@ interface WebResponse {
   error?: string;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
   try {
     // Create a Supabase client with the Auth context of the logged-in user
     const supabaseClient = createClient(
@@ -27,16 +37,27 @@ serve(async (req: Request) => {
       siteId: siteId || undefined
     };
 
+    console.log('Returning Hotjar site ID:', siteId ? 'ID available' : 'No ID found');
+
     return new Response(
       JSON.stringify(response),
-      { headers: { 'Content-Type': 'application/json' } },
+      { 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
+      },
     )
   } catch (error) {
+    console.error('Error in get-hotjar-site-id function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
       },
     )
   }

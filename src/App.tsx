@@ -44,12 +44,15 @@ import Pricing from './pages/Pricing';
 import SubscriptionSuccess from './pages/subscription/Success';
 import SubscriptionManager from './pages/admin/SubscriptionManager';
 import Index from './pages/Index';
+import { HotjarTracking } from './components/analytics/HotjarTracking';
 
 function App() {
   return (
     <div className="App">
       <AuthProvider>
         <LanguageProvider>
+          {/* Add Hotjar tracking at the app level */}
+          <HotjarTracking />
           <BrowserRouter>
             <Routes>
               {/* Public routes */}

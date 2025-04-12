@@ -4,6 +4,7 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { HotjarTracking } from "@/components/analytics/HotjarTracking";
 
 export default function Unauthorized() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function Unauthorized() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
+      <HotjarTracking />
       <div className="container mx-auto px-4 page-header-spacing">
         <motion.div 
           className="max-w-lg mx-auto text-center py-12"
