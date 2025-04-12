@@ -19,7 +19,7 @@ export const HotjarTracking = ({ siteId, hotjarVersion = 6 }: HotjarTrackingProp
           let hjid = siteId;
           
           if (!hjid) {
-            // Try to get HOTJAR_SITE_ID from environment
+            // Fetch HOTJAR_SITE_ID from Supabase function
             const { data, error } = await supabase.functions.invoke('get-hotjar-site-id');
             if (!error && data?.siteId) {
               hjid = data.siteId;
