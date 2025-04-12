@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from 'react';
-import { hotjar } from '@hotjar/browser';
+import hotjar from '@hotjar/browser';
 import { supabase } from '@/lib/supabase';
 
 interface HotjarTrackingProps {
