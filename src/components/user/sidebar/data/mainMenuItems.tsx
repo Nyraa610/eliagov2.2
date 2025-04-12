@@ -2,48 +2,52 @@
 import { LayoutDashboard, BookOpen, FileText, Trophy, UserIcon } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
 
 export const getMainMenuItems = (): MenuItem[] => {
   const { t } = useTranslation();
-  const location = useLocation();
   
   return [
     {
+      id: "dashboard",
       label: t('navigation.dashboard'),
       icon: <LayoutDashboard className="h-5 w-5" />,
       path: "/dashboard",
-      active: location.pathname === "/dashboard"
+      hasSubmenu: false
     },
     {
+      id: "training",
       label: t('navigation.training'),
       icon: <BookOpen className="h-5 w-5" />,
       path: "/training",
-      active: location.pathname === "/training"
+      hasSubmenu: false
     },
     {
+      id: "documents",
       label: t('navigation.documents'),
       icon: <FileText className="h-5 w-5" />,
       path: "/documents",
-      active: location.pathname === "/documents"
+      hasSubmenu: false
     },
     {
+      id: "deliverables",
       label: t('navigation.deliverables'),
       icon: <FileText className="h-5 w-5" />,
       path: "/deliverables",
-      active: location.pathname === "/deliverables"
+      hasSubmenu: false
     },
     {
+      id: "engagement",
       label: t('navigation.engagement'),
       icon: <Trophy className="h-5 w-5" />,
       path: "/engagement",
-      active: location.pathname === "/engagement"
+      hasSubmenu: false
     },
     {
+      id: "profile",
       label: t('navigation.profile'),
       icon: <UserIcon className="h-5 w-5" />,
       path: "/profile",
-      active: location.pathname === "/profile"
+      hasSubmenu: false
     }
   ];
 };

@@ -18,7 +18,7 @@ export const HotjarTracking = ({ siteId, hotjarVersion = 6 }: HotjarTrackingProp
         r = o.createElement('script'); r.async = 1;
         r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
         a.appendChild(r);
-      })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+      })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=', null, null);
     }
   }, [siteId, hotjarVersion]);
 

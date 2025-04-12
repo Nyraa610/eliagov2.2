@@ -14,7 +14,7 @@ export function UserLayout({ children, title }: UserLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      {/* Add Hotjar tracking - uncomment and add your Hotjar ID when ready */}
+      {/* Add Hotjar tracking - uncomment and add your Hotjar Site ID when ready */}
       {/* <HotjarTracking siteId="YOUR_HOTJAR_SITE_ID" /> */}
       
       <div className="flex">
