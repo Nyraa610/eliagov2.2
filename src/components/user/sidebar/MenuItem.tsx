@@ -1,8 +1,9 @@
 
-import { ChevronLeft, ChevronRight, LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type MenuItemProps = {
   item: {
@@ -31,43 +32,35 @@ export const MenuItem = ({
 }: MenuItemProps) => {
   const hasSubmenu = item.submenu && item.submenu.length > 0;
   const location = useLocation();
+  const isExpanded = expandedSubmenu === item.path;
+  const submenuActive = item.submenu?.some(subItem => 
+    location.pathname.startsWith(subItem.path)
+  );
   
   if (hasSubmenu && !collapsed) {
     return (
       <li className="flex flex-col">
         <div className="flex flex-col">
-          <div className="flex items-center">
-            <Link 
-              to={item.path}
-              className={cn(
-                "flex items-center px-3 py-2 rounded-md text-sm transition-colors flex-1",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-gray-600 hover:bg-gray-100"
-              )}
-            >
+          <button
+            onClick={() => toggleSubmenu(item.path)}
+            className={cn(
+              "flex items-center px-3 py-2 rounded-md text-sm transition-colors justify-between",
+              (isActive || submenuActive || isExpanded)
+                ? "text-primary font-medium"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <div className="flex items-center">
               {item.icon}
               <span className="ml-3">{item.title}</span>
-            </Link>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 p-0 ml-1"
-              tabIndex={-1}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleSubmenu(item.path);
-              }}
-            >
-              {expandedSubmenu === item.path ? (
-                <ChevronLeft className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+            </div>
+            {isExpanded ? 
+              <ChevronDown className="h-4 w-4" /> : 
+              <ChevronRight className="h-4 w-4" />
+            }
+          </button>
           
-          {expandedSubmenu === item.path && (
+          {isExpanded && (
             <ul className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-2">
               {item.submenu?.map((subItem) => (
                 <li key={subItem.path}>
@@ -75,7 +68,7 @@ export const MenuItem = ({
                     to={subItem.path}
                     className={cn(
                       "flex items-center px-3 py-1.5 rounded-md text-sm transition-colors",
-                      location.pathname === subItem.path
+                      location.pathname.startsWith(subItem.path)
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-gray-600 hover:bg-gray-100"
                     )}
@@ -109,6 +102,7 @@ export const MenuItem = ({
           {item.icon}
           {!collapsed && <span className="ml-3">{item.title}</span>}
         </div>
+        {hasSubmenu && !collapsed && <ChevronRight className="h-4 w-4" />}
       </Link>
     </li>
   );

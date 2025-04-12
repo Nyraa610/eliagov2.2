@@ -1,18 +1,18 @@
 
-import { Settings, Building } from "lucide-react";
+import { UserIcon, Building } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
 export const getCompanyHubItems = (): MenuItem[] => {
   return [
     {
-      id: "profile",
+      id: "user-profile",
       label: "User Profile",
       path: "/profile",
-      icon: <Settings className="h-4 w-4" />,
+      icon: <UserIcon className="h-4 w-4" />,
       hasSubmenu: false
     },
     {
-      id: "companies",
+      id: "company-profile",
       label: "Company Profile",
       path: "/companies",
       icon: <Building className="h-4 w-4" />,

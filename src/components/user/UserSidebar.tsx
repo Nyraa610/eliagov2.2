@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { MenuItemsList } from "./sidebar/MenuItemsList";
 import { useMenuItems } from "./sidebar/useMenuItems";
-import { MenuItem } from "./sidebar/types/menuItemTypes";
 
 export const UserSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -24,7 +23,7 @@ export const UserSidebar = () => {
   };
 
   // Map MenuItems to the format expected by MenuItemsList
-  const mapMenuItems = (items: MenuItem[]) => {
+  const mapMenuItems = (items) => {
     return items.map(item => ({
       title: item.label,
       icon: item.icon,
