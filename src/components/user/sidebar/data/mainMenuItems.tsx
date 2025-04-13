@@ -18,42 +18,56 @@ export const getMainMenuItems = (): MenuItem[] => {
       id: "assessments",
       label: "Assessments",
       icon: <ClipboardCheck className="h-5 w-5" />,
-      path: "/assessments",
+      path: "/assessment",
       hasSubmenu: true,
       submenuItems: [
         {
           id: "esg-diagnostic",
           label: "ESG Diagnostic",
           icon: <ClipboardCheck className="h-4 w-4" />,
-          path: "/assessments/esg-diagnostic",
+          path: "/assessment/esg-diagnostic",
           hasSubmenu: false
         },
         {
           id: "value-chain",
           label: "Value Chain",
           icon: <BarChartHorizontal className="h-4 w-4" />,
-          path: "/assessments/value-chain",
+          path: "/assessment/value-chain",
           hasSubmenu: false
         },
         {
           id: "materiality-analysis",
           label: "Materiality Analysis",
           icon: <ClipboardCheck className="h-4 w-4" />,
-          path: "/assessments/materiality-analysis",
+          path: "/assessment/materiality-analysis",
           hasSubmenu: false
         },
         {
           id: "iro-analysis",
           label: "IRO Analysis",
           icon: <TargetIcon className="h-4 w-4" />,
-          path: "/assessments/iro-analysis",
+          path: "/assessment/iro",
+          hasSubmenu: false
+        },
+        {
+          id: "carbon-evaluation",
+          label: "Carbon Evaluation",
+          icon: <BarChartHorizontal className="h-4 w-4" />,
+          path: "/assessment/carbon-evaluation",
+          hasSubmenu: false
+        },
+        {
+          id: "action-plan",
+          label: "Action Plan",
+          icon: <FileText className="h-4 w-4" />,
+          path: "/assessment/action-plan",
           hasSubmenu: false
         },
         {
           id: "assessment-results",
           label: "Assessment Results",
           icon: <FileBarChart className="h-4 w-4" />,
-          path: "/assessments/results",
+          path: "/assessment",
           hasSubmenu: false
         }
       ]
@@ -62,14 +76,14 @@ export const getMainMenuItems = (): MenuItem[] => {
       id: "carbon-evaluation",
       label: "Carbon Evaluation",
       icon: <BarChartHorizontal className="h-5 w-5" />,
-      path: "/carbon-evaluation",
+      path: "/assessment/carbon-evaluation",
       hasSubmenu: false
     },
     {
       id: "action-plan",
       label: "Action Plan",
       icon: <FileText className="h-5 w-5" />,
-      path: "/action-plan",
+      path: "/assessment/action-plan",
       hasSubmenu: false
     },
     {
