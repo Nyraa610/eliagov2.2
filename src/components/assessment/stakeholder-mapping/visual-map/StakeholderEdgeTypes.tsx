@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps } from '@xyflow/react';
 
-// Custom edge with label
-const StakeholderEdge = ({
+// Custom edge with label with proper type definition
+const StakeholderEdge: React.FC<EdgeProps> = ({
   id,
   sourceX,
   sourceY,

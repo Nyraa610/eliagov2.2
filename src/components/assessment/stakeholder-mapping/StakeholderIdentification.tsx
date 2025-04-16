@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DocumentUpload } from "@/components/shared/DocumentUpload";
+import { SimpleUploadButton } from "@/components/shared/DocumentUpload";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -80,12 +79,10 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Extract selected stakeholder types
       const selectedStakeholders = stakeholderTypes
         .filter(type => values[type.id as keyof typeof values])
         .map(type => type.label);
       
-      // Add any additional stakeholders
       if (values.additionalStakeholders) {
         const additionalList = values.additionalStakeholders
           .split(',')
@@ -94,7 +91,6 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
         selectedStakeholders.push(...additionalList);
       }
 
-      // Save the identified stakeholders
       await stakeholderService.saveIdentifiedStakeholders({
         companyDescription: values.companyDescription,
         stakeholderTypes: selectedStakeholders,
@@ -121,7 +117,6 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
     try {
       const result = await stakeholderService.autoIdentifyStakeholders(form.getValues().companyDescription);
       
-      // Update form with identified stakeholders
       if (result.stakeholders) {
         const formUpdate: any = {};
         stakeholderTypes.forEach(type => {
@@ -240,15 +235,19 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                 <FormDescription className="mb-4">
                   Upload documents that can help identify stakeholders (org charts, reports, etc.)
                 </FormDescription>
-                <DocumentUpload 
-                  onUpload={handleDocumentUpload} 
-                  isUploading={isUploading}
-                  acceptedFileTypes={{
-                    'application/pdf': ['.pdf'],
-                    'application/msword': ['.doc'],
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                    'application/vnd.ms-excel': ['.xls'],
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                <SimpleUploadButton 
+                  onUploadComplete={(documents) => handleDocumentUpload(Array.from(documents))}
+                  buttonText="Upload Documents"
+                  validationRules={{
+                    allowedTypes: [
+                      'application/pdf',
+                      'application/msword',
+                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      'application/vnd.ms-excel',
+                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    ],
+                    maxFileSize: 10 * 1024 * 1024, // 10MB
+                    maxTotalSize: 50 * 1024 * 1024 // 50MB
                   }}
                 />
                 {uploadedDocuments.length > 0 && (
