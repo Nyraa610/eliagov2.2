@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { ChevronRight, Upload, Users } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
 import { UploadedDocument } from "@/services/storage/supabaseStorageService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   companyDescription: z.string().min(10, "Please provide a brief description of your company"),
@@ -36,6 +36,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+  const { user, companyId } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +68,12 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   const handleDocumentUpload = async (files: File[]) => {
     setIsUploading(true);
     try {
+      if (!companyId) {
+        toast.error("Company ID is required to upload documents");
+        setIsUploading(false);
+        return;
+      }
+      
       const documents = await stakeholderService.uploadStakeholderDocuments(files);
       setUploadedDocuments(prev => [...prev, ...documents]);
       toast.success("Documents uploaded successfully");
@@ -239,7 +246,6 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                 </FormDescription>
                 <SimpleUploadButton 
                   onUploadComplete={(documents) => {
-                    // Convert UploadedDocument[] to File[] compatible format for our handler
                     const files = documents.map(doc => new File([], doc.name, { type: doc.file_type }));
                     handleDocumentUpload(files);
                   }}
@@ -252,7 +258,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                       'application/vnd.ms-excel',
                       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                     ],
-                    maxFiles: 10, // Use maxFiles instead of maxFileSize
+                    maxFiles: 10,
                   }}
                 />
                 {uploadedDocuments.length > 0 && (

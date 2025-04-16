@@ -44,11 +44,15 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
     const loadStakeholderMap = async () => {
       setIsLoading(true);
       try {
+        console.log("Loading stakeholder map data...");
         const { nodes: savedNodes, edges: savedEdges } = await stakeholderService.getStakeholderMap();
-        if (savedNodes.length > 0) {
+        console.log("Loaded nodes:", savedNodes, "edges:", savedEdges);
+        
+        if (savedNodes && savedNodes.length > 0) {
           setNodes(savedNodes);
-          setEdges(savedEdges);
+          setEdges(savedEdges || []);
         } else {
+          console.log("No saved map found, creating default company node");
           // If no saved map, create a default company node in the center
           setNodes([
             {
@@ -58,6 +62,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
               position: { x: 250, y: 250 }
             }
           ]);
+          setEdges([]);
         }
       } catch (error) {
         console.error("Error loading stakeholder map:", error);
@@ -121,6 +126,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const handleSaveMap = async () => {
     setIsSubmitting(true);
     try {
+      console.log("Saving stakeholder map:", { nodes, edges });
       await stakeholderService.saveStakeholderMap(nodes, edges);
       toast.success("Stakeholder map saved successfully");
       onComplete();
