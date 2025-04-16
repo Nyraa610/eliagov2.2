@@ -33,8 +33,8 @@ export function StakeholderMapControls({
     if (selectedNodeId) {
       const selectedNode = nodes.find((node) => node.id === selectedNodeId);
       if (selectedNode) {
-        setNodeLabel(selectedNode.data.label || "");
-        setNodeType(selectedNode.type?.replace("Node", "") || "");
+        setNodeLabel(selectedNode.data?.label || "");
+        setNodeType((selectedNode.type?.replace("Node", "") || ""));
         setShowNodeControls(true);
         
         // Get relationships for this node

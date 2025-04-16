@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +30,15 @@ const formSchema = z.object({
   managementChallenges: z.string().min(1, "Please describe your challenges"),
 });
 
+type ManagementPractices = {
+  engagementFrequency: string;
+  engagementMethods: string;
+  stakeholderInfluence: string;
+  documentsProcesses: string;
+  stakeholderFeedback: string;
+  managementChallenges: string;
+};
+
 type StakeholderManagementProps = {
   onComplete: () => void;
 };
@@ -53,7 +61,16 @@ export function StakeholderManagement({ onComplete }: StakeholderManagementProps
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await stakeholderService.saveManagementPractices(values);
+      const managementData: ManagementPractices = {
+        engagementFrequency: values.engagementFrequency,
+        engagementMethods: values.engagementMethods,
+        stakeholderInfluence: values.stakeholderInfluence,
+        documentsProcesses: values.documentsProcesses,
+        stakeholderFeedback: values.stakeholderFeedback,
+        managementChallenges: values.managementChallenges,
+      };
+      
+      await stakeholderService.saveManagementPractices(managementData);
       toast.success("Management practices saved");
       onComplete();
     } catch (error) {

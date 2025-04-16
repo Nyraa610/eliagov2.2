@@ -252,9 +252,7 @@ export const stakeholderService = {
         .single();
         
       const formData = {
-        management: {
-          ...data
-        }
+        management: data
       };
       
       if (progressError || !progress) {
@@ -309,11 +307,19 @@ export const stakeholderService = {
         .eq('assessment_type', 'stakeholder_mapping')
         .single();
         
-      if (progressError || !progress || !progress.form_data || !progress.form_data.visual_map) {
+      if (progressError || !progress || !progress.form_data) {
         return { nodes: [], edges: [] };
       }
       
-      return progress.form_data.visual_map || { nodes: [], edges: [] };
+      // Check if form_data is an object with visual_map property
+      if (typeof progress.form_data === 'object' && progress.form_data !== null) {
+        const formData = progress.form_data as Record<string, any>;
+        if (formData.visual_map) {
+          return formData.visual_map as { nodes: any[], edges: any[] };
+        }
+      }
+      
+      return { nodes: [], edges: [] };
     } catch (error) {
       console.error("Error getting stakeholder map:", error);
       throw error;
@@ -362,7 +368,8 @@ export const stakeholderService = {
           });
       } else {
         // Update existing assessment progress
-        const existingData = progress.form_data || {};
+        const existingData = typeof progress.form_data === 'object' ? 
+          (progress.form_data as Record<string, any>) || {} : {};
         
         await supabase
           .from('assessment_progress')

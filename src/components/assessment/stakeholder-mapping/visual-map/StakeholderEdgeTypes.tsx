@@ -21,9 +21,9 @@ export function StakeholderEdge({
     sourceX,
     sourceY,
     sourcePosition,
+    targetPosition,
     targetX,
     targetY,
-    targetPosition,
   });
 
   const relationshipLabel = data?.relationship || "";
