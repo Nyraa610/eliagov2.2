@@ -127,15 +127,20 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
       
       // Extract the text content
       let content = '';
-      if (lastMessage.content && Array.isArray(lastMessage.content) && lastMessage.content.length > 0) {
+      
+      // Debug the content structure
+      console.log("Message content structure:", JSON.stringify(lastMessage.content, null, 2));
+      
+      if (lastMessage.content && Array.isArray(lastMessage.content)) {
         for (const contentPart of lastMessage.content) {
           if (contentPart.type === 'text') {
             content += contentPart.text.value;
+            console.log("Extracted text content:", contentPart.text.value.substring(0, 100) + "...");
           }
         }
       }
       
-      console.log("Extracted content:", content);
+      console.log("Final extracted content:", content.substring(0, 100) + "...");
       
       if (!content) {
         console.error("Failed to extract text content from assistant message");

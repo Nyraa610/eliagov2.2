@@ -113,7 +113,7 @@ export function EliaAIChat() {
       
       console.log("AI response received:", response);
       
-      if (response && response.result) {
+      if (response && response.result && typeof response.result === 'string') {
         const assistantMessage: Message = {
           role: 'assistant',
           content: response.result,

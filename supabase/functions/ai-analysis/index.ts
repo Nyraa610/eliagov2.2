@@ -62,13 +62,15 @@ serve(async (req) => {
       // Call OpenAI API
       const completion = await createChatCompletion(openai, messages, type);
       
-      console.log("OpenAI response received");
+      console.log("OpenAI response received", typeof completion, completion ? "has data" : "no data");
       
       // Extract the result properly, handling potential undefined values
       let result = "No result generated";
+      
       if (completion && completion.data && completion.data.choices && 
           completion.data.choices.length > 0 && completion.data.choices[0].message) {
         result = completion.data.choices[0].message.content || "No result generated";
+        console.log("Response content type:", typeof result);
         console.log("Extracted result:", result.substring(0, 100) + "...");
       } else {
         console.error("Invalid completion structure:", JSON.stringify(completion, null, 2));
@@ -80,7 +82,10 @@ serve(async (req) => {
       }
       
       // Return the analysis result
-      return new Response(JSON.stringify({ result }), {
+      const response = { result };
+      console.log("Sending response:", JSON.stringify(response).substring(0, 100) + "...");
+      
+      return new Response(JSON.stringify(response), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
