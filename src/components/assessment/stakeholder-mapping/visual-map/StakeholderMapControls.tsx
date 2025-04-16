@@ -1,183 +1,184 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Trash2, Edit, Save } from 'lucide-react';
-import { Node, Edge } from '@xyflow/react';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
+import { 
+  Download, 
+  ZoomIn, 
+  ZoomOut, 
+  Save, 
+  Plus, 
+  UserPlus, 
+  Undo2, 
+  Building, 
+  Users, 
+  Info
+} from "lucide-react";
 
 interface StakeholderMapControlsProps {
-  selectedNodeId: string | null;
-  nodes: Node[];
-  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
-  edges: Edge[];
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  onAddNode: (type: string) => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onSave: () => void;
+  onExport: () => void;
+  mapName: string;
+  onMapNameChange: (name: string) => void;
 }
 
 export function StakeholderMapControls({
-  selectedNodeId,
-  nodes,
-  setNodes,
-  edges,
-  setEdges
+  onAddNode,
+  onZoomIn,
+  onZoomOut,
+  onSave,
+  onExport,
+  mapName,
+  onMapNameChange,
 }: StakeholderMapControlsProps) {
-  const [nodeLabel, setNodeLabel] = useState('');
-  const [nodeType, setNodeType] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const { t } = useTranslation();
+  const [selectedNodeType, setSelectedNodeType] = useState<string>("stakeholder");
 
-  // Find the selected node
-  const selectedNode = nodes.find(node => node.id === selectedNodeId);
-
-  // Initialize form when a node is selected
-  React.useEffect(() => {
-    if (selectedNode) {
-      setNodeLabel(selectedNode.data.label || '');
-      
-      // Extract node type from the type property (remove "Node" suffix)
-      const currentType = selectedNode.type?.replace('Node', '') || 'generic';
-      setNodeType(currentType);
-      
-      setIsEditing(false);
-    }
-  }, [selectedNode]);
-
-  // Handle node deletion
-  const handleDeleteNode = () => {
-    if (!selectedNodeId) return;
-    
-    // Remove all connected edges
-    const newEdges = edges.filter(
-      edge => edge.source !== selectedNodeId && edge.target !== selectedNodeId
-    );
-    
-    // Remove the node
-    const newNodes = nodes.filter(node => node.id !== selectedNodeId);
-    
-    setEdges(newEdges);
-    setNodes(newNodes);
+  const handleNodeTypeChange = (value: string) => {
+    setSelectedNodeType(value);
   };
 
-  // Handle save node changes
-  const handleSaveChanges = () => {
-    if (!selectedNodeId || !nodeLabel) return;
-    
-    // Update the node
-    const updatedNodes = nodes.map(node => {
-      if (node.id === selectedNodeId) {
-        const newType = `${nodeType}Node`;
-        return {
-          ...node,
-          data: { ...node.data, label: nodeLabel },
-          type: newType,
-        };
-      }
-      return node;
-    });
-    
-    setNodes(updatedNodes);
-    setIsEditing(false);
+  const handleAddNode = () => {
+    onAddNode(selectedNodeType);
   };
 
-  if (!selectedNode) return null;
+  const nodeTypes = [
+    { id: "stakeholder", label: "Stakeholder", icon: <Users size={14} /> },
+    { id: "company", label: "Company", icon: <Building size={14} /> },
+    { id: "person", label: "Person", icon: <UserPlus size={14} /> },
+  ];
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        right: 10,
-        top: 10,
-        zIndex: 10,
-      }}
-    >
-      <Card className="w-72">
-        <CardContent className="pt-6">
-          {isEditing ? (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="node-label">Stakeholder Name</Label>
-                <Input
-                  id="node-label"
-                  value={nodeLabel}
-                  onChange={(e) => setNodeLabel(e.target.value)}
-                  placeholder="Enter name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="node-type">Stakeholder Type</Label>
-                <Select
-                  value={nodeType}
-                  onValueChange={setNodeType}
-                >
-                  <SelectTrigger id="node-type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="company">Company</SelectItem>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="supplier">Supplier</SelectItem>
-                    <SelectItem value="community">Community</SelectItem>
-                    <SelectItem value="government">Government</SelectItem>
-                    <SelectItem value="generic">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-2">
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="map-name" className="text-sm font-medium mr-2">
+            Map Name:
+          </Label>
+          <Input
+            id="map-name"
+            value={mapName}
+            onChange={(e) => onMapNameChange(e.target.value)}
+            className="h-8 flex-1"
+            placeholder="Stakeholder Map"
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setIsEditing(false)}
+                  onClick={onSave}
+                  className="h-8 px-3"
                 >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveChanges}
-                  disabled={!nodeLabel}
-                >
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4 mr-1" />
                   Save
                 </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-muted-foreground text-xs">Name</Label>
-                <p className="font-medium">{selectedNode.data.label}</p>
-              </div>
-              
-              <div>
-                <Label className="text-muted-foreground text-xs">Type</Label>
-                <p className="capitalize">{selectedNode.type?.replace('Node', '') || 'Generic'}</p>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Save the current map</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center space-x-2 border rounded-md px-2 py-1">
+            <Select
+              value={selectedNodeType}
+              onValueChange={handleNodeTypeChange}
+            >
+              <SelectTrigger className="h-8 w-[130px] border-0 px-2 py-0 font-normal">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {nodeTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    <div className="flex items-center space-x-2">
+                      {type.icon}
+                      <span>{type.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleAddNode}
+              className="h-7 px-2"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add
+            </Button>
+          </div>
+
+          <div className="flex items-center border rounded-md">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onZoomOut}
+              className="h-8 px-2"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <div className="h-8 w-px bg-gray-200"></div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onZoomIn}
+              className="h-8 px-2"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            className="h-8 px-3"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Export
+          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <Info className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteNode}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Create connections by dragging from one node's handle to another.
+                  <br />
+                  Double-click a node to edit its properties.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
     </div>
   );
 }

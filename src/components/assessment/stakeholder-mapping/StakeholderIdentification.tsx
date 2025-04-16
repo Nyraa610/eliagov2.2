@@ -13,6 +13,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { ChevronRight, Upload, Users } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
+import { UploadedDocument } from "@/services/storage/supabaseStorageService";
 
 const formSchema = z.object({
   companyDescription: z.string().min(10, "Please provide a brief description of your company"),
@@ -34,7 +35,7 @@ type StakeholderIdentificationProps = {
 export function StakeholderIdentification({ onComplete }: StakeholderIdentificationProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,8 +67,8 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   const handleDocumentUpload = async (files: File[]) => {
     setIsUploading(true);
     try {
-      const uploadedFiles = await stakeholderService.uploadStakeholderDocuments(files);
-      setUploadedDocuments(prev => [...prev, ...uploadedFiles.map(f => f.name)]);
+      const documents = await stakeholderService.uploadStakeholderDocuments(files);
+      setUploadedDocuments(prev => [...prev, ...documents]);
       toast.success("Documents uploaded successfully");
     } catch (error) {
       console.error("Error uploading documents:", error);
@@ -95,7 +96,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
       await stakeholderService.saveIdentifiedStakeholders({
         companyDescription: values.companyDescription,
         stakeholderTypes: selectedStakeholders,
-        documents: uploadedDocuments
+        documents: uploadedDocuments.map(doc => doc.url)
       });
       
       toast.success("Stakeholder identification saved");
@@ -261,7 +262,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                       {uploadedDocuments.map((doc, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <Upload className="h-4 w-4 text-green-500" />
-                          {doc}
+                          {doc.name}
                         </li>
                       ))}
                     </ul>
