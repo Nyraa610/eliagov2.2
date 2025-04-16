@@ -29,6 +29,11 @@ export const aiService = {
       
       if (error) throw error;
       
+      if (!data || typeof data.result !== 'string') {
+        console.error("Invalid AI analysis response:", data);
+        throw new Error("Invalid response format from AI service");
+      }
+      
       return data as AIAnalysisResponse;
     } catch (error) {
       console.error("Error in AI Analysis:", error);

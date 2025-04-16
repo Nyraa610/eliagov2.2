@@ -58,7 +58,12 @@ serve(async (req) => {
       // Call OpenAI API
       const completion = await createChatCompletion(openai, messages, type);
       
-      const result = completion.data.choices[0]?.message?.content || "No result generated";
+      // Extract the result properly, handling potential undefined values
+      let result = "No result generated";
+      if (completion && completion.data && completion.data.choices && 
+          completion.data.choices.length > 0 && completion.data.choices[0].message) {
+        result = completion.data.choices[0].message.content || "No result generated";
+      }
       
       // Save ESG assessment data if it's an ESG assessment
       if (type === 'esg-assessment') {
@@ -75,6 +80,7 @@ serve(async (req) => {
       });
       
     } catch (authError) {
+      console.error("Auth error:", authError);
       return new Response(JSON.stringify({ error: authError.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

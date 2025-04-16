@@ -116,13 +116,20 @@ export function EliaAIChat() {
         context: messageContext
       });
       
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response.result,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
+      // Check if response and response.result exist before using
+      if (response && response.result) {
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: response.result,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        // Handle empty or undefined response
+        console.error("Empty or invalid response from AI service:", response);
+        throw new Error("Invalid response from AI service");
+      }
     } catch (error) {
       console.error("Error getting AI response:", error);
       toast({
@@ -136,7 +143,7 @@ export function EliaAIChat() {
         ...prev, 
         {
           role: 'assistant',
-          content: "I'm sorry, I encountered an error. Please try asking again.",
+          content: "I'm sorry, I encountered an error processing your request. Please try asking again.",
           timestamp: new Date()
         }
       ]);
