@@ -16,6 +16,14 @@ export interface AIAnalysisResponse {
   metadata?: Record<string, any>;
 }
 
+export interface ChatHistoryItem {
+  id: string;
+  user_id: string;
+  user_message: string;
+  assistant_response: string;
+  created_at: string;
+}
+
 export const aiService = {
   /**
    * Analyze content using AI
@@ -154,6 +162,30 @@ export const aiService = {
       return response.result;
     } catch (error) {
       console.error("Error getting assistant response:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get chat history from the database
+   * @returns Promise with the chat history
+   */
+  getChatHistory: async (): Promise<ChatHistoryItem[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_history')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+      
+      if (error) {
+        console.error("Error fetching chat history:", error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in getChatHistory:", error);
       throw error;
     }
   }

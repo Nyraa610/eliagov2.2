@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { verifyAuth, corsHeaders } from "./handlers/auth.ts";
 import { initializeOpenAI, getSystemPrompt, createChatCompletion } from "./handlers/openai.ts";
-import { saveESGAssessment } from "./handlers/database.ts";
+import { saveESGAssessment, saveChatHistory } from "./handlers/database.ts";
 import { AIAnalysisRequest } from "./handlers/types.ts";
 
 serve(async (req) => {
@@ -79,6 +79,11 @@ serve(async (req) => {
       // Save ESG assessment data if it's an ESG assessment
       if (type === 'esg-assessment') {
         await saveESGAssessment(user.id, content, result);
+      }
+      
+      // Save chat history if it's the ESG assistant
+      if (type === 'esg-assistant' && result !== "No result generated") {
+        await saveChatHistory(user.id, content, result);
       }
       
       // Return the analysis result

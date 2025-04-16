@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { Sparkles, Award, ThumbsUp, Send, X } from "lucide-react";
+import { Leaf, Award, ThumbsUp, Send, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { EliaAIChat } from "@/components/assessment/ai/EliaAIChat";
@@ -65,7 +65,7 @@ export function EliaAssistant() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+              <Leaf className="h-4 w-4 text-amber-400" />
             </Avatar>
             <div>
               <h3 className="font-semibold text-white">Elia Assistant</h3>
@@ -100,7 +100,7 @@ export function EliaAssistant() {
                 whileHover={{ scale: 1.01 }}
                 onClick={handleOpenChat}
               >
-                <Sparkles className="h-4 w-4 mr-2 text-emerald-800" />
+                <Leaf className="h-4 w-4 mr-2 text-emerald-800" />
                 Help me understand ESG terminology
               </motion.div>
 

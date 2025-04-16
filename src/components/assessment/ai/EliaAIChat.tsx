@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Card, 
@@ -8,13 +9,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
-  Sparkles, 
+  Leaf, 
   Send, 
   X, 
   Maximize2, 
   Minimize2, 
   MessageSquare, 
-  Leaf, 
   HelpCircle,
   CornerDownLeft
 } from "lucide-react";
@@ -27,6 +27,7 @@ import { aiService } from "@/services/aiService";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMobile } from "@/hooks/use-mobile";
+import { useAuthState } from "@/hooks/useAuthState";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -45,6 +46,7 @@ export function EliaAIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useMobile();
+  const { user } = useAuthState();
   
   const suggestedPrompts = {
     esg: [
@@ -75,6 +77,52 @@ export function EliaAIChat() {
 
   useEffect(() => {
     if (messages.length === 0) {
+      // Load chat history from the database or set initial message
+      loadChatHistory();
+    }
+  }, []);
+
+  const loadChatHistory = async () => {
+    if (!user) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+          timestamp: new Date()
+        }
+      ]);
+      return;
+    }
+
+    try {
+      const history = await aiService.getChatHistory();
+      
+      if (history && history.length > 0) {
+        const formattedHistory: Message[] = history.flatMap(item => [
+          {
+            role: 'user',
+            content: item.user_message,
+            timestamp: new Date(item.created_at)
+          },
+          {
+            role: 'assistant',
+            content: item.assistant_response,
+            timestamp: new Date(item.created_at)
+          }
+        ]);
+        
+        setMessages(formattedHistory);
+      } else {
+        setMessages([
+          {
+            role: 'assistant',
+            content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+            timestamp: new Date()
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
       setMessages([
         {
           role: 'assistant',
@@ -83,7 +131,7 @@ export function EliaAIChat() {
         }
       ]);
     }
-  }, [messages]);
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -179,7 +227,7 @@ export function EliaAIChat() {
         <div className="flex items-start gap-2">
           {message.role === 'assistant' && (
             <Avatar className="h-8 w-8 bg-emerald-800">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+              <Leaf className="h-4 w-4 text-amber-400" />
             </Avatar>
           )}
           <div
@@ -218,7 +266,7 @@ export function EliaAIChat() {
               onClick={handleToggle}
             >
               <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-                <Sparkles className="h-6 w-6 text-amber-400" />
+                <Leaf className="h-6 w-6 text-amber-400" />
               </Avatar>
             </Button>
           </DrawerTrigger>
@@ -228,7 +276,7 @@ export function EliaAIChat() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-800">
-                      <Sparkles className="h-4 w-4 text-amber-400" />
+                      <Leaf className="h-4 w-4 text-amber-400" />
                     </Avatar>
                     <h3 className="font-semibold">Elia Assistant</h3>
                   </div>
@@ -350,7 +398,7 @@ export function EliaAIChat() {
           onClick={handleToggle}
         >
           <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-            <Sparkles className="h-6 w-6 text-amber-400" />
+            <Leaf className="h-6 w-6 text-amber-400" />
           </Avatar>
         </Button>
       )}
@@ -371,7 +419,7 @@ export function EliaAIChat() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
-                      <Sparkles className="h-4 w-4 text-amber-400" />
+                      <Leaf className="h-4 w-4 text-amber-400" />
                     </Avatar>
                     <div>
                       <h3 className="font-semibold text-white">Elia Assistant</h3>
@@ -420,7 +468,7 @@ export function EliaAIChat() {
                     {isLoading && (
                       <div className="flex items-center gap-2 mt-2">
                         <Avatar className="h-8 w-8 bg-emerald-800">
-                          <Sparkles className="h-4 w-4 text-amber-400" />
+                          <Leaf className="h-4 w-4 text-amber-400" />
                         </Avatar>
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="flex space-x-1">

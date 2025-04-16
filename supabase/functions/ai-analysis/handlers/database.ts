@@ -1,36 +1,65 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Initialize Supabase client for database operations
-const supabaseClient = createClient(
-  Deno.env.get("SUPABASE_URL") as string,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string
-);
+function createClient() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  return createClient(supabaseUrl, supabaseKey);
+}
 
-// Save ESG assessment data to the database
+/**
+ * Save the ESG assessment data to the database
+ */
 export async function saveESGAssessment(userId: string, content: string, result: string) {
   try {
-    const { data, error } = await supabaseClient
-      .from('assessment_progress')
+    const supabase = createClient();
+    
+    const { data, error } = await supabase
+      .from('esg_assessments')
       .insert({
         user_id: userId,
-        assessment_type: 'esg_diagnostic',
-        status: 'completed',
-        progress: 100,
-        form_data: { 
-          content, 
-          analysis_result: result,
-          completed_at: new Date().toISOString()
-        }
+        content: content,
+        result: result,
+        created_at: new Date().toISOString()
       });
-
+    
     if (error) {
       console.error("Error saving ESG assessment:", error);
+      throw error;
     }
+    
+    console.log("ESG assessment saved successfully");
+    return true;
+  } catch (error) {
+    console.error("Error in saveESGAssessment:", error);
+    return false;
+  }
+}
 
-    return data;
-  } catch (err) {
-    console.error("Exception saving ESG assessment:", err);
-    return null;
+/**
+ * Save the chat history to the database
+ */
+export async function saveChatHistory(userId: string, message: string, response: string) {
+  try {
+    const supabase = createClient();
+    
+    const { error } = await supabase
+      .from('chat_history')
+      .insert({
+        user_id: userId,
+        user_message: message,
+        assistant_response: response,
+        created_at: new Date().toISOString()
+      });
+    
+    if (error) {
+      console.error("Error saving chat history:", error);
+      throw error;
+    }
+    
+    console.log("Chat history saved successfully");
+    return true;
+  } catch (error) {
+    console.error("Error in saveChatHistory:", error);
+    return false;
   }
 }
