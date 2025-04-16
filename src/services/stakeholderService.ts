@@ -773,7 +773,12 @@ export const stakeholderService = {
     }));
     
     // Sort by date
-    responsesByDate.sort((a, b) => a.date.localeCompare(b.date));
+    responsesByDate.sort((a, b) => {
+      if (typeof a.date === 'string' && typeof b.date === 'string') {
+        return a.date.localeCompare(b.date);
+      }
+      return 0;
+    });
     
     return {
       averageCompletionTime: `${minutes}m ${seconds}s`,

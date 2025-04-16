@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, DragHandleDots2, AlertCircle } from 'lucide-react';
+import { PlusCircle, Trash2, GripVertical, AlertCircle } from 'lucide-react';
 import { Survey, SurveyQuestion, SurveyTemplate } from '../StakeholderSurveys';
 import { stakeholderService } from '@/services/stakeholderService';
 import { toast } from 'sonner';
@@ -47,13 +46,11 @@ export function SurveyEditorDialog({
     
     setIsLoading(true);
     try {
-      // Load the template with questions
       const templates = await stakeholderService.getSurveyTemplates();
       const foundTemplate = templates.find(t => t.id === survey.templateId);
       
       if (foundTemplate) {
         setTemplate(foundTemplate);
-        // Clone the questions to avoid modifying the template directly
         setQuestions([...foundTemplate.questions]);
       }
     } catch (error) {
@@ -89,7 +86,6 @@ export function SurveyEditorDialog({
     setQuestions(questions.map(q => {
       if (q.id === questionId) {
         const updatedQuestion = { ...q, type };
-        // If changing to multiple choice and no options exist, add default options
         if (type === 'multiple_choice' && (!q.options || q.options.length === 0)) {
           updatedQuestion.options = ['Option 1', 'Option 2', 'Option 3'];
         }
@@ -146,7 +142,6 @@ export function SurveyEditorDialog({
     
     setIsSaving(true);
     try {
-      // Create a new template with the modified questions
       const updatedTemplate: SurveyTemplate = {
         ...template,
         id: `${template.id}-custom-${Date.now()}`,
@@ -154,10 +149,8 @@ export function SurveyEditorDialog({
         questions: questions
       };
       
-      // Save the updated template
       await stakeholderService.saveSurveyTemplate(updatedTemplate);
       
-      // Update the survey with the new template ID
       await stakeholderService.updateSurvey({
         ...survey,
         name: surveyName,
@@ -230,7 +223,7 @@ export function SurveyEditorDialog({
                       <CardContent className="p-4 pt-4">
                         <div className="flex items-start gap-2">
                           <div className="pt-2 cursor-move text-gray-400">
-                            <DragHandleDots2 className="h-5 w-5" />
+                            <GripVertical className="h-5 w-5" />
                           </div>
                           <div className="flex-1 space-y-4">
                             <div className="space-y-2">
