@@ -104,7 +104,7 @@ const mainMenuItems: MenuItem[] = [
   }
 ];
 
-// Add this function to export mainMenuItems
+// Function to export mainMenuItems
 export const getMainMenuItems = () => {
   return mainMenuItems;
 };

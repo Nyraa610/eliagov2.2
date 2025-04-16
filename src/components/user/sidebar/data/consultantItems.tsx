@@ -6,17 +6,21 @@ export const getConsultantItems = (): MenuItem[] => {
   return [
     {
       id: "consultantDashboard",
+      title: "Consultant Dashboard",
+      href: "/consultant/dashboard",
+      icon: LayoutDashboard,
+      hasSubmenu: false,
       label: "Consultant Dashboard",
-      path: "/consultant/dashboard",
-      icon: <LayoutDashboard className="h-4 w-4" />,
-      hasSubmenu: false
+      path: "/consultant/dashboard"
     },
     {
       id: "notifications",
+      title: "Notifications",
+      href: "/consultant/notifications",
+      icon: Bell,
+      hasSubmenu: false,
       label: "Notifications",
-      path: "/consultant/notifications",
-      icon: <Bell className="h-4 w-4" />,
-      hasSubmenu: false
+      path: "/consultant/notifications"
     }
   ];
 };

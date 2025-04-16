@@ -1,13 +1,19 @@
 
 import { ReactNode } from "react";
+import { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
-  id: string;
-  label: string;
-  path: string;
-  icon: ReactNode;
-  hasSubmenu: boolean;
+  id?: string;
+  title: string;
+  href?: string;
+  path?: string;
+  icon: LucideIcon;
+  requiresCompany?: boolean;
+  highlight?: boolean;
+  hasSubmenu?: boolean;
+  label?: string;
   submenuItems?: MenuItem[];
+  children?: MenuItem[];
 }
 
 export interface MenuItemsResult {

@@ -6,10 +6,12 @@ export const getAdminItems = (): MenuItem[] => {
   return [
     {
       id: "adminPanel",
+      title: "Admin Panel",
+      href: "/admin/panel",
+      icon: Settings,
+      hasSubmenu: false,
       label: "Admin Panel",
-      path: "/admin/panel",
-      icon: <Settings className="h-4 w-4" />,
-      hasSubmenu: false
+      path: "/admin/panel"
     }
   ];
 };
