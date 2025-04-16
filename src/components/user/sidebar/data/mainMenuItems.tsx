@@ -10,7 +10,10 @@ import {
   FileCheck,
   LucideIcon,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  CheckSquare,
+  Target,
+  List
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
@@ -22,27 +25,45 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: false,
   },
   {
-    title: "Assessment",
+    title: "Assessments",
     href: "/assessment",
-    icon: FileCheck,
+    icon: CheckSquare,
     requiresCompany: true,
     children: [
       {
         title: "ESG Diagnostic",
         href: "/assessment/esg-diagnostic",
-        icon: BarChart4,
+        icon: FileText,
         requiresCompany: true,
       },
       {
-        title: "Carbon Evaluation",
-        href: "/assessment/carbon-evaluation",
-        icon: BarChart4,
+        title: "Value Chain",
+        href: "/assessment/value-chain",
+        icon: List,
+        requiresCompany: true,
+      },
+      {
+        title: "Materiality Analysis",
+        href: "/assessment/materiality-analysis",
+        icon: CheckSquare,
         requiresCompany: true,
       },
       {
         title: "IRO Analysis",
         href: "/assessment/iro",
-        icon: BarChart4,
+        icon: Target,
+        requiresCompany: true,
+      },
+      {
+        title: "Stakeholder Mapping",
+        href: "/assessment/stakeholder-mapping",
+        icon: Users,
+        requiresCompany: true,
+      },
+      {
+        title: "Carbon Evaluation",
+        href: "/assessment/carbon-evaluation",
+        icon: FileText,
         requiresCompany: true,
       },
       {
@@ -52,21 +73,9 @@ const mainMenuItems: MenuItem[] = [
         requiresCompany: true,
       },
       {
-        title: "Value Chain",
-        href: "/assessment/value-chain",
+        title: "Assessment Results",
+        href: "/assessment/action-plan-results",
         icon: FileText,
-        requiresCompany: true,
-      },
-      {
-        title: "Materiality Analysis",
-        href: "/assessment/materiality-analysis",
-        icon: FileText,
-        requiresCompany: true,
-      },
-      {
-        title: "Stakeholder Mapping",
-        href: "/assessment/stakeholder-mapping",
-        icon: Users,
         requiresCompany: true,
       },
     ],
