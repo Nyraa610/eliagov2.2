@@ -12,8 +12,6 @@ import {
   MiniMap,
   Node,
   Edge,
-  NodeChange,
-  EdgeChange,
   Connection
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -22,7 +20,7 @@ import { ChevronRight, Share2 } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
 import { StakeholderMapControls } from "./visual-map/StakeholderMapControls";
 import { StakeholderNodeTypes } from "./visual-map/StakeholderNodeTypes";
-import { StakeholderEdgeTypes } from "./visual-map/StakeholderEdgeTypes";
+import { stakeholderEdgeTypes } from "./visual-map/StakeholderEdgeTypes";
 import { StakeholderAddDialog } from "./visual-map/StakeholderAddDialog";
 
 type StakeholderVisualMapProps = {
@@ -38,7 +36,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const nodeTypes = StakeholderNodeTypes;
-  const edgeTypes = StakeholderEdgeTypes;
+  const edgeTypes = stakeholderEdgeTypes;
 
   // Load existing stakeholder map data
   useEffect(() => {
@@ -208,7 +206,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
                   }}
                 />
                 <StakeholderMapControls
-                  selectedNodeId={selectedNodeId}
+                  selectedNodeId={selectedNodeId || ''}
                   nodes={nodes}
                   setNodes={setNodes}
                   edges={edges}
