@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -140,6 +139,7 @@ const STORAGE_KEYS = {
   STAKEHOLDERS: "stakeholders_list",
   STAKEHOLDER_CONTACTS: "stakeholder_contacts",
   SURVEYS: "stakeholder_surveys",
+  SURVEY_TEMPLATES: "stakeholder_survey_templates",
   SURVEY_RESPONSES: "stakeholder_survey_responses"
 };
 
@@ -165,6 +165,9 @@ const initializeLocalStorage = () => {
   }
   if (!localStorage.getItem(STORAGE_KEYS.SURVEYS)) {
     localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES)) {
+    localStorage.setItem(STORAGE_KEYS.SURVEY_TEMPLATES, JSON.stringify(SURVEY_TEMPLATES));
   }
   if (!localStorage.getItem(STORAGE_KEYS.SURVEY_RESPONSES)) {
     localStorage.setItem(STORAGE_KEYS.SURVEY_RESPONSES, JSON.stringify({}));
@@ -407,14 +410,59 @@ export const stakeholderService = {
   
   // Step 5: Stakeholder Surveys
   getSurveyTemplates: async (): Promise<SurveyTemplate[]> => {
-    // In a real implementation, fetch from Supabase
-    return SURVEY_TEMPLATES;
+    initializeLocalStorage();
+    
+    // First try to get from local storage
+    const templates = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES) || '[]');
+    
+    // If no custom templates found, use the default ones
+    if (templates.length === 0) {
+      return SURVEY_TEMPLATES;
+    }
+    
+    return templates;
+  },
+  
+  saveSurveyTemplate: async (template: SurveyTemplate): Promise<SurveyTemplate> => {
+    initializeLocalStorage();
+    const templates = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES) || '[]');
+    
+    // Check if this template already exists
+    const existingIndex = templates.findIndex((t: SurveyTemplate) => t.id === template.id);
+    
+    if (existingIndex >= 0) {
+      // Update existing template
+      templates[existingIndex] = template;
+    } else {
+      // Add new template
+      templates.push(template);
+    }
+    
+    localStorage.setItem(STORAGE_KEYS.SURVEY_TEMPLATES, JSON.stringify(templates));
+    return template;
+  },
+  
+  deleteSurveyTemplate: async (templateId: string): Promise<boolean> => {
+    initializeLocalStorage();
+    const templates = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES) || '[]');
+    
+    const filteredTemplates = templates.filter((t: SurveyTemplate) => t.id !== templateId);
+    localStorage.setItem(STORAGE_KEYS.SURVEY_TEMPLATES, JSON.stringify(filteredTemplates));
+    
+    return true;
   },
   
   getSurveys: async (): Promise<Survey[]> => {
     initializeLocalStorage();
     const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
     return surveys;
+  },
+  
+  getSurveyById: async (surveyId: string): Promise<Survey | null> => {
+    initializeLocalStorage();
+    const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+    const survey = surveys.find((s: Survey) => s.id === surveyId);
+    return survey || null;
   },
   
   createSurvey: async (survey: Omit<Survey, "id">): Promise<Survey> => {
@@ -429,8 +477,29 @@ export const stakeholderService = {
     surveys.push(newSurvey);
     localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(surveys));
     
-    // In a real implementation, save to Supabase
     return newSurvey;
+  },
+  
+  updateSurvey: async (survey: Survey): Promise<Survey> => {
+    initializeLocalStorage();
+    const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+    
+    const updatedSurveys = surveys.map((s: Survey) => 
+      s.id === survey.id ? survey : s
+    );
+    
+    localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(updatedSurveys));
+    return survey;
+  },
+  
+  deleteSurvey: async (surveyId: string): Promise<boolean> => {
+    initializeLocalStorage();
+    const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+    
+    const filteredSurveys = surveys.filter((s: Survey) => s.id !== surveyId);
+    localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(filteredSurveys));
+    
+    return true;
   },
   
   sendSurvey: async (surveyId: string, contactIds: string[]): Promise<boolean> => {
@@ -454,11 +523,11 @@ export const stakeholderService = {
     
     // Simulate some responses (in real implementation this would be handled by the survey tool)
     setTimeout(() => {
-      const responses = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_RESPONSES) || "{}");
+      const responsesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_RESPONSES) || "{}");
       
       // Create mock responses
-      if (!responses[surveyId]) {
-        responses[surveyId] = {
+      if (!responsesData[surveyId]) {
+        responsesData[surveyId] = {
           responses: []
         };
       }
@@ -468,71 +537,295 @@ export const stakeholderService = {
       
       if (respondingContacts.length > 0) {
         // Find the survey to update its response count
-        const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
-        const updatedSurveys = surveys.map((s: Survey) => {
+        const surveysData = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+        const updatedSurveysData = surveysData.map((s: Survey) => {
           if (s.id === surveyId) {
             return {
               ...s,
-              responseCount: s.responseCount + respondingContacts.length
+              responseCount: s.responseCount + respondingContacts.length,
+              status: s.responseCount + respondingContacts.length >= s.sentCount ? 'completed' : s.status
             };
           }
           return s;
         });
         
+        // Get the survey template to generate mock responses
+        const templates = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES) || "[]");
+        const survey = surveysData.find((s: Survey) => s.id === surveyId);
+        const template = templates.find((t: SurveyTemplate) => t.id === survey?.templateId) || SURVEY_TEMPLATES[0];
+        
+        // Generate mock responses for each question
+        const mockResponses = respondingContacts.map(() => {
+          const questionResponses: Record<string, any> = {};
+          
+          template.questions.forEach(question => {
+            if (question.type === 'multiple_choice' && question.options) {
+              // Randomly select an option
+              const randomIndex = Math.floor(Math.random() * question.options.length);
+              questionResponses[question.id] = question.options[randomIndex];
+            } else if (question.type === 'rating') {
+              // Random rating between 1-5
+              questionResponses[question.id] = Math.floor(Math.random() * 5) + 1;
+            } else if (question.type === 'text') {
+              // Mock text responses
+              const textResponses = [
+                "This is very important to our business.",
+                "We need more information about this topic.",
+                "I think this initiative will have a positive impact.",
+                "I'm not sure if this applies to our department.",
+                "Looking forward to seeing the results of this survey."
+              ];
+              const randomIndex = Math.floor(Math.random() * textResponses.length);
+              questionResponses[question.id] = textResponses[randomIndex];
+            }
+          });
+          
+          return {
+            timestamp: new Date().toISOString(),
+            responses: questionResponses,
+            contactInfo: {
+              name: "Anonymous Respondent",
+              email: "stakeholder@example.com"
+            }
+          };
+        });
+        
+        // Add mock responses to storage
+        responsesData[surveyId].responses = [
+          ...(responsesData[surveyId].responses || []),
+          ...mockResponses
+        ];
+        
         // Update local storage
-        localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(updatedSurveys));
-        localStorage.setItem(STORAGE_KEYS.SURVEY_RESPONSES, JSON.stringify(responses));
+        localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(updatedSurveysData));
+        localStorage.setItem(STORAGE_KEYS.SURVEY_RESPONSES, JSON.stringify(responsesData));
         
         // Notify user of responses
         toast.success(`${respondingContacts.length} responses received to survey`);
       }
     }, 5000); // Simulate response delay
     
-    // In a real implementation, this would send emails to contacts
     return true;
   },
   
   getSurveyResults: async (surveyId: string): Promise<any> => {
-    // In a real implementation, fetch from Supabase
-    // For now, return mock data
-    return {
-      averageCompletionTime: "3m 45s",
-      averageRating: 4.2,
-      questions: [
-        {
-          text: "How would you rate our overall sustainability performance?",
-          type: "rating",
-          responses: {
-            1: 2,
-            2: 5,
-            3: 10,
-            4: 15,
-            5: 8
+    initializeLocalStorage();
+    
+    // Get survey data
+    const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+    const survey = surveys.find((s: Survey) => s.id === surveyId);
+    
+    if (!survey) {
+      throw new Error("Survey not found");
+    }
+    
+    // Get survey template
+    const templates = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_TEMPLATES) || "[]") as SurveyTemplate[];
+    const defaultTemplates = SURVEY_TEMPLATES;
+    const allTemplates = [...templates, ...defaultTemplates];
+    const template = allTemplates.find(t => t.id === survey.templateId);
+    
+    if (!template) {
+      throw new Error("Survey template not found");
+    }
+    
+    // Get responses
+    const responsesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_RESPONSES) || "{}");
+    const surveyResponses = responsesData[surveyId]?.responses || [];
+    
+    if (surveyResponses.length === 0) {
+      // If no real responses, generate mock data
+      return {
+        averageCompletionTime: "3m 45s",
+        averageRating: 4.2,
+        responsesByType: [
+          { name: "Employees", value: 40 },
+          { name: "Customers", value: 30 },
+          { name: "Suppliers", value: 20 },
+          { name: "Community", value: 10 }
+        ],
+        lastResponseDate: new Date().toISOString(),
+        responsesByDate: Array.from({ length: 14 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (13 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            responses: Math.floor(Math.random() * 5) + (i % 3)
+          };
+        }),
+        questions: template.questions.map(question => {
+          if (question.type === 'multiple_choice') {
+            const responses: Record<string, number> = {};
+            question.options?.forEach(option => {
+              responses[option] = Math.floor(Math.random() * 15) + 1;
+            });
+            return {
+              text: question.text,
+              type: question.type,
+              responses
+            };
+          } else if (question.type === 'rating') {
+            return {
+              text: question.text,
+              type: question.type,
+              responses: {
+                1: Math.floor(Math.random() * 5) + 1,
+                2: Math.floor(Math.random() * 5) + 1,
+                3: Math.floor(Math.random() * 10) + 1,
+                4: Math.floor(Math.random() * 15) + 5,
+                5: Math.floor(Math.random() * 10) + 1
+              }
+            };
+          } else {
+            // Text responses
+            const textResponses = [
+              "I believe sustainability should be a top priority.",
+              "We need more training on sustainable practices.",
+              "The company's initiatives are on the right track.",
+              "I would like to see more focus on renewable energy.",
+              "Supply chain transparency could be improved."
+            ];
+            return {
+              text: question.text,
+              type: question.type,
+              responses: textResponses
+            };
           }
-        },
-        {
-          text: "Which of our sustainability initiatives are you most familiar with?",
-          type: "multiple_choice",
-          responses: {
-            "Carbon Reduction": 12,
-            "Waste Management": 18,
-            "Community Engagement": 8,
-            "Diversity & Inclusion": 6,
-            "Other/None": 4
+        })
+      };
+    }
+    
+    // Process real responses
+    const completionTimes = surveyResponses.map((r: any) => r.completionTimeMs || 0);
+    const avgCompletionTimeMs = completionTimes.reduce((a: number, b: number) => a + b, 0) / completionTimes.length;
+    const minutes = Math.floor(avgCompletionTimeMs / 60000);
+    const seconds = Math.floor((avgCompletionTimeMs % 60000) / 1000);
+    
+    // Aggregate responses by question
+    const questionResults = template.questions.map(question => {
+      if (question.type === 'multiple_choice') {
+        // Count responses for each option
+        const responses: Record<string, number> = {};
+        surveyResponses.forEach((response: any) => {
+          const answer = response.responses[question.id];
+          if (answer) {
+            responses[answer] = (responses[answer] || 0) + 1;
           }
-        },
-        {
-          text: "What sustainability issues should we prioritize?",
-          type: "text",
-          responses: [
-            "More focus on renewable energy",
-            "Plastic reduction in packaging",
-            "Better reporting on progress",
-            "Employee volunteering opportunities",
-            "Supply chain transparency"
-          ]
+        });
+        return {
+          text: question.text,
+          type: question.type,
+          responses
+        };
+      } else if (question.type === 'rating') {
+        // Count responses for each rating
+        const responses: Record<string, number> = {};
+        surveyResponses.forEach((response: any) => {
+          const rating = response.responses[question.id];
+          if (rating) {
+            responses[rating] = (responses[rating] || 0) + 1;
+          }
+        });
+        return {
+          text: question.text,
+          type: question.type,
+          responses
+        };
+      } else {
+        // Collect text responses
+        const responses = surveyResponses
+          .map((response: any) => response.responses[question.id])
+          .filter(Boolean);
+        return {
+          text: question.text,
+          type: question.type,
+          responses
+        };
+      }
+    });
+    
+    // Calculate average rating across all rating questions
+    let totalRating = 0;
+    let ratingCount = 0;
+    
+    surveyResponses.forEach((response: any) => {
+      Object.entries(response.responses).forEach(([questionId, value]) => {
+        const question = template.questions.find(q => q.id === questionId);
+        if (question?.type === 'rating' && typeof value === 'number') {
+          totalRating += value;
+          ratingCount++;
         }
-      ]
+      });
+    });
+    
+    const averageRating = ratingCount > 0 ? totalRating / ratingCount : 0;
+    
+    // Generate response trend data
+    const responseDates = surveyResponses.map((r: any) => {
+      const date = new Date(r.timestamp);
+      return date.toISOString().split('T')[0];
+    });
+    
+    const uniqueDates = [...new Set(responseDates)];
+    const responsesByDate = uniqueDates.map(date => ({
+      date,
+      responses: responseDates.filter(d => d === date).length
+    }));
+    
+    // Sort by date
+    responsesByDate.sort((a, b) => a.date.localeCompare(b.date));
+    
+    return {
+      averageCompletionTime: `${minutes}m ${seconds}s`,
+      averageRating: parseFloat(averageRating.toFixed(1)),
+      responsesByType: [
+        { name: "Employees", value: Math.floor(surveyResponses.length * 0.4) },
+        { name: "Customers", value: Math.floor(surveyResponses.length * 0.3) },
+        { name: "Suppliers", value: Math.floor(surveyResponses.length * 0.2) },
+        { name: "Community", value: Math.floor(surveyResponses.length * 0.1) }
+      ],
+      lastResponseDate: surveyResponses[surveyResponses.length - 1]?.timestamp,
+      responsesByDate,
+      questions: questionResults
     };
+  },
+  
+  submitSurveyResponse: async (surveyId: string, response: any): Promise<boolean> => {
+    initializeLocalStorage();
+    
+    // Load existing responses
+    const responsesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEY_RESPONSES) || "{}");
+    
+    // Create entry for this survey if it doesn't exist
+    if (!responsesData[surveyId]) {
+      responsesData[surveyId] = {
+        responses: []
+      };
+    }
+    
+    // Add the new response
+    responsesData[surveyId].responses.push({
+      timestamp: new Date().toISOString(),
+      ...response
+    });
+    
+    // Update the survey response count
+    const surveys = JSON.parse(localStorage.getItem(STORAGE_KEYS.SURVEYS) || "[]");
+    const updatedSurveys = surveys.map((s: Survey) => {
+      if (s.id === surveyId) {
+        return {
+          ...s,
+          responseCount: s.responseCount + 1,
+          status: s.responseCount + 1 >= s.sentCount ? 'completed' : s.status
+        };
+      }
+      return s;
+    });
+    
+    // Save back to local storage
+    localStorage.setItem(STORAGE_KEYS.SURVEY_RESPONSES, JSON.stringify(responsesData));
+    localStorage.setItem(STORAGE_KEYS.SURVEYS, JSON.stringify(updatedSurveys));
+    
+    return true;
   }
 };
