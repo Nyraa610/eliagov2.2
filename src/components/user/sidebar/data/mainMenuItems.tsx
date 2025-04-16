@@ -1,125 +1,107 @@
 
-import { LayoutDashboard, ClipboardCheck, BookOpen, FileText, Trophy, BarChartHorizontal, FileBarChart, TargetIcon, UserIcon, Users } from "lucide-react";
-import { MenuItem } from "../types/menuItemTypes";
-import { useTranslation } from "react-i18next";
+import {
+  LayoutDashboard,
+  FileText,
+  Folder,
+  GraduationCap,
+  Users,
+  BarChart4,
+  Award,
+  FileCheck,
+  LucideIcon,
+  Sparkles,
+  MessageSquare
+} from "lucide-react";
+import { MenuItemType } from "../types/menuItemTypes";
 
-export const getMainMenuItems = (): MenuItem[] => {
-  const { t } = useTranslation();
-  
-  return [
-    {
-      id: "dashboard",
-      label: t('navigation.dashboard'),
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      path: "/dashboard",
-      hasSubmenu: false
-    },
-    {
-      id: "assessments",
-      label: "Assessments",
-      icon: <ClipboardCheck className="h-5 w-5" />,
-      path: "/assessment",
-      hasSubmenu: true,
-      submenuItems: [
-        {
-          id: "esg-diagnostic",
-          label: "ESG Diagnostic",
-          icon: <ClipboardCheck className="h-4 w-4" />,
-          path: "/assessment/esg-diagnostic",
-          hasSubmenu: false
-        },
-        {
-          id: "value-chain",
-          label: "Value Chain",
-          icon: <BarChartHorizontal className="h-4 w-4" />,
-          path: "/assessment/value-chain",
-          hasSubmenu: false
-        },
-        {
-          id: "materiality-analysis",
-          label: "Materiality Analysis",
-          icon: <ClipboardCheck className="h-4 w-4" />,
-          path: "/assessment/materiality-analysis",
-          hasSubmenu: false
-        },
-        {
-          id: "iro-analysis",
-          label: "IRO Analysis",
-          icon: <TargetIcon className="h-4 w-4" />,
-          path: "/assessment/iro",
-          hasSubmenu: false
-        },
-        {
-          id: "stakeholder-mapping",
-          label: "Stakeholder Mapping",
-          icon: <Users className="h-4 w-4" />,
-          path: "/assessment/stakeholder-mapping",
-          hasSubmenu: false
-        },
-        {
-          id: "carbon-evaluation",
-          label: "Carbon Evaluation",
-          icon: <BarChartHorizontal className="h-4 w-4" />,
-          path: "/assessment/carbon-evaluation",
-          hasSubmenu: false
-        },
-        {
-          id: "action-plan",
-          label: "Action Plan",
-          icon: <FileText className="h-4 w-4" />,
-          path: "/assessment/action-plan",
-          hasSubmenu: false
-        },
-        {
-          id: "assessment-results",
-          label: "Assessment Results",
-          icon: <FileBarChart className="h-4 w-4" />,
-          path: "/assessment",
-          hasSubmenu: false
-        }
-      ]
-    },
-    {
-      id: "carbon-evaluation",
-      label: "Carbon Evaluation",
-      icon: <BarChartHorizontal className="h-5 w-5" />,
-      path: "/assessment/carbon-evaluation",
-      hasSubmenu: false
-    },
-    {
-      id: "action-plan",
-      label: "Action Plan",
-      icon: <FileText className="h-5 w-5" />,
-      path: "/assessment/action-plan",
-      hasSubmenu: false
-    },
-    {
-      id: "training",
-      label: t('navigation.training'),
-      icon: <BookOpen className="h-5 w-5" />,
-      path: "/training",
-      hasSubmenu: false
-    },
-    {
-      id: "engagement",
-      label: t('navigation.engagement'),
-      icon: <Trophy className="h-5 w-5" />,
-      path: "/engagement",
-      hasSubmenu: false
-    },
-    {
-      id: "document-center",
-      label: "Document Center",
-      icon: <FileText className="h-5 w-5" />,
-      path: "/documents",
-      hasSubmenu: false
-    },
-    {
-      id: "deliverables",
-      label: t('navigation.deliverables'),
-      icon: <FileText className="h-5 w-5" />,
-      path: "/deliverables",
-      hasSubmenu: false
-    }
-  ];
-};
+const mainMenuItems: MenuItemType[] = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    requiresCompany: false,
+  },
+  {
+    title: "Assessment",
+    href: "/assessment",
+    icon: FileCheck,
+    requiresCompany: true,
+    children: [
+      {
+        title: "ESG Diagnostic",
+        href: "/assessment/esg-diagnostic",
+        icon: BarChart4,
+        requiresCompany: true,
+      },
+      {
+        title: "Carbon Evaluation",
+        href: "/assessment/carbon-evaluation",
+        icon: BarChart4,
+        requiresCompany: true,
+      },
+      {
+        title: "IRO Analysis",
+        href: "/assessment/iro",
+        icon: BarChart4,
+        requiresCompany: true,
+      },
+      {
+        title: "Action Plan",
+        href: "/assessment/action-plan",
+        icon: FileText,
+        requiresCompany: true,
+      },
+      {
+        title: "Value Chain",
+        href: "/assessment/value-chain",
+        icon: FileText,
+        requiresCompany: true,
+      },
+      {
+        title: "Materiality Analysis",
+        href: "/assessment/materiality-analysis",
+        icon: FileText,
+        requiresCompany: true,
+      },
+      {
+        title: "Stakeholder Mapping",
+        href: "/assessment/stakeholder-mapping",
+        icon: Users,
+        requiresCompany: true,
+      },
+    ],
+  },
+  {
+    title: "Talk with Experts",
+    href: "/expert/talk",
+    icon: MessageSquare,
+    requiresCompany: false,
+    highlight: true,
+  },
+  {
+    title: "Training",
+    href: "/training",
+    icon: GraduationCap,
+    requiresCompany: false,
+  },
+  {
+    title: "Documents",
+    href: "/documents",
+    icon: Folder,
+    requiresCompany: true,
+  },
+  {
+    title: "Deliverables",
+    href: "/deliverables",
+    icon: FileText,
+    requiresCompany: true,
+  },
+  {
+    title: "Engagement",
+    href: "/engagement",
+    icon: Award,
+    requiresCompany: false,
+  }
+];
+
+export default mainMenuItems;

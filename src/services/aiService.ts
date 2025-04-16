@@ -1,11 +1,12 @@
 
 import { supabase } from "@/lib/supabase";
 
-export type AIAnalysisType = 'course-summary' | 'esg-assessment' | 'iro-analysis';
+export type AIAnalysisType = 'course-summary' | 'esg-assessment' | 'iro-analysis' | 'esg-assistant';
 
 export interface AIAnalysisRequest {
   type: AIAnalysisType;
   content: string;
+  context?: Array<{ role: 'user' | 'assistant', content: string }>;
   additionalParams?: Record<string, any>;
 }
 
@@ -107,6 +108,30 @@ export const aiService = {
       return response;
     } catch (error) {
       console.error("Error generating IRO items:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get ESG assistant response
+   * @param query The user's query
+   * @param context Previous conversation context
+   * @returns Promise with the assistant's response
+   */
+  getAssistantResponse: async (
+    query: string, 
+    context?: Array<{ role: 'user' | 'assistant', content: string }>
+  ): Promise<string> => {
+    try {
+      const response = await aiService.analyzeContent({
+        type: 'esg-assistant',
+        content: query,
+        context: context
+      });
+      
+      return response.result;
+    } catch (error) {
+      console.error("Error getting assistant response:", error);
       throw error;
     }
   }

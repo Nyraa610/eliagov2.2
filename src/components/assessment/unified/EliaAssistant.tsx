@@ -1,16 +1,18 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Sparkles, Award, ThumbsUp, Send, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { EliaAIChat } from "@/components/assessment/ai/EliaAIChat";
 
 export function EliaAssistant() {
   const [expanded, setExpanded] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState("");
+  const [showChat, setShowChat] = useState(false);
   const [motivationalMessages] = useState([
     "You're making great progress! Keep going!",
     "Remember, every step in your ESG journey matters!",
@@ -23,17 +25,15 @@ export function EliaAssistant() {
   ]);
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Show a random motivational message after 10 seconds
-    const timer = setTimeout(() => {
-      if (!expanded) {
-        setMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
-        setShowMessage(true);
-      }
-    }, 10000);
+  // Show chat and hide card when chat is opened
+  const handleOpenChat = () => {
+    setShowChat(true);
+    setExpanded(false);
+    setShowMessage(false);
     
-    return () => clearTimeout(timer);
-  }, [expanded, motivationalMessages]);
+    // Track engagement
+    console.log("Elia AI Chat opened"); 
+  };
   
   const handleExpand = () => {
     setExpanded(!expanded);
@@ -41,7 +41,7 @@ export function EliaAssistant() {
     
     if (!expanded) {
       // Track engagement
-      console.log("Elia assistant opened"); 
+      console.log("Elia assistant card opened"); 
     }
   };
   
@@ -54,17 +54,25 @@ export function EliaAssistant() {
     });
   };
 
+  // Only show the preview card if chat is not open
+  if (showChat) {
+    return <EliaAIChat />;
+  }
+
   return (
-    <Card className="shadow-md border-primary/20">
-      <CardHeader className="pb-2 cursor-pointer" onClick={handleExpand}>
+    <Card className="shadow-md border-emerald-800/20">
+      <CardHeader className="pb-2 cursor-pointer bg-emerald-800 text-white" onClick={handleExpand}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8 bg-primary/20">
-              <Sparkles className="h-4 w-4 text-primary" />
+            <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
+              <Sparkles className="h-4 w-4 text-amber-400" />
             </Avatar>
-            <h3 className="font-semibold text-primary">Elia Assistant</h3>
+            <div>
+              <h3 className="font-semibold text-white">Elia Assistant</h3>
+              <p className="text-xs text-amber-200">ESG & Business Expert</p>
+            </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-200 hover:text-white hover:bg-emerald-700">
             {expanded ? <X className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
@@ -74,34 +82,44 @@ export function EliaAssistant() {
         <CardContent className="pt-2">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              I'm Elia, your sustainability assistant. How can I help you with your ESG assessment today?
+              I'm Elia, your ESG and sustainability assistant. How can I help you with your sustainability journey today?
             </p>
             
             <div className="space-y-2">
               <motion.div 
-                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                className="p-2 rounded-md bg-emerald-800/10 hover:bg-emerald-800/20 cursor-pointer text-sm transition-colors flex items-center"
                 whileHover={{ scale: 1.01 }}
+                onClick={handleOpenChat}
               >
-                <Award className="h-4 w-4 mr-2 text-primary" />
+                <Award className="h-4 w-4 mr-2 text-emerald-800" />
                 Get tips for improving my assessment
               </motion.div>
               
               <motion.div 
-                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                className="p-2 rounded-md bg-emerald-800/10 hover:bg-emerald-800/20 cursor-pointer text-sm transition-colors flex items-center"
                 whileHover={{ scale: 1.01 }}
+                onClick={handleOpenChat}
               >
-                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                <Sparkles className="h-4 w-4 mr-2 text-emerald-800" />
                 Help me understand ESG terminology
               </motion.div>
 
               <motion.div 
-                className="p-2 rounded-md bg-primary/10 hover:bg-primary/20 cursor-pointer text-sm transition-colors flex items-center"
+                className="p-2 rounded-md bg-emerald-800/10 hover:bg-emerald-800/20 cursor-pointer text-sm transition-colors flex items-center"
                 whileHover={{ scale: 1.01 }}
+                onClick={handleOpenChat}
               >
-                <ThumbsUp className="h-4 w-4 mr-2 text-primary" />
+                <ThumbsUp className="h-4 w-4 mr-2 text-emerald-800" />
                 Recommend next steps for my sustainability journey
               </motion.div>
             </div>
+            
+            <Button 
+              onClick={handleOpenChat}
+              className="w-full bg-emerald-800 hover:bg-emerald-700 text-white"
+            >
+              Start a conversation with Elia
+            </Button>
           </div>
         </CardContent>
       )}
@@ -128,16 +146,6 @@ export function EliaAssistant() {
                 <div className="absolute bottom-0 translate-y-1/2 left-4 w-2 h-2 bg-primary/5 rotate-45"></div>
               </div>
             </CardContent>
-            <CardFooter className="pt-0 flex justify-end space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-7 px-2 text-xs"
-                onClick={handleLike}
-              >
-                <ThumbsUp className="h-3 w-3 mr-1" /> Helpful
-              </Button>
-            </CardFooter>
           </motion.div>
         )}
       </AnimatePresence>

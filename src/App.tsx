@@ -45,6 +45,7 @@ import SubscriptionSuccess from './pages/subscription/Success';
 import SubscriptionManager from './pages/admin/SubscriptionManager';
 import Index from './pages/Index';
 import StakeholderMapping from './pages/assessment/StakeholderMapping';
+import TalkWithExperts from './pages/expert/TalkWithExperts';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
 
 function App() {
@@ -92,6 +93,9 @@ function App() {
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 <Route path="assessment/iro" element={<IRO />} />
                 <Route path="assessment/stakeholder-mapping" element={<StakeholderMapping />} />
+                
+                {/* AI Expert page */}
+                <Route path="expert/talk" element={<TalkWithExperts />} />
                 
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
