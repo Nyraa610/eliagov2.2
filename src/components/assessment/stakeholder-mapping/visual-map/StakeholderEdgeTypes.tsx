@@ -41,7 +41,8 @@ const StakeholderEdge: React.FC<EdgeProps> = ({
             }}
             className="nodrag nopan"
           >
-            {data.label}
+            {/* Fix the ReactI18NextChildren type issue by ensuring label is a string */}
+            {String(data.label)}
           </div>
         </EdgeLabelRenderer>
       )}

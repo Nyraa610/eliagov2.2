@@ -33,7 +33,8 @@ export function StakeholderMapControls({
   // Initialize form when a node is selected
   React.useEffect(() => {
     if (selectedNode) {
-      setNodeLabel(selectedNode.data.label || '');
+      // Fix type issue with explicit type cast
+      setNodeLabel(String(selectedNode.data.label || ''));
       
       // Extract node type from the type property (remove "Node" suffix)
       const currentType = selectedNode.type?.replace('Node', '') || 'generic';
@@ -148,7 +149,8 @@ export function StakeholderMapControls({
             <div className="space-y-4">
               <div>
                 <Label className="text-muted-foreground text-xs">Name</Label>
-                <p className="font-medium">{selectedNode.data.label}</p>
+                {/* Fix the type issue by providing a fallback and ensuring it's a string */}
+                <p className="font-medium">{String(selectedNode.data.label || '')}</p>
               </div>
               
               <div>

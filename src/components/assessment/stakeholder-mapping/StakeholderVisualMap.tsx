@@ -171,7 +171,8 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
     }
   };
   
-  const handleSaveVersion = async (imageUrl: string, versionName: string) => {
+  // Fix the return type to match the expected Promise<void>
+  const handleSaveVersion = async (imageUrl: string, versionName: string): Promise<void> => {
     if (!companyId) {
       toast.error("Company ID is required to save versions");
       return;
@@ -200,7 +201,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
         category: "stakeholder_map"
       });
       
-      return versionId;
+      // No return needed since return type is void
     } catch (error) {
       console.error("Error saving version:", error);
       throw error;
