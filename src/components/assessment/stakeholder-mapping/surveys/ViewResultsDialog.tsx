@@ -1,18 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Survey, SurveyResult, stakeholderService } from "@/services/stakeholderService";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Survey } from '../StakeholderSurveys';
+import { stakeholderService } from '@/services/stakeholderService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface ViewResultsDialogProps {
   open: boolean;
@@ -20,201 +19,178 @@ interface ViewResultsDialogProps {
   survey: Survey;
 }
 
-export function ViewResultsDialog({ open, onClose, survey }: ViewResultsDialogProps) {
-  const [results, setResults] = useState<SurveyResult[]>([]);
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+export function ViewResultsDialog({
+  open,
+  onClose,
+  survey
+}: ViewResultsDialogProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [results, setResults] = useState<any>(null);
 
   useEffect(() => {
-    const loadResults = async () => {
-      if (!open) return;
-
-      setIsLoading(true);
-      try {
-        const surveyResults = await stakeholderService.getSurveyResults(survey.id);
-        setResults(surveyResults);
-      } catch (error) {
-        console.error("Error loading survey results:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadResults();
+    if (open) {
+      const loadResults = async () => {
+        setIsLoading(true);
+        try {
+          const data = await stakeholderService.getSurveyResults(survey.id);
+          setResults(data);
+        } catch (error) {
+          console.error("Error loading survey results:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      loadResults();
+    }
   }, [open, survey.id]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const renderQuestionResults = (question: any, index: number) => {
+    if (!question || !question.responses) {
+      return <p>No data available</p>;
+    }
 
-  // Group responses by question for analysis
-  const questionResponses: {
-    [questionId: string]: {
-      questionText: string;
-      responseCount: number;
-      type: string;
-      answers: Array<string | number>;
-      chartData?: { name: string; value: number }[];
-    };
-  } = {};
+    if (question.type === 'multiple_choice') {
+      const data = Object.entries(question.responses).map(([label, count]) => ({
+        name: label,
+        value: count
+      }));
 
-  results.forEach((result) => {
-    result.answers.forEach((answer) => {
-      if (!questionResponses[answer.questionId]) {
-        questionResponses[answer.questionId] = {
-          questionText: answer.questionText,
-          responseCount: 0,
-          type: typeof answer.answer === "number" ? "rating" : "text",
-          answers: [],
+      return (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{question.text}</h3>
+          <div className="h-[200px] mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
+
+    if (question.type === 'rating') {
+      const data = Array.from({ length: 5 }, (_, i) => {
+        const rating = i + 1;
+        return {
+          name: rating.toString(),
+          count: question.responses[rating] || 0
         };
-      }
+      });
 
-      questionResponses[answer.questionId].answers.push(answer.answer);
-      questionResponses[answer.questionId].responseCount++;
+      return (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{question.text}</h3>
+          <div className="h-[200px] mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" label={{ value: 'Rating', position: 'insideBottom', offset: -5 }} />
+                <YAxis label={{ value: 'Responses', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
 
-      // Prepare chart data for rating questions
-      if (typeof answer.answer === "number") {
-        if (!questionResponses[answer.questionId].chartData) {
-          questionResponses[answer.questionId].chartData = [];
-          for (let i = 1; i <= 5; i++) {
-            questionResponses[answer.questionId].chartData!.push({
-              name: i.toString(),
-              value: 0,
-            });
-          }
-        }
-
-        // Increment the count for this rating
-        const ratingIndex = Math.min(Math.max(1, Math.round(answer.answer)), 5) - 1;
-        questionResponses[answer.questionId].chartData![ratingIndex].value++;
-      }
-    });
-  });
+    // For text responses
+    return (
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium">{question.text}</h3>
+        <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto">
+          {question.responses.map((response: string, i: number) => (
+            <div key={i} className="p-2 border-b last:border-b-0">
+              "{response}"
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Survey Results: {survey.name}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              className="print:hidden"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          </DialogTitle>
-          <DialogDescription>
-            {survey.responseCount} responses received
-          </DialogDescription>
+          <DialogTitle>{survey.name} - Results</DialogTitle>
         </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex justify-center my-8">
-            <p>Loading survey results...</p>
-          </div>
-        ) : results.length === 0 ? (
-          <div className="text-center my-8">
-            <p>No responses received yet.</p>
-          </div>
-        ) : (
-          <div className="mt-4">
-            <Tabs defaultValue="summary">
-              <TabsList className="print:hidden">
-                <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="individual">Individual Responses</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="summary" className="mt-4">
-                <div className="space-y-6">
-                  {Object.entries(questionResponses).map(
-                    ([questionId, questionData]) => (
-                      <Card key={questionId} className="mb-6">
-                        <CardContent className="pt-6">
-                          <h3 className="text-lg font-medium mb-2">
-                            {questionData.questionText}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            {questionData.responseCount} responses
-                          </p>
-
-                          {questionData.type === "rating" && questionData.chartData ? (
-                            <div className="h-64">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                  data={questionData.chartData}
-                                  margin={{
-                                    top: 5,
-                                    right: 30,
-                                    left: 20,
-                                    bottom: 5,
-                                  }}
-                                >
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="name" />
-                                  <YAxis />
-                                  <Tooltip />
-                                  <Bar
-                                    dataKey="value"
-                                    fill="#4f46e5"
-                                    name="Responses"
-                                  />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          ) : (
-                            <div className="max-h-64 overflow-y-auto">
-                              <ul className="space-y-2">
-                                {questionData.answers.map((answer, index) => (
-                                  <li
-                                    key={index}
-                                    className="p-2 bg-gray-50 rounded-md"
-                                  >
-                                    {answer.toString()}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="individual">
-                <div className="space-y-6">
-                  {results.map((result) => (
-                    <Card key={result.id} className="mb-6">
-                      <CardContent className="pt-6">
-                        <h3 className="font-medium">
-                          {result.contactName}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Submitted {new Date(result.submittedAt).toLocaleString()}
-                        </p>
-
-                        <div className="space-y-4">
-                          {result.answers.map((answer, index) => (
-                            <div key={index}>
-                              <p className="font-medium">{answer.questionText}</p>
-                              <p className="p-2 bg-gray-50 rounded-md mt-1">
-                                {answer.answer.toString()}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+        
+        <div className="py-4">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading survey results...</p>
+            </div>
+          ) : !results ? (
+            <div className="text-center py-8">
+              <p>No results found for this survey.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground">Response Rate</p>
+                  <p className="text-2xl font-bold">
+                    {survey.sentCount > 0 
+                      ? `${Math.round((survey.responseCount / survey.sentCount) * 100)}%` 
+                      : '0%'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {survey.responseCount} of {survey.sentCount} responded
+                  </p>
+                </Card>
+                
+                <Card className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground">Avg. Completion Time</p>
+                  <p className="text-2xl font-bold">
+                    {results.averageCompletionTime || 'N/A'}
+                  </p>
+                </Card>
+                
+                <Card className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground">Avg. Rating</p>
+                  <p className="text-2xl font-bold">
+                    {results.averageRating ? `${results.averageRating.toFixed(1)}/5` : 'N/A'}
+                  </p>
+                </Card>
+              </div>
+              
+              <div className="space-y-8">
+                <h3 className="text-lg font-medium">Question Results</h3>
+                
+                {results.questions && results.questions.map((question: any, index: number) => (
+                  <div key={index} className="border-t pt-4">
+                    {renderQuestionResults(question, index)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button onClick={onClose}>Close</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

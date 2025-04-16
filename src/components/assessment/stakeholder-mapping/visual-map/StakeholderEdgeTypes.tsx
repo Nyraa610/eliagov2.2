@@ -1,10 +1,9 @@
 
-import React from "react";
-import { EdgeProps, getBezierPath } from "@xyflow/react";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, EdgeProps } from '@xyflow/react';
 
-// Custom edge component for stakeholder connections
-export function StakeholderEdge({
+// Custom edge with label with proper type definition
+const StakeholderEdge: React.FC<EdgeProps> = ({
   id,
   sourceX,
   sourceY,
@@ -12,54 +11,44 @@ export function StakeholderEdge({
   targetY,
   sourcePosition,
   targetPosition,
-  style = {},
   data,
   markerEnd,
-}: EdgeProps) {
-  const { t } = useTranslation();
+}) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
-    targetPosition,
     targetX,
     targetY,
+    targetPosition,
   });
 
-  const relationshipLabel = data?.relationship || "";
-  
   return (
     <>
-      <path
-        id={id}
-        style={style}
-        className="react-flow__edge-path stroke-2 stroke-gray-300"
-        d={edgePath}
-        markerEnd={markerEnd}
-      />
-      {relationshipLabel && (
-        <text
-          x={labelX}
-          y={labelY}
-          className="text-xs fill-gray-700 bg-white px-1"
-          textAnchor="middle"
-          dominantBaseline="central"
-          style={{ 
-            background: '#fff',
-            padding: '2px 4px',
-            borderRadius: '4px',
-            fontSize: '10px',
-            fontWeight: 500
-          }}
-        >
-          {relationshipLabel as React.ReactNode}
-        </text>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} className="stroke-gray-400 stroke-2" />
+      {data?.label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              fontSize: 12,
+              pointerEvents: 'all',
+              backgroundColor: 'white',
+              padding: '2px 4px',
+              borderRadius: 4,
+              border: '1px solid #ccc',
+            }}
+            className="nodrag nopan"
+          >
+            {data.label}
+          </div>
+        </EdgeLabelRenderer>
       )}
     </>
   );
-}
+};
 
-// Export edge types for React Flow
-export const stakeholderEdgeTypes = {
+export const StakeholderEdgeTypes = {
   stakeholderEdge: StakeholderEdge,
 };

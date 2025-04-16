@@ -1,5 +1,4 @@
 
-// Fix the import to reference stakeholderEdgeTypes
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,8 @@ import {
   MiniMap,
   Node,
   Edge,
+  NodeChange,
+  EdgeChange,
   Connection
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -21,7 +22,7 @@ import { ChevronRight, Share2 } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
 import { StakeholderMapControls } from "./visual-map/StakeholderMapControls";
 import { StakeholderNodeTypes } from "./visual-map/StakeholderNodeTypes";
-import { stakeholderEdgeTypes } from "./visual-map/StakeholderEdgeTypes";
+import { StakeholderEdgeTypes } from "./visual-map/StakeholderEdgeTypes";
 import { StakeholderAddDialog } from "./visual-map/StakeholderAddDialog";
 
 type StakeholderVisualMapProps = {
@@ -37,22 +38,18 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const nodeTypes = StakeholderNodeTypes;
-  const edgeTypes = stakeholderEdgeTypes;
+  const edgeTypes = StakeholderEdgeTypes;
 
   // Load existing stakeholder map data
   useEffect(() => {
     const loadStakeholderMap = async () => {
       setIsLoading(true);
       try {
-        console.log("Loading stakeholder map data...");
         const { nodes: savedNodes, edges: savedEdges } = await stakeholderService.getStakeholderMap();
-        console.log("Loaded nodes:", savedNodes, "edges:", savedEdges);
-        
-        if (savedNodes && savedNodes.length > 0) {
+        if (savedNodes.length > 0) {
           setNodes(savedNodes);
-          setEdges(savedEdges || []);
+          setEdges(savedEdges);
         } else {
-          console.log("No saved map found, creating default company node");
           // If no saved map, create a default company node in the center
           setNodes([
             {
@@ -62,7 +59,6 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
               position: { x: 250, y: 250 }
             }
           ]);
-          setEdges([]);
         }
       } catch (error) {
         console.error("Error loading stakeholder map:", error);
@@ -126,7 +122,6 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const handleSaveMap = async () => {
     setIsSubmitting(true);
     try {
-      console.log("Saving stakeholder map:", { nodes, edges });
       await stakeholderService.saveStakeholderMap(nodes, edges);
       toast.success("Stakeholder map saved successfully");
       onComplete();
@@ -213,7 +208,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
                   }}
                 />
                 <StakeholderMapControls
-                  selectedNodeId={selectedNodeId || ''}
+                  selectedNodeId={selectedNodeId}
                   nodes={nodes}
                   setNodes={setNodes}
                   edges={edges}

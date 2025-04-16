@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
@@ -12,8 +13,6 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { ChevronRight, Upload, Users } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
-import { UploadedDocument } from "@/services/storage/supabaseStorageService";
-import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   companyDescription: z.string().min(10, "Please provide a brief description of your company"),
@@ -35,8 +34,7 @@ type StakeholderIdentificationProps = {
 export function StakeholderIdentification({ onComplete }: StakeholderIdentificationProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
-  const { user, companyId } = useAuth();
+  const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,14 +66,8 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   const handleDocumentUpload = async (files: File[]) => {
     setIsUploading(true);
     try {
-      if (!companyId) {
-        toast.error("Company ID is required to upload documents");
-        setIsUploading(false);
-        return;
-      }
-      
-      const documents = await stakeholderService.uploadStakeholderDocuments(files);
-      setUploadedDocuments(prev => [...prev, ...documents]);
+      const uploadedFiles = await stakeholderService.uploadStakeholderDocuments(files);
+      setUploadedDocuments(prev => [...prev, ...uploadedFiles.map(f => f.name)]);
       toast.success("Documents uploaded successfully");
     } catch (error) {
       console.error("Error uploading documents:", error);
@@ -103,7 +95,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
       await stakeholderService.saveIdentifiedStakeholders({
         companyDescription: values.companyDescription,
         stakeholderTypes: selectedStakeholders,
-        documents: uploadedDocuments.map(doc => doc.url)
+        documents: uploadedDocuments
       });
       
       toast.success("Stakeholder identification saved");
@@ -246,6 +238,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                 </FormDescription>
                 <SimpleUploadButton 
                   onUploadComplete={(documents) => {
+                    // Convert UploadedDocument[] to File[] compatible format for our handler
                     const files = documents.map(doc => new File([], doc.name, { type: doc.file_type }));
                     handleDocumentUpload(files);
                   }}
@@ -258,7 +251,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                       'application/vnd.ms-excel',
                       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                     ],
-                    maxFiles: 10,
+                    maxFiles: 10, // Use maxFiles instead of maxFileSize
                   }}
                 />
                 {uploadedDocuments.length > 0 && (
@@ -268,7 +261,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                       {uploadedDocuments.map((doc, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <Upload className="h-4 w-4 text-green-500" />
-                          {doc.name}
+                          {doc}
                         </li>
                       ))}
                     </ul>

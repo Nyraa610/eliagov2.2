@@ -1,15 +1,15 @@
 
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Trash, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Node, Edge } from "@xyflow/react";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Trash2, Edit, Save } from 'lucide-react';
+import { Node, Edge } from '@xyflow/react';
 
-export interface StakeholderMapControlsProps {
-  selectedNodeId: string;
+interface StakeholderMapControlsProps {
+  selectedNodeId: string | null;
   nodes: Node[];
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
   edges: Edge[];
@@ -21,208 +21,163 @@ export function StakeholderMapControls({
   nodes,
   setNodes,
   edges,
-  setEdges,
+  setEdges
 }: StakeholderMapControlsProps) {
-  const { t } = useTranslation();
-  const [nodeLabel, setNodeLabel] = useState("");
-  const [nodeType, setNodeType] = useState("");
-  const [relationships, setRelationships] = useState<{ [key: string]: string }>({});
-  const [showNodeControls, setShowNodeControls] = useState(false);
+  const [nodeLabel, setNodeLabel] = useState('');
+  const [nodeType, setNodeType] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    if (selectedNodeId) {
-      const selectedNode = nodes.find((node) => node.id === selectedNodeId);
-      if (selectedNode) {
-        setNodeLabel(selectedNode.data?.label as string || "");
-        setNodeType((selectedNode.type?.replace("Node", "") || "") as string);
-        setShowNodeControls(true);
-        
-        // Get relationships for this node
-        const nodeRelationships: { [key: string]: string } = {};
-        edges.forEach((edge) => {
-          if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
-            const isSource = edge.source === selectedNodeId;
-            const otherNodeId = isSource ? edge.target : edge.source;
-            const otherNode = nodes.find((n) => n.id === otherNodeId);
-            
-            if (otherNode) {
-              nodeRelationships[edge.id] = edge.data?.relationship as string || "";
-            }
-          }
-        });
-        
-        setRelationships(nodeRelationships);
-      }
-    } else {
-      setShowNodeControls(false);
+  // Find the selected node
+  const selectedNode = nodes.find(node => node.id === selectedNodeId);
+
+  // Initialize form when a node is selected
+  React.useEffect(() => {
+    if (selectedNode) {
+      setNodeLabel(selectedNode.data.label || '');
+      
+      // Extract node type from the type property (remove "Node" suffix)
+      const currentType = selectedNode.type?.replace('Node', '') || 'generic';
+      setNodeType(currentType);
+      
+      setIsEditing(false);
     }
-  }, [selectedNodeId, nodes, edges]);
+  }, [selectedNode]);
 
-  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNodeLabel(e.target.value);
-    
-    // Update node in real-time
-    if (selectedNodeId) {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === selectedNodeId) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                label: e.target.value,
-              },
-            };
-          }
-          return node;
-        })
-      );
-    }
-  };
-
-  const handleTypeChange = (value: string) => {
-    setNodeType(value);
-    
-    // Update node type in real-time
-    if (selectedNodeId) {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === selectedNodeId) {
-            return {
-              ...node,
-              type: `${value}Node`,
-            };
-          }
-          return node;
-        })
-      );
-    }
-  };
-
-  const handleRelationshipChange = (edgeId: string, value: string) => {
-    // Update relationship in state
-    setRelationships((prev) => ({
-      ...prev,
-      [edgeId]: value,
-    }));
-    
-    // Update edge in real-time
-    setEdges((eds) =>
-      eds.map((edge) => {
-        if (edge.id === edgeId) {
-          return {
-            ...edge,
-            data: {
-              ...edge.data,
-              relationship: value,
-            },
-          };
-        }
-        return edge;
-      })
-    );
-  };
-
+  // Handle node deletion
   const handleDeleteNode = () => {
     if (!selectedNodeId) return;
     
-    // Delete all connected edges
-    setEdges((eds) => eds.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId));
+    // Remove all connected edges
+    const newEdges = edges.filter(
+      edge => edge.source !== selectedNodeId && edge.target !== selectedNodeId
+    );
     
-    // Delete the node
-    setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+    // Remove the node
+    const newNodes = nodes.filter(node => node.id !== selectedNodeId);
     
-    // Clear the selection
-    setShowNodeControls(false);
+    setEdges(newEdges);
+    setNodes(newNodes);
   };
 
-  const getConnectedNodeLabel = (edgeId: string) => {
-    const edge = edges.find((e) => e.id === edgeId);
-    if (!edge) return "";
+  // Handle save node changes
+  const handleSaveChanges = () => {
+    if (!selectedNodeId || !nodeLabel) return;
     
-    const connectedNodeId = edge.source === selectedNodeId ? edge.target : edge.source;
-    const connectedNode = nodes.find((n) => n.id === connectedNodeId);
+    // Update the node
+    const updatedNodes = nodes.map(node => {
+      if (node.id === selectedNodeId) {
+        const newType = `${nodeType}Node`;
+        return {
+          ...node,
+          data: { ...node.data, label: nodeLabel },
+          type: newType,
+        };
+      }
+      return node;
+    });
     
-    return connectedNode?.data?.label as string || "";
+    setNodes(updatedNodes);
+    setIsEditing(false);
   };
 
-  if (!showNodeControls) {
-    return null;
-  }
+  if (!selectedNode) return null;
 
   return (
-    <div className="absolute top-4 right-4 p-4 bg-white rounded-md shadow-md z-10 w-64">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium">{t("Edit Node")}</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={() => setShowNodeControls(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="nodeLabel">{t("Label")}</Label>
-          <Input
-            id="nodeLabel"
-            value={nodeLabel}
-            onChange={handleLabelChange}
-            className="mt-1"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="nodeType">{t("Type")}</Label>
-          <Select
-            value={nodeType}
-            onValueChange={handleTypeChange}
-          >
-            <SelectTrigger id="nodeType" className="mt-1">
-              <SelectValue placeholder={t("Select type")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="company">Company</SelectItem>
-              <SelectItem value="employee">Employee</SelectItem>
-              <SelectItem value="customer">Customer</SelectItem>
-              <SelectItem value="supplier">Supplier</SelectItem>
-              <SelectItem value="community">Community</SelectItem>
-              <SelectItem value="government">Government</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {Object.keys(relationships).length > 0 && (
-          <div>
-            <Label>{t("Relationships")}</Label>
-            <div className="space-y-2 mt-1">
-              {Object.entries(relationships).map(([edgeId, relationship]) => (
-                <div key={edgeId} className="flex items-center space-x-2">
-                  <Input
-                    value={relationship}
-                    onChange={(e) => handleRelationshipChange(edgeId, e.target.value)}
-                    placeholder={`${t("Relation with")} ${getConnectedNodeLabel(edgeId)}`}
-                    className="flex-1"
-                  />
-                </div>
-              ))}
+    <div
+      style={{
+        position: 'absolute',
+        right: 10,
+        top: 10,
+        zIndex: 10,
+      }}
+    >
+      <Card className="w-72">
+        <CardContent className="pt-6">
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="node-label">Stakeholder Name</Label>
+                <Input
+                  id="node-label"
+                  value={nodeLabel}
+                  onChange={(e) => setNodeLabel(e.target.value)}
+                  placeholder="Enter name"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="node-type">Stakeholder Type</Label>
+                <Select
+                  value={nodeType}
+                  onValueChange={setNodeType}
+                >
+                  <SelectTrigger id="node-type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="company">Company</SelectItem>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                    <SelectItem value="community">Community</SelectItem>
+                    <SelectItem value="government">Government</SelectItem>
+                    <SelectItem value="generic">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveChanges}
+                  disabled={!nodeLabel}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-
-        <Button
-          variant="destructive"
-          size="sm"
-          className="w-full"
-          onClick={handleDeleteNode}
-        >
-          <Trash className="h-4 w-4 mr-2" /> {t("Delete Node")}
-        </Button>
-      </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground text-xs">Name</Label>
+                <p className="font-medium">{selectedNode.data.label}</p>
+              </div>
+              
+              <div>
+                <Label className="text-muted-foreground text-xs">Type</Label>
+                <p className="capitalize">{selectedNode.type?.replace('Node', '') || 'Generic'}</p>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteNode}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
