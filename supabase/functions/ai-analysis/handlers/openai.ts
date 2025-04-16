@@ -123,7 +123,7 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
         
         if (runStatus.status === 'failed') {
           console.error('Assistant run failed:', JSON.stringify(runStatus.last_error, null, 2));
-          throw new Error('Assistant run failed: ' + runStatus.last_error?.message || 'Unknown error');
+          throw new Error('Assistant run failed: ' + (runStatus.last_error?.message || 'Unknown error'));
         }
         
         if (pollCount >= maxPolls && runStatus.status !== 'completed') {
@@ -148,22 +148,30 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
         const lastMessage = assistantMessages[0];
         console.log("Assistant message ID:", lastMessage.id);
         
+        // Debug the full message structure
+        console.log("Complete message structure:", JSON.stringify(lastMessage, null, 2));
+        
         // Extract the text content
         let content = '';
         
-        // Debug the content structure
-        console.log("Message content structure:", JSON.stringify(lastMessage.content, null, 2));
-        
         if (lastMessage.content && Array.isArray(lastMessage.content)) {
+          console.log(`Found ${lastMessage.content.length} content parts in message`);
+          
           for (const contentPart of lastMessage.content) {
+            console.log(`Processing content part type: ${contentPart.type}`);
+            
             if (contentPart.type === 'text') {
+              console.log(`Adding text content of length: ${contentPart.text.value.length}`);
               content += contentPart.text.value;
-              console.log("Extracted text content:", contentPart.text.value.substring(0, 100) + "...");
+              
+              // Only log a portion to avoid flooding logs
+              const previewLength = Math.min(contentPart.text.value.length, 300);
+              console.log(`Text content preview (${previewLength} chars): ${contentPart.text.value.substring(0, previewLength)}...`);
             }
           }
         }
         
-        console.log("Final extracted content length:", content.length);
+        console.log(`Final extracted content length: ${content.length}`);
         
         if (!content) {
           console.error("Failed to extract text content from assistant message");
@@ -183,7 +191,7 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
         };
       } catch (error) {
         console.error("Error using OpenAI assistant:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
+        console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         
         // Fallback to regular chat completion
         console.log("Falling back to regular chat completion");
@@ -191,12 +199,15 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
         const temperature = 0.7;
         const maxTokens = 1500;
         
-        return await openai.chat.completions.create({
+        const response = await openai.chat.completions.create({
           model: model,
           messages,
           temperature: temperature,
           max_tokens: maxTokens,
         });
+        
+        console.log("Fallback chat completion response:", JSON.stringify(response, null, 2));
+        return response;
       }
     }
     
@@ -214,7 +225,7 @@ export async function createChatCompletion(openai: OpenAI, messages: any[], type
       max_tokens: maxTokens,
     });
     
-    console.log("OpenAI API response received successfully");
+    console.log("OpenAI API response received successfully:", JSON.stringify(response, null, 2));
     return response;
   } catch (error) {
     console.error("Error in createChatCompletion:", error);

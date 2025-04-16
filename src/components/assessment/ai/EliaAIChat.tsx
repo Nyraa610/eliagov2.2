@@ -95,9 +95,11 @@ export function EliaAIChat() {
     }
 
     try {
+      console.log("Loading chat history from database...");
       const history = await aiService.getChatHistory();
       
       if (history && history.length > 0) {
+        console.log(`Loaded ${history.length} chat history entries`);
         const formattedHistory: Message[] = history.flatMap(item => [
           {
             role: 'user',
@@ -113,6 +115,7 @@ export function EliaAIChat() {
         
         setMessages(formattedHistory);
       } else {
+        console.log("No chat history found, setting welcome message");
         setMessages([
           {
             role: 'assistant',
@@ -123,6 +126,12 @@ export function EliaAIChat() {
       }
     } catch (error) {
       console.error("Error loading chat history:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history. Starting a new conversation.",
+        variant: "destructive",
+      });
+      
       setMessages([
         {
           role: 'assistant',
@@ -169,6 +178,7 @@ export function EliaAIChat() {
         };
         
         setMessages(prev => [...prev, assistantMessage]);
+        console.log("Added assistant message to chat");
       } else {
         console.error("Empty or invalid response from AI service:", response);
         throw new Error("Invalid response from AI service");

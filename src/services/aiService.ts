@@ -38,9 +38,13 @@ export const aiService = {
         contextSize: request.context?.length || 0
       });
       
+      const startTime = Date.now();
       const { data, error } = await supabase.functions.invoke('ai-analysis', {
         body: request
       });
+      const endTime = Date.now();
+      
+      console.log(`AI analysis response received in ${endTime - startTime}ms`);
       
       if (error) {
         console.error("Supabase function error:", error);
@@ -172,6 +176,7 @@ export const aiService = {
    */
   getChatHistory: async (): Promise<ChatHistoryItem[]> => {
     try {
+      console.log("Fetching chat history from database");
       const { data, error } = await supabase
         .from('chat_history')
         .select('*')
@@ -183,6 +188,7 @@ export const aiService = {
         throw error;
       }
       
+      console.log(`Retrieved ${data?.length || 0} chat history items`);
       return data || [];
     } catch (error) {
       console.error("Error in getChatHistory:", error);

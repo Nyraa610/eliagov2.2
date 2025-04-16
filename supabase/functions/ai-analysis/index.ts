@@ -83,13 +83,35 @@ serve(async (req) => {
       // Extract the result properly, handling potential undefined values
       let result = "No result generated";
       
-      if (completion && completion.data && completion.data.choices && 
-          completion.data.choices.length > 0 && completion.data.choices[0].message) {
-        result = completion.data.choices[0].message.content || "No result generated";
-        console.log(`[${executionId}] Response content type: ${typeof result}`);
-        console.log(`[${executionId}] Extracted result: ${result.substring(0, 100)}...`);
-      } else {
-        console.error(`[${executionId}] Invalid completion structure:`, JSON.stringify(completion, null, 2));
+      try {
+        if (completion && completion.data && completion.data.choices && 
+            completion.data.choices.length > 0 && completion.data.choices[0].message) {
+          result = completion.data.choices[0].message.content || "No result generated";
+          console.log(`[${executionId}] Response content type: ${typeof result}`);
+          console.log(`[${executionId}] Extracted result: ${result.substring(0, 100)}...`);
+        } else {
+          console.error(`[${executionId}] Invalid completion structure:`, JSON.stringify(completion, null, 2));
+          
+          // Attempt to recover from non-standard response formats
+          if (completion && typeof completion === 'object') {
+            // Try various paths to find the content
+            if (completion.choices && completion.choices[0] && completion.choices[0].message) {
+              result = completion.choices[0].message.content || "No result generated";
+              console.log(`[${executionId}] Recovered result from direct completion object`);
+            } else if (completion.message && typeof completion.message.content === 'string') {
+              result = completion.message.content;
+              console.log(`[${executionId}] Recovered result from message.content`);
+            } else if (typeof completion.content === 'string') {
+              result = completion.content;
+              console.log(`[${executionId}] Recovered result from direct content property`);
+            } else {
+              console.error(`[${executionId}] Could not parse completion structure:`, JSON.stringify(completion, null, 2));
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error(`[${executionId}] Error parsing completion:`, parseError);
+        console.error(`[${executionId}] Completion object:`, JSON.stringify(completion, null, 2));
       }
       
       // Save ESG assessment data if it's an ESG assessment
@@ -101,7 +123,8 @@ serve(async (req) => {
       // Save chat history if it's the ESG assistant
       if (type === 'esg-assistant' && result !== "No result generated") {
         console.log(`[${executionId}] Saving chat history`);
-        await saveChatHistory(user.id, content, result);
+        const saved = await saveChatHistory(user.id, content, result);
+        console.log(`[${executionId}] Chat history saved successfully: ${saved}`);
       }
       
       // Return the analysis result

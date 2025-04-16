@@ -45,16 +45,34 @@ export async function saveESGAssessment(userId: string, content: string, result:
 export async function saveChatHistory(userId: string, message: string, response: string) {
   try {
     console.log(`Saving chat history for user ${userId.substring(0, 8)}...`);
+    console.log(`Message length: ${message.length}, Response length: ${response.length}`);
+    
+    // Check if message or response is empty or null
+    if (!message || !response) {
+      console.error("Invalid chat data: message or response is empty");
+      console.log("Message:", message ? message.substring(0, 100) + "..." : "null/empty");
+      console.log("Response:", response ? response.substring(0, 100) + "..." : "null/empty");
+      return false;
+    }
+    
     const supabase = createSupabaseClient();
+    
+    const chatEntry = {
+      user_id: userId,
+      user_message: message,
+      assistant_response: response,
+      created_at: new Date().toISOString()
+    };
+    
+    console.log("Inserting chat entry:", JSON.stringify({
+      ...chatEntry,
+      user_message: chatEntry.user_message.substring(0, 50) + "...",
+      assistant_response: chatEntry.assistant_response.substring(0, 50) + "..."
+    }));
     
     const { error } = await supabase
       .from('chat_history')
-      .insert({
-        user_id: userId,
-        user_message: message,
-        assistant_response: response,
-        created_at: new Date().toISOString()
-      });
+      .insert(chatEntry);
     
     if (error) {
       console.error("Error saving chat history:", error);
