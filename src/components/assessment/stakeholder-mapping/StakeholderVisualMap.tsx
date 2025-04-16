@@ -35,11 +35,12 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const reactFlowRef = useRef<HTMLDivElement>(null);
 
-  const handleSaveAndContinue = async () => {
+  const handleSaveAndContinue = async (): Promise<boolean> => {
     const success = await handleSaveMap();
     if (success) {
       onComplete();
     }
+    return success; // Make sure to return the success boolean
   };
 
   return (
