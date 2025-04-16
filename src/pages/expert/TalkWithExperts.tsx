@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EliaAIChat } from '@/components/assessment/ai/EliaAIChat';
-import { Leaf, Users, Building, LightbulbIcon, BookOpen, FileText } from 'lucide-react';
+import { Leaf, Users, Building, LightbulbIcon, BookOpen, FileText, MessageSquare } from 'lucide-react';
 
 export default function TalkWithExperts() {
   return (

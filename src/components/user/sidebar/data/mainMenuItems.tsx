@@ -12,9 +12,9 @@ import {
   Sparkles,
   MessageSquare
 } from "lucide-react";
-import { MenuItemType } from "../types/menuItemTypes";
+import { MenuItem } from "../types/menuItemTypes";
 
-const mainMenuItems: MenuItemType[] = [
+const mainMenuItems: MenuItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
@@ -103,5 +103,10 @@ const mainMenuItems: MenuItemType[] = [
     requiresCompany: false,
   }
 ];
+
+// Add this function to export mainMenuItems
+export const getMainMenuItems = () => {
+  return mainMenuItems;
+};
 
 export default mainMenuItems;
