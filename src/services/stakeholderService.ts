@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseStorageService, UploadedDocument } from "./storage/supabaseStorageService";
 
@@ -155,14 +154,15 @@ export const stakeholderService = {
           });
       } else {
         // Update existing assessment progress
-        const existingData = progress.form_data || {};
+        const existingData = progress.form_data ? 
+          (typeof progress.form_data === 'object' ? progress.form_data as Record<string, any> : {}) : {};
         
         await supabase
           .from('assessment_progress')
           .update({
             progress: Math.max(progress.progress, 25),
             form_data: {
-              ...existingData,
+              ...existingData as Record<string, any>,
               identification: formData.identification
             }
           })
@@ -268,14 +268,15 @@ export const stakeholderService = {
           });
       } else {
         // Update existing assessment progress
-        const existingData = progress.form_data || {};
+        const existingData = progress.form_data ? 
+          (typeof progress.form_data === 'object' ? progress.form_data as Record<string, any> : {}) : {};
         
         await supabase
           .from('assessment_progress')
           .update({
             progress: Math.max(progress.progress, 50),
             form_data: {
-              ...existingData,
+              ...existingData as Record<string, any>,
               management: formData.management
             }
           })

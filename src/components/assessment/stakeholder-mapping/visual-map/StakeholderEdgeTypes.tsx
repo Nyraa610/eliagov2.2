@@ -52,7 +52,7 @@ export function StakeholderEdge({
             fontWeight: 500
           }}
         >
-          {relationshipLabel}
+          {relationshipLabel as string}
         </text>
       )}
     </>

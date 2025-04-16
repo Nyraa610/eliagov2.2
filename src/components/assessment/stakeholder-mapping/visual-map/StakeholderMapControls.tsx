@@ -33,8 +33,8 @@ export function StakeholderMapControls({
     if (selectedNodeId) {
       const selectedNode = nodes.find((node) => node.id === selectedNodeId);
       if (selectedNode) {
-        setNodeLabel(selectedNode.data?.label || "");
-        setNodeType((selectedNode.type?.replace("Node", "") || ""));
+        setNodeLabel(selectedNode.data?.label as string || "");
+        setNodeType((selectedNode.type?.replace("Node", "") || "") as string);
         setShowNodeControls(true);
         
         // Get relationships for this node
@@ -46,7 +46,7 @@ export function StakeholderMapControls({
             const otherNode = nodes.find((n) => n.id === otherNodeId);
             
             if (otherNode) {
-              nodeRelationships[edge.id] = edge.data?.relationship || "";
+              nodeRelationships[edge.id] = edge.data?.relationship as string || "";
             }
           }
         });
@@ -143,7 +143,7 @@ export function StakeholderMapControls({
     const connectedNodeId = edge.source === selectedNodeId ? edge.target : edge.source;
     const connectedNode = nodes.find((n) => n.id === connectedNodeId);
     
-    return connectedNode?.data?.label || "";
+    return connectedNode?.data?.label as string || "";
   };
 
   if (!showNodeControls) {
