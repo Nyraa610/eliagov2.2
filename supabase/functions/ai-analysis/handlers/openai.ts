@@ -51,139 +51,174 @@ Remember that users are typically business professionals seeking to improve thei
 }
 
 export async function createChatCompletion(openai: OpenAI, messages: any[], type: string) {
-  if (type === 'esg-assessment' && messages[messages.length - 1].content.includes("IRO")) {
-    const content = messages[messages.length - 1].content;
-    const result = await generateIRORisksOpportunities(content);
-    return {
-      data: {
-        choices: [
-          {
-            message: {
-              content: result
-            }
-          }
-        ]
-      }
-    };
-  }
-  
-  // Use the custom assistant for ESG assistant type
-  if (type === 'esg-assistant') {
-    try {
-      console.log("Using OpenAI assistant for ESG assistant query");
-      
-      // Create a thread
-      const thread = await openai.beta.threads.create();
-      console.log("Thread created:", thread.id);
-      
-      // Add messages to the thread
-      for (const msg of messages) {
-        if (msg.role === 'user' || msg.role === 'assistant') {
-          await openai.beta.threads.messages.create(thread.id, {
-            role: msg.role,
-            content: msg.content
-          });
-        }
-      }
-      console.log("Messages added to thread");
-      
-      // Run the assistant on the thread
-      const run = await openai.beta.threads.runs.create(thread.id, {
-        assistant_id: "asst_sxtwO6YB80QvXGYgQlCNxVKa", // Your specific assistant ID
-      });
-      console.log("Run created:", run.id);
-      
-      // Poll for completion
-      let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-      
-      // Simple polling mechanism - in production, you'd want to use webhooks
-      while (runStatus.status !== 'completed' && runStatus.status !== 'failed') {
-        console.log("Run status:", runStatus.status);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-      }
-      
-      if (runStatus.status === 'failed') {
-        console.error('Assistant run failed:', runStatus.last_error);
-        throw new Error('Assistant run failed: ' + runStatus.last_error?.message || 'Unknown error');
-      }
-      
-      console.log("Run completed, fetching messages");
-      
-      // Get the messages from the thread
-      const messages = await openai.beta.threads.messages.list(thread.id);
-      
-      // Find the assistant's last message
-      const assistantMessages = messages.data.filter(msg => msg.role === 'assistant');
-      
-      if (assistantMessages.length === 0) {
-        console.error("No assistant messages found in the thread");
-        throw new Error('No response from assistant');
-      }
-      
-      // Get the most recent assistant message
-      const lastMessage = assistantMessages[0];
-      console.log("Assistant message:", JSON.stringify(lastMessage, null, 2));
-      
-      // Extract the text content
-      let content = '';
-      
-      // Debug the content structure
-      console.log("Message content structure:", JSON.stringify(lastMessage.content, null, 2));
-      
-      if (lastMessage.content && Array.isArray(lastMessage.content)) {
-        for (const contentPart of lastMessage.content) {
-          if (contentPart.type === 'text') {
-            content += contentPart.text.value;
-            console.log("Extracted text content:", contentPart.text.value.substring(0, 100) + "...");
-          }
-        }
-      }
-      
-      console.log("Final extracted content:", content.substring(0, 100) + "...");
-      
-      if (!content) {
-        console.error("Failed to extract text content from assistant message");
-        content = "I couldn't generate a response at this time. Please try again later.";
-      }
-      
+  try {
+    console.log(`Starting createChatCompletion for type: ${type} with ${messages.length} messages`);
+    
+    if (type === 'esg-assessment' && messages[messages.length - 1].content.includes("IRO")) {
+      const content = messages[messages.length - 1].content;
+      console.log("Using IRO assessment flow");
+      const result = await generateIRORisksOpportunities(content);
       return {
         data: {
           choices: [
             {
               message: {
-                content: content
+                content: result
               }
             }
           ]
         }
       };
-    } catch (error) {
-      console.error("Error using OpenAI assistant:", error);
-      
-      // Fallback to regular chat completion
-      const model = "gpt-4o-mini";
-      const temperature = 0.7;
-      const maxTokens = 1500;
-      
-      return await openai.chat.completions.create({
-        model: model,
-        messages,
-        temperature: temperature,
-        max_tokens: maxTokens,
-      });
     }
+    
+    // Use the custom assistant for ESG assistant type
+    if (type === 'esg-assistant') {
+      try {
+        console.log("Using OpenAI assistant for ESG assistant query");
+        
+        // Create a thread
+        console.log("Creating thread...");
+        const thread = await openai.beta.threads.create();
+        console.log("Thread created:", thread.id);
+        
+        // Add messages to the thread
+        console.log("Adding messages to thread...");
+        for (const msg of messages) {
+          if (msg.role === 'user' || msg.role === 'assistant') {
+            await openai.beta.threads.messages.create(thread.id, {
+              role: msg.role,
+              content: msg.content
+            });
+          }
+        }
+        console.log("Messages added to thread");
+        
+        // Run the assistant on the thread
+        console.log("Creating assistant run...");
+        const run = await openai.beta.threads.runs.create(thread.id, {
+          assistant_id: "asst_sxtwO6YB80QvXGYgQlCNxVKa", // Your specific assistant ID
+        });
+        console.log("Run created:", run.id);
+        
+        // Poll for completion
+        let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+        let pollCount = 0;
+        const maxPolls = 30; // Avoid infinite polling
+        
+        // Simple polling mechanism - in production, you'd want to use webhooks
+        while (runStatus.status !== 'completed' && 
+               runStatus.status !== 'failed' && 
+               runStatus.status !== 'cancelled' && 
+               pollCount < maxPolls) {
+          console.log(`Run status (poll ${pollCount}): ${runStatus.status}`);
+          
+          if (runStatus.status === 'requires_action') {
+            console.log("Run requires action:", JSON.stringify(runStatus.required_action, null, 2));
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+          pollCount++;
+        }
+        
+        if (runStatus.status === 'failed') {
+          console.error('Assistant run failed:', JSON.stringify(runStatus.last_error, null, 2));
+          throw new Error('Assistant run failed: ' + runStatus.last_error?.message || 'Unknown error');
+        }
+        
+        if (pollCount >= maxPolls && runStatus.status !== 'completed') {
+          console.error(`Run timed out after ${maxPolls} polls. Final status: ${runStatus.status}`);
+          throw new Error(`Assistant run timed out with status: ${runStatus.status}`);
+        }
+        
+        console.log("Run completed, fetching messages");
+        
+        // Get the messages from the thread
+        const messages = await openai.beta.threads.messages.list(thread.id);
+        
+        // Find the assistant's last message
+        const assistantMessages = messages.data.filter(msg => msg.role === 'assistant');
+        
+        if (assistantMessages.length === 0) {
+          console.error("No assistant messages found in the thread");
+          throw new Error('No response from assistant');
+        }
+        
+        // Get the most recent assistant message
+        const lastMessage = assistantMessages[0];
+        console.log("Assistant message ID:", lastMessage.id);
+        
+        // Extract the text content
+        let content = '';
+        
+        // Debug the content structure
+        console.log("Message content structure:", JSON.stringify(lastMessage.content, null, 2));
+        
+        if (lastMessage.content && Array.isArray(lastMessage.content)) {
+          for (const contentPart of lastMessage.content) {
+            if (contentPart.type === 'text') {
+              content += contentPart.text.value;
+              console.log("Extracted text content:", contentPart.text.value.substring(0, 100) + "...");
+            }
+          }
+        }
+        
+        console.log("Final extracted content length:", content.length);
+        
+        if (!content) {
+          console.error("Failed to extract text content from assistant message");
+          content = "I couldn't generate a response at this time. Please try again later.";
+        }
+        
+        return {
+          data: {
+            choices: [
+              {
+                message: {
+                  content: content
+                }
+              }
+            ]
+          }
+        };
+      } catch (error) {
+        console.error("Error using OpenAI assistant:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        
+        // Fallback to regular chat completion
+        console.log("Falling back to regular chat completion");
+        const model = "gpt-4o-mini";
+        const temperature = 0.7;
+        const maxTokens = 1500;
+        
+        return await openai.chat.completions.create({
+          model: model,
+          messages,
+          temperature: temperature,
+          max_tokens: maxTokens,
+        });
+      }
+    }
+    
+    // For other types, use the regular chat completion
+    console.log("Using regular chat completion");
+    const model = "gpt-4o-mini";
+    const temperature = 0.7;
+    const maxTokens = 1500;
+    
+    console.log(`Calling OpenAI API with model: ${model}`);
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages,
+      temperature: temperature,
+      max_tokens: maxTokens,
+    });
+    
+    console.log("OpenAI API response received successfully");
+    return response;
+  } catch (error) {
+    console.error("Error in createChatCompletion:", error);
+    console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    throw error;
   }
-  
-  // For other types, use the regular chat completion
-  const model = "gpt-4o-mini";
-  const temperature = 0.7;
-  const maxTokens = 1500;
-  
-  return await openai.chat.completions.create({
-    model: model,
-    messages,
-    temperature: temperature,
-    max_tokens: maxTokens,
-  });
 }

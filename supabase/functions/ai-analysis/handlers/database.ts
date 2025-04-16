@@ -1,6 +1,7 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-function createClient() {
+function createSupabaseClient() {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
   return createClient(supabaseUrl, supabaseKey);
@@ -11,7 +12,8 @@ function createClient() {
  */
 export async function saveESGAssessment(userId: string, content: string, result: string) {
   try {
-    const supabase = createClient();
+    console.log(`Saving ESG assessment for user ${userId.substring(0, 8)}...`);
+    const supabase = createSupabaseClient();
     
     const { data, error } = await supabase
       .from('esg_assessments')
@@ -24,6 +26,7 @@ export async function saveESGAssessment(userId: string, content: string, result:
     
     if (error) {
       console.error("Error saving ESG assessment:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       throw error;
     }
     
@@ -31,6 +34,7 @@ export async function saveESGAssessment(userId: string, content: string, result:
     return true;
   } catch (error) {
     console.error("Error in saveESGAssessment:", error);
+    console.error("Error stack:", error.stack);
     return false;
   }
 }
@@ -40,7 +44,8 @@ export async function saveESGAssessment(userId: string, content: string, result:
  */
 export async function saveChatHistory(userId: string, message: string, response: string) {
   try {
-    const supabase = createClient();
+    console.log(`Saving chat history for user ${userId.substring(0, 8)}...`);
+    const supabase = createSupabaseClient();
     
     const { error } = await supabase
       .from('chat_history')
@@ -53,6 +58,7 @@ export async function saveChatHistory(userId: string, message: string, response:
     
     if (error) {
       console.error("Error saving chat history:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       throw error;
     }
     
@@ -60,6 +66,7 @@ export async function saveChatHistory(userId: string, message: string, response:
     return true;
   } catch (error) {
     console.error("Error in saveChatHistory:", error);
+    console.error("Error stack:", error.stack);
     return false;
   }
 }
