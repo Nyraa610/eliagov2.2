@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Card, 
@@ -47,7 +46,6 @@ export function EliaAIChat() {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useMobile();
   
-  // Suggested prompts
   const suggestedPrompts = {
     esg: [
       "What are the key elements of an ESG strategy?",
@@ -63,12 +61,10 @@ export function EliaAIChat() {
     ]
   };
 
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen && !isMobile) {
       setTimeout(() => {
@@ -77,7 +73,6 @@ export function EliaAIChat() {
     }
   }, [isOpen, isMobile]);
 
-  // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
@@ -104,19 +99,20 @@ export function EliaAIChat() {
     setIsLoading(true);
     
     try {
-      // Get previous messages for context (last 6 messages)
       const messageContext = messages
         .slice(-6)
         .map(msg => ({ role: msg.role, content: msg.content }));
       
-      // Call AI service
+      console.log("Sending AI request with context", messageContext.length);
+      
       const response = await aiService.analyzeContent({
         type: 'esg-assistant',
         content: input,
         context: messageContext
       });
       
-      // Check if response and response.result exist before using
+      console.log("AI response received:", response);
+      
       if (response && response.result) {
         const assistantMessage: Message = {
           role: 'assistant',
@@ -126,7 +122,6 @@ export function EliaAIChat() {
         
         setMessages(prev => [...prev, assistantMessage]);
       } else {
-        // Handle empty or undefined response
         console.error("Empty or invalid response from AI service:", response);
         throw new Error("Invalid response from AI service");
       }
@@ -138,7 +133,6 @@ export function EliaAIChat() {
         variant: "destructive",
       });
       
-      // Add error message
       setMessages(prev => [
         ...prev, 
         {
@@ -213,7 +207,6 @@ export function EliaAIChat() {
     ));
   };
 
-  // For mobile devices, use a drawer that slides up from the bottom
   if (isMobile) {
     return (
       <>
@@ -348,7 +341,6 @@ export function EliaAIChat() {
     );
   }
 
-  // For desktop, use a floating chat window that can be expanded
   return (
     <>
       {!isOpen && (

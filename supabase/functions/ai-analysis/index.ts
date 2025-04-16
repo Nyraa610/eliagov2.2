@@ -22,6 +22,8 @@ serve(async (req) => {
       const requestData: AIAnalysisRequest = await req.json();
       const { type, content, context, analysisType } = requestData;
       
+      console.log("Processing AI Analysis request:", { type, analysisType, contentLength: content?.length });
+      
       if (!type || !content) {
         return new Response(JSON.stringify({ error: "Missing required fields: type or content" }), {
           status: 400,
@@ -55,14 +57,21 @@ serve(async (req) => {
       // Add the current user message
       messages.push({ role: "user", content: content });
       
+      console.log("Calling OpenAI with messages:", messages.length);
+      
       // Call OpenAI API
       const completion = await createChatCompletion(openai, messages, type);
+      
+      console.log("OpenAI response received");
       
       // Extract the result properly, handling potential undefined values
       let result = "No result generated";
       if (completion && completion.data && completion.data.choices && 
           completion.data.choices.length > 0 && completion.data.choices[0].message) {
         result = completion.data.choices[0].message.content || "No result generated";
+        console.log("Extracted result:", result.substring(0, 100) + "...");
+      } else {
+        console.error("Invalid completion structure:", JSON.stringify(completion, null, 2));
       }
       
       // Save ESG assessment data if it's an ESG assessment

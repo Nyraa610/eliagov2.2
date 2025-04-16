@@ -8,6 +8,7 @@ export interface AIAnalysisRequest {
   content: string;
   context?: Array<{ role: 'user' | 'assistant', content: string }>;
   additionalParams?: Record<string, any>;
+  analysisType?: string;
 }
 
 export interface AIAnalysisResponse {
@@ -23,14 +24,30 @@ export const aiService = {
    */
   analyzeContent: async (request: AIAnalysisRequest): Promise<AIAnalysisResponse> => {
     try {
+      console.log("Sending AI analysis request:", {
+        type: request.type,
+        contentLength: request.content.length,
+        contextSize: request.context?.length || 0
+      });
+      
       const { data, error } = await supabase.functions.invoke('ai-analysis', {
         body: request
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw error;
+      }
       
-      if (!data || typeof data.result !== 'string') {
-        console.error("Invalid AI analysis response:", data);
+      console.log("AI analysis response:", data);
+      
+      if (!data) {
+        console.error("Empty response from AI service");
+        throw new Error("Empty response from AI service");
+      }
+      
+      if (typeof data.result !== 'string') {
+        console.error("Invalid AI analysis response format:", data);
         throw new Error("Invalid response format from AI service");
       }
       
