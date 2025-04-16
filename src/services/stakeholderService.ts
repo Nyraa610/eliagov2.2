@@ -136,6 +136,7 @@ const STORAGE_KEYS = {
   IDENTIFIED_STAKEHOLDERS: "identified_stakeholders",
   MANAGEMENT_PRACTICES: "stakeholder_management_practices",
   STAKEHOLDER_MAP: "stakeholder_map",
+  STAKEHOLDER_MAP_VERSIONS: "stakeholder_map_versions",
   STAKEHOLDERS: "stakeholders_list",
   STAKEHOLDER_CONTACTS: "stakeholder_contacts",
   SURVEYS: "stakeholder_surveys",
@@ -152,6 +153,9 @@ const initializeLocalStorage = () => {
   }
   if (!localStorage.getItem(STORAGE_KEYS.STAKEHOLDER_MAP)) {
     localStorage.setItem(STORAGE_KEYS.STAKEHOLDER_MAP, JSON.stringify({ nodes: [], edges: [] }));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.STAKEHOLDER_MAP_VERSIONS)) {
+    localStorage.setItem(STORAGE_KEYS.STAKEHOLDER_MAP_VERSIONS, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.STAKEHOLDERS)) {
     localStorage.setItem(STORAGE_KEYS.STAKEHOLDERS, JSON.stringify([]));
@@ -240,7 +244,95 @@ export const stakeholderService = {
     localStorage.setItem(STORAGE_KEYS.STAKEHOLDER_MAP, JSON.stringify({ nodes, edges }));
     
     // In a real implementation, save to Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data, error } = await supabase
+          .from('stakeholder_assessments')
+          .upsert({
+            user_id: session.user.id,
+            visual_map: { nodes, edges },
+            updated_at: new Date().toISOString()
+          });
+          
+        if (error) console.error("Error saving to Supabase:", error);
+      }
+    } catch (err) {
+      console.error("Error in Supabase save:", err);
+    }
+    
     return true;
+  },
+  
+  // New function to save map versions
+  saveStakeholderMapVersion: async (companyId: string, name: string, imageUrl: string) => {
+    const versionId = uuidv4();
+    const version = {
+      id: versionId,
+      company_id: companyId,
+      name,
+      image_url: imageUrl,
+      created_at: new Date().toISOString()
+    };
+    
+    // Save to localStorage for mock data
+    initializeLocalStorage();
+    const versions = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAKEHOLDER_MAP_VERSIONS) || '[]');
+    versions.push(version);
+    localStorage.setItem(STORAGE_KEYS.STAKEHOLDER_MAP_VERSIONS, JSON.stringify(versions));
+    
+    // In a real implementation, save to Supabase
+    try {
+      const { error } = await supabase
+        .from('stakeholder_map_versions')
+        .insert({
+          id: versionId,
+          company_id: companyId,
+          name,
+          image_url: imageUrl,
+          created_at: new Date().toISOString()
+        });
+        
+      if (error) {
+        console.error("Error saving version to Supabase:", error);
+        throw error;
+      }
+    } catch (err) {
+      console.error("Error in Supabase version save:", err);
+      throw err;
+    }
+    
+    return versionId;
+  },
+  
+  // New function to get map versions
+  getStakeholderMapVersions: async (companyId: string) => {
+    // First try to get from Supabase
+    try {
+      const { data, error } = await supabase
+        .from('stakeholder_map_versions')
+        .select('id, name, created_at')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.error("Error fetching versions from Supabase:", err);
+    }
+    
+    // Fall back to localStorage
+    initializeLocalStorage();
+    const versions = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAKEHOLDER_MAP_VERSIONS) || '[]');
+    return versions.filter((v: any) => v.company_id === companyId)
+      .map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        created_at: v.created_at
+      }));
   },
   
   // Step 4: Stakeholder Database

@@ -1,34 +1,56 @@
 
-export type Document = {
+export interface Document {
   id: string;
   name: string;
   file_path: string;
   file_type: string;
-  file_size: number;
+  size: number;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
   folder_id?: string | null;
-  company_id?: string | null;
-  created_by: string;
-  created_at: string;
-  is_personal?: boolean;
-};
+  user_id: string;
+  description?: string | null;
+  tags?: string[] | null;
+  metadata?: Record<string, any> | null;
+}
 
-export type DocumentFolder = {
+export interface DocumentFolder {
   id: string;
   name: string;
-  parent_id: string | null;
   company_id: string;
+  parent_id?: string | null;
   created_at: string;
-  created_by: string;
-};
+  updated_at: string;
+  user_id: string;
+  description?: string | null;
+}
 
-export type Deliverable = {
+export interface Deliverable {
   id: string;
+  company_id: string;
   name: string;
+  description?: string | null;
   file_path: string;
   file_type: string;
   created_at: string;
+  updated_at?: string | null;
+  assessment_type?: string | null;
+  assessment_id?: string | null;
+  category?: string | null;
+  status?: string;
+  metadata?: Record<string, any> | null;
+}
+
+export interface DeliverableInput {
   company_id: string;
-  category: string;
-  description?: string;
-  document_type?: string;
-};
+  name: string;
+  description?: string | null;
+  file_path: string;
+  file_type: string;
+  assessment_type?: string | null;
+  assessment_id?: string | null;
+  category?: string | null;
+  status?: string;
+  metadata?: Record<string, any> | null;
+}

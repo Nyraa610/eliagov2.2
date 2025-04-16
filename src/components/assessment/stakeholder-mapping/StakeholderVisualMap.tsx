@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,6 +24,9 @@ import { StakeholderMapControls } from "./visual-map/StakeholderMapControls";
 import { StakeholderNodeTypes } from "./visual-map/StakeholderNodeTypes";
 import { StakeholderEdgeTypes } from "./visual-map/StakeholderEdgeTypes";
 import { StakeholderAddDialog } from "./visual-map/StakeholderAddDialog";
+import { MapExportControls } from "./visual-map/MapExportControls";
+import { documentService } from "@/services/document";
+import { supabase } from "@/lib/supabase";
 
 type StakeholderVisualMapProps = {
   onComplete: () => void;
@@ -36,9 +39,36 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [versions, setVersions] = useState<{id: string, name: string, created_at: string}[]>([]);
+  const reactFlowRef = useRef<HTMLDivElement>(null);
 
   const nodeTypes = StakeholderNodeTypes;
   const edgeTypes = StakeholderEdgeTypes;
+
+  // Fetch company ID for the current user
+  useEffect(() => {
+    const fetchUserCompany = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('company_id')
+            .eq('id', user.id)
+            .single();
+          
+          if (data) {
+            setCompanyId(data.company_id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user company:", error);
+      }
+    };
+    
+    fetchUserCompany();
+  }, []);
 
   // Load existing stakeholder map data
   useEffect(() => {
@@ -60,6 +90,12 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
             }
           ]);
         }
+        
+        // Load saved versions
+        if (companyId) {
+          const savedVersions = await stakeholderService.getStakeholderMapVersions(companyId);
+          setVersions(savedVersions);
+        }
       } catch (error) {
         console.error("Error loading stakeholder map:", error);
         toast.error("Failed to load stakeholder map");
@@ -78,8 +114,10 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
       }
     };
     
-    loadStakeholderMap();
-  }, [setNodes, setEdges]);
+    if (companyId) {
+      loadStakeholderMap();
+    }
+  }, [setNodes, setEdges, companyId]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'stakeholderEdge' }, eds)),
@@ -132,6 +170,42 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
       setIsSubmitting(false);
     }
   };
+  
+  const handleSaveVersion = async (imageUrl: string, versionName: string) => {
+    if (!companyId) {
+      toast.error("Company ID is required to save versions");
+      return;
+    }
+    
+    try {
+      // Save the version in the database
+      const versionId = await stakeholderService.saveStakeholderMapVersion(
+        companyId,
+        versionName,
+        imageUrl
+      );
+      
+      // Refresh versions list
+      const savedVersions = await stakeholderService.getStakeholderMapVersions(companyId);
+      setVersions(savedVersions);
+      
+      // Save as a deliverable
+      await documentService.createDeliverable({
+        company_id: companyId,
+        name: versionName,
+        description: "Stakeholder mapping visual representation",
+        file_path: imageUrl,
+        file_type: "image/png",
+        assessment_type: "stakeholder_mapping",
+        category: "stakeholder_map"
+      });
+      
+      return versionId;
+    } catch (error) {
+      console.error("Error saving version:", error);
+      throw error;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -146,7 +220,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-4 gap-4 mb-4">
-            <div className="col-span-3">
+            <div className="col-span-3 flex items-center gap-2">
               <Button
                 onClick={() => setIsAddDialogOpen(true)}
                 variant="outline"
@@ -154,6 +228,11 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
               >
                 Add Stakeholder
               </Button>
+              
+              <MapExportControls 
+                reactFlowRef={reactFlowRef}
+                onSaveVersion={handleSaveVersion}
+              />
             </div>
             <div className="flex justify-end">
               <Button
@@ -173,6 +252,7 @@ export function StakeholderVisualMap({ onComplete }: StakeholderVisualMapProps) 
               </div>
             ) : (
               <ReactFlow
+                ref={reactFlowRef}
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={onNodesChange}
