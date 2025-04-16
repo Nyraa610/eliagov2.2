@@ -7,7 +7,7 @@ export interface MenuItem {
   title: string;
   href?: string;
   path?: string;
-  icon: LucideIcon;
+  icon: LucideIcon; // This is already correct as LucideIcon
   requiresCompany?: boolean;
   highlight?: boolean;
   hasSubmenu?: boolean;

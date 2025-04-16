@@ -8,11 +8,11 @@ import { useState } from "react";
 type MenuItemProps = {
   item: {
     title: string;
-    icon: React.ReactNode;
+    icon: React.ElementType; // Changed from ReactNode to ElementType
     path: string;
     submenu?: {
       title: string;
-      icon: React.ReactNode;
+      icon: React.ElementType; // Changed from ReactNode to ElementType
       path: string;
     }[];
     disabled?: boolean;
@@ -37,6 +37,9 @@ export const MenuItem = ({
     location.pathname.startsWith(subItem.path)
   );
   
+  // Create an instance of the icon component
+  const IconComponent = item.icon;
+  
   if (hasSubmenu && !collapsed) {
     return (
       <li className="flex flex-col">
@@ -51,7 +54,7 @@ export const MenuItem = ({
             )}
           >
             <div className="flex items-center">
-              {item.icon}
+              <IconComponent className="h-4 w-4" />
               <span className="ml-3">{item.title}</span>
             </div>
             {isExpanded ? 
@@ -62,22 +65,25 @@ export const MenuItem = ({
           
           {isExpanded && (
             <ul className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-2">
-              {item.submenu?.map((subItem) => (
-                <li key={subItem.path}>
-                  <Link 
-                    to={subItem.path}
-                    className={cn(
-                      "flex items-center px-3 py-1.5 rounded-md text-sm transition-colors",
-                      location.pathname.startsWith(subItem.path)
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-gray-600 hover:bg-gray-100"
-                    )}
-                  >
-                    {subItem.icon}
-                    <span className="ml-3">{subItem.title}</span>
-                  </Link>
-                </li>
-              ))}
+              {item.submenu?.map((subItem) => {
+                const SubIconComponent = subItem.icon;
+                return (
+                  <li key={subItem.path}>
+                    <Link 
+                      to={subItem.path}
+                      className={cn(
+                        "flex items-center px-3 py-1.5 rounded-md text-sm transition-colors",
+                        location.pathname.startsWith(subItem.path)
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-gray-600 hover:bg-gray-100"
+                      )}
+                    >
+                      <SubIconComponent className="h-4 w-4" />
+                      <span className="ml-3">{subItem.title}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -99,7 +105,7 @@ export const MenuItem = ({
         )}
       >
         <div className="flex items-center">
-          {item.icon}
+          <IconComponent className="h-4 w-4" />
           {!collapsed && <span className="ml-3">{item.title}</span>}
         </div>
         {hasSubmenu && !collapsed && <ChevronRight className="h-4 w-4" />}
