@@ -107,6 +107,7 @@ export type Database = {
       code_redemptions: {
         Row: {
           code_id: string
+          company_id: string | null
           id: string
           redeemed_at: string | null
           subscription_id: string | null
@@ -114,6 +115,7 @@ export type Database = {
         }
         Insert: {
           code_id: string
+          company_id?: string | null
           id?: string
           redeemed_at?: string | null
           subscription_id?: string | null
@@ -121,6 +123,7 @@ export type Database = {
         }
         Update: {
           code_id?: string
+          company_id?: string | null
           id?: string
           redeemed_at?: string | null
           subscription_id?: string | null
@@ -132,6 +135,13 @@ export type Database = {
             columns: ["code_id"]
             isOneToOne: false
             referencedRelation: "promotion_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_redemptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {

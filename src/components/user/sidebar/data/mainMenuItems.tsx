@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, ClipboardCheck, BookOpen, FileText, Trophy, BarChartHorizontal, FileBarChart, TargetIcon, UserIcon } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, BookOpen, FileText, Trophy, BarChartHorizontal, FileBarChart, TargetIcon, UserIcon, Users } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 import { useTranslation } from "react-i18next";
 
@@ -47,6 +47,13 @@ export const getMainMenuItems = (): MenuItem[] => {
           label: "IRO Analysis",
           icon: <TargetIcon className="h-4 w-4" />,
           path: "/assessment/iro",
+          hasSubmenu: false
+        },
+        {
+          id: "stakeholder-mapping",
+          label: "Stakeholder Mapping",
+          icon: <Users className="h-4 w-4" />,
+          path: "/assessment/stakeholder-mapping",
           hasSubmenu: false
         },
         {

@@ -44,6 +44,7 @@ import Pricing from './pages/Pricing';
 import SubscriptionSuccess from './pages/subscription/Success';
 import SubscriptionManager from './pages/admin/SubscriptionManager';
 import Index from './pages/Index';
+import StakeholderMapping from './pages/assessment/StakeholderMapping';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
                 <Route path="assessment/value-chain-results" element={<ValueChainResults />} />
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 <Route path="assessment/iro" element={<IRO />} />
+                <Route path="assessment/stakeholder-mapping" element={<StakeholderMapping />} />
                 
                 <Route path="training" element={<Training />} />
                 <Route path="documents" element={<DocumentCenter />} />
