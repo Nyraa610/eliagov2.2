@@ -47,6 +47,7 @@ import Index from './pages/Index';
 import StakeholderMapping from './pages/assessment/StakeholderMapping';
 import TalkWithExperts from './pages/expert/TalkWithExperts';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
+import { GlobalAIAssistant } from './components/ai/GlobalAIAssistant';
 
 function App() {
   return (
@@ -56,6 +57,9 @@ function App() {
           {/* Add Hotjar tracking at the app level */}
           <HotjarTracking />
           <BrowserRouter>
+            {/* Add the global AI assistant */}
+            <GlobalAIAssistant />
+            
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

@@ -56,7 +56,8 @@ export function EliaAssistant() {
 
   // Only show the preview card if chat is not open
   if (showChat) {
-    return <EliaAIChat />;
+    // This is now handled by the global assistant through App.tsx
+    return null;
   }
 
   return (
@@ -72,9 +73,11 @@ export function EliaAssistant() {
               <p className="text-xs text-amber-200">ESG & Business Expert</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-200 hover:text-white hover:bg-emerald-700">
-            {expanded ? <X className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-          </Button>
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-200 hover:text-white hover:bg-emerald-700">
+              {expanded ? <X className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </motion.div>
         </div>
       </CardHeader>
       
@@ -114,12 +117,17 @@ export function EliaAssistant() {
               </motion.div>
             </div>
             
-            <Button 
-              onClick={handleOpenChat}
-              className="w-full bg-emerald-800 hover:bg-emerald-700 text-white"
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Start a conversation with Elia
-            </Button>
+              <Button 
+                onClick={handleOpenChat}
+                className="w-full bg-emerald-800 hover:bg-emerald-700 text-white"
+              >
+                Start a conversation with Elia
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       )}

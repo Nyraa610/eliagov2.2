@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -178,7 +179,7 @@ export default function TalkWithExperts() {
         </div>
         
         <div className="md:w-1/3">
-          <Card className="sticky top-24 border-emerald-800/20">
+          <Card className="sticky top-24 border-emerald-800/20 h-[600px]">
             <CardHeader className="bg-emerald-800 text-white pb-4">
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -188,10 +189,8 @@ export default function TalkWithExperts() {
                 Your ESG & Business Assistant
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-0 min-h-[500px] flex items-center justify-center">
-              <div className="text-center p-4">
-                <EliaAIChat />
-              </div>
+            <CardContent className="p-0 h-[calc(100%-88px)]">
+              <EliaAIChat fullPage={true} />
             </CardContent>
           </Card>
         </div>

@@ -16,7 +16,8 @@ import {
   Minimize2, 
   MessageSquare, 
   HelpCircle,
-  CornerDownLeft
+  CornerDownLeft,
+  Sparkles
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -35,16 +36,18 @@ interface Message {
   timestamp: Date;
 }
 
-export function EliaAIChat() {
+export function EliaAIChat({ fullPage = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isMobile = useMobile();
   const { user } = useAuthState();
   
@@ -63,8 +66,11 @@ export function EliaAIChat() {
     ]
   };
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -75,12 +81,13 @@ export function EliaAIChat() {
     }
   }, [isOpen, isMobile]);
 
+  // Load chat history when component mounts
   useEffect(() => {
-    if (messages.length === 0) {
-      // Load chat history from the database or set initial message
+    if (!hasLoadedHistory) {
       loadChatHistory();
+      setHasLoadedHistory(true);
     }
-  }, []);
+  }, [hasLoadedHistory]);
 
   const loadChatHistory = async () => {
     if (!user) {
@@ -96,6 +103,7 @@ export function EliaAIChat() {
 
     try {
       console.log("Loading chat history from database...");
+      setIsLoading(true);
       const history = await aiService.getChatHistory();
       
       if (history && history.length > 0) {
@@ -139,6 +147,8 @@ export function EliaAIChat() {
           timestamp: new Date()
         }
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -216,6 +226,7 @@ export function EliaAIChat() {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    setActiveTab("chat");
   };
 
   const handleToggle = () => {
@@ -228,8 +239,11 @@ export function EliaAIChat() {
 
   const renderMessages = () => {
     return messages.map((message, index) => (
-      <div
+      <motion.div
         key={index}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className={`mb-4 ${
           message.role === 'user' ? 'ml-auto max-w-[80%]' : 'mr-auto max-w-[80%]'
         }`}
@@ -261,24 +275,203 @@ export function EliaAIChat() {
             </Avatar>
           )}
         </div>
-      </div>
+      </motion.div>
     ));
   };
 
+  // Render full page version for the /expert/talk route
+  if (fullPage) {
+    return (
+      <Card className="h-full flex flex-col overflow-hidden border-emerald-800/20">
+        <CardHeader className="p-3 border-b bg-emerald-800 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
+                <Leaf className="h-4 w-4 text-amber-400" />
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-white">Elia Assistant</h3>
+                <p className="text-xs text-amber-200">ESG & Business Expert</p>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <TabsList className="w-full justify-start border-b rounded-none px-2">
+            <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="esg" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              ESG Help
+            </TabsTrigger>
+            <TabsTrigger value="app" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              App Help
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
+            <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+              {renderMessages()}
+              <div ref={messagesEndRef} />
+              
+              {isLoading && (
+                <motion.div 
+                  className="flex items-center gap-2 mt-2"
+                  animate={{ 
+                    opacity: [0.5, 1, 0.5],
+                    scale: [0.98, 1.02, 0.98],
+                  }}
+                  transition={{ 
+                    repeat: Infinity, 
+                    duration: 2 
+                  }}
+                >
+                  <Avatar className="h-8 w-8 bg-emerald-800">
+                    <Leaf className="h-4 w-4 text-amber-400" />
+                  </Avatar>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <div className="flex space-x-2">
+                      <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                      <div className="flex space-x-1">
+                        <motion.div 
+                          className="h-2 w-2 rounded-full bg-emerald-500" 
+                          animate={{ scale: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.div 
+                          className="h-2 w-2 rounded-full bg-emerald-500" 
+                          animate={{ scale: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                        />
+                        <motion.div 
+                          className="h-2 w-2 rounded-full bg-emerald-500" 
+                          animate={{ scale: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="esg" className="flex-1 p-4 overflow-auto">
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg flex items-center gap-2">
+                <Leaf className="h-5 w-5 text-emerald-600" />
+                ESG & Sustainability Questions
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Get expert insights on environmental, social, and governance topics.
+              </p>
+              <div className="grid gap-2">
+                {suggestedPrompts.esg.map((prompt) => (
+                  <motion.div
+                    key={prompt}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                      onClick={() => handlePromptClick(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="app" className="flex-1 p-4 overflow-auto">
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-blue-600" />
+                App Usage Help
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Learn how to get the most out of the ELIA platform.
+              </p>
+              <div className="grid gap-2">
+                {suggestedPrompts.app.map((prompt) => (
+                  <motion.div
+                    key={prompt}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                      onClick={() => handlePromptClick(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <CardFooter className="p-3 border-t">
+          <div className="flex gap-2 w-full">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything about ESG or how to use the app..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                size="icon"
+                className="bg-emerald-800 hover:bg-emerald-700"
+              >
+                {isLoading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </motion.div>
+          </div>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // Mobile view
   if (isMobile) {
     return (
       <>
         <Drawer>
           <DrawerTrigger asChild>
-            <Button
-              className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg"
-              size="icon"
-              onClick={handleToggle}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-                <Leaf className="h-6 w-6 text-amber-400" />
-              </Avatar>
-            </Button>
+              <Button
+                className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg"
+                size="icon"
+                onClick={handleToggle}
+              >
+                <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
+                  <Leaf className="h-6 w-6 text-amber-400" />
+                </Avatar>
+              </Button>
+            </motion.div>
           </DrawerTrigger>
           <DrawerContent className="h-[85vh]">
             <div className="h-full flex flex-col">
@@ -310,6 +503,46 @@ export function EliaAIChat() {
                   <ScrollArea className="flex-1 pr-4">
                     {renderMessages()}
                     <div ref={messagesEndRef} />
+                    
+                    {isLoading && (
+                      <motion.div 
+                        className="flex items-center gap-2 mt-2"
+                        animate={{ 
+                          opacity: [0.5, 1, 0.5],
+                          scale: [0.98, 1.02, 0.98],
+                        }}
+                        transition={{ 
+                          repeat: Infinity, 
+                          duration: 2 
+                        }}
+                      >
+                        <Avatar className="h-8 w-8 bg-emerald-800">
+                          <Leaf className="h-4 w-4 text-amber-400" />
+                        </Avatar>
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="flex space-x-2">
+                            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                            <div className="flex space-x-1">
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                              />
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                              />
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </ScrollArea>
                   
                   <div className="pt-4 border-t">
@@ -323,17 +556,23 @@ export function EliaAIChat() {
                         disabled={isLoading}
                         className="flex-1"
                       />
-                      <Button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        size="icon"
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {isLoading ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        ) : (
-                          <CornerDownLeft className="h-4 w-4" />
-                        )}
-                      </Button>
+                        <Button
+                          onClick={handleSend}
+                          disabled={!input.trim() || isLoading}
+                          size="icon"
+                          className="bg-emerald-800 hover:bg-emerald-700"
+                        >
+                          {isLoading ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <CornerDownLeft className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </motion.div>
                     </div>
                   </div>
                 </TabsContent>
@@ -349,17 +588,19 @@ export function EliaAIChat() {
                     </p>
                     <div className="grid gap-2">
                       {suggestedPrompts.esg.map((prompt) => (
-                        <Button
+                        <motion.div
                           key={prompt}
-                          variant="outline"
-                          className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
-                          onClick={() => {
-                            handlePromptClick(prompt);
-                            setActiveTab("chat");
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {prompt}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt)}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -376,17 +617,19 @@ export function EliaAIChat() {
                     </p>
                     <div className="grid gap-2">
                       {suggestedPrompts.app.map((prompt) => (
-                        <Button
+                        <motion.div
                           key={prompt}
-                          variant="outline"
-                          className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
-                          onClick={() => {
-                            handlePromptClick(prompt);
-                            setActiveTab("chat");
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {prompt}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt)}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -399,18 +642,27 @@ export function EliaAIChat() {
     );
   }
 
+  // Desktop view
   return (
     <>
       {!isOpen && (
-        <Button
-          className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50"
-          size="icon"
-          onClick={handleToggle}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed right-4 top-1/3 z-50"
         >
-          <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-            <Leaf className="h-6 w-6 text-amber-400" />
-          </Avatar>
-        </Button>
+          <Button
+            className="h-14 w-14 rounded-full shadow-lg"
+            size="icon"
+            onClick={handleToggle}
+          >
+            <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
+              <Leaf className="h-6 w-6 text-amber-400" />
+            </Avatar>
+          </Button>
+        </motion.div>
       )}
 
       <AnimatePresence>
@@ -419,8 +671,8 @@ export function EliaAIChat() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className={`fixed bottom-4 right-4 z-50 shadow-xl ${
+            transition={{ duration: 0.3, type: "spring" }}
+            className={`fixed top-1/3 -translate-y-1/4 right-4 z-50 shadow-xl ${
               isExpanded ? 'w-[800px] h-[80vh]' : 'w-[380px] h-[500px]'
             }`}
           >
@@ -437,22 +689,26 @@ export function EliaAIChat() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
-                      onClick={handleExpand}
-                    >
-                      {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
-                      onClick={handleToggle}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
+                        onClick={handleExpand}
+                      >
+                        {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
+                        onClick={handleToggle}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
               </CardHeader>
@@ -476,18 +732,43 @@ export function EliaAIChat() {
                     <div ref={messagesEndRef} />
                     
                     {isLoading && (
-                      <div className="flex items-center gap-2 mt-2">
+                      <motion.div 
+                        className="flex items-center gap-2 mt-2"
+                        animate={{ 
+                          opacity: [0.5, 1, 0.5],
+                          scale: [0.98, 1.02, 0.98],
+                        }}
+                        transition={{ 
+                          repeat: Infinity, 
+                          duration: 2 
+                        }}
+                      >
                         <Avatar className="h-8 w-8 bg-emerald-800">
                           <Leaf className="h-4 w-4 text-amber-400" />
                         </Avatar>
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="flex space-x-1">
-                            <div className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:-0.3s]"></div>
-                            <div className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:-0.15s]"></div>
-                            <div className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce"></div>
+                          <div className="flex space-x-2">
+                            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                            <div className="flex space-x-1">
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                              />
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                              />
+                              <motion.div 
+                                className="h-2 w-2 rounded-full bg-emerald-500" 
+                                animate={{ scale: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                   </ScrollArea>
                 </TabsContent>
@@ -503,17 +784,19 @@ export function EliaAIChat() {
                     </p>
                     <div className="grid gap-2">
                       {suggestedPrompts.esg.map((prompt) => (
-                        <Button
+                        <motion.div
                           key={prompt}
-                          variant="outline"
-                          className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
-                          onClick={() => {
-                            handlePromptClick(prompt);
-                            setActiveTab("chat");
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {prompt}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt)}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -530,17 +813,19 @@ export function EliaAIChat() {
                     </p>
                     <div className="grid gap-2">
                       {suggestedPrompts.app.map((prompt) => (
-                        <Button
+                        <motion.div
                           key={prompt}
-                          variant="outline"
-                          className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
-                          onClick={() => {
-                            handlePromptClick(prompt);
-                            setActiveTab("chat");
-                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {prompt}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt)}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -558,18 +843,23 @@ export function EliaAIChat() {
                     disabled={isLoading}
                     className="flex-1"
                   />
-                  <Button
-                    onClick={handleSend}
-                    disabled={!input.trim() || isLoading}
-                    size="icon"
-                    className="bg-emerald-800 hover:bg-emerald-700"
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {isLoading ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
+                    <Button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      size="icon"
+                      className="bg-emerald-800 hover:bg-emerald-700"
+                    >
+                      {isLoading ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </motion.div>
                 </div>
               </CardFooter>
             </Card>
