@@ -70,8 +70,8 @@ export function MobileChatLayout({
         </motion.div>
       </DrawerTrigger>
       <DrawerContent className="h-[85vh]">
-        <div className="h-full flex flex-col">
-          <div className="p-4 border-b">
+        <div className="h-full flex flex-col overflow-hidden">
+          <div className="p-4 border-b shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8 bg-emerald-800">
@@ -86,8 +86,8 @@ export function MobileChatLayout({
             </div>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="w-full justify-start border-b rounded-none px-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="w-full justify-start border-b rounded-none px-4 shrink-0">
               <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
                 Chat
               </TabsTrigger>
@@ -99,10 +99,12 @@ export function MobileChatLayout({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="chat" className="flex-1 flex flex-col space-y-4 p-4 h-0 overflow-hidden">
-              <ChatMessages messages={messages} isLoading={isLoading} />
+            <TabsContent value="chat" className="flex-1 flex flex-col p-4 h-0 overflow-hidden">
+              <div className="flex-1 overflow-hidden mb-4">
+                <ChatMessages messages={messages} isLoading={isLoading} />
+              </div>
               
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t shrink-0">
                 <ChatInput 
                   input={input}
                   setInput={setInput}

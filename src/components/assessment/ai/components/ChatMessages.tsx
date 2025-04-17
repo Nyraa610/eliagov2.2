@@ -20,14 +20,13 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1" id="chat-scroll-area">
-      <div className="pr-4 pb-2">
+    <ScrollArea className="flex-1 h-full">
+      <div className="pr-4 pb-2 flex flex-col max-h-full">
         {messages.map((message, index) => (
           <ChatMessage key={index} message={message} />
         ))}
-        <div ref={messagesEndRef} />
-        
         {isLoading && <TypingIndicator />}
+        <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
   );

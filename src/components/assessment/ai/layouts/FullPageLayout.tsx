@@ -43,7 +43,7 @@ export function FullPageLayout({
 
   return (
     <Card className="h-full flex flex-col overflow-hidden border-emerald-800/20">
-      <CardHeader className="p-3 border-b bg-emerald-800 text-white">
+      <CardHeader className="p-3 border-b bg-emerald-800 text-white shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
@@ -61,8 +61,8 @@ export function FullPageLayout({
         </div>
       </CardHeader>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="w-full justify-start border-b rounded-none px-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="w-full justify-start border-b rounded-none px-2 shrink-0">
           <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
             Chat
           </TabsTrigger>
@@ -95,7 +95,7 @@ export function FullPageLayout({
         </TabsContent>
       </Tabs>
       
-      <CardFooter className="p-3 border-t">
+      <CardFooter className="p-3 border-t shrink-0">
         <ChatInput 
           input={input}
           setInput={setInput}
