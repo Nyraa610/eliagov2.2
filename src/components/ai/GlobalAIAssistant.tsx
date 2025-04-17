@@ -6,10 +6,12 @@ import { EliaAIChat } from '@/components/assessment/ai/EliaAIChat';
 export function GlobalAIAssistant() {
   const location = useLocation();
   
-  // Don't show global assistant on the expert talk page as it has its own interface
+  // On the expert talk page, we use the full-page interface
+  // so don't render the floating chat component
   if (location.pathname === '/expert/talk') {
-    return null;
+    return <EliaAIChat fullPage={true} />;
   }
   
+  // On all other pages, render the floating chat
   return <EliaAIChat />;
 }

@@ -9,12 +9,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
-  Leaf, 
+  MessageSquare, 
   Send, 
   X, 
   Maximize2, 
   Minimize2, 
-  MessageSquare, 
   HelpCircle,
   CornerDownLeft,
   Sparkles
@@ -73,6 +72,7 @@ export function EliaAIChat({ fullPage = false }) {
     }
   }, [messages]);
 
+  // Focus input when chat is opened
   useEffect(() => {
     if (isOpen && !isMobile) {
       setTimeout(() => {
@@ -83,11 +83,11 @@ export function EliaAIChat({ fullPage = false }) {
 
   // Load chat history when component mounts
   useEffect(() => {
-    if (!hasLoadedHistory) {
+    if (!hasLoadedHistory && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
     }
-  }, [hasLoadedHistory]);
+  }, [hasLoadedHistory, user]);
 
   const loadChatHistory = async () => {
     if (!user) {
@@ -108,18 +108,23 @@ export function EliaAIChat({ fullPage = false }) {
       
       if (history && history.length > 0) {
         console.log(`Loaded ${history.length} chat history entries`);
-        const formattedHistory: Message[] = history.flatMap(item => [
-          {
+        const formattedHistory: Message[] = [];
+        
+        // Process the history in pairs to maintain conversation flow
+        for (let i = 0; i < history.length; i++) {
+          const item = history[i];
+          formattedHistory.push({
             role: 'user',
             content: item.user_message,
             timestamp: new Date(item.created_at)
-          },
-          {
+          });
+          
+          formattedHistory.push({
             role: 'assistant',
             content: item.assistant_response,
             timestamp: new Date(item.created_at)
-          }
-        ]);
+          });
+        }
         
         setMessages(formattedHistory);
       } else {
@@ -149,6 +154,13 @@ export function EliaAIChat({ fullPage = false }) {
       ]);
     } finally {
       setIsLoading(false);
+      
+      // Ensure scroll to bottom after history is loaded
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+      }, 100);
     }
   };
 
@@ -211,6 +223,13 @@ export function EliaAIChat({ fullPage = false }) {
       ]);
     } finally {
       setIsLoading(false);
+      
+      // Ensure scroll to bottom after sending message
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     }
   };
 
@@ -231,6 +250,12 @@ export function EliaAIChat({ fullPage = false }) {
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
+    
+    // If opening the chat and history hasn't been loaded yet, load it
+    if (!isOpen && !hasLoadedHistory && user) {
+      loadChatHistory();
+      setHasLoadedHistory(true);
+    }
   };
 
   const handleExpand = () => {
@@ -251,7 +276,11 @@ export function EliaAIChat({ fullPage = false }) {
         <div className="flex items-start gap-2">
           {message.role === 'assistant' && (
             <Avatar className="h-8 w-8 bg-emerald-800">
-              <Leaf className="h-4 w-4 text-amber-400" />
+              <img 
+                src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                alt="Elia AI" 
+                className="h-full w-full object-cover"
+              />
             </Avatar>
           )}
           <div
@@ -287,7 +316,11 @@ export function EliaAIChat({ fullPage = false }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
-                <Leaf className="h-4 w-4 text-amber-400" />
+                <img 
+                  src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                  alt="Elia AI" 
+                  className="h-full w-full object-cover"
+                />
               </Avatar>
               <div>
                 <h3 className="font-semibold text-white">Elia Assistant</h3>
@@ -311,56 +344,66 @@ export function EliaAIChat({ fullPage = false }) {
           </TabsList>
           
           <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
-            <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-              {renderMessages()}
-              <div ref={messagesEndRef} />
-              
-              {isLoading && (
-                <motion.div 
-                  className="flex items-center gap-2 mt-2"
-                  animate={{ 
-                    opacity: [0.5, 1, 0.5],
-                    scale: [0.98, 1.02, 0.98],
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 2 
-                  }}
-                >
-                  <Avatar className="h-8 w-8 bg-emerald-800">
-                    <Leaf className="h-4 w-4 text-amber-400" />
-                  </Avatar>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <div className="flex space-x-2">
-                      <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-                      <div className="flex space-x-1">
-                        <motion.div 
-                          className="h-2 w-2 rounded-full bg-emerald-500" 
-                          animate={{ scale: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                        />
-                        <motion.div 
-                          className="h-2 w-2 rounded-full bg-emerald-500" 
-                          animate={{ scale: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                        />
-                        <motion.div 
-                          className="h-2 w-2 rounded-full bg-emerald-500" 
-                          animate={{ scale: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                        />
+            <ScrollArea className="flex-1 pr-4">
+              <div className="pb-2">
+                {renderMessages()}
+                <div ref={messagesEndRef} />
+                
+                {isLoading && (
+                  <motion.div 
+                    className="flex items-center gap-2 mt-2"
+                    animate={{ 
+                      opacity: [0.5, 1, 0.5],
+                      scale: [0.98, 1.02, 0.98],
+                    }}
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: 2 
+                    }}
+                  >
+                    <Avatar className="h-8 w-8 bg-emerald-800">
+                      <img 
+                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
+                    </Avatar>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <div className="flex space-x-2">
+                        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                        <div className="flex space-x-1">
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                          />
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                          />
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
+              </div>
             </ScrollArea>
           </TabsContent>
           
           <TabsContent value="esg" className="flex-1 p-4 overflow-auto">
             <div className="space-y-4">
               <h3 className="font-medium text-lg flex items-center gap-2">
-                <Leaf className="h-5 w-5 text-emerald-600" />
+                <img 
+                  src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                  alt="Elia AI" 
+                  className="h-5 w-5 object-cover"
+                />
                 ESG & Sustainability Questions
               </h3>
               <p className="text-muted-foreground text-sm">
@@ -468,7 +511,11 @@ export function EliaAIChat({ fullPage = false }) {
                 onClick={handleToggle}
               >
                 <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-                  <Leaf className="h-6 w-6 text-amber-400" />
+                  <img 
+                    src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                    alt="Elia AI" 
+                    className="h-full w-full object-cover" 
+                  />
                 </Avatar>
               </Button>
             </motion.div>
@@ -479,7 +526,11 @@ export function EliaAIChat({ fullPage = false }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-800">
-                      <Leaf className="h-4 w-4 text-amber-400" />
+                      <img 
+                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
                     </Avatar>
                     <h3 className="font-semibold">Elia Assistant</h3>
                   </div>
@@ -501,48 +552,54 @@ export function EliaAIChat({ fullPage = false }) {
                 
                 <TabsContent value="chat" className="flex-1 flex flex-col space-y-4 p-4 h-0 overflow-hidden">
                   <ScrollArea className="flex-1 pr-4">
-                    {renderMessages()}
-                    <div ref={messagesEndRef} />
-                    
-                    {isLoading && (
-                      <motion.div 
-                        className="flex items-center gap-2 mt-2"
-                        animate={{ 
-                          opacity: [0.5, 1, 0.5],
-                          scale: [0.98, 1.02, 0.98],
-                        }}
-                        transition={{ 
-                          repeat: Infinity, 
-                          duration: 2 
-                        }}
-                      >
-                        <Avatar className="h-8 w-8 bg-emerald-800">
-                          <Leaf className="h-4 w-4 text-amber-400" />
-                        </Avatar>
-                        <div className="bg-muted p-3 rounded-lg">
-                          <div className="flex space-x-2">
-                            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-                            <div className="flex space-x-1">
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                              />
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                              />
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                              />
+                    <div className="pb-2">
+                      {renderMessages()}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <motion.div 
+                          className="flex items-center gap-2 mt-2"
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.98, 1.02, 0.98],
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 2 
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 bg-emerald-800">
+                            <img 
+                              src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                              alt="Elia AI" 
+                              className="h-full w-full object-cover"
+                            />
+                          </Avatar>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <div className="flex space-x-2">
+                              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
+                        </motion.div>
+                      )}
+                    </div>
                   </ScrollArea>
                   
                   <div className="pt-4 border-t">
@@ -580,7 +637,11 @@ export function EliaAIChat({ fullPage = false }) {
                 <TabsContent value="esg" className="flex-1 p-4 h-0 overflow-auto">
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
-                      <Leaf className="h-5 w-5 text-emerald-600" />
+                      <img 
+                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        alt="Elia AI" 
+                        className="h-5 w-5 object-cover"
+                      />
                       ESG & Sustainability Questions
                     </h3>
                     <p className="text-muted-foreground text-sm">
@@ -651,7 +712,7 @@ export function EliaAIChat({ fullPage = false }) {
           animate={{ opacity: 1, scale: 1 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="fixed right-4 top-1/3 z-50"
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50"
         >
           <Button
             className="h-14 w-14 rounded-full shadow-lg"
@@ -659,7 +720,11 @@ export function EliaAIChat({ fullPage = false }) {
             onClick={handleToggle}
           >
             <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
-              <Leaf className="h-6 w-6 text-amber-400" />
+              <img 
+                src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                alt="Elia AI" 
+                className="h-full w-full object-cover" 
+              />
             </Avatar>
           </Button>
         </motion.div>
@@ -672,7 +737,7 @@ export function EliaAIChat({ fullPage = false }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className={`fixed top-1/3 -translate-y-1/4 right-4 z-50 shadow-xl ${
+            className={`fixed top-1/2 -translate-y-1/2 right-4 z-50 shadow-xl ${
               isExpanded ? 'w-[800px] h-[80vh]' : 'w-[380px] h-[500px]'
             }`}
           >
@@ -681,7 +746,11 @@ export function EliaAIChat({ fullPage = false }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
-                      <Leaf className="h-4 w-4 text-amber-400" />
+                      <img 
+                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
                     </Avatar>
                     <div>
                       <h3 className="font-semibold text-white">Elia Assistant</h3>
@@ -728,55 +797,65 @@ export function EliaAIChat({ fullPage = false }) {
                 
                 <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
                   <ScrollArea className="flex-1 pr-4">
-                    {renderMessages()}
-                    <div ref={messagesEndRef} />
-                    
-                    {isLoading && (
-                      <motion.div 
-                        className="flex items-center gap-2 mt-2"
-                        animate={{ 
-                          opacity: [0.5, 1, 0.5],
-                          scale: [0.98, 1.02, 0.98],
-                        }}
-                        transition={{ 
-                          repeat: Infinity, 
-                          duration: 2 
-                        }}
-                      >
-                        <Avatar className="h-8 w-8 bg-emerald-800">
-                          <Leaf className="h-4 w-4 text-amber-400" />
-                        </Avatar>
-                        <div className="bg-muted p-3 rounded-lg">
-                          <div className="flex space-x-2">
-                            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-                            <div className="flex space-x-1">
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                              />
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                              />
-                              <motion.div 
-                                className="h-2 w-2 rounded-full bg-emerald-500" 
-                                animate={{ scale: [0.5, 1, 0.5] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                              />
+                    <div className="pb-2">
+                      {renderMessages()}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <motion.div 
+                          className="flex items-center gap-2 mt-2"
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.98, 1.02, 0.98],
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 2 
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 bg-emerald-800">
+                            <img 
+                              src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                              alt="Elia AI" 
+                              className="h-full w-full object-cover"
+                            />
+                          </Avatar>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <div className="flex space-x-2">
+                              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
+                        </motion.div>
+                      )}
+                    </div>
                   </ScrollArea>
                 </TabsContent>
                 
                 <TabsContent value="esg" className="flex-1 p-4 overflow-auto">
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
-                      <Leaf className="h-5 w-5 text-emerald-600" />
+                      <img 
+                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        alt="Elia AI" 
+                        className="h-5 w-5 object-cover"
+                      />
                       ESG & Sustainability Questions
                     </h3>
                     <p className="text-muted-foreground text-sm">
