@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Card, 
@@ -901,7 +900,6 @@ export function EliaAIChat({ fullPage = false }) {
                 </TabsList>
                 
                 <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
-                  {/* Fix: Remove viewportRef property from ScrollArea and handle scroll area differently */}
                   <ScrollArea className="flex-1">
                     <div ref={scrollAreaRef} className="pr-4 pb-2">
                       {renderMessages()}
@@ -1054,4 +1052,3 @@ export function EliaAIChat({ fullPage = false }) {
     </>
   );
 }
-
