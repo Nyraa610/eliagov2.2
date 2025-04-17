@@ -16,7 +16,8 @@ import {
   Minimize2, 
   HelpCircle,
   CornerDownLeft,
-  Sparkles
+  Sparkles,
+  Tag
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -27,11 +28,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMobile } from "@/hooks/use-mobile";
 import { useAuthState } from "@/hooks/useAuthState";
+import { Badge } from "@/components/ui/badge";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  tag?: 'esg' | 'app' | 'general';
 }
 
 export function EliaAIChat({ fullPage = false }) {
@@ -98,12 +101,39 @@ export function EliaAIChat({ fullPage = false }) {
         {
           role: 'assistant',
           content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
-          timestamp: new Date()
+          timestamp: new Date(),
+          tag: 'general'
         }
       ]);
       setHasLoadedHistory(true);
     }
   }, [hasLoadedHistory, user, fullPage]);
+
+  // Determine the message tag based on content
+  const determineMessageTag = (content: string): 'esg' | 'app' | 'general' => {
+    // Check if the message is related to ESG topics
+    const esgKeywords = ['esg', 'environment', 'social', 'governance', 'sustainability', 'carbon', 'emission', 'climate', 
+                         'biodiversity', 'waste', 'energy', 'diversity', 'inclusion', 'human rights', 'compliance'];
+    
+    // Check if the message is related to app usage
+    const appKeywords = ['app', 'platform', 'dashboard', 'report', 'feature', 'tool', 'profile', 'account', 'login', 
+                         'assessment', 'form', 'export', 'import', 'upload', 'download', 'settings'];
+    
+    const lowerContent = content.toLowerCase();
+    
+    // Check if the content contains ESG keywords
+    if (esgKeywords.some(keyword => lowerContent.includes(keyword))) {
+      return 'esg';
+    }
+    
+    // Check if the content contains app usage keywords
+    if (appKeywords.some(keyword => lowerContent.includes(keyword))) {
+      return 'app';
+    }
+    
+    // Default to general if no specific category is detected
+    return 'general';
+  };
 
   const loadChatHistory = async () => {
     if (!user) {
@@ -111,7 +141,8 @@ export function EliaAIChat({ fullPage = false }) {
         {
           role: 'assistant',
           content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
-          timestamp: new Date()
+          timestamp: new Date(),
+          tag: 'general'
         }
       ]);
       return;
@@ -129,16 +160,20 @@ export function EliaAIChat({ fullPage = false }) {
         // Process the history in pairs to maintain conversation flow
         for (let i = 0; i < history.length; i++) {
           const item = history[i];
-          formattedHistory.push({
-            role: 'user',
+          const userMessage = {
+            role: 'user' as const,
             content: item.user_message,
-            timestamp: new Date(item.created_at)
-          });
+            timestamp: new Date(item.created_at),
+            tag: item.tag || determineMessageTag(item.user_message)
+          };
+          
+          formattedHistory.push(userMessage);
           
           formattedHistory.push({
-            role: 'assistant',
+            role: 'assistant' as const,
             content: item.assistant_response,
-            timestamp: new Date(item.created_at)
+            timestamp: new Date(item.created_at),
+            tag: userMessage.tag // Assign the same tag as the user message
           });
         }
         
@@ -149,7 +184,8 @@ export function EliaAIChat({ fullPage = false }) {
           {
             role: 'assistant',
             content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
-            timestamp: new Date()
+            timestamp: new Date(),
+            tag: 'general'
           }
         ]);
       }
@@ -165,7 +201,8 @@ export function EliaAIChat({ fullPage = false }) {
         {
           role: 'assistant',
           content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
-          timestamp: new Date()
+          timestamp: new Date(),
+          tag: 'general'
         }
       ]);
     } finally {
@@ -183,10 +220,16 @@ export function EliaAIChat({ fullPage = false }) {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
+    // Determine the tag for this message
+    const messageTag = activeTab === 'esg' ? 'esg' : 
+                      activeTab === 'app' ? 'app' : 
+                      determineMessageTag(input);
+    
     const userMessage: Message = {
       role: 'user',
       content: input,
-      timestamp: new Date()
+      timestamp: new Date(),
+      tag: messageTag
     };
     
     setMessages(prev => [...prev, userMessage]);
@@ -203,7 +246,11 @@ export function EliaAIChat({ fullPage = false }) {
       const response = await aiService.analyzeContent({
         type: 'esg-assistant',
         content: input,
-        context: messageContext
+        context: messageContext,
+        // Adding tag information to the request
+        metadata: {
+          tag: messageTag
+        }
       });
       
       console.log("AI response received:", response);
@@ -212,7 +259,8 @@ export function EliaAIChat({ fullPage = false }) {
         const assistantMessage: Message = {
           role: 'assistant',
           content: response.result,
-          timestamp: new Date()
+          timestamp: new Date(),
+          tag: messageTag // Use the same tag as the user message
         };
         
         setMessages(prev => [...prev, assistantMessage]);
@@ -234,7 +282,8 @@ export function EliaAIChat({ fullPage = false }) {
         {
           role: 'assistant',
           content: "I'm sorry, I encountered an error processing your request. Please try asking again.",
-          timestamp: new Date()
+          timestamp: new Date(),
+          tag: messageTag // Use the same tag as the user message
         }
       ]);
     } finally {
@@ -256,12 +305,13 @@ export function EliaAIChat({ fullPage = false }) {
     }
   };
 
-  const handlePromptClick = (prompt: string) => {
+  const handlePromptClick = (prompt: string, tag: 'esg' | 'app') => {
     setInput(prompt);
+    setActiveTab("chat");
+    // Setting the tag based on which tab the prompt came from
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    setActiveTab("chat");
   };
 
   const handleToggle = () => {
@@ -276,6 +326,28 @@ export function EliaAIChat({ fullPage = false }) {
 
   const handleExpand = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const getTagBadgeColor = (tag?: 'esg' | 'app' | 'general') => {
+    switch (tag) {
+      case 'esg':
+        return 'bg-emerald-500 hover:bg-emerald-600';
+      case 'app':
+        return 'bg-blue-500 hover:bg-blue-600';
+      default:
+        return 'bg-gray-500 hover:bg-gray-600';
+    }
+  };
+
+  const getTagLabel = (tag?: 'esg' | 'app' | 'general') => {
+    switch (tag) {
+      case 'esg':
+        return 'ESG';
+      case 'app':
+        return 'App';
+      default:
+        return 'General';
+    }
   };
 
   const renderMessages = () => {
@@ -293,19 +365,27 @@ export function EliaAIChat({ fullPage = false }) {
           {message.role === 'assistant' && (
             <Avatar className="h-8 w-8 bg-emerald-800">
               <img 
-                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                 alt="Elia AI" 
                 className="h-full w-full object-cover"
               />
             </Avatar>
           )}
           <div
-            className={`rounded-lg p-3 ${
+            className={`rounded-lg p-3 relative ${
               message.role === 'user'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
             }`}
           >
+            {message.tag && (
+              <Badge 
+                className={`absolute -top-2 -right-2 text-xs ${getTagBadgeColor(message.tag)}`}
+                variant="secondary"
+              >
+                {getTagLabel(message.tag)}
+              </Badge>
+            )}
             <div className="whitespace-pre-wrap">{message.content}</div>
             <div className="mt-1 text-xs opacity-70">
               {message.timestamp.toLocaleTimeString([], {
@@ -333,7 +413,7 @@ export function EliaAIChat({ fullPage = false }) {
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
                 <img 
-                  src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                  src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                   alt="Elia AI" 
                   className="h-full w-full object-cover"
                 />
@@ -359,9 +439,9 @@ export function EliaAIChat({ fullPage = false }) {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
-            <ScrollArea className="flex-1 pr-4" id="chat-scroll-area">
-              <div className="pb-2">
+          <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
+            <ScrollArea className="flex-1" id="chat-scroll-area">
+              <div className="pr-4 pb-2">
                 {renderMessages()}
                 <div ref={messagesEndRef} />
                 
@@ -379,7 +459,7 @@ export function EliaAIChat({ fullPage = false }) {
                   >
                     <Avatar className="h-8 w-8 bg-emerald-800">
                       <img 
-                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -412,11 +492,11 @@ export function EliaAIChat({ fullPage = false }) {
             </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="esg" className="flex-1 p-4 overflow-auto">
+          <TabsContent value="esg" className="flex-1 p-4 overflow-auto m-0">
             <div className="space-y-4">
               <h3 className="font-medium text-lg flex items-center gap-2">
                 <img 
-                  src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                  src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                   alt="Elia AI" 
                   className="h-5 w-5 object-cover"
                 />
@@ -435,7 +515,7 @@ export function EliaAIChat({ fullPage = false }) {
                     <Button
                       variant="outline"
                       className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                      onClick={() => handlePromptClick(prompt)}
+                      onClick={() => handlePromptClick(prompt, 'esg')}
                     >
                       {prompt}
                     </Button>
@@ -445,7 +525,7 @@ export function EliaAIChat({ fullPage = false }) {
             </div>
           </TabsContent>
           
-          <TabsContent value="app" className="flex-1 p-4 overflow-auto">
+          <TabsContent value="app" className="flex-1 p-4 overflow-auto m-0">
             <div className="space-y-4">
               <h3 className="font-medium text-lg flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-blue-600" />
@@ -464,7 +544,7 @@ export function EliaAIChat({ fullPage = false }) {
                     <Button
                       variant="outline"
                       className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                      onClick={() => handlePromptClick(prompt)}
+                      onClick={() => handlePromptClick(prompt, 'app')}
                     >
                       {prompt}
                     </Button>
@@ -737,7 +817,7 @@ export function EliaAIChat({ fullPage = false }) {
           >
             <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
               <img 
-                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                 alt="Elia AI" 
                 className="h-full w-full object-cover" 
               />
@@ -763,7 +843,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
                       <img 
-                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -811,9 +891,9 @@ export function EliaAIChat({ fullPage = false }) {
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
-                  <ScrollArea className="flex-1 pr-4">
-                    <div className="pb-2">
+                <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
+                  <ScrollArea className="flex-1" viewportRef={scrollAreaRef}>
+                    <div className="pr-4 pb-2">
                       {renderMessages()}
                       <div ref={messagesEndRef} />
                       
@@ -831,7 +911,7 @@ export function EliaAIChat({ fullPage = false }) {
                         >
                           <Avatar className="h-8 w-8 bg-emerald-800">
                             <img 
-                              src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                              src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                               alt="Elia AI" 
                               className="h-full w-full object-cover"
                             />
@@ -864,11 +944,11 @@ export function EliaAIChat({ fullPage = false }) {
                   </ScrollArea>
                 </TabsContent>
                 
-                <TabsContent value="esg" className="flex-1 p-4 overflow-auto">
+                <TabsContent value="esg" className="flex-1 p-4 overflow-auto m-0">
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
                       <img 
-                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                         alt="Elia AI" 
                         className="h-5 w-5 object-cover"
                       />
@@ -887,7 +967,7 @@ export function EliaAIChat({ fullPage = false }) {
                           <Button
                             variant="outline"
                             className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                            onClick={() => handlePromptClick(prompt)}
+                            onClick={() => handlePromptClick(prompt, 'esg')}
                           >
                             {prompt}
                           </Button>
@@ -897,7 +977,7 @@ export function EliaAIChat({ fullPage = false }) {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="app" className="flex-1 p-4 overflow-auto">
+                <TabsContent value="app" className="flex-1 p-4 overflow-auto m-0">
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
                       <HelpCircle className="h-5 w-5 text-blue-600" />
@@ -916,7 +996,7 @@ export function EliaAIChat({ fullPage = false }) {
                           <Button
                             variant="outline"
                             className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                            onClick={() => handlePromptClick(prompt)}
+                            onClick={() => handlePromptClick(prompt, 'app')}
                           >
                             {prompt}
                           </Button>

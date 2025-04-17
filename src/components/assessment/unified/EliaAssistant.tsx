@@ -67,7 +67,7 @@ export function EliaAssistant() {
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
               <img 
-                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                 alt="Elia AI" 
                 className="h-full w-full object-cover"
               />
@@ -108,7 +108,7 @@ export function EliaAssistant() {
                 onClick={handleOpenChat}
               >
                 <img 
-                  src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                  src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                   alt="Elia AI" 
                   className="h-4 w-4 mr-2 object-cover" 
                 />
