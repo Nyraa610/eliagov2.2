@@ -10,7 +10,7 @@ export interface ChatHistoryItem {
   user_message: string;
   assistant_response: string;
   created_at: string;
-  tag?: 'esg' | 'app' | 'general';
+  messageCategory?: 'esg' | 'app' | 'general';
 }
 
 export type MessageTag = 'esg' | 'app' | 'general';

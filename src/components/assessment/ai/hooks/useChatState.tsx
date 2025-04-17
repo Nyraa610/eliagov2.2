@@ -61,7 +61,7 @@ export function useChatState() {
             role: 'user' as const,
             content: item.user_message,
             timestamp: new Date(item.created_at),
-            tag: item.tag || determineMessageTag(item.user_message)
+            tag: item.messageCategory || determineMessageTag(item.user_message)
           };
           
           formattedHistory.push(userMessage);
@@ -137,7 +137,7 @@ export function useChatState() {
         content: input,
         context: messageContext,
         additionalParams: {
-          tag: messageTag
+          messageCategory: messageTag
         }
       });
       

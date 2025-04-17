@@ -21,12 +21,14 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
 
   return (
     <ScrollArea className="flex-1 h-full">
-      <div className="pr-4 pb-2 flex flex-col max-h-full">
-        {messages.map((message, index) => (
-          <ChatMessage key={index} message={message} />
-        ))}
+      <div className="px-2 py-2 flex flex-col min-h-full">
+        <div className="flex-1">
+          {messages.map((message, index) => (
+            <ChatMessage key={index} message={message} />
+          ))}
+        </div>
         {isLoading && <TypingIndicator />}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
     </ScrollArea>
   );
