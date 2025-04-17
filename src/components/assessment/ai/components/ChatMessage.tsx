@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Motion, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { MessageSquare } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
