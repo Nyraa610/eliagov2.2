@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Card, 
@@ -842,4 +843,221 @@ export function EliaAIChat({ fullPage = false }) {
                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <Button
                         variant="ghost"
-                        size
+                        size="icon"
+                        className="text-white hover:bg-emerald-700"
+                        onClick={handleExpand}
+                      >
+                        {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-emerald-700"
+                        onClick={handleToggle}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                <TabsList className="w-full justify-start border-b rounded-none px-2">
+                  <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger value="esg" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    ESG Help
+                  </TabsTrigger>
+                  <TabsTrigger value="app" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    App Help
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
+                  <ScrollArea className="flex-1" id="chat-scroll-area">
+                    <div className="pr-4 pb-2">
+                      {renderMessages()}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <motion.div 
+                          className="flex items-center gap-2 mt-2"
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.98, 1.02, 0.98],
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 2 
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 bg-emerald-800">
+                            <img 
+                              src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                              alt="Elia AI" 
+                              className="h-full w-full object-cover"
+                            />
+                          </Avatar>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <div className="flex space-x-2">
+                              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                  
+                  <div className="pt-4 border-t">
+                    <div className="flex gap-2">
+                      <Input
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask anything about ESG or how to use the app..."
+                        disabled={isLoading}
+                        className="flex-1"
+                      />
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          onClick={handleSend}
+                          disabled={!input.trim() || isLoading}
+                          size="icon"
+                          className="bg-emerald-800 hover:bg-emerald-700"
+                        >
+                          {isLoading ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="esg" className="flex-1 p-4 overflow-auto m-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-5 w-5 object-cover"
+                      />
+                      ESG & Sustainability Questions
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Get expert insights on environmental, social, and governance topics.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.esg.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'esg')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="app" className="flex-1 p-4 overflow-auto m-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-blue-600" />
+                      App Usage Help
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Learn how to get the most out of the ELIA platform.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.app.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'app')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <CardFooter className="p-3 border-t">
+                <div className="flex gap-2 w-full">
+                  <Input
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask anything about ESG or how to use the app..."
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      size="icon"
+                      className="bg-emerald-800 hover:bg-emerald-700"
+                    >
+                      {isLoading ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </motion.div>
+                </div>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
