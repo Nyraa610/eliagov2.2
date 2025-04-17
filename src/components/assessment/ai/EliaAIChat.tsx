@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aiService } from "@/services/aiService";
@@ -65,6 +64,13 @@ export function EliaAIChat({ fullPage = false }) {
     ]
   };
 
+  // Auto-open chat on full page mode
+  useEffect(() => {
+    if (fullPage) {
+      setIsOpen(true);
+    }
+  }, [fullPage]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -81,13 +87,23 @@ export function EliaAIChat({ fullPage = false }) {
     }
   }, [isOpen, isMobile]);
 
-  // Load chat history when component mounts
+  // Load chat history when component mounts or when user changes
   useEffect(() => {
-    if (!hasLoadedHistory && user) {
+    if ((!hasLoadedHistory || fullPage) && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
+    } else if (!hasLoadedHistory && !user) {
+      // Set a welcome message for non-authenticated users
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+          timestamp: new Date()
+        }
+      ]);
+      setHasLoadedHistory(true);
     }
-  }, [hasLoadedHistory, user]);
+  }, [hasLoadedHistory, user, fullPage]);
 
   const loadChatHistory = async () => {
     if (!user) {
@@ -277,7 +293,7 @@ export function EliaAIChat({ fullPage = false }) {
           {message.role === 'assistant' && (
             <Avatar className="h-8 w-8 bg-emerald-800">
               <img 
-                src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                 alt="Elia AI" 
                 className="h-full w-full object-cover"
               />
@@ -317,7 +333,7 @@ export function EliaAIChat({ fullPage = false }) {
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
                 <img 
-                  src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                  src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                   alt="Elia AI" 
                   className="h-full w-full object-cover"
                 />
@@ -344,7 +360,7 @@ export function EliaAIChat({ fullPage = false }) {
           </TabsList>
           
           <TabsContent value="chat" className="flex-1 flex flex-col p-4 overflow-hidden">
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 pr-4" id="chat-scroll-area">
               <div className="pb-2">
                 {renderMessages()}
                 <div ref={messagesEndRef} />
@@ -363,7 +379,7 @@ export function EliaAIChat({ fullPage = false }) {
                   >
                     <Avatar className="h-8 w-8 bg-emerald-800">
                       <img 
-                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -400,7 +416,7 @@ export function EliaAIChat({ fullPage = false }) {
             <div className="space-y-4">
               <h3 className="font-medium text-lg flex items-center gap-2">
                 <img 
-                  src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                  src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                   alt="Elia AI" 
                   className="h-5 w-5 object-cover"
                 />
@@ -512,7 +528,7 @@ export function EliaAIChat({ fullPage = false }) {
               >
                 <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
                   <img 
-                    src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                    src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                     alt="Elia AI" 
                     className="h-full w-full object-cover" 
                   />
@@ -527,7 +543,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-800">
                       <img 
-                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -570,7 +586,7 @@ export function EliaAIChat({ fullPage = false }) {
                         >
                           <Avatar className="h-8 w-8 bg-emerald-800">
                             <img 
-                              src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                              src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                               alt="Elia AI" 
                               className="h-full w-full object-cover"
                             />
@@ -638,7 +654,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
                       <img 
-                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                         alt="Elia AI" 
                         className="h-5 w-5 object-cover"
                       />
@@ -721,7 +737,7 @@ export function EliaAIChat({ fullPage = false }) {
           >
             <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
               <img 
-                src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                 alt="Elia AI" 
                 className="h-full w-full object-cover" 
               />
@@ -747,7 +763,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
                       <img 
-                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -815,7 +831,7 @@ export function EliaAIChat({ fullPage = false }) {
                         >
                           <Avatar className="h-8 w-8 bg-emerald-800">
                             <img 
-                              src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                              src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                               alt="Elia AI" 
                               className="h-full w-full object-cover"
                             />
@@ -852,7 +868,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
                       <img 
-                        src="/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png" 
+                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
                         alt="Elia AI" 
                         className="h-5 w-5 object-cover"
                       />

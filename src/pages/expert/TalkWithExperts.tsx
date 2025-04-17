@@ -7,9 +7,9 @@ import { Leaf, Users, Building, LightbulbIcon, BookOpen, FileText, MessageSquare
 
 export default function TalkWithExperts() {
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-2/3">
+    <div className="container mx-auto py-6 h-[calc(100vh-4rem)]">
+      <div className="flex flex-col md:flex-row gap-6 h-full">
+        <div className="md:w-1/2 lg:w-2/3 flex flex-col">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-emerald-800 mb-2">Talk with ESG & Business Experts</h1>
             <p className="text-muted-foreground">
@@ -17,6 +17,23 @@ export default function TalkWithExperts() {
             </p>
           </div>
           
+          <Card className="flex-1 border-emerald-800/20">
+            <CardHeader className="bg-emerald-800 text-white pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Chat with Elia
+              </CardTitle>
+              <CardDescription className="text-emerald-100">
+                Your ESG & Business Assistant
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 h-[calc(100%-88px)]">
+              <EliaAIChat fullPage={true} />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="md:w-1/2 lg:w-1/3 space-y-6">
           <Tabs defaultValue="environmental" className="mb-6">
             <TabsList className="w-full grid grid-cols-3 md:grid-cols-6">
               <TabsTrigger value="environmental" className="flex items-center gap-1">
@@ -100,7 +117,7 @@ export default function TalkWithExperts() {
             </TabsContent>
             
             <TabsContent value="learning" className="p-4 bg-cyan-50 rounded-md mt-4">
-              <h3 className="text-lg font-medium mb-2 text-cyan-700">Learning Topics</h3>
+              <h3 className="text-lg font-medium text-cyan-700 mb-2">Learning Topics</h3>
               <p className="mb-4">
                 Access educational resources on ESG topics, sustainability trends, 
                 and professional development opportunities.
@@ -130,67 +147,48 @@ export default function TalkWithExperts() {
             </TabsContent>
           </Tabs>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">How Elia Can Help You</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex gap-2">
-                    <Leaf className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                    <span>Get expert insights on ESG best practices tailored to your industry</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <LightbulbIcon className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                    <span>Receive recommendations for your sustainability strategy</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <span>Learn about sustainability frameworks and reporting standards</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <FileText className="h-5 w-5 text-violet-600 flex-shrink-0" />
-                    <span>Get step-by-step guidance on completing assessments</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">About Elia AI</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Elia is an AI assistant trained on the latest ESG knowledge, sustainability frameworks, 
-                  and business practices. Elia can help you:
-                </p>
-                <ul className="space-y-1 text-sm">
-                  <li>• Answer questions about ESG topics and sustainability</li>
-                  <li>• Guide you through using the platform's features</li>
-                  <li>• Interpret assessment results and provide recommendations</li>
-                  <li>• Help you understand regulatory requirements</li>
-                  <li>• Suggest next steps for your sustainability journey</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-        
-        <div className="md:w-1/3">
-          <Card className="sticky top-24 border-emerald-800/20 h-[600px]">
-            <CardHeader className="bg-emerald-800 text-white pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Chat with Elia
-              </CardTitle>
-              <CardDescription className="text-emerald-100">
-                Your ESG & Business Assistant
-              </CardDescription>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">How Elia Can Help You</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 h-[calc(100%-88px)]">
-              <EliaAIChat fullPage={true} />
+            <CardContent>
+              <ul className="space-y-2">
+                <li className="flex gap-2">
+                  <Leaf className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <span>Get expert insights on ESG best practices tailored to your industry</span>
+                </li>
+                <li className="flex gap-2">
+                  <LightbulbIcon className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  <span>Receive recommendations for your sustainability strategy</span>
+                </li>
+                <li className="flex gap-2">
+                  <BookOpen className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                  <span>Learn about sustainability frameworks and reporting standards</span>
+                </li>
+                <li className="flex gap-2">
+                  <FileText className="h-5 w-5 text-violet-600 flex-shrink-0" />
+                  <span>Get step-by-step guidance on completing assessments</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">About Elia AI</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm mb-4">
+                Elia is an AI assistant trained on the latest ESG knowledge, sustainability frameworks, 
+                and business practices. Elia can help you:
+              </p>
+              <ul className="space-y-1 text-sm">
+                <li>• Answer questions about ESG topics and sustainability</li>
+                <li>• Guide you through using the platform's features</li>
+                <li>• Interpret assessment results and provide recommendations</li>
+                <li>• Help you understand regulatory requirements</li>
+                <li>• Suggest next steps for your sustainability journey</li>
+              </ul>
             </CardContent>
           </Card>
         </div>
