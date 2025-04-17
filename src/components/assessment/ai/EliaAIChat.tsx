@@ -1,37 +1,65 @@
-
 import React, { useState, useRef, useEffect } from "react";
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader 
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { 
+  MessageSquare, 
+  Send, 
+  X, 
+  Maximize2, 
+  Minimize2, 
+  HelpCircle,
+  CornerDownLeft,
+  Sparkles,
+  Tag
+} from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { aiService } from "@/services/aiService";
+import { useToast } from "@/components/ui/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMobile } from "@/hooks/use-mobile";
-import { FullPageLayout } from "./layouts/FullPageLayout";
-import { MobileChatLayout } from "./layouts/MobileChatLayout";
-import { FloatingChatLayout } from "./layouts/FloatingChatLayout";
-import { useChatState } from "./hooks/useChatState";
-import { SuggestedPromptGroups } from "./types/chat";
+import { useAuthState } from "@/hooks/useAuthState";
+import { Badge } from "@/components/ui/badge";
 
-interface EliaAIChatProps {
-  fullPage?: boolean;
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  tag?: 'esg' | 'app' | 'general';
 }
 
-export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
+// Update the ChatHistoryItem type to include tag property
+interface ChatHistoryItem {
+  user_message: string;
+  assistant_response: string;
+  created_at: string;
+  tag?: 'esg' | 'app' | 'general';
+}
+
+export function EliaAIChat({ fullPage = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isMobile = useMobile();
+  const { user } = useAuthState();
   
-  const {
-    messages,
-    input,
-    setInput,
-    isLoading,
-    hasLoadedHistory,
-    setHasLoadedHistory,
-    loadChatHistory,
-    handleSend: sendMessage
-  } = useChatState();
-  
-  const suggestedPrompts: SuggestedPromptGroups = {
+  const suggestedPrompts = {
     esg: [
       "What are the key elements of an ESG strategy?",
       "How can I reduce my company's carbon footprint?",
@@ -46,7 +74,7 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
     ]
   };
 
-  // Handle full page mode
+  // Auto-open chat on full page mode
   useEffect(() => {
     if (fullPage) {
       setIsOpen(true);
@@ -60,7 +88,7 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
     }
   }, [messages]);
 
-  // Focus input when chat opens (desktop only)
+  // Focus input when chat is opened
   useEffect(() => {
     if (isOpen && !isMobile) {
       setTimeout(() => {
@@ -69,13 +97,213 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
     }
   }, [isOpen, isMobile]);
 
-  // Load chat history
+  // Load chat history when component mounts or when user changes
   useEffect(() => {
-    if ((!hasLoadedHistory || fullPage) && isOpen) {
+    if ((!hasLoadedHistory || fullPage) && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
+    } else if (!hasLoadedHistory && !user) {
+      // Set a welcome message for non-authenticated users
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+          timestamp: new Date(),
+          tag: 'general'
+        }
+      ]);
+      setHasLoadedHistory(true);
     }
-  }, [hasLoadedHistory, fullPage, isOpen, loadChatHistory, setHasLoadedHistory]);
+  }, [hasLoadedHistory, user, fullPage]);
+
+  // Determine the message tag based on content
+  const determineMessageTag = (content: string): 'esg' | 'app' | 'general' => {
+    // Check if the message is related to ESG topics
+    const esgKeywords = ['esg', 'environment', 'social', 'governance', 'sustainability', 'carbon', 'emission', 'climate', 
+                         'biodiversity', 'waste', 'energy', 'diversity', 'inclusion', 'human rights', 'compliance'];
+    
+    // Check if the message is related to app usage
+    const appKeywords = ['app', 'platform', 'dashboard', 'report', 'feature', 'tool', 'profile', 'account', 'login', 
+                         'assessment', 'form', 'export', 'import', 'upload', 'download', 'settings'];
+    
+    const lowerContent = content.toLowerCase();
+    
+    // Check if the content contains ESG keywords
+    if (esgKeywords.some(keyword => lowerContent.includes(keyword))) {
+      return 'esg';
+    }
+    
+    // Check if the content contains app usage keywords
+    if (appKeywords.some(keyword => lowerContent.includes(keyword))) {
+      return 'app';
+    }
+    
+    // Default to general if no specific category is detected
+    return 'general';
+  };
+
+  const loadChatHistory = async () => {
+    if (!user) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+          timestamp: new Date(),
+          tag: 'general'
+        }
+      ]);
+      return;
+    }
+
+    try {
+      console.log("Loading chat history from database...");
+      setIsLoading(true);
+      const history = await aiService.getChatHistory();
+      
+      if (history && history.length > 0) {
+        console.log(`Loaded ${history.length} chat history entries`);
+        const formattedHistory: Message[] = [];
+        
+        // Process the history in pairs to maintain conversation flow
+        for (let i = 0; i < history.length; i++) {
+          const item = history[i];
+          const userMessage = {
+            role: 'user' as const,
+            content: item.user_message,
+            timestamp: new Date(item.created_at),
+            tag: item.tag || determineMessageTag(item.user_message)
+          };
+          
+          formattedHistory.push(userMessage);
+          
+          formattedHistory.push({
+            role: 'assistant' as const,
+            content: item.assistant_response,
+            timestamp: new Date(item.created_at),
+            tag: userMessage.tag // Assign the same tag as the user message
+          });
+        }
+        
+        setMessages(formattedHistory);
+      } else {
+        console.log("No chat history found, setting welcome message");
+        setMessages([
+          {
+            role: 'assistant',
+            content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+            timestamp: new Date(),
+            tag: 'general'
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history. Starting a new conversation.",
+        variant: "destructive",
+      });
+      
+      setMessages([
+        {
+          role: 'assistant',
+          content: "Hello! I'm Elia, your ESG and sustainability assistant. How can I help you today?",
+          timestamp: new Date(),
+          tag: 'general'
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+      
+      // Ensure scroll to bottom after history is loaded
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+      }, 100);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    
+    // Determine the tag for this message
+    const messageTag = activeTab === 'esg' ? 'esg' : 
+                      activeTab === 'app' ? 'app' : 
+                      determineMessageTag(input);
+    
+    const userMessage: Message = {
+      role: 'user',
+      content: input,
+      timestamp: new Date(),
+      tag: messageTag
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    
+    try {
+      const messageContext = messages
+        .slice(-6)
+        .map(msg => ({ role: msg.role, content: msg.content }));
+      
+      console.log("Sending AI request with context", messageContext.length);
+      
+      const response = await aiService.analyzeContent({
+        type: 'esg-assistant',
+        content: input,
+        context: messageContext,
+        // Fix: Use additionalParams instead of metadata
+        additionalParams: {
+          tag: messageTag
+        }
+      });
+      
+      console.log("AI response received:", response);
+      
+      if (response && response.result && typeof response.result === 'string') {
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: response.result,
+          timestamp: new Date(),
+          tag: messageTag // Use the same tag as the user message
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        console.log("Added assistant message to chat");
+      } else {
+        console.error("Empty or invalid response from AI service:", response);
+        throw new Error("Invalid response from AI service");
+      }
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+      });
+      
+      setMessages(prev => [
+        ...prev, 
+        {
+          role: 'assistant',
+          content: "I'm sorry, I encountered an error processing your request. Please try asking again.",
+          timestamp: new Date(),
+          tag: messageTag // Use the same tag as the user message
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+      
+      // Ensure scroll to bottom after sending message
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -84,9 +312,11 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
     }
   };
 
+  // Fix the handlePromptClick function to include the tag parameter
   const handlePromptClick = (prompt: string, tag: 'esg' | 'app') => {
     setInput(prompt);
     setActiveTab("chat");
+    // Setting the tag based on which tab the prompt came from
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -95,7 +325,8 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
   const handleToggle = () => {
     setIsOpen(!isOpen);
     
-    if (!isOpen && !hasLoadedHistory) {
+    // If opening the chat and history hasn't been loaded yet, load it
+    if (!isOpen && !hasLoadedHistory && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
     }
@@ -105,58 +336,719 @@ export function EliaAIChat({ fullPage = false }: EliaAIChatProps) {
     setIsExpanded(!isExpanded);
   };
 
-  const handleSend = () => {
-    sendMessage(input, activeTab);
+  const getTagBadgeColor = (tag?: 'esg' | 'app' | 'general') => {
+    switch (tag) {
+      case 'esg':
+        return 'bg-emerald-500 hover:bg-emerald-600';
+      case 'app':
+        return 'bg-blue-500 hover:bg-blue-600';
+      default:
+        return 'bg-gray-500 hover:bg-gray-600';
+    }
   };
 
-  // Full page layout
+  const getTagLabel = (tag?: 'esg' | 'app' | 'general') => {
+    switch (tag) {
+      case 'esg':
+        return 'ESG';
+      case 'app':
+        return 'App';
+      default:
+        return 'General';
+    }
+  };
+
+  const renderMessages = () => {
+    return messages.map((message, index) => (
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`mb-4 ${
+          message.role === 'user' ? 'ml-auto max-w-[80%]' : 'mr-auto max-w-[80%]'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          {message.role === 'assistant' && (
+            <Avatar className="h-8 w-8 bg-emerald-800">
+              <img 
+                src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                alt="Elia AI" 
+                className="h-full w-full object-cover"
+              />
+            </Avatar>
+          )}
+          <div
+            className={`rounded-lg p-3 relative ${
+              message.role === 'user'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {message.tag && (
+              <Badge 
+                className={`absolute -top-2 -right-2 text-xs ${getTagBadgeColor(message.tag)}`}
+                variant="secondary"
+              >
+                {getTagLabel(message.tag)}
+              </Badge>
+            )}
+            <div className="whitespace-pre-wrap">{message.content}</div>
+            <div className="mt-1 text-xs opacity-70">
+              {message.timestamp.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </div>
+          {message.role === 'user' && (
+            <Avatar className="h-8 w-8 bg-primary/20">
+              <MessageSquare className="h-4 w-4 text-primary" />
+            </Avatar>
+          )}
+        </div>
+      </motion.div>
+    ));
+  };
+
+  // Render full page version for the /expert/talk route
   if (fullPage) {
     return (
-      <FullPageLayout
-        messages={messages}
-        isLoading={isLoading}
-        input={input}
-        setInput={setInput}
-        handleSend={handleSend}
-        handleKeyDown={handleKeyDown}
-        handlePromptClick={handlePromptClick}
-        suggestedPrompts={suggestedPrompts}
-      />
+      <Card className="h-full flex flex-col overflow-hidden border-emerald-800/20">
+        <CardHeader className="p-3 border-b bg-emerald-800 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
+                <img 
+                  src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                  alt="Elia AI" 
+                  className="h-full w-full object-cover"
+                />
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-white">Elia Assistant</h3>
+                <p className="text-xs text-amber-200">ESG & Business Expert</p>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <TabsList className="w-full justify-start border-b rounded-none px-2">
+            <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="esg" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              ESG Help
+            </TabsTrigger>
+            <TabsTrigger value="app" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              App Help
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
+            <ScrollArea className="flex-1" id="chat-scroll-area">
+              <div className="pr-4 pb-2">
+                {renderMessages()}
+                <div ref={messagesEndRef} />
+                
+                {isLoading && (
+                  <motion.div 
+                    className="flex items-center gap-2 mt-2"
+                    animate={{ 
+                      opacity: [0.5, 1, 0.5],
+                      scale: [0.98, 1.02, 0.98],
+                    }}
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: 2 
+                    }}
+                  >
+                    <Avatar className="h-8 w-8 bg-emerald-800">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
+                    </Avatar>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <div className="flex space-x-2">
+                        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                        <div className="flex space-x-1">
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                          />
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                          />
+                          <motion.div 
+                            className="h-2 w-2 rounded-full bg-emerald-500" 
+                            animate={{ scale: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="esg" className="flex-1 p-4 overflow-auto m-0">
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg flex items-center gap-2">
+                <img 
+                  src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                  alt="Elia AI" 
+                  className="h-5 w-5 object-cover"
+                />
+                ESG & Sustainability Questions
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Get expert insights on environmental, social, and governance topics.
+              </p>
+              <div className="grid gap-2">
+                {suggestedPrompts.esg.map((prompt) => (
+                  <motion.div
+                    key={prompt}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                      onClick={() => handlePromptClick(prompt, 'esg')}
+                    >
+                      {prompt}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="app" className="flex-1 p-4 overflow-auto m-0">
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-blue-600" />
+                App Usage Help
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Learn how to get the most out of the ELIA platform.
+              </p>
+              <div className="grid gap-2">
+                {suggestedPrompts.app.map((prompt) => (
+                  <motion.div
+                    key={prompt}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                      onClick={() => handlePromptClick(prompt, 'app')}
+                    >
+                      {prompt}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <CardFooter className="p-3 border-t">
+          <div className="flex gap-2 w-full">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything about ESG or how to use the app..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                size="icon"
+                className="bg-emerald-800 hover:bg-emerald-700"
+              >
+                {isLoading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </motion.div>
+          </div>
+        </CardFooter>
+      </Card>
     );
   }
 
-  // Mobile layout
+  // Mobile view
   if (isMobile) {
     return (
-      <MobileChatLayout
-        messages={messages}
-        isLoading={isLoading}
-        input={input}
-        setInput={setInput}
-        handleSend={handleSend}
-        handleKeyDown={handleKeyDown}
-        handlePromptClick={handlePromptClick}
-        suggestedPrompts={suggestedPrompts}
-        handleToggle={handleToggle}
-      />
+      <>
+        <Drawer>
+          <DrawerTrigger asChild>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg"
+                size="icon"
+                onClick={handleToggle}
+              >
+                <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
+                  <img 
+                    src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                    alt="Elia AI" 
+                    className="h-full w-full object-cover" 
+                  />
+                </Avatar>
+              </Button>
+            </motion.div>
+          </DrawerTrigger>
+          <DrawerContent className="h-[85vh]">
+            <div className="h-full flex flex-col">
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8 bg-emerald-800">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
+                    </Avatar>
+                    <h3 className="font-semibold">Elia Assistant</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                <TabsList className="w-full justify-start border-b rounded-none px-4">
+                  <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger value="esg" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    ESG Help
+                  </TabsTrigger>
+                  <TabsTrigger value="app" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    App Help
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chat" className="flex-1 flex flex-col space-y-4 p-4 h-0 overflow-hidden">
+                  <ScrollArea className="flex-1 pr-4">
+                    <div className="pb-2">
+                      {renderMessages()}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <motion.div 
+                          className="flex items-center gap-2 mt-2"
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.98, 1.02, 0.98],
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 2 
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 bg-emerald-800">
+                            <img 
+                              src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                              alt="Elia AI" 
+                              className="h-full w-full object-cover"
+                            />
+                          </Avatar>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <div className="flex space-x-2">
+                              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                  
+                  <div className="pt-4 border-t">
+                    <div className="flex gap-2">
+                      <Input
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask anything about ESG or how to use the app..."
+                        disabled={isLoading}
+                        className="flex-1"
+                      />
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          onClick={handleSend}
+                          disabled={!input.trim() || isLoading}
+                          size="icon"
+                          className="bg-emerald-800 hover:bg-emerald-700"
+                        >
+                          {isLoading ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <CornerDownLeft className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="esg" className="flex-1 p-4 h-0 overflow-auto">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-5 w-5 object-cover"
+                      />
+                      ESG & Sustainability Questions
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Get expert insights on environmental, social, and governance topics.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.esg.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'esg')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="app" className="flex-1 p-4 h-0 overflow-auto">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-blue-600" />
+                      App Usage Help
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Learn how to get the most out of the ELIA platform.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.app.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'app')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </>
     );
   }
 
-  // Floating desktop layout
+  // Desktop view
   return (
-    <FloatingChatLayout
-      isOpen={isOpen}
-      isExpanded={isExpanded}
-      messages={messages}
-      isLoading={isLoading}
-      input={input}
-      setInput={setInput}
-      handleSend={handleSend}
-      handleKeyDown={handleKeyDown}
-      handleToggle={handleToggle}
-      handleExpand={handleExpand}
-      handlePromptClick={handlePromptClick}
-      suggestedPrompts={suggestedPrompts}
-    />
+    <>
+      {!isOpen && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50"
+        >
+          <Button
+            className="h-14 w-14 rounded-full shadow-lg"
+            size="icon"
+            onClick={handleToggle}
+          >
+            <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
+              <img 
+                src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                alt="Elia AI" 
+                className="h-full w-full object-cover" 
+              />
+            </Avatar>
+          </Button>
+        </motion.div>
+      )}
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.3, type: "spring" }}
+            className={`fixed top-1/2 -translate-y-1/2 right-4 z-50 shadow-xl ${
+              isExpanded ? 'w-[800px] h-[80vh]' : 'w-[380px] h-[500px]'
+            }`}
+          >
+            <Card className="h-full flex flex-col overflow-hidden border-emerald-800/20">
+              <CardHeader className="p-3 border-b bg-emerald-800 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8 bg-emerald-900 border border-amber-400/50">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-full w-full object-cover"
+                      />
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-white">Elia Assistant</h3>
+                      <p className="text-xs text-amber-200">ESG & Business Expert</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
+                        onClick={handleExpand}
+                      >
+                        {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-amber-200 hover:text-white hover:bg-emerald-700"
+                        onClick={handleToggle}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                <TabsList className="w-full justify-start border-b rounded-none px-2">
+                  <TabsTrigger value="chat" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger value="esg" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    ESG Help
+                  </TabsTrigger>
+                  <TabsTrigger value="app" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                    App Help
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
+                  <ScrollArea className="flex-1">
+                    <div ref={scrollAreaRef} className="pr-4 pb-2">
+                      {renderMessages()}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <motion.div 
+                          className="flex items-center gap-2 mt-2"
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.98, 1.02, 0.98],
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 2 
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 bg-emerald-800">
+                            <img 
+                              src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                              alt="Elia AI" 
+                              className="h-full w-full object-cover"
+                            />
+                          </Avatar>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <div className="flex space-x-2">
+                              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                />
+                                <motion.div 
+                                  className="h-2 w-2 rounded-full bg-emerald-500" 
+                                  animate={{ scale: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                
+                <TabsContent value="esg" className="flex-1 p-4 overflow-auto m-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <img 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
+                        alt="Elia AI" 
+                        className="h-5 w-5 object-cover"
+                      />
+                      ESG & Sustainability Questions
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Get expert insights on environmental, social, and governance topics.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.esg.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'esg')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="app" className="flex-1 p-4 overflow-auto m-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-blue-600" />
+                      App Usage Help
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Learn how to get the most out of the ELIA platform.
+                    </p>
+                    <div className="grid gap-2">
+                      {suggestedPrompts.app.map((prompt) => (
+                        <motion.div
+                          key={prompt}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            variant="outline"
+                            className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
+                            onClick={() => handlePromptClick(prompt, 'app')}
+                          >
+                            {prompt}
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <CardFooter className="p-3 border-t">
+                <div className="flex gap-2 w-full">
+                  <Input
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask anything about ESG or how to use the app..."
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      size="icon"
+                      className="bg-emerald-800 hover:bg-emerald-700"
+                    >
+                      {isLoading ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </motion.div>
+                </div>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
