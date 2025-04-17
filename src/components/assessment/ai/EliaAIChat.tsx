@@ -37,6 +37,14 @@ interface Message {
   tag?: 'esg' | 'app' | 'general';
 }
 
+// Update the ChatHistoryItem type to include tag property
+interface ChatHistoryItem {
+  user_message: string;
+  assistant_response: string;
+  created_at: string;
+  tag?: 'esg' | 'app' | 'general';
+}
+
 export function EliaAIChat({ fullPage = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -247,8 +255,8 @@ export function EliaAIChat({ fullPage = false }) {
         type: 'esg-assistant',
         content: input,
         context: messageContext,
-        // Adding tag information to the request
-        metadata: {
+        // Fix: Use additionalParams instead of metadata
+        additionalParams: {
           tag: messageTag
         }
       });
@@ -305,6 +313,7 @@ export function EliaAIChat({ fullPage = false }) {
     }
   };
 
+  // Fix the handlePromptClick function to include the tag parameter
   const handlePromptClick = (prompt: string, tag: 'esg' | 'app') => {
     setInput(prompt);
     setActiveTab("chat");
@@ -608,7 +617,7 @@ export function EliaAIChat({ fullPage = false }) {
               >
                 <Avatar className="h-14 w-14 bg-emerald-800 border-2 border-amber-400">
                   <img 
-                    src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                    src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                     alt="Elia AI" 
                     className="h-full w-full object-cover" 
                   />
@@ -623,7 +632,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 bg-emerald-800">
                       <img 
-                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                         alt="Elia AI" 
                         className="h-full w-full object-cover"
                       />
@@ -666,7 +675,7 @@ export function EliaAIChat({ fullPage = false }) {
                         >
                           <Avatar className="h-8 w-8 bg-emerald-800">
                             <img 
-                              src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                              src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                               alt="Elia AI" 
                               className="h-full w-full object-cover"
                             />
@@ -734,7 +743,7 @@ export function EliaAIChat({ fullPage = false }) {
                   <div className="space-y-4">
                     <h3 className="font-medium text-lg flex items-center gap-2">
                       <img 
-                        src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
+                        src="/lovable-uploads/e5a0161f-aa8f-4767-a94c-4be0c0af9a56.png" 
                         alt="Elia AI" 
                         className="h-5 w-5 object-cover"
                       />
@@ -753,7 +762,7 @@ export function EliaAIChat({ fullPage = false }) {
                           <Button
                             variant="outline"
                             className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                            onClick={() => handlePromptClick(prompt)}
+                            onClick={() => handlePromptClick(prompt, 'esg')}
                           >
                             {prompt}
                           </Button>
@@ -782,7 +791,7 @@ export function EliaAIChat({ fullPage = false }) {
                           <Button
                             variant="outline"
                             className="justify-start h-auto py-3 px-4 whitespace-normal text-left w-full"
-                            onClick={() => handlePromptClick(prompt)}
+                            onClick={() => handlePromptClick(prompt, 'app')}
                           >
                             {prompt}
                           </Button>
@@ -892,8 +901,9 @@ export function EliaAIChat({ fullPage = false }) {
                 </TabsList>
                 
                 <TabsContent value="chat" className="flex-1 flex flex-col p-4 m-0 overflow-hidden">
-                  <ScrollArea className="flex-1" viewportRef={scrollAreaRef}>
-                    <div className="pr-4 pb-2">
+                  {/* Fix: Remove viewportRef property from ScrollArea and handle scroll area differently */}
+                  <ScrollArea className="flex-1">
+                    <div ref={scrollAreaRef} className="pr-4 pb-2">
                       {renderMessages()}
                       <div ref={messagesEndRef} />
                       
@@ -1044,3 +1054,4 @@ export function EliaAIChat({ fullPage = false }) {
     </>
   );
 }
+
