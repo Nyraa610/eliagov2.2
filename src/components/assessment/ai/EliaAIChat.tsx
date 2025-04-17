@@ -36,7 +36,6 @@ interface Message {
   tag?: 'esg' | 'app' | 'general';
 }
 
-// Update the ChatHistoryItem type to include tag property
 interface ChatHistoryItem {
   user_message: string;
   assistant_response: string;
@@ -74,21 +73,18 @@ export function EliaAIChat({ fullPage = false }) {
     ]
   };
 
-  // Auto-open chat on full page mode
   useEffect(() => {
     if (fullPage) {
       setIsOpen(true);
     }
   }, [fullPage]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  // Focus input when chat is opened
   useEffect(() => {
     if (isOpen && !isMobile) {
       setTimeout(() => {
@@ -97,13 +93,11 @@ export function EliaAIChat({ fullPage = false }) {
     }
   }, [isOpen, isMobile]);
 
-  // Load chat history when component mounts or when user changes
   useEffect(() => {
     if ((!hasLoadedHistory || fullPage) && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
     } else if (!hasLoadedHistory && !user) {
-      // Set a welcome message for non-authenticated users
       setMessages([
         {
           role: 'assistant',
@@ -116,29 +110,23 @@ export function EliaAIChat({ fullPage = false }) {
     }
   }, [hasLoadedHistory, user, fullPage]);
 
-  // Determine the message tag based on content
   const determineMessageTag = (content: string): 'esg' | 'app' | 'general' => {
-    // Check if the message is related to ESG topics
     const esgKeywords = ['esg', 'environment', 'social', 'governance', 'sustainability', 'carbon', 'emission', 'climate', 
                          'biodiversity', 'waste', 'energy', 'diversity', 'inclusion', 'human rights', 'compliance'];
     
-    // Check if the message is related to app usage
     const appKeywords = ['app', 'platform', 'dashboard', 'report', 'feature', 'tool', 'profile', 'account', 'login', 
                          'assessment', 'form', 'export', 'import', 'upload', 'download', 'settings'];
     
     const lowerContent = content.toLowerCase();
     
-    // Check if the content contains ESG keywords
     if (esgKeywords.some(keyword => lowerContent.includes(keyword))) {
       return 'esg';
     }
     
-    // Check if the content contains app usage keywords
     if (appKeywords.some(keyword => lowerContent.includes(keyword))) {
       return 'app';
     }
     
-    // Default to general if no specific category is detected
     return 'general';
   };
 
@@ -164,7 +152,6 @@ export function EliaAIChat({ fullPage = false }) {
         console.log(`Loaded ${history.length} chat history entries`);
         const formattedHistory: Message[] = [];
         
-        // Process the history in pairs to maintain conversation flow
         for (let i = 0; i < history.length; i++) {
           const item = history[i];
           const userMessage = {
@@ -180,7 +167,7 @@ export function EliaAIChat({ fullPage = false }) {
             role: 'assistant' as const,
             content: item.assistant_response,
             timestamp: new Date(item.created_at),
-            tag: userMessage.tag // Assign the same tag as the user message
+            tag: userMessage.tag
           });
         }
         
@@ -215,7 +202,6 @@ export function EliaAIChat({ fullPage = false }) {
     } finally {
       setIsLoading(false);
       
-      // Ensure scroll to bottom after history is loaded
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
@@ -227,7 +213,6 @@ export function EliaAIChat({ fullPage = false }) {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
-    // Determine the tag for this message
     const messageTag = activeTab === 'esg' ? 'esg' : 
                       activeTab === 'app' ? 'app' : 
                       determineMessageTag(input);
@@ -254,7 +239,6 @@ export function EliaAIChat({ fullPage = false }) {
         type: 'esg-assistant',
         content: input,
         context: messageContext,
-        // Fix: Use additionalParams instead of metadata
         additionalParams: {
           tag: messageTag
         }
@@ -267,7 +251,7 @@ export function EliaAIChat({ fullPage = false }) {
           role: 'assistant',
           content: response.result,
           timestamp: new Date(),
-          tag: messageTag // Use the same tag as the user message
+          tag: messageTag
         };
         
         setMessages(prev => [...prev, assistantMessage]);
@@ -290,13 +274,12 @@ export function EliaAIChat({ fullPage = false }) {
           role: 'assistant',
           content: "I'm sorry, I encountered an error processing your request. Please try asking again.",
           timestamp: new Date(),
-          tag: messageTag // Use the same tag as the user message
+          tag: messageTag
         }
       ]);
     } finally {
       setIsLoading(false);
       
-      // Ensure scroll to bottom after sending message
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -312,11 +295,9 @@ export function EliaAIChat({ fullPage = false }) {
     }
   };
 
-  // Fix the handlePromptClick function to include the tag parameter
   const handlePromptClick = (prompt: string, tag: 'esg' | 'app') => {
     setInput(prompt);
     setActiveTab("chat");
-    // Setting the tag based on which tab the prompt came from
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -325,7 +306,6 @@ export function EliaAIChat({ fullPage = false }) {
   const handleToggle = () => {
     setIsOpen(!isOpen);
     
-    // If opening the chat and history hasn't been loaded yet, load it
     if (!isOpen && !hasLoadedHistory && user) {
       loadChatHistory();
       setHasLoadedHistory(true);
@@ -412,7 +392,6 @@ export function EliaAIChat({ fullPage = false }) {
     ));
   };
 
-  // Render full page version for the /expert/talk route
   if (fullPage) {
     return (
       <Card className="h-full flex flex-col overflow-hidden border-emerald-800/20">
@@ -597,7 +576,6 @@ export function EliaAIChat({ fullPage = false }) {
     );
   }
 
-  // Mobile view
   if (isMobile) {
     return (
       <>
@@ -807,7 +785,6 @@ export function EliaAIChat({ fullPage = false }) {
     );
   }
 
-  // Desktop view
   return (
     <>
       {!isOpen && (
