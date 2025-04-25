@@ -1,5 +1,5 @@
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AIAnalysisType = 'course-summary' | 'esg-assessment' | 'iro-analysis' | 'esg-assistant';
 
@@ -22,6 +22,7 @@ export interface ChatHistoryItem {
   user_message: string;
   assistant_response: string;
   created_at: string;
+  tag?: 'esg' | 'app' | 'general';
 }
 
 export const aiService = {
