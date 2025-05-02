@@ -49,7 +49,7 @@ import TalkWithExperts from './pages/expert/TalkWithExperts';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
 import { GlobalAIAssistant } from './components/ai/GlobalAIAssistant';
 
-psql function App() {
+function App() {
   return (
     <div className="App">
       <AuthProvider>
