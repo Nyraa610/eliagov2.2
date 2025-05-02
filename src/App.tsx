@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
@@ -7,6 +8,7 @@ import Assessment from './pages/Assessment';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterConfirmation from './pages/RegisterConfirmation';
+import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { UserLayout } from './components/user/UserLayout';
@@ -65,6 +67,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/register/confirmation" element={<RegisterConfirmation />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/pricing" element={<Pricing />} />
               

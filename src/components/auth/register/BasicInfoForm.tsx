@@ -1,17 +1,13 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { basicInfoSchema } from "./formSchemas";
-import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
-import { RegisterFormData } from "./formSchemas";
+import { RegistrationFormValues } from "@/hooks/useRegistration";
 
 export interface BasicInfoFormProps {
-  form: UseFormReturn<RegisterFormData, any, undefined>;
-  onSubmit: (values: Partial<RegisterFormData>) => void;
+  form: UseFormReturn<RegistrationFormValues, any, undefined>;
+  onSubmit: (values: Partial<RegistrationFormValues>) => void;
   isLoading: boolean;
 }
 

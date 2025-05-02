@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useRegistration, registrationFormSchema, RegistrationFormValues } from "@/hooks/useRegistration";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { AdditionalInfoForm } from "./AdditionalInfoForm";
@@ -17,16 +17,19 @@ export function RegisterForm() {
   const { registerUser, isLoading } = useRegistration();
 
   // Step 1 form (basic info)
-  const basicInfoForm = useForm<Partial<RegistrationFormValues>>({
-    resolver: zodResolver(registrationFormSchema.pick({
-      email: true,
-      password: true,
-      firstName: true,
-      lastName: true,
-      phone: true,
-      company: true,
-      country: true,
-    })),
+  const basicInfoForm = useForm<RegistrationFormValues>({
+    resolver: zodResolver(
+      registrationFormSchema.pick({
+        email: true,
+        password: true,
+        confirmPassword: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        company: true,
+        country: true,
+      })
+    ),
     defaultValues: {
       email: "",
       password: "",
@@ -39,20 +42,25 @@ export function RegisterForm() {
   });
 
   // Step 2 form (additional info)
-  const additionalInfoForm = useForm<Partial<RegistrationFormValues>>({
-    resolver: zodResolver(registrationFormSchema.pick({
-      department: true,
-      persona: true,
-      marketingConsent: true,
-    })),
+  const additionalInfoForm = useForm<RegistrationFormValues>({
+    resolver: zodResolver(
+      registrationFormSchema.pick({
+        department: true,
+        persona: true,
+        marketingConsent: true,
+        termsConsent: true,
+      })
+    ),
     defaultValues: {
       department: "",
       persona: "",
       marketingConsent: false,
+      termsConsent: false,
     },
   });
 
   const onBasicInfoSubmit = (data: Partial<RegistrationFormValues>) => {
+    console.log("Basic info submitted:", data);
     setBasicData(data);
     setCurrentStep(2);
   };
@@ -67,15 +75,17 @@ export function RegisterForm() {
 
       console.log("Submitting registration with data:", combinedData);
       
-      await registerUser(combinedData);
+      const success = await registerUser(combinedData);
       
-      // Navigate to confirmation page
-      toast({
-        title: "Registration successful",
-        description: "Please check your email to verify your account.",
-      });
-      
-      navigate("/register/confirmation");
+      if (success) {
+        // Navigate to confirmation page
+        toast({
+          title: "Registration successful",
+          description: "Please check your email to verify your account.",
+        });
+        
+        navigate("/register/confirmation");
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({

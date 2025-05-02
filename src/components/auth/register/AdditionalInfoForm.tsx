@@ -3,15 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { additionalInfoSchema } from "./formSchemas";
 import { departments, getPersonaOptions } from "./departmentOptions";
 import { z } from "zod";
 import { UseFormReturn } from "react-hook-form";
-import { RegisterFormData } from "./formSchemas";
+import { RegistrationFormValues } from "@/hooks/useRegistration";
 
 export interface AdditionalInfoFormProps {
-  form: UseFormReturn<RegisterFormData, any, undefined>;
-  onSubmit: (values: Partial<RegisterFormData>) => void;
+  form: UseFormReturn<RegistrationFormValues, any, undefined>;
+  onSubmit: (values: Partial<RegistrationFormValues>) => void;
   onBack: () => void;
   isLoading: boolean;
 }
@@ -138,4 +137,4 @@ export const AdditionalInfoForm = ({
       </form>
     </Form>
   );
-};
+}
