@@ -28,7 +28,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       // Make sure environment variables are properly exposed to the client
-      'import.meta.env.VITE_APP_ENV': JSON.stringify(env.VITE_APP_ENV || mode)
+      'import.meta.env.VITE_APP_ENV': JSON.stringify(env.VITE_APP_ENV || mode),
+      'import.meta.env.VITE_LOCAL_SUPABASE': JSON.stringify(env.VITE_LOCAL_SUPABASE || 'false')
     }
   };
 });
