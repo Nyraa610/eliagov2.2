@@ -10,19 +10,11 @@ import { useState } from "react";
 
 export default function Login() {
   const [showAdminTools, setShowAdminTools] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showTestEmailDialog, setShowTestEmailDialog] = useState(false);
   
-  const showResetPasswordDialog = () => {
-    const dialog = document.getElementById('resetPasswordDialog');
-    if (dialog instanceof HTMLDialogElement) {
-      dialog.showModal();
-    }
-  };
-
-  const showTestEmailDialog = () => {
-    const dialog = document.getElementById('testEmailDialog');
-    if (dialog instanceof HTMLDialogElement) {
-      dialog.showModal();
-    }
+  const handleForgotPassword = () => {
+    setShowResetDialog(true);
   };
 
   const toggleAdminTools = () => {
@@ -43,7 +35,7 @@ export default function Login() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <LoginForm onForgotPassword={showResetPasswordDialog} />
+              <LoginForm onForgotPassword={handleForgotPassword} />
               
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-600">
@@ -54,7 +46,7 @@ export default function Login() {
                 </p>
               </div>
               
-              {/* Hidden admin tools area, can be toggled with Ctrl+Alt+T */}
+              {/* Hidden admin tools area, can be toggled with button below */}
               {showAdminTools && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Admin Tools</h3>
@@ -63,7 +55,7 @@ export default function Login() {
                       variant="outline" 
                       size="sm" 
                       className="w-full text-xs"
-                      onClick={showTestEmailDialog}
+                      onClick={() => setShowTestEmailDialog(true)}
                     >
                       Test SMTP Configuration
                     </Button>
@@ -83,8 +75,15 @@ export default function Login() {
             </button>
           </div>
           
-          <ResetPasswordDialog />
-          <TestEmailDialog />
+          <ResetPasswordDialog 
+            open={showResetDialog} 
+            onClose={() => setShowResetDialog(false)} 
+          />
+          
+          <TestEmailDialog 
+            open={showTestEmailDialog}
+            onClose={() => setShowTestEmailDialog(false)}
+          />
         </div>
       </div>
     </div>

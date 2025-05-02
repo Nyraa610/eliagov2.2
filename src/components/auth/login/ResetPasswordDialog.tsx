@@ -30,7 +30,7 @@ interface ResetPasswordDialogProps {
   onClose: () => void;
 }
 
-export default function ResetPasswordDialog({ open, onClose }: ResetPasswordDialogProps) {
+export function ResetPasswordDialog({ open, onClose }: ResetPasswordDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState("");

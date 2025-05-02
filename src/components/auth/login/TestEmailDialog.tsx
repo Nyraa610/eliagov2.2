@@ -30,7 +30,7 @@ interface TestEmailDialogProps {
   onClose: () => void;
 }
 
-export default function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
+export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState("");
