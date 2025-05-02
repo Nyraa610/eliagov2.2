@@ -4,7 +4,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { departments, getPersonaOptions } from "./departmentOptions";
-import { z } from "zod";
 import { UseFormReturn } from "react-hook-form";
 import { RegistrationFormValues } from "@/hooks/useRegistration";
 

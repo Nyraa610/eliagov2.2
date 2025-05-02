@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 export const registrationFormSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   phone: z.string().optional(),
@@ -17,6 +18,9 @@ export const registrationFormSchema = z.object({
   persona: z.string().optional(),
   marketingConsent: z.boolean().default(false),
   termsConsent: z.boolean().default(false),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
 });
 
 // Extract the type from the schema
