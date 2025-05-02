@@ -1,12 +1,5 @@
-/**
-    // ...existing code...
 
-    /**
-     * Check if the app is running in local mode
-     */
-    export const isLocal = (): boolean => {
-      return getCurrentEnvironment() === 'local';
-    };
+/**
  * Utility functions for environment detection and configuration
  */
 
