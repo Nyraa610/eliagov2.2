@@ -1,115 +1,144 @@
 
 import { useState } from "react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { emailService } from "@/services/emailService";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon, AlertCircleIcon, CheckCircleIcon } from "lucide-react";
 
-export function ResetPasswordDialog() {
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const { toast } = useToast();
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!resetEmail || !resetEmail.includes('@')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-      });
-      return;
-    }
-    
-    setIsResettingPassword(true);
+type FormValues = z.infer<typeof formSchema>;
+
+interface ResetPasswordDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function ResetPasswordDialog({ open, onClose }: ResetPasswordDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState("");
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const handleSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+    setStatus('idle');
     
     try {
-      console.log("Initiating password reset for:", resetEmail);
+      const resetLink = `${window.location.origin}/reset-password`;
       
-      // Generate the full reset link
-      const origin = window.location.origin;
-      const resetLink = `${origin}/reset-password`;
+      console.log("Sending password reset email to:", values.email);
+      const result = await emailService.sendPasswordResetEmail(values.email, resetLink);
       
-      console.log("Reset link will redirect to:", resetLink);
+      console.log("Password reset request result:", result);
       
-      // Use Supabase's built-in password reset
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: resetLink,
-      });
-      
-      if (error) {
-        console.error("Password reset error:", error);
-        throw new Error(error.message || "Failed to send password reset email");
-      }
-      
-      console.log("Password reset email sent successfully");
-      
-      toast({
-        title: "Password reset email sent",
-        description: "Check your inbox for password reset instructions",
-      });
-      
-      setResetEmail("");
-      
-      // Close the dialog
-      const dialog = document.getElementById('resetPasswordDialog');
-      if (dialog instanceof HTMLDialogElement) {
-        dialog.close();
+      if (result.success) {
+        setStatus('success');
+        setMessage("Password reset email sent successfully. Please check your inbox.");
+        form.reset();
+      } else {
+        setStatus('error');
+        setMessage(result.error || "Failed to send password reset email. Please try again later.");
       }
     } catch (error: any) {
       console.error("Password reset error:", error);
-      toast({
-        variant: "destructive",
-        title: "Password reset failed",
-        description: error.message || "An unexpected error occurred. Please try again later.",
-      });
+      setStatus('error');
+      setMessage("An unexpected error occurred. Please try again later.");
     } finally {
-      setIsResettingPassword(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <dialog id="resetPasswordDialog" className="modal p-0 rounded-lg shadow-lg backdrop:bg-black/50">
-      <div className="bg-white p-6 w-full max-w-md rounded-lg">
-        <h3 className="text-xl font-bold mb-4">Reset Password</h3>
-        <p className="text-gray-600 mb-4">
-          Enter your email address and we'll send you instructions to reset your password.
-        </p>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+          <DialogDescription>
+            Enter your email address and we'll send you a link to reset your password.
+          </DialogDescription>
+        </DialogHeader>
         
-        <form onSubmit={handleResetPassword} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="reset-email">Email</Label>
-            <Input 
-              id="reset-email" 
-              type="email" 
-              value={resetEmail} 
-              onChange={(e) => setResetEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <Label htmlFor="email">Email</Label>
+                  <FormControl>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="name@example.com" 
+                      {...field} 
+                      autoComplete="email"
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                const dialog = document.getElementById('resetPasswordDialog');
-                if (dialog instanceof HTMLDialogElement) {
-                  dialog.close();
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isResettingPassword}>
-              {isResettingPassword ? "Sending..." : "Send Reset Link"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </dialog>
+            
+            {status === 'success' && (
+              <Alert className="border-green-500 bg-green-50 text-green-800">
+                <CheckCircleIcon className="h-4 w-4" />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
+            
+            {status === 'error' && (
+              <Alert className="border-destructive bg-destructive/10">
+                <AlertCircleIcon className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }

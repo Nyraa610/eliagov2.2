@@ -178,14 +178,27 @@ export const emailService = {
       
       if (error) {
         console.error("Password reset email error:", error);
+        
+        // Make the error message more user-friendly
+        let userFriendlyMessage = "Failed to send password reset email";
+        
+        if (error.message.includes("SMTP") || error.message.includes("network")) {
+          userFriendlyMessage = "Email service is currently unavailable. Please try again later.";
+        } else if (error.message.includes("rate limit")) {
+          userFriendlyMessage = "Too many reset attempts. Please wait a few minutes before trying again.";
+        } else if (error.message.includes("not found") || error.message.includes("does not exist")) {
+          userFriendlyMessage = "No account found with this email address.";
+        }
+        
         return { 
           success: false, 
-          error: error.message,
+          error: userFriendlyMessage,
           details: {
             type: "supabase_auth_error",
             errorInfo: {
               message: error.message,
-              name: error.name
+              name: error.name,
+              originalMessage: error.message
             }
           }
         };
@@ -207,7 +220,7 @@ export const emailService = {
       console.error("Failed to send password reset email:", error);
       return { 
         success: false, 
-        error: error.message || "Failed to send password reset email",
+        error: "Unable to process your request. Please try again later.",
         details: {
           type: "exception",
           emailType: "passwordReset",

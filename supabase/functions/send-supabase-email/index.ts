@@ -121,7 +121,6 @@ async function sendEmail(emailRequest: EmailRequest) {
         html: emailRequest.html,
         text: emailRequest.text || undefined,
         reply_to: emailRequest.replyTo || undefined,
-        // Attachments handling would need to be compatible with Supabase's email API
       }
     });
     

@@ -1,140 +1,171 @@
 
 import { useState } from "react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { emailService } from "@/services/emailService";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon, AlertCircleIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
 
-export function TestEmailDialog() {
-  const [isSending, setIsSending] = useState(false);
-  const [testEmail, setTestEmail] = useState("");
-  const [testResult, setTestResult] = useState<null | {
-    success: boolean;
-    message: string;
-    details?: any;
-  }>(null);
-  const { toast } = useToast();
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
-  const handleSendTestEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!testEmail || !testEmail.includes('@')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-      });
-      return;
-    }
-    
-    setIsSending(true);
-    setTestResult(null);
+type FormValues = z.infer<typeof formSchema>;
+
+interface TestEmailDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState("");
+  const [details, setDetails] = useState<any>(null);
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const handleSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+    setStatus('pending');
+    setMessage("Sending test email...");
+    setDetails(null);
     
     try {
-      console.log("Sending test email to:", testEmail);
+      console.log("Sending test email to:", values.email);
+      const result = await emailService.sendTestEmail(values.email);
+      console.log("Test email result:", result);
       
-      const response = await emailService.sendTestEmail(testEmail);
+      setDetails(result.details);
       
-      if (!response.success) {
-        console.error("Test email failed:", response.error);
-        setTestResult({
-          success: false,
-          message: `Failed to send test email: ${response.error || "Unknown error"}`,
-          details: response
-        });
-        throw new Error(response.error || "Failed to send test email");
+      if (result.success) {
+        setStatus('success');
+        setMessage(`Test email sent successfully to ${values.email}`);
+      } else {
+        setStatus('error');
+        setMessage(result.error || "Failed to send test email. Please check your email configuration.");
       }
-      
-      setTestResult({
-        success: true,
-        message: "Test email sent successfully! Check your inbox.",
-        details: response
-      });
-      
-      toast({
-        title: "Test email sent",
-        description: "Check your inbox for the test email",
-      });
     } catch (error: any) {
       console.error("Test email error:", error);
-      setTestResult({
-        success: false,
-        message: error.message || "An unexpected error occurred",
-        details: error
-      });
-      
-      toast({
-        variant: "destructive",
-        title: "Test email failed",
-        description: error.message || "An unexpected error occurred",
-      });
+      setStatus('error');
+      setMessage("An unexpected error occurred. Please try again later.");
+      setDetails({ error: error.message });
     } finally {
-      setIsSending(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const closeDialog = () => {
-    const dialog = document.getElementById('testEmailDialog');
-    if (dialog instanceof HTMLDialogElement) {
-      dialog.close();
-    }
-    setTestResult(null);
   };
 
   return (
-    <dialog id="testEmailDialog" className="modal p-0 rounded-lg shadow-lg backdrop:bg-black/50">
-      <div className="bg-white p-6 w-full max-w-2xl rounded-lg">
-        <h3 className="text-xl font-bold mb-4">Test SMTP Configuration</h3>
-        <p className="text-gray-600 mb-4">
-          Enter an email address to send a test message and verify your SMTP configuration.
-        </p>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Test Email Configuration</DialogTitle>
+          <DialogDescription>
+            Send a test email to verify your email configuration is working correctly.
+          </DialogDescription>
+        </DialogHeader>
         
-        <form onSubmit={handleSendTestEmail} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="test-email">Email</Label>
-            <Input 
-              id="test-email" 
-              type="email" 
-              value={testEmail} 
-              onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-            />
-          </div>
-          
-          {testResult && (
-            <div className={`p-4 rounded-md ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-              <h4 className={`font-medium ${testResult.success ? 'text-green-800' : 'text-red-800'}`}>
-                {testResult.success ? 'Success' : 'Error'}
-              </h4>
-              <p className="text-sm my-2">{testResult.message}</p>
-              
-              {testResult.details && (
-                <ScrollArea className="h-40 mt-2 rounded bg-black/5 p-2">
-                  <pre className="text-xs font-mono">
-                    {JSON.stringify(testResult.details, null, 2)}
-                  </pre>
-                </ScrollArea>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <Label htmlFor="email">Email</Label>
+                  <FormControl>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="name@example.com" 
+                      {...field} 
+                      autoComplete="email"
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-          )}
-          
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeDialog}
-            >
-              Close
-            </Button>
-            <Button type="submit" disabled={isSending}>
-              {isSending ? "Sending..." : "Send Test Email"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </dialog>
+            />
+            
+            {status === 'pending' && (
+              <Alert>
+                <ClockIcon className="h-4 w-4" />
+                <AlertTitle>Sending...</AlertTitle>
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
+            
+            {status === 'success' && (
+              <Alert className="border-green-500 bg-green-50 text-green-800">
+                <CheckCircleIcon className="h-4 w-4" />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>
+                  {message}
+                  {details && details.duration && (
+                    <div className="mt-2 text-xs">
+                      Sent in {details.duration}ms
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {status === 'error' && (
+              <Alert className="border-destructive bg-destructive/10">
+                <AlertCircleIcon className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {message}
+                  
+                  {details && (
+                    <div className="mt-2 text-xs overflow-auto max-h-32 p-2 bg-gray-100 rounded">
+                      <pre className="whitespace-pre-wrap">
+                        {JSON.stringify(details, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Close
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Sending..." : "Send Test Email"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
