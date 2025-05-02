@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
-import { emailService } from "@/services/emailService";
 
 export function ResetPasswordDialog() {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -35,43 +34,17 @@ export function ResetPasswordDialog() {
       
       console.log("Reset link will redirect to:", resetLink);
       
-      // Try Supabase's built-in password reset first
-      const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      // Use Supabase's built-in password reset
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: resetLink,
       });
       
       if (error) {
-        console.error("Supabase password reset error:", error);
-        
-        // If it's a rate limit error or any other error, fall back to our custom email service
-        console.log("Supabase reset failed, using custom email service as fallback");
-        
-        // Send a custom email using our email service
-        const { success, error: emailError } = await emailService.sendPasswordResetEmail(resetEmail, resetLink);
-        
-        if (!success) {
-          console.error("Custom password reset email failed:", emailError);
-          throw new Error(emailError || "Failed to send password reset email. Please try again later.");
-        }
-        
-        toast({
-          title: "Password reset email sent",
-          description: "Check your inbox for password reset instructions",
-        });
-        
-        setResetEmail("");
-        
-        // Close the dialog
-        const dialog = document.getElementById('resetPasswordDialog');
-        if (dialog instanceof HTMLDialogElement) {
-          dialog.close();
-        }
-        
-        setIsResettingPassword(false);
-        return;
+        console.error("Password reset error:", error);
+        throw new Error(error.message || "Failed to send password reset email");
       }
       
-      console.log("Supabase password reset successful");
+      console.log("Password reset email sent successfully");
       
       toast({
         title: "Password reset email sent",

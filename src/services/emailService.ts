@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -29,18 +30,20 @@ export interface EmailResponse {
 }
 
 /**
- * Service for sending emails via Supabase Edge Function
+ * Service for sending emails via Supabase Auth
  */
 export const emailService = {
   /**
-   * Send an email using the configured SMTP server
+   * Send an email using Supabase's configured SMTP server
    */
   sendEmail: async (options: EmailOptions): Promise<EmailResponse> => {
     try {
       console.log("Sending email to:", options.to);
       
+      // For emails that don't fit into auth-related categories,
+      // we'll use a simplified approach through a specialized edge function
       const startTime = Date.now();
-      const { data, error } = await supabase.functions.invoke("send-email", {
+      const { data, error } = await supabase.functions.invoke("send-supabase-email", {
         body: options
       });
       const duration = Date.now() - startTime;
@@ -48,7 +51,7 @@ export const emailService = {
       console.log(`Send-email function responded in ${duration}ms`);
       
       if (error) {
-        console.error("Error invoking send-email function:", error);
+        console.error("Error invoking send-supabase-email function:", error);
         console.error("Error details:", {
           message: error.message,
           name: error.name,
@@ -162,49 +165,42 @@ export const emailService = {
   },
   
   /**
-   * Send a password reset email
+   * Send a password reset email using Supabase Auth
    */
   sendPasswordResetEmail: async (email: string, resetLink: string): Promise<EmailResponse> => {
     try {
       console.log("Sending password reset email to:", email);
-      console.log("With reset link:", resetLink);
       
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #4F46E5;">Reset Your Password</h1>
-          <p>Hello,</p>
-          <p>You recently requested to reset your password for your ELIA GO account. Click the button below to proceed:</p>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-          </p>
-          <p>If the button above doesn't work, you can also copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${resetLink}</p>
-          <p>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
-          <p>This link will expire in 24 hours.</p>
-          <p>Best regards,<br>The ELIA GO Team</p>
-        </div>
-      `;
-      
-      const startTime = Date.now();
-      const response = await emailService.sendEmail({
-        to: email,
-        subject: "Reset Your ELIA GO Password",
-        html
+      // Use Supabase's built-in password reset functionality
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: resetLink,
       });
-      const duration = Date.now() - startTime;
       
-      if (!response.success) {
-        console.error(`Password reset email failed after ${duration}ms:`, response.error);
-      } else {
-        console.log(`Password reset email sent successfully in ${duration}ms`);
+      if (error) {
+        console.error("Password reset email error:", error);
+        return { 
+          success: false, 
+          error: error.message,
+          details: {
+            type: "supabase_auth_error",
+            errorInfo: {
+              message: error.message,
+              name: error.name
+            }
+          }
+        };
       }
       
+      console.log("Password reset email sent successfully");
       return {
-        ...response,
+        success: true,
+        data: {
+          messageId: "supabase-auth-reset",
+          recipients: [email]
+        },
         details: {
-          ...response.details,
           emailType: "passwordReset",
-          duration
+          method: "supabase-auth"
         }
       };
     } catch (error: any) {
@@ -225,33 +221,25 @@ export const emailService = {
   },
   
   /**
-   * Send a test email to verify SMTP configuration
+   * Send a test email to verify email configuration
    */
   sendTestEmail: async (toEmail: string): Promise<EmailResponse> => {
     try {
       console.log("Sending test email to:", toEmail);
       
-      const config = {
-        smtpHost: "smtp.gmail.com",
-        smtpPort: 587,
-        username: "olive@eliago.com"
-      };
-      
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #4F46E5;">SMTP Test Successful!</h1>
+          <h1 style="color: #4F46E5;">Email Test Successful!</h1>
           <p>Hello,</p>
-          <p>This is a test email to verify that the SMTP configuration for ELIA GO is working correctly.</p>
+          <p>This is a test email to verify that the email configuration for ELIA GO is working correctly.</p>
           <p>If you're receiving this email, it means that:</p>
           <ul>
-            <li>Your Gmail SMTP settings are correctly configured</li>
-            <li>The Supabase Edge Function is working properly</li>
-            <li>Emails can be successfully delivered through your configured SMTP server</li>
+            <li>Your Supabase SMTP settings are correctly configured</li>
+            <li>Emails can be successfully delivered through your configured email provider</li>
           </ul>
           <p>Configuration details:</p>
           <ul>
-            <li>SMTP Provider: Gmail</li>
-            <li>From: olive@eliago.com</li>
+            <li>Provider: Supabase Auth SMTP</li>
             <li>Test sent: ${new Date().toLocaleString()}</li>
           </ul>
           <p>Best regards,<br>The ELIA GO Team</p>
@@ -261,7 +249,7 @@ export const emailService = {
       const startTime = Date.now();
       const response = await emailService.sendEmail({
         to: toEmail,
-        subject: "ELIA GO - SMTP Test Email",
+        subject: "ELIA GO - Email Test",
         html
       });
       const duration = Date.now() - startTime;
@@ -273,8 +261,7 @@ export const emailService = {
         details: {
           ...response.details,
           emailType: "test",
-          duration,
-          smtpConfig: config
+          duration
         }
       };
     } catch (error: any) {
