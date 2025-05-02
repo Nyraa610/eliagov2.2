@@ -8,6 +8,26 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRegistration, registrationFormSchema, RegistrationFormValues } from "@/hooks/useRegistration";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { AdditionalInfoForm } from "./AdditionalInfoForm";
+import { z } from "zod";
+
+// Create partial schemas for the multi-step form
+const basicInfoSchema = z.object({
+  email: registrationFormSchema.shape.email,
+  password: registrationFormSchema.shape.password,
+  confirmPassword: registrationFormSchema.shape.confirmPassword,
+  firstName: registrationFormSchema.shape.firstName,
+  lastName: registrationFormSchema.shape.lastName,
+  phone: registrationFormSchema.shape.phone,
+  company: registrationFormSchema.shape.company,
+  country: registrationFormSchema.shape.country,
+});
+
+const additionalInfoSchema = z.object({
+  department: registrationFormSchema.shape.department,
+  persona: registrationFormSchema.shape.persona,
+  marketingConsent: registrationFormSchema.shape.marketingConsent,
+  termsConsent: registrationFormSchema.shape.termsConsent,
+});
 
 export function RegisterForm() {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -18,18 +38,7 @@ export function RegisterForm() {
 
   // Step 1 form (basic info)
   const basicInfoForm = useForm<RegistrationFormValues>({
-    resolver: zodResolver(
-      registrationFormSchema.pick({
-        email: true,
-        password: true,
-        confirmPassword: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        company: true,
-        country: true,
-      })
-    ),
+    resolver: zodResolver(basicInfoSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -44,14 +53,7 @@ export function RegisterForm() {
 
   // Step 2 form (additional info)
   const additionalInfoForm = useForm<RegistrationFormValues>({
-    resolver: zodResolver(
-      registrationFormSchema.pick({
-        department: true,
-        persona: true,
-        marketingConsent: true,
-        termsConsent: true,
-      })
-    ),
+    resolver: zodResolver(additionalInfoSchema),
     defaultValues: {
       department: "",
       persona: "",
