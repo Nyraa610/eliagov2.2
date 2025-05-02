@@ -6,7 +6,7 @@ import { UseFormReturn } from "react-hook-form";
 import { RegistrationFormValues } from "@/hooks/useRegistration";
 
 export interface BasicInfoFormProps {
-  form: UseFormReturn<RegistrationFormValues, any, undefined>;
+  form: UseFormReturn<Partial<RegistrationFormValues>, any, undefined>;
   onSubmit: (values: Partial<RegistrationFormValues>) => void;
   isLoading: boolean;
 }

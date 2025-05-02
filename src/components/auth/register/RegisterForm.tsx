@@ -12,21 +12,24 @@ import { z } from "zod";
 
 // Create partial schemas for the multi-step form
 const basicInfoSchema = z.object({
-  email: registrationFormSchema.shape.email,
-  password: registrationFormSchema.shape.password,
-  confirmPassword: registrationFormSchema.shape.confirmPassword,
-  firstName: registrationFormSchema.shape.firstName,
-  lastName: registrationFormSchema.shape.lastName,
-  phone: registrationFormSchema.shape.phone,
-  company: registrationFormSchema.shape.company,
-  country: registrationFormSchema.shape.country,
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  country: z.string().optional(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
 });
 
 const additionalInfoSchema = z.object({
-  department: registrationFormSchema.shape.department,
-  persona: registrationFormSchema.shape.persona,
-  marketingConsent: registrationFormSchema.shape.marketingConsent,
-  termsConsent: registrationFormSchema.shape.termsConsent,
+  department: z.string().optional(),
+  persona: z.string().optional(),
+  marketingConsent: z.boolean().default(false),
+  termsConsent: z.boolean().default(false),
 });
 
 export function RegisterForm() {
@@ -37,7 +40,7 @@ export function RegisterForm() {
   const { registerUser, isLoading } = useRegistration();
 
   // Step 1 form (basic info)
-  const basicInfoForm = useForm<RegistrationFormValues>({
+  const basicInfoForm = useForm<Partial<RegistrationFormValues>>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: {
       email: "",
@@ -52,7 +55,7 @@ export function RegisterForm() {
   });
 
   // Step 2 form (additional info)
-  const additionalInfoForm = useForm<RegistrationFormValues>({
+  const additionalInfoForm = useForm<Partial<RegistrationFormValues>>({
     resolver: zodResolver(additionalInfoSchema),
     defaultValues: {
       department: "",
