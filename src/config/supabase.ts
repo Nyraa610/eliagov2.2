@@ -1,4 +1,3 @@
-
 interface SupabaseConfig {
   url: string;
   anonKey: string;
@@ -35,7 +34,7 @@ const configs: Record<string, SupabaseConfig> = {
   }
 };
 
-// Determine environment and export the configuration
+// Ensure the local environment is selected when VITE_LOCAL_SUPABASE is true
 const environment = getEnvironment();
 console.log(`Using Supabase environment: ${environment}`);
-export const supabaseConfig = configs[environment] || configs.development;
+export const supabaseConfig = configs[environment] || configs.local;
