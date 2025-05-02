@@ -80,6 +80,7 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
           <DialogTitle>Test Email Configuration</DialogTitle>
           <DialogDescription>
             Send a test email to verify your email configuration is working correctly.
+            This will use the native Supabase SMTP configuration.
           </DialogDescription>
         </DialogHeader>
         
