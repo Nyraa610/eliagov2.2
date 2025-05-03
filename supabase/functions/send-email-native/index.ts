@@ -83,7 +83,23 @@ serve(async (req) => {
       ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc : [emailRequest.bcc]) 
       : [];
     
+    // Verify the SMTP settings are available
+    if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      logEvent('config', 'error', "Missing required environment variables for Supabase client");
+      throw new Error("Server configuration error: Missing required environment variables");
+    }
+    
+    // Log the SMTP configuration we're using (without sensitive data)
+    logEvent('config', 'info', "Using Supabase native email service", {
+      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
+      hasServiceRoleKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      recipients: recipients.join(','),
+      hasCC: ccRecipients.length > 0,
+      hasBCC: bccRecipients.length > 0
+    });
+    
     // Send email using Supabase's built-in email service
+    const startTime = Date.now();
     const { data, error } = await supabaseAdmin.functions.invoke('send-email-v2', {
       body: {
         to: recipients.join(','),
@@ -95,23 +111,29 @@ serve(async (req) => {
         reply_to: emailRequest.replyTo || undefined,
       }
     });
+    const responseTime = Date.now() - startTime;
     
     if (error) {
       logEvent('delivery', 'error', `Email error: ${error.message}`, {
         errorName: error.name,
-        errorMessage: error.message
+        errorMessage: error.message,
+        responseTimeMs: responseTime
       });
       throw error;
     }
     
-    logEvent('response', 'info', "Email processed successfully");
+    logEvent('response', 'info', "Email processed successfully", {
+      responseTimeMs: responseTime,
+      recipients: recipients.length
+    });
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: {
           messageId: `supabase-email-${Date.now()}`,
-          recipients: [...recipients, ...ccRecipients, ...bccRecipients]
+          recipients: [...recipients, ...ccRecipients, ...bccRecipients],
+          responseTime: responseTime
         }
       }),
       { 
@@ -122,7 +144,8 @@ serve(async (req) => {
   } catch (error: any) {
     logEvent('response', 'error', `Error sending email: ${error.message}`, {
       errorName: error.name,
-      errorStack: error.stack
+      errorStack: error.stack,
+      errorDetails: error.details || {}
     });
     
     return new Response(
