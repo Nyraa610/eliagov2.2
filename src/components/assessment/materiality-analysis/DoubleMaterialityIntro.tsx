@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LightBulb } from "lucide-react";
+import { Lightbulb } from "lucide-react"; // Changed from LightBulb to Lightbulb
 
 export function DoubleMaterialityIntro() {
   return (
@@ -48,7 +48,7 @@ export function DoubleMaterialityIntro() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <LightBulb className="h-5 w-5 text-amber-500" />
+            <Lightbulb className="h-5 w-5 text-amber-500" /> {/* Changed from LightBulb to Lightbulb */}
             Double Materiality Explained
           </CardTitle>
           <CardDescription>

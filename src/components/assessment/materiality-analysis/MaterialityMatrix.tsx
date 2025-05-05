@@ -8,7 +8,7 @@ import { MaterialityFormValues } from "./formSchema";
 import { Chart, registerables } from "chart.js";
 import { Download, FileText, Printer } from "lucide-react";
 import { jsPDF } from "jspdf";
-import html2canvas from "html-to-image";
+import { toPng } from "html-to-image";
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -38,7 +38,7 @@ const getCategoryColor = (category?: string): string => {
 export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMatrixProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
-  const issues = form.watch("materialIssues");
+  const issues = form.watch("materialIssues") || [];
   const matrixContainerRef = useRef<HTMLDivElement>(null);
   
   // Create and update chart when issues change
@@ -127,26 +127,34 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
           },
           legend: {
             display: false,
-          },
-          // Add a diagonal line
-          afterDraw: (chart) => {
-            const ctx = chart.ctx;
-            const xAxis = chart.scales.x;
-            const yAxis = chart.scales.y;
-            
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(xAxis.getPixelForValue(0), yAxis.getPixelForValue(0));
-            ctx.lineTo(xAxis.getPixelForValue(10), yAxis.getPixelForValue(10));
-            ctx.stroke();
-            ctx.restore();
-          },
+          }
         },
       },
     });
+    
+    // Add diagonal line after chart is rendered
+    const drawDiagonalLine = () => {
+      if (!chartInstanceRef.current) return;
+      
+      const chart = chartInstanceRef.current;
+      const ctx = chart.ctx;
+      const xAxis = chart.scales['x'];
+      const yAxis = chart.scales['y'];
+      
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(xAxis.getPixelForValue(0), yAxis.getPixelForValue(0));
+      ctx.lineTo(xAxis.getPixelForValue(10), yAxis.getPixelForValue(10));
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    chartInstanceRef.current.options.animation = {
+      onComplete: drawDiagonalLine
+    };
     
     return () => {
       if (chartInstanceRef.current) {
@@ -161,23 +169,22 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
     if (!matrixContainerRef.current) return;
     
     try {
-      const canvas = await html2canvas(matrixContainerRef.current, {
+      const dataUrl = await toPng(matrixContainerRef.current, {
         backgroundColor: '#ffffff',
       });
       
       const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
       
       // Add title
       pdf.setFontSize(16);
       pdf.text('Double Materiality Assessment Matrix', 15, 15);
       
       // Calculate dimensions to fit the PDF while maintaining aspect ratio
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 30;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgWidth = 270; // PDF width (less margins)
+      const imgHeight = 150; // Approximate height for the chart
       
       // Add the image
-      pdf.addImage(imgData, 'PNG', 15, 25, pdfWidth, pdfHeight);
+      pdf.addImage(dataUrl, 'PNG', 15, 25, imgWidth, imgHeight);
       
       // Add issues table
       pdf.addPage();
@@ -226,7 +233,7 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
     if (!matrixContainerRef.current) return;
     
     try {
-      const canvas = await html2canvas(matrixContainerRef.current, {
+      const dataUrl = await toPng(matrixContainerRef.current, {
         backgroundColor: '#ffffff',
       });
       
@@ -237,7 +244,7 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
       win.document.write('<style>body{text-align:center;}</style>');
       win.document.write('</head><body>');
       win.document.write('<h1>Double Materiality Assessment Matrix</h1>');
-      win.document.write(`<img src="${canvas.toDataURL()}" style="max-width:100%;" />`);
+      win.document.write(`<img src="${dataUrl}" style="max-width:100%;" />`);
       win.document.write('<h2>Material Issues</h2><ul style="text-align:left;">');
       
       // Add issue details

@@ -22,6 +22,9 @@ export const materialitySchema = z.object({
   materialIssues: z.array(materialityIssueSchema).default([]),
   stakeholderFeedback: z.string().optional(),
   customIssueInput: z.string().optional(),
+  // Add the missing fields that we're trying to use in forms
+  impactOnBusiness: z.number().min(0).max(10).optional(),
+  impactOnStakeholders: z.number().min(0).max(10).optional(),
 });
 
 export type MaterialityFormValues = z.infer<typeof materialitySchema>;
