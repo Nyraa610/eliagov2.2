@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { 
   Notification, 
   notificationService 
@@ -81,6 +81,25 @@ export function NotificationButton() {
       console.error("Error marking all notifications as read:", error);
     }
   };
+  
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'assessment_completed':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'document_uploaded':
+        return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'deliverable_created':
+        return <FileText className="h-5 w-5 text-purple-500" />;
+      case 'approval_request':
+        return <AlertCircle className="h-5 w-5 text-amber-500" />;
+      case 'approval_update':
+        return <CheckCircle className="h-5 w-5 text-blue-500" />;
+      case 'message':
+        return <Bell className="h-5 w-5 text-orange-500" />;
+      default:
+        return <Bell className="h-5 w-5 text-gray-500" />;
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -119,14 +138,19 @@ export function NotificationButton() {
               {notifications.map((notification) => (
                 <Card key={notification.id} className="rounded-none border-x-0 border-t-0 last:border-b-0">
                   <div className="p-3 hover:bg-muted/50 cursor-pointer" onClick={() => notification.id && markAsRead(notification.id)}>
-                    <div className="flex items-start gap-2">
-                      {!notification.is_read && (
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                      )}
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex-shrink-0">
+                        {getNotificationIcon(notification.notification_type)}
+                      </div>
                       <div className="flex-1">
-                        <p className={`text-sm ${!notification.is_read ? 'font-medium' : ''}`}>
-                          {notification.title}
-                        </p>
+                        <div className="flex items-start justify-between">
+                          <p className={`text-sm ${!notification.is_read ? 'font-medium' : ''}`}>
+                            {notification.title}
+                          </p>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                           {notification.message}
                         </p>

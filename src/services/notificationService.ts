@@ -6,6 +6,8 @@ export type NotificationType =
   | 'assessment_completed' 
   | 'document_uploaded' 
   | 'deliverable_created' 
+  | 'approval_request'
+  | 'approval_update'
   | 'message';
 
 export interface Notification {
