@@ -124,7 +124,7 @@ export function MatrixContainer({ data }: MatrixContainerProps) {
           open={isApprovalDialogOpen}
           onOpenChange={setIsApprovalDialogOpen}
           documentType="materiality_matrix"
-          documentId="materiality_matrix_" + Date.now()
+          documentId={`materiality_matrix_${Date.now()}`}
           documentTitle={`${data.companyName} - Double Materiality Matrix`}
           companyId={companyId}
         />
