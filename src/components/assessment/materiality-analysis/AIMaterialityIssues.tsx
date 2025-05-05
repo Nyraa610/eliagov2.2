@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ export function AIMaterialityIssues({ form, onNext }: AIMaterialityIssuesProps) 
         title: customIssue, 
         financialMateriality: 5, 
         impactMateriality: 5, 
-        category: "Environmental" // Default to Environmental instead of "Uncategorized"
+        category: "Environmental" // Using the enum value directly
       }
     ]);
     setCustomIssue('');
@@ -42,7 +43,7 @@ export function AIMaterialityIssues({ form, onNext }: AIMaterialityIssuesProps) 
     setIssues(updatedIssues);
   };
 
-  const handleCategoryChange = (id: string, category: string) => {
+  const handleCategoryChange = (id: string, category: typeof issueCategories[number]) => {
     const updatedIssues = issues.map(issue => {
       if (issue.id === id) {
         return { ...issue, category };
@@ -82,9 +83,12 @@ export function AIMaterialityIssues({ form, onNext }: AIMaterialityIssuesProps) 
                 <li key={issue.id} className="flex items-center justify-between border rounded-md p-3">
                   <span>{issue.title}</span>
                   <div className="flex items-center space-x-3">
-                    <Select onValueChange={(value) => handleCategoryChange(issue.id as string, value)}>
+                    <Select 
+                      defaultValue={issue.category}
+                      onValueChange={(value) => handleCategoryChange(issue.id as string, value as typeof issueCategories[number])}
+                    >
                       <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select category" defaultValue={issue.category} />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
                         {issueCategories.map((category) => (

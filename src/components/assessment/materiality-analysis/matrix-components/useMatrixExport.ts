@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { jsPDF } from "jspdf";
-import html2canvas from 'html-to-image';
+import * as htmlToImage from 'html-to-image';
 import { MaterialityIssue } from '../formSchema';
 import { MaterialityFormValues } from '../formSchema';
 
@@ -29,7 +29,7 @@ export function useMatrixExport() {
     if (!matrixContainerRef.current) return null;
     
     try {
-      const dataUrl = await html2canvas.toPng(matrixContainerRef.current, {
+      const dataUrl = await htmlToImage.toPng(matrixContainerRef.current, {
         backgroundColor: '#ffffff',
       });
       
@@ -119,7 +119,7 @@ export function useMatrixExport() {
     if (!matrixContainerRef.current) return;
     
     try {
-      const dataUrl = await html2canvas.toPng(matrixContainerRef.current, {
+      const dataUrl = await htmlToImage.toPng(matrixContainerRef.current, {
         backgroundColor: '#ffffff',
       });
       
