@@ -6,13 +6,13 @@ import { Download, Printer, Save } from "lucide-react";
 interface ExportActionsProps {
   onPrint: () => void;
   onDownloadPDF: () => void;
-  onOpenSaveDialog: () => void;
+  onSave: () => void;
 }
 
 export function ExportActions({ 
   onPrint, 
   onDownloadPDF, 
-  onOpenSaveDialog 
+  onSave 
 }: ExportActionsProps) {
   return (
     <div className="flex justify-center space-x-3">
@@ -22,7 +22,7 @@ export function ExportActions({
       <Button variant="outline" size="sm" onClick={onDownloadPDF}>
         <Download className="h-4 w-4 mr-2" /> Download PDF
       </Button>
-      <Button variant="outline" size="sm" onClick={onOpenSaveDialog}>
+      <Button variant="outline" size="sm" onClick={onSave}>
         <Save className="h-4 w-4 mr-2" /> Save to Deliverables
       </Button>
     </div>

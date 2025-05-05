@@ -52,7 +52,7 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
           <div className="space-y-6">
             <MatrixContainer 
               ref={matrixContainerRef} 
-              issues={issues} 
+              data={form.getValues()}
             />
             
             <ExportActions 
@@ -62,7 +62,7 @@ export function MaterialityMatrix({ form, onPrevious, onFinish }: MaterialityMat
                 issues, 
                 form.getValues().companyName || "Company"
               )}
-              onOpenSaveDialog={() => setIsSaveDialogOpen(true)}
+              onSave={() => setIsSaveDialogOpen(true)}
             />
             
             <MaterialityIssuesSummary issues={issues} />

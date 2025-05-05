@@ -6,9 +6,10 @@ import { MaterialityIssue } from "../formSchema";
 
 interface KeyInsightsProps {
   issues: MaterialityIssue[];
+  companyName?: string; // Make this optional to avoid breaking other usages
 }
 
-export function KeyInsights({ issues }: KeyInsightsProps) {
+export function KeyInsights({ issues, companyName }: KeyInsightsProps) {
   return (
     <div>
       <h3 className="font-medium text-lg mb-3">Key Insights</h3>
