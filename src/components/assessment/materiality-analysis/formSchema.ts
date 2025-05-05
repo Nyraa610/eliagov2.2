@@ -1,6 +1,10 @@
 
 import * as z from "zod";
 
+// Define the valid categories for materiality issues
+export const issueCategories = ["Environmental", "Social", "Governance"] as const;
+export type IssueCategory = typeof issueCategories[number];
+
 // Define the schema for a materiality issue
 export const materialityIssueSchema = z.object({
   id: z.string().optional(),
@@ -9,7 +13,7 @@ export const materialityIssueSchema = z.object({
   financialMateriality: z.number().min(0).max(10),
   impactMateriality: z.number().min(0).max(10),
   maturity: z.number().min(0).max(10).optional(),
-  category: z.string().optional(),
+  category: z.enum(issueCategories).default("Environmental"),
 });
 
 export type MaterialityIssue = z.infer<typeof materialityIssueSchema>;
@@ -22,9 +26,6 @@ export const materialitySchema = z.object({
   materialIssues: z.array(materialityIssueSchema).default([]),
   stakeholderFeedback: z.string().optional(),
   customIssueInput: z.string().optional(),
-  // Add the missing fields that we're trying to use in forms
-  impactOnBusiness: z.number().min(0).max(10).optional(),
-  impactOnStakeholders: z.number().min(0).max(10).optional(),
 });
 
 export type MaterialityFormValues = z.infer<typeof materialitySchema>;
