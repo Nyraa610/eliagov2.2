@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -25,11 +26,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/base/supabaseService';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { ClientIndicator } from './navigation/ClientIndicator';
+import { roleService } from '@/services/base/roleService';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConsultant, setIsConsultant] = useState(false);
   const location = useLocation();
   const { isAuthenticated, isLoading: authLoading, user, signOut } = useAuth();
   
@@ -57,6 +60,22 @@ export function Navigation() {
     
     fetchUserProfile();
   }, [isAuthenticated, user]);
+  
+  // Check if the user is a consultant
+  useEffect(() => {
+    const checkConsultantRole = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        const hasRole = await roleService.hasRole('consultant');
+        setIsConsultant(hasRole);
+      } catch (error) {
+        console.error("Error checking consultant role:", error);
+      }
+    };
+    
+    checkConsultantRole();
+  }, [isAuthenticated]);
   
   const handleLogout = async () => {
     try {
@@ -91,7 +110,7 @@ export function Navigation() {
                 isActive={isActive}
                 onLogout={handleLogout}
               />
-              <ClientIndicator />
+              {isConsultant && <ClientIndicator />}
             </>
           )}
         </div>
