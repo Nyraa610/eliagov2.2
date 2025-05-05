@@ -6,6 +6,9 @@ import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics";
 import { LearningProgressCard } from "@/components/dashboard/LearningProgressCard";
 import { EngagementStatsCard } from "@/components/dashboard/EngagementStatsCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useSelectedClient } from "@/hooks/useSelectedClient";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Building } from "lucide-react";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -18,8 +21,20 @@ const Dashboard = () => {
     engagementStats
   } = useDashboardData();
   
+  const { clientId, clientName, isLoading: clientLoading } = useSelectedClient();
+  
   return (
     <>
+      {clientId && (
+        <Alert className="mb-6 bg-muted/50">
+          <Building className="h-4 w-4" />
+          <AlertTitle>Consultant View</AlertTitle>
+          <AlertDescription>
+            You are currently viewing data for client: <strong>{clientName}</strong>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <DashboardMetrics 
         totalPoints={totalPoints} 
         completedCourses={completedCourses}

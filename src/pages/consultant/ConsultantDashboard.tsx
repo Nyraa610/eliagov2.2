@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,14 @@ import { ClientSelector } from "@/components/consultant/ClientSelector";
 import { roleService } from "@/services/base/roleService";
 import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, BarChart, ClipboardCheck } from "lucide-react";
+import { useClientContext } from "@/contexts/ClientContext";
 
 export default function ConsultantDashboard() {
   const navigate = useNavigate();
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isConsultant, setIsConsultant] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
+  const { selectedClientId } = useClientContext();
 
   useEffect(() => {
     const checkRole = async () => {
@@ -47,9 +47,8 @@ export default function ConsultantDashboard() {
   }, [navigate, toast]);
 
   const handleClientChange = (companyId: string) => {
-    setSelectedCompanyId(companyId);
-    // Here you would typically load data specific to the selected company
-    console.log("Selected company changed:", companyId);
+    // This will be handled by the ClientSelector with our context
+    console.log("Client changed via dashboard selector:", companyId);
   };
 
   if (isLoading) {
@@ -80,7 +79,7 @@ export default function ConsultantDashboard() {
       
       <ClientSelector onChange={handleClientChange} />
       
-      {selectedCompanyId && (
+      {selectedClientId && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
@@ -143,7 +142,7 @@ export default function ConsultantDashboard() {
             <CardDescription>Latest actions across client accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedCompanyId ? (
+            {selectedClientId ? (
               <div className="space-y-4">
                 <div className="border-b pb-2">
                   <div className="font-medium">ESG Diagnostic Started</div>
@@ -172,7 +171,7 @@ export default function ConsultantDashboard() {
             <CardDescription>Quick actions for the selected client</CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedCompanyId ? (
+            {selectedClientId ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button onClick={() => navigate("/assessment")}>
                   <ClipboardCheck className="h-4 w-4 mr-2" />

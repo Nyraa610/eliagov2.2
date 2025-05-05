@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { Navigation } from '../Navigation';
 import { UserSidebar } from './UserSidebar';
 import { HotjarTracking } from '../analytics/HotjarTracking';
+import { ClientProvider } from '@/contexts/ClientContext';
 
 interface UserLayoutProps {
   children?: ReactNode;
@@ -12,21 +13,23 @@ interface UserLayoutProps {
 
 export function UserLayout({ children, title }: UserLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      {/* Add Hotjar tracking */}
-      <HotjarTracking />
-      
-      <div className="flex">
-        <UserSidebar />
+    <ClientProvider>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        {/* Add Hotjar tracking */}
+        <HotjarTracking />
         
-        <main className="flex-1 p-6 pt-24">
-          <div className="container mx-auto max-w-6xl">
-            {title && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
-            {children || <Outlet />}
-          </div>
-        </main>
+        <div className="flex">
+          <UserSidebar />
+          
+          <main className="flex-1 p-6 pt-24">
+            <div className="container mx-auto max-w-6xl">
+              {title && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
+              {children || <Outlet />}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ClientProvider>
   );
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +24,7 @@ import { UserProfile } from '@/services/base/profileTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/base/supabaseService';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ClientIndicator } from './navigation/ClientIndicator';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -84,12 +84,15 @@ export function Navigation() {
           </Link>
           
           {!authLoading && isAuthenticated && (
-            <DesktopNavigation 
-              isAuthenticated={isAuthenticated} 
-              userProfile={userProfile} 
-              isActive={isActive}
-              onLogout={handleLogout}
-            />
+            <>
+              <DesktopNavigation 
+                isAuthenticated={isAuthenticated} 
+                userProfile={userProfile} 
+                isActive={isActive}
+                onLogout={handleLogout}
+              />
+              <ClientIndicator />
+            </>
           )}
         </div>
         
