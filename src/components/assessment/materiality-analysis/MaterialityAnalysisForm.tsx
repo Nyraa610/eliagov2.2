@@ -22,28 +22,45 @@ export function MaterialityAnalysisForm({
   setProgress
 }: MaterialityAnalysisFormProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("identify");
+  const [activeTab, setActiveTab] = useState("introduction");
   
   // Form definition
   const form = useForm<MaterialityFormValues>({
     resolver: zodResolver(materialitySchema),
     defaultValues: {
       companyName: "",
-      materialIssues: "",
-      impactOnBusiness: 5,
-      impactOnStakeholders: 5,
+      industry: "",
+      materialIssues: [],
       stakeholderFeedback: "",
     },
   });
 
   // Handler for tab changes to update status
   const handleTabChange = (tab: string) => {
-    // If this is the first tab and status is not-started, change to in-progress
+    // If this is the first tab after introduction and status is not-started, change to in-progress
     if (tab === "identify" && analysisStatus === "not-started") {
       setAnalysisStatus("in-progress");
     }
     
     setActiveTab(tab);
+    
+    // Update progress based on the tab
+    switch(tab) {
+      case "introduction":
+        setProgress(10);
+        break;
+      case "identify":
+        setProgress(40);
+        break;
+      case "stakeholders":
+        setProgress(70);
+        break;
+      case "matrix":
+        setProgress(90);
+        break;
+      default:
+        setProgress(10);
+    }
   };
 
   function onSubmit(values: MaterialityFormValues) {

@@ -1,11 +1,30 @@
+
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function RegisterValidation() {
   const location = useLocation();
   const hasError = location.hash.includes('error');
+  const searchParams = new URLSearchParams(location.search);
+  const redirectTo = searchParams.get('redirectTo');
+  
+  useEffect(() => {
+    if (!hasError) {
+      // Show a success toast
+      toast.success("Email verified successfully", {
+        description: "You can now log in to your account"
+      });
+    } else {
+      // Show an error toast
+      toast.error("Email verification failed", {
+        description: "Please try again or contact support"
+      });
+    }
+  }, [hasError]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
@@ -45,8 +64,10 @@ export default function RegisterValidation() {
               </p>
               
               <div className="pt-4">
-                <Link to="/login">
-                  <Button>Se connecter</Button>
+                <Link to={redirectTo || "/login"}>
+                  <Button>
+                    {redirectTo ? "Continuer" : "Se connecter"}
+                  </Button>
                 </Link>
               </div>
             </>

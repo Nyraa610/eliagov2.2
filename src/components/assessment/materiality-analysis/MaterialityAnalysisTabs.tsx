@@ -1,12 +1,12 @@
 
-import { Layers, Users, TrendingUp, BarChart3 } from "lucide-react";
+import { Layers, Users, BarChart3, TrendingUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UseFormReturn } from "react-hook-form";
 import { MaterialityFormValues } from "./formSchema";
-import { IdentifyIssuesForm } from "./IdentifyIssuesForm";
-import { AssessImpactForm } from "./AssessImpactForm";
+import { DoubleMaterialityIntro } from "./DoubleMaterialityIntro";
+import { AIMaterialityIssues } from "./AIMaterialityIssues";
 import { StakeholderInputForm } from "./StakeholderInputForm";
-import { PrioritizeForm } from "./PrioritizeForm";
+import { MaterialityMatrix } from "./MaterialityMatrix";
 
 interface MaterialityAnalysisTabsProps {
   form: UseFormReturn<MaterialityFormValues>;
@@ -22,10 +22,10 @@ export function MaterialityAnalysisTabs({
   onSubmit 
 }: MaterialityAnalysisTabsProps) {
   const tabs = [
-    { id: "identify", label: "Identify Issues", icon: <Layers className="h-4 w-4 mr-2" /> },
-    { id: "assess", label: "Assess Impact", icon: <BarChart3 className="h-4 w-4 mr-2" /> },
+    { id: "introduction", label: "Introduction", icon: <Layers className="h-4 w-4 mr-2" /> },
+    { id: "identify", label: "Identify Issues", icon: <BarChart3 className="h-4 w-4 mr-2" /> },
     { id: "stakeholders", label: "Stakeholder Input", icon: <Users className="h-4 w-4 mr-2" /> },
-    { id: "prioritize", label: "Prioritize", icon: <TrendingUp className="h-4 w-4 mr-2" /> }
+    { id: "matrix", label: "Materiality Matrix", icon: <TrendingUp className="h-4 w-4 mr-2" /> }
   ];
 
   return (
@@ -38,17 +38,21 @@ export function MaterialityAnalysisTabs({
         ))}
       </TabsList>
       
-      <TabsContent value="identify" className="space-y-4">
-        <IdentifyIssuesForm 
-          form={form} 
-          onNext={() => setActiveTab("assess")} 
-        />
+      <TabsContent value="introduction" className="space-y-4">
+        <DoubleMaterialityIntro />
+        <div className="flex justify-end">
+          <button 
+            onClick={() => setActiveTab("identify")} 
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
+          >
+            Start Assessment
+          </button>
+        </div>
       </TabsContent>
       
-      <TabsContent value="assess" className="space-y-4">
-        <AssessImpactForm 
+      <TabsContent value="identify" className="space-y-4">
+        <AIMaterialityIssues 
           form={form} 
-          onPrevious={() => setActiveTab("identify")} 
           onNext={() => setActiveTab("stakeholders")} 
         />
       </TabsContent>
@@ -56,16 +60,16 @@ export function MaterialityAnalysisTabs({
       <TabsContent value="stakeholders" className="space-y-4">
         <StakeholderInputForm 
           form={form} 
-          onPrevious={() => setActiveTab("assess")} 
-          onNext={() => setActiveTab("prioritize")} 
+          onPrevious={() => setActiveTab("identify")} 
+          onNext={() => setActiveTab("matrix")} 
         />
       </TabsContent>
       
-      <TabsContent value="prioritize" className="space-y-4">
-        <PrioritizeForm 
+      <TabsContent value="matrix" className="space-y-4">
+        <MaterialityMatrix 
           form={form} 
           onPrevious={() => setActiveTab("stakeholders")} 
-          onSubmit={onSubmit} 
+          onFinish={onSubmit} 
         />
       </TabsContent>
     </Tabs>
