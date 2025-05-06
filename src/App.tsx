@@ -89,7 +89,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="/Features" element={<Features />} />
+                <Route path="Features" element={<Features />} />
                 
                 {/* Assessment module routes - consolidated */}
                 <Route path="assessment" element={<Assessment />} />
