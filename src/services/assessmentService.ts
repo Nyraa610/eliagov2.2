@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 // Type for assessment results
@@ -10,16 +11,17 @@ export type AssessmentType =
   | 'value_chain';
 
 // Generic type for status
-type AssessmentStatus = 'not-started' | 'in-progress' | 'waiting-for-approval' | 'blocked' | 'completed';
+export type AssessmentStatus = 'not-started' | 'in-progress' | 'waiting-for-approval' | 'blocked' | 'completed';
 
 // Type for assessment progress
-type AssessmentProgress = {
+export type AssessmentProgress = {
   status: AssessmentStatus;
   progress: number;
+  form_data?: any; // Adding form_data property to fix the type errors
 };
 
 // Type for document templates
-type DocumentTemplateTypes = 
+export type DocumentTemplateTypes = 
   | 'esg-diagnostic' 
   | 'carbon-evaluation' 
   | 'materiality_analysis' 
@@ -54,7 +56,7 @@ export const assessmentService = {
     try {
       const { data, error } = await supabase
         .from('assessment_progress')
-        .select('status, progress')
+        .select('status, progress, form_data')
         .eq('assessment_type', assessmentType)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -69,6 +71,48 @@ export const assessmentService = {
     } catch (error) {
       console.error("Failed to get assessment progress:", error);
       return { status: 'not-started', progress: 0 };
+    }
+  },
+
+  // Adding the missing saveAssessmentProgress method
+  saveAssessmentProgress: async (
+    assessmentType: string, 
+    status: AssessmentStatus, 
+    progress: number, 
+    form_data?: any
+  ): Promise<boolean> => {
+    try {
+      // Get user ID from session
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        console.error("No authenticated user found");
+        return false;
+      }
+
+      const userId = session.session.user.id;
+      
+      const { error } = await supabase
+        .from('assessment_progress')
+        .upsert({
+          user_id: userId,
+          assessment_type: assessmentType,
+          status,
+          progress,
+          form_data,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id, assessment_type'
+        });
+
+      if (error) {
+        console.error("Error saving assessment progress:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Failed to save assessment progress:", error);
+      return false;
     }
   },
 

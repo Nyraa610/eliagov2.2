@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -100,7 +99,8 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
       </div>
     );
   };
-  
+
+  // Fix the array handling issues in the ESG Assessment section
   const renderESGAssessment = () => {
     const section = documentData.esgAssessment || {
       introduction: "This ESG assessment provides a comprehensive review of current sustainability practices and identifies areas for improvement, using the ISO 26000 framework as a reference for responsible business conduct.",
@@ -160,7 +160,16 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                       onChange={(e) => {
                         const newPillars = [...section.pillars];
                         newPillars[index].name = e.target.value;
-                        handleInputChange("esgAssessment", "pillars", newPillars);
+                        // Fix: Convert array to string JSON representation for the handleInputChange
+                        handleInputChange("esgAssessment", "pillars", JSON.stringify(newPillars));
+                        // Then update directly to maintain the array in state
+                        setDocumentData((prev: any) => ({
+                          ...prev,
+                          esgAssessment: {
+                            ...prev.esgAssessment,
+                            pillars: newPillars
+                          }
+                        }));
                       }}
                     />
                   </div>
@@ -171,7 +180,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                       onChange={(e) => {
                         const newPillars = [...section.pillars];
                         newPillars[index].assessment = e.target.value;
-                        handleInputChange("esgAssessment", "pillars", newPillars);
+                        // Fix: Update directly rather than using handleInputChange
+                        setDocumentData((prev: any) => ({
+                          ...prev,
+                          esgAssessment: {
+                            ...prev.esgAssessment,
+                            pillars: newPillars
+                          }
+                        }));
                       }}
                     />
                   </div>
@@ -202,7 +218,7 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
       </div>
     );
   };
-  
+
   const renderCarbonFootprint = () => {
     const section = documentData.carbonFootprint || {
       introduction: "This section provides a snapshot of the organization's carbon footprint across all relevant emission scopes.",
@@ -235,6 +251,7 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
     );
   };
   
+  // Fix the array handling in the Risk/Opportunity section
   const renderRiskOpportunity = () => {
     const section = documentData.riskOpportunity || {
       introduction: "This matrix highlights the key sustainability risks and opportunities identified during the assessment.",
@@ -275,7 +292,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newRisks = [...section.risks];
                           newRisks[index].title = e.target.value;
-                          handleInputChange("riskOpportunity", "risks", newRisks);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            riskOpportunity: {
+                              ...prev.riskOpportunity,
+                              risks: newRisks
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -286,7 +310,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newRisks = [...section.risks];
                           newRisks[index].description = e.target.value;
-                          handleInputChange("riskOpportunity", "risks", newRisks);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            riskOpportunity: {
+                              ...prev.riskOpportunity,
+                              risks: newRisks
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -321,7 +352,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newOpportunities = [...section.opportunities];
                           newOpportunities[index].title = e.target.value;
-                          handleInputChange("riskOpportunity", "opportunities", newOpportunities);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            riskOpportunity: {
+                              ...prev.riskOpportunity,
+                              opportunities: newOpportunities
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -332,7 +370,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newOpportunities = [...section.opportunities];
                           newOpportunities[index].description = e.target.value;
-                          handleInputChange("riskOpportunity", "opportunities", newOpportunities);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            riskOpportunity: {
+                              ...prev.riskOpportunity,
+                              opportunities: newOpportunities
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -355,6 +400,7 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
     );
   };
   
+  // Fix the array handling in the Action Plan section
   const renderActionPlan = () => {
     const section = documentData.actionPlan || {
       objective: "Develop and implement a comprehensive sustainability strategy that reduces environmental impact while enhancing business performance.",
@@ -395,7 +441,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                     onChange={(e) => {
                       const newActions = [...section.keyActions];
                       newActions[index] = e.target.value;
-                      handleInputChange("actionPlan", "keyActions", newActions);
+                      // Fix: Update directly instead of using handleInputChange
+                      setDocumentData((prev: any) => ({
+                        ...prev,
+                        actionPlan: {
+                          ...prev.actionPlan,
+                          keyActions: newActions
+                        }
+                      }));
                     }}
                   />
                 </div>
@@ -431,7 +484,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newRoadmap = [...section.roadmap];
                           newRoadmap[index].timeframe = e.target.value;
-                          handleInputChange("actionPlan", "roadmap", newRoadmap);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            actionPlan: {
+                              ...prev.actionPlan,
+                              roadmap: newRoadmap
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -442,7 +502,14 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
                         onChange={(e) => {
                           const newRoadmap = [...section.roadmap];
                           newRoadmap[index].actions = e.target.value;
-                          handleInputChange("actionPlan", "roadmap", newRoadmap);
+                          // Fix: Update directly instead of using handleInputChange
+                          setDocumentData((prev: any) => ({
+                            ...prev,
+                            actionPlan: {
+                              ...prev.actionPlan,
+                              roadmap: newRoadmap
+                            }
+                          }));
                         }}
                       />
                     </div>
@@ -500,7 +567,7 @@ export const DocumentContent: React.FC<DocumentContentProps> = ({
       </div>
     );
   };
-  
+
   return (
     <div className="space-y-12 max-w-4xl mx-auto">
       <div className="text-center mb-8">
