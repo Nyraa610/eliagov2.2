@@ -49,6 +49,7 @@ import StakeholderMapping from './pages/assessment/StakeholderMapping';
 import TalkWithExperts from './pages/expert/TalkWithExperts';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
 import { GlobalAIAssistant } from './components/ai/GlobalAIAssistant';
+import RegisterValidation from './pages/RegisterValidation';
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/register/confirmation" element={<RegisterConfirmation />} />
+              <Route path="/register/validation" element={<RegisterValidation />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/pricing" element={<Pricing />} />
