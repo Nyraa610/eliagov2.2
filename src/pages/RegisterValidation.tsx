@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Navigation } from "@/components/Navigation"; // Ajout de cette importation manquante
 
 export default function RegisterValidation() {
   const location = useLocation();
