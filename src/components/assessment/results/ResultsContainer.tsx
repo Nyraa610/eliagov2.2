@@ -12,6 +12,7 @@ interface ResultsContainerProps {
   children: React.ReactNode;
   reportUrl?: string;
   showDeliverables?: boolean;
+  additionalActions?: React.ReactNode;
 }
 
 export const ResultsContainer: React.FC<ResultsContainerProps> = ({
@@ -19,7 +20,8 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
   description,
   children,
   reportUrl,
-  showDeliverables = true
+  showDeliverables = true,
+  additionalActions
 }) => {
   const { t } = useTranslation();
   
@@ -47,6 +49,8 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
                 </a>
               </Button>
             )}
+            
+            {additionalActions}
             
             {showDeliverables && (
               <Button variant="outline" className="gap-2" asChild>

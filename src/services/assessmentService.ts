@@ -1,206 +1,201 @@
-
 import { supabase } from "@/lib/supabase";
-import { FeatureStatus } from "@/types/training";
-import { toast } from "sonner";
 
-export type AssessmentType = 'rse_diagnostic' | 'carbon_evaluation' | 'materiality_analysis' | 'action_plan' | 'value_chain' | 'iro_analysis';
+// Type for assessment results
+export type AssessmentType = 
+  | 'rse_diagnostic' 
+  | 'carbon_evaluation' 
+  | 'materiality_analysis' 
+  | 'action_plan' 
+  | 'iro_analysis'
+  | 'value_chain';
 
-interface AssessmentProgress {
-  id?: string;
-  user_id?: string;
-  assessment_type: AssessmentType;
-  status: FeatureStatus;
+// Generic type for status
+type AssessmentStatus = 'not-started' | 'in-progress' | 'waiting-for-approval' | 'blocked' | 'completed';
+
+// Type for assessment progress
+type AssessmentProgress = {
+  status: AssessmentStatus;
   progress: number;
-  form_data?: any;
-  created_at?: string;
-  updated_at?: string;
-}
+};
+
+// Type for document templates
+type DocumentTemplateTypes = 
+  | 'esg-diagnostic' 
+  | 'carbon-evaluation' 
+  | 'materiality_analysis' 
+  | 'action-plan' 
+  | 'iro';
 
 export const assessmentService = {
-  /**
-   * Get the assessment progress for a specific assessment type
-   */
-  getAssessmentProgress: async (assessmentType: AssessmentType): Promise<AssessmentProgress | null> => {
+  // Existing methods
+  getAssessmentResults: async (assessmentType: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log("No authenticated user session found");
-        return null;
-      }
-      
       const { data, error } = await supabase
         .from('assessment_progress')
-        .select('*')
+        .select('form_data')
         .eq('assessment_type', assessmentType)
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
       if (error) {
-        console.error("Error fetching assessment progress:", error.message);
+        console.error("Error fetching assessment results:", error);
         return null;
       }
-      
-      return data;
+
+      return data?.form_data || null;
     } catch (error) {
-      console.error("Exception fetching assessment progress:", error);
+      console.error("Failed to get assessment results:", error);
       return null;
     }
   },
-  
-  /**
-   * Save or update assessment progress
-   */
-  saveAssessmentProgress: async (
-    assessmentType: AssessmentType,
-    status: FeatureStatus,
-    progress: number,
-    formData?: any
-  ): Promise<boolean> => {
+
+  getAssessmentProgress: async (assessmentType: AssessmentType): Promise<AssessmentProgress | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log("No authenticated user session found");
-        toast.error("You need to be logged in to save progress");
-        return false;
-      }
-      
-      const userId = session.user.id;
-      
-      // Check if there's an existing record
-      const { data: existingRecord } = await supabase
+      const { data, error } = await supabase
         .from('assessment_progress')
-        .select('id')
+        .select('status, progress')
         .eq('assessment_type', assessmentType)
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      const payload = {
-        user_id: userId,
-        assessment_type: assessmentType,
-        status,
-        progress,
-        form_data: formData,
-        updated_at: new Date().toISOString()
-      };
-      
-      let result;
-      
-      if (existingRecord?.id) {
-        // Update existing record
-        result = await supabase
-          .from('assessment_progress')
-          .update(payload)
-          .eq('id', existingRecord.id);
-      } else {
-        // Insert new record
-        result = await supabase
-          .from('assessment_progress')
-          .insert([payload]);
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error("Error fetching assessment progress:", error);
+        return { status: 'not-started', progress: 0 };
       }
-      
-      if (result.error) {
-        console.error("Error saving assessment progress:", result.error.message);
-        toast.error("Failed to save progress");
-        return false;
+
+      return data as AssessmentProgress;
+    } catch (error) {
+      console.error("Failed to get assessment progress:", error);
+      return { status: 'not-started', progress: 0 };
+    }
+  },
+
+  // New methods for document generation
+  getDocumentTemplate: async (assessmentType: string): Promise<any> => {
+    // In a real implementation, fetch the document template from the database
+    // For now, return mock data
+    
+    // Default template data
+    const templateData = {
+      title: "Sustainability Assessment and Action Plan",
+      companyName: "",
+      industry: "",
+      date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      preparedBy: "Prepared by Elia Go",
+      executiveSummary: {
+        summary: "This executive summary provides an overview of the sustainability assessment findings and recommended actions."
+      },
+      approach: {
+        description: "The Elia Go methodology combines international standards with Mediterranean-specific insights to deliver actionable sustainability recommendations."
+      },
+      esgAssessment: {
+        introduction: "This ESG assessment provides a comprehensive review of current sustainability practices and identifies areas for improvement, using the ISO 26000 framework as a reference for responsible business conduct.",
+        pillars: [
+          {
+            name: "Organizational Governance",
+            assessment: "Formal governance structure with sustainability oversight."
+          },
+          {
+            name: "Human Rights",
+            assessment: "Strong policies in place with room for enhanced implementation."
+          },
+          {
+            name: "Labor Practices",
+            assessment: "Good employee relations with opportunity for more formal training."
+          },
+          {
+            name: "Environment",
+            assessment: "Basic environmental management with substantial improvement opportunities."
+          },
+          {
+            name: "Fair Operating Practices",
+            assessment: "Ethical business practices need more formal documentation."
+          },
+          {
+            name: "Consumer Issues",
+            assessment: "Strong customer focus with potential for improvement in sustainability communication."
+          },
+          {
+            name: "Community Involvement",
+            assessment: "Some community engagement with room for strategic expansion."
+          }
+        ]
+      },
+      carbonFootprint: {
+        introduction: "This section provides a snapshot of the organization's carbon footprint across all relevant emission scopes.",
+        summary: "Based on our assessment, the total carbon footprint is approximately X tonnes CO2e annually.",
+        recommendations: "Key areas for emission reduction include energy efficiency improvements, renewable energy adoption, and optimizing transportation logistics."
+      },
+      riskOpportunity: {
+        introduction: "This matrix highlights the key sustainability risks and opportunities identified during the assessment.",
+        risks: [
+          { title: "Regulatory Risk", description: "Increasing compliance requirements for sustainability reporting." },
+          { title: "Resource Scarcity", description: "Potential supply chain disruptions due to water scarcity in Mediterranean regions." },
+          { title: "Climate Change Impact", description: "Physical risk to assets from extreme weather events." }
+        ],
+        opportunities: [
+          { title: "Energy Efficiency", description: "Potential for significant cost reduction through energy efficiency measures." },
+          { title: "Green Marketing", description: "Growing consumer preference for sustainable products and services." },
+          { title: "Circular Economy", description: "Opportunities for waste reduction and resource recovery." }
+        ]
+      },
+      actionPlan: {
+        objective: "Develop and implement a comprehensive sustainability strategy that reduces environmental impact while enhancing business performance.",
+        keyActions: [
+          "Establish formal sustainability governance and reporting structure",
+          "Implement energy efficiency measures across all locations",
+          "Develop and roll out supplier sustainability assessment program",
+          "Launch employee engagement campaign on sustainability topics"
+        ],
+        benefits: "This approach integrates sustainability into core business operations, leading to cost savings, improved reputation, enhanced compliance, and better prepared for future regulations.",
+        roadmap: [
+          { timeframe: "Immediate (1-3 months)", actions: "Form sustainability committee, conduct baseline assessments" },
+          { timeframe: "Short-term (3-6 months)", actions: "Implement quick wins in energy efficiency, develop policies" },
+          { timeframe: "Medium-term (6-12 months)", actions: "Roll out supplier program, staff training" },
+          { timeframe: "Long-term (1-2 years)", actions: "Renewable energy transition, circular economy initiatives" }
+        ]
+      },
+      financialImpact: {
+        introduction: "This section outlines the projected financial impacts of implementing the recommended sustainability actions.",
+        summary: "Based on our analysis, implementing the full action plan is expected to result in net positive financial returns within 2-3 years through cost savings and new business opportunities.",
+        details: "Key financial benefits include reduced energy costs (15-20% savings potential), waste management savings (10-15%), and potential new revenue from sustainable products and services."
       }
+    };
+    
+    try {
+      // In a real implementation, fetch from the database
+      return templateData;
+    } catch (error) {
+      console.error("Failed to get document template:", error);
+      return templateData; // Return default template
+    }
+  },
+  
+  saveDocumentData: async (assessmentType: string, documentData: any): Promise<boolean> => {
+    try {
+      // In a real implementation, save to the database
+      console.log(`Saving document data for ${assessmentType}:`, documentData);
       
-      console.log(`Assessment progress saved for ${assessmentType}`);
-      
-      // Create notification for consultants when a form is submitted at 100% progress
-      if (progress === 100) {
-        await createAssessmentNotification(userId, assessmentType);
-      }
-      
+      // Simulate successful API call
       return true;
     } catch (error) {
-      console.error("Exception saving assessment progress:", error);
-      toast.error("An error occurred while saving progress");
+      console.error("Failed to save document data:", error);
       return false;
     }
   },
 
-  /**
-   * Get assessment results for a specific assessment type
-   * For now, this returns the form_data from the assessment progress
-   * In a real implementation, this would fetch actual processed results
-   */
-  getAssessmentResults: async (assessmentType: AssessmentType): Promise<any | null> => {
+  exportDocument: async (assessmentType: string, documentData: any, format: 'pdf' | 'word', filename: string): Promise<boolean> => {
     try {
-      const progress = await assessmentService.getAssessmentProgress(assessmentType);
+      // In a real implementation, call an API to generate the document
+      console.log(`Exporting ${assessmentType} as ${format}:`, documentData);
       
-      if (!progress) {
-        console.log("No assessment progress found");
-        return null;
-      }
-      
-      // For now, we'll just return the form_data field as our results
-      // In a real implementation, this would likely involve more processing
-      return progress.form_data;
+      // Simulate successful API call
+      return true;
     } catch (error) {
-      console.error(`Error fetching ${assessmentType} results:`, error);
-      return null;
+      console.error(`Failed to export document as ${format}:`, error);
+      return false;
     }
   }
 };
-
-// Create a notification for consultants when an assessment is completed
-async function createAssessmentNotification(userId: string, assessmentType: AssessmentType): Promise<void> {
-  try {
-    // Get user details to include in notification
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('full_name, email, company_id')
-      .eq('id', userId)
-      .single();
-    
-    if (!userProfile) {
-      console.error("User profile not found for notification");
-      return;
-    }
-    
-    // Format the assessment type for display
-    const formattedType = assessmentType
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
-    
-    // Create notification for all consultants
-    const { data: consultants, error: consultantError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'consultant');
-    
-    if (consultantError) {
-      console.error("Error fetching consultants:", consultantError);
-      return;
-    }
-    
-    // Create a notification for each consultant
-    const notifications = consultants.map(consultant => ({
-      user_id: consultant.id,
-      sender_id: userId,
-      notification_type: 'assessment_completed',
-      title: `Assessment Completed`,
-      message: `${userProfile.full_name || 'A user'} has completed the ${formattedType} assessment.`,
-      metadata: {
-        assessment_type: assessmentType,
-        user_email: userProfile.email,
-        company_id: userProfile.company_id
-      },
-      is_read: false
-    }));
-    
-    if (notifications.length > 0) {
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert(notifications);
-      
-      if (notificationError) {
-        console.error("Error creating notification:", notificationError);
-      }
-    }
-  } catch (error) {
-    console.error("Error creating assessment notification:", error);
-  }
-}

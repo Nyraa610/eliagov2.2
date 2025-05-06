@@ -50,6 +50,7 @@ import TalkWithExperts from './pages/expert/TalkWithExperts';
 import { HotjarTracking } from './components/analytics/HotjarTracking';
 import { GlobalAIAssistant } from './components/ai/GlobalAIAssistant';
 import RegisterValidation from './pages/RegisterValidation';
+import DocumentEditor from './pages/assessment/DocumentEditor';
 
 function App() {
   return (
@@ -101,6 +102,9 @@ function App() {
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 <Route path="assessment/iro" element={<IRO />} />
                 <Route path="assessment/stakeholder-mapping" element={<StakeholderMapping />} />
+                
+                {/* Document Editor routes */}
+                <Route path="assessment/document-editor/:assessmentType" element={<DocumentEditor />} />
                 
                 {/* AI Expert page */}
                 <Route path="expert/talk" element={<TalkWithExperts />} />

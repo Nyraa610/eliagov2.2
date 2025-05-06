@@ -5,7 +5,9 @@ import { ResultsContainer } from "@/components/assessment/results/ResultsContain
 import { useToast } from "@/components/ui/use-toast";
 import { assessmentService } from "@/services/assessmentService";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, CheckCircle2, Clock, Target } from "lucide-react";
+import { Button } from "@/components/ui/button"; 
+import { Link } from "react-router-dom"; 
+import { CalendarDays, CheckCircle2, Clock, Target, FileText } from "lucide-react";
 
 export default function ActionPlanResults() {
   const { t } = useTranslation();
@@ -110,6 +112,14 @@ export default function ActionPlanResults() {
       title={t("assessment.actionPlan.resultsTitle")}
       description={t("assessment.actionPlan.resultsDescription")}
       reportUrl="/reports/action-plan-report.pdf"
+      additionalActions={
+        <Link to="/assessment/document-editor/action-plan">
+          <Button variant="default" className="gap-2">
+            <FileText className="h-4 w-4" />
+            {t("assessment.results.editDocument")}
+          </Button>
+        </Link>
+      }
     >
       <div className="space-y-8">
         <div>
