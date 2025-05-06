@@ -51,6 +51,7 @@ import { HotjarTracking } from './components/analytics/HotjarTracking';
 import { GlobalAIAssistant } from './components/ai/GlobalAIAssistant';
 import RegisterValidation from './pages/RegisterValidation';
 import DocumentEditor from './pages/assessment/DocumentEditor';
+import Features from './pages/features';
 
 function App() {
   return (
@@ -88,6 +89,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route path="dashboard" element={<Dashboard />} />
+                <Route path="/features" element={<Features />} />
                 
                 {/* Assessment module routes - consolidated */}
                 <Route path="assessment" element={<Assessment />} />
@@ -102,6 +104,7 @@ function App() {
                 <Route path="assessment/materiality-analysis" element={<MaterialityAnalysis />} />
                 <Route path="assessment/iro" element={<IRO />} />
                 <Route path="assessment/stakeholder-mapping" element={<StakeholderMapping />} />
+                
                 
                 {/* Document Editor routes */}
                 <Route path="assessment/document-editor/:assessmentType" element={<DocumentEditor />} />
