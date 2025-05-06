@@ -1,77 +1,26 @@
-
 import { Navigation } from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertTriangle } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { toast } from "sonner";
+import { ValidationForm } from "@/components/auth/validation/ValidationForm"; // Créez ce composant si nécessaire
+import { HotjarTracking } from "@/components/analytics/HotjarTracking";
 
-export default function RegisterValidation() {
-  const location = useLocation();
-  const hasError = location.hash.includes('error');
-  const searchParams = new URLSearchParams(location.search);
-  const redirectTo = searchParams.get('redirectTo');
-  
-  useEffect(() => {
-    if (!hasError) {
-      // Show a success toast
-      toast.success("Email verified successfully", {
-        description: "You can now log in to your account"
-      });
-    } else {
-      // Show an error toast
-      toast.error("Email verification failed", {
-        description: "Please try again or contact support"
-      });
-    }
-  }, [hasError]);
-
+export default function Validation() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
+      <HotjarTracking />
       
-      <main className="container mx-auto px-4 py-24">
-        <div className="max-w-md mx-auto text-center space-y-6">
-          {hasError ? (
-            <>
-              <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-destructive" />
-              </div>
-              
-              <h1 className="text-3xl font-bold text-destructive">Échec de validation</h1>
-              <p className="text-gray-600">
-                Une erreur s'est produite lors de la validation de votre email. Veuillez réessayer ou contacter notre support.
-              </p>
-              
-              <div className="flex flex-col gap-4 pt-4">
-                <Link to="/register">
-                  <Button className="w-full">S'inscrire à nouveau</Button>
-                </Link>
-                <Link to="/login">
-                  <Button variant="outline" className="w-full">Se connecter</Button>
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-primary" />
-              </div>
-              
-              <h1 className="text-3xl font-bold text-primary">Email vérifié avec succès</h1>
-              <p className="text-gray-600">
-                Félicitations ! Votre adresse email a été vérifiée avec succès. Vous pouvez maintenant vous connecter à votre compte.
-              </p>
-              
-              <div className="pt-4">
-                <Link to={redirectTo || "/login"}>
-                  <Button>
-                    {redirectTo ? "Continuer" : "Se connecter"}
-                  </Button>
-                </Link>
-              </div>
-            </>
-          )}
+      <main className="container mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-lg mx-auto space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-primary">Validate your account</h1>
+            <p className="text-gray-600">
+              Complete your registration by validating your email
+            </p>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
+            {/* Votre contenu de validation ici */}
+            <ValidationForm />
+          </div>
         </div>
       </main>
     </div>
