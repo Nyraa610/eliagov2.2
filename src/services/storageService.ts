@@ -1,7 +1,39 @@
-
 import { supabase } from "@/lib/supabase";
 
 export const storageService = {
+  async ensureStorageBucketExists(bucketName: string): Promise<void> {
+    try {
+      // Vérifier si le bucket existe
+      const { data: buckets, error: listBucketsError } = await supabase.storage.listBuckets();
+      
+      if (listBucketsError) {
+        console.error("Error listing buckets:", listBucketsError);
+        throw listBucketsError;
+      }
+      
+      const bucketExists = buckets?.find(b => b.name === bucketName);
+      
+      if (!bucketExists) {
+        console.log(`Creating ${bucketName} bucket`);
+        const { error: createBucketError } = await supabase.storage.createBucket(bucketName, {
+          public: true // ou false selon vos besoins
+        });
+        
+        if (createBucketError) {
+          console.error("Error creating bucket:", createBucketError);
+          throw createBucketError;
+        }
+        
+        console.log("Bucket created successfully");
+      } else {
+        console.log("Bucket already exists");
+      }
+    } catch (error) {
+      console.error(`Error ensuring bucket ${bucketName} exists:`, error);
+      throw error;
+    }
+  },
+
   async uploadVideo(file: File): Promise<string> {
     try {
       const { data: user } = await supabase.auth.getUser();
@@ -15,29 +47,7 @@ export const storageService = {
       console.log("Starting video upload to path:", filePath);
 
       // Ensure the training_materials bucket exists
-      const { data: buckets, error: listBucketsError } = await supabase.storage.listBuckets();
-      if (listBucketsError) {
-        console.error("Error listing buckets:", listBucketsError);
-        throw listBucketsError;
-      }
-      
-      const trainingBucket = buckets?.find(b => b.name === 'training_materials');
-      
-      if (!trainingBucket) {
-        console.log("Creating training_materials bucket");
-        const { error: createBucketError } = await supabase.storage.createBucket('training_materials', {
-          public: true
-        });
-        
-        if (createBucketError) {
-          console.error("Error creating bucket:", createBucketError);
-          throw createBucketError;
-        }
-        
-        console.log("Bucket created successfully");
-      } else {
-        console.log("Bucket already exists");
-      }
+      await this.ensureStorageBucketExists('training_materials');
 
       // Upload the file to storage
       console.log("Uploading video file...");
@@ -85,7 +95,10 @@ export const storageService = {
       
       console.log("Starting image upload to path:", filePath);
 
-      // Upload the file to storage - we've already created the bucket with SQL
+      // Ensure the bucket exists before uploading
+      await this.ensureStorageBucketExists('training_materials');
+
+      // Upload the file to storage
       console.log("Uploading image file...");
       const { error: uploadError } = await supabase.storage
         .from('training_materials')
