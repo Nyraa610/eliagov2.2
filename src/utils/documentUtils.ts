@@ -16,8 +16,11 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
     const templateBuffer = await response.arrayBuffer();
     
     // Process the template with docx-templates
+    // Convert ArrayBuffer to Uint8Array as required by docx-templates
+    const templateUint8Array = new Uint8Array(templateBuffer);
+    
     const result = await createReport({
-      template: templateBuffer,
+      template: templateUint8Array,
       data: data,
       cmdDelimiter: '[]', // Assuming placeholders use [] format like [CompanyName]
     });

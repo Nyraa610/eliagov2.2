@@ -1,6 +1,7 @@
+
 import { supabase } from "@/lib/supabase";
 import { jsPDF } from "jspdf";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 // Type for assessment results
 export type AssessmentType = 
@@ -346,7 +347,7 @@ export const assessmentService = {
       return false;
     } catch (error) {
       console.error(`Failed to export document as ${format}:`, error);
-      toast.error(`Failed to export document as ${format}`);
+      sonnerToast.error(`Failed to export document as ${format}`);
       return false;
     }
   }
@@ -354,4 +355,3 @@ export const assessmentService = {
 
 // Import the document utils
 import { createDocumentFromTemplate, replacePlaceholders, prepareDocumentData } from '@/utils/documentUtils';
-import { toast } from "sonner";
