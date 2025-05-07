@@ -1,5 +1,6 @@
 
 import { saveAs } from 'file-saver';
+import { createReport } from 'docx-templates';
 
 /**
  * Utility function to create and download a document from template
@@ -12,14 +13,22 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
       throw new Error(`Failed to fetch template: ${response.status} ${response.statusText}`);
     }
     
-    const templateBlob = await response.blob();
+    const templateBuffer = await response.arrayBuffer();
     
-    // Here we would normally use a library like docx-templates to fill in the template
-    // For now, we'll just download the original template
-    // In a real implementation, we would replace placeholders with actual data
+    // Process the template with docx-templates
+    const result = await createReport({
+      template: templateBuffer,
+      data: data,
+      cmdDelimiter: '[]', // Assuming placeholders use [] format like [CompanyName]
+    });
+    
+    // Convert the result to a Blob
+    const blob = new Blob([result], { 
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+    });
     
     // Save the file
-    saveAs(templateBlob, outputFilename);
+    saveAs(blob, outputFilename);
     
     return true;
   } catch (error) {
@@ -41,6 +50,34 @@ export function replacePlaceholders(text: string, data: Record<string, any>): st
       result = result.replace(new RegExp(placeholder, 'g'), value);
     }
   }
+  
+  return result;
+}
+
+/**
+ * Prepare document data for template processing
+ * Flattens nested objects to make them accessible to the template engine
+ */
+export function prepareDocumentData(data: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  
+  function flatten(obj: Record<string, any>, prefix = '') {
+    for (const [key, value] of Object.entries(obj)) {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        flatten(value, newKey);
+      } else {
+        result[newKey] = value;
+      }
+    }
+  }
+  
+  // First copy all top-level properties
+  Object.assign(result, data);
+  
+  // Then flatten nested objects for easier access in templates
+  flatten(data);
   
   return result;
 }
