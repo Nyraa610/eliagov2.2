@@ -39,7 +39,8 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       const companyName = documentData.companyName || 'company';
       const cleanCompanyName = companyName.toLowerCase().replace(/\s+/g, '-');
       const dateStr = new Date().toISOString().split('T')[0];
-      const filename = `${cleanCompanyName}-${assessmentType}-${dateStr}.${format === 'word' ? 'docx' : 'pdf'}`;
+      const fileExtension = format === 'word' ? 'doc' : 'pdf';
+      const filename = `${cleanCompanyName}-${assessmentType}-${dateStr}.${fileExtension}`;
       
       // Call the export function from assessmentService
       const success = await assessmentService.exportDocument(
