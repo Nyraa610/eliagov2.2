@@ -83,7 +83,7 @@ export const DocumentEditorContainer: React.FC<DocumentEditorContainerProps> = (
               <DocumentContent 
                 documentData={documentData} 
                 setDocumentData={setDocumentData} 
-                isEditMode={true}
+                readOnly={false}
               />
             </TabsContent>
             <TabsContent value="preview" className="mt-6">
@@ -91,7 +91,7 @@ export const DocumentEditorContainer: React.FC<DocumentEditorContainerProps> = (
                 <DocumentContent 
                   documentData={documentData} 
                   setDocumentData={setDocumentData} 
-                  isEditMode={false}
+                  readOnly={true}
                 />
               </div>
             </TabsContent>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
@@ -62,8 +63,11 @@ export const useSupabaseStorage = () => {
         
         // Now set the bucket policy to public if needed
         try {
-          const { error: policyError } = await supabase.storage.from(bucketName).getPublicUrl('test');
-          if (policyError) {
+          // This is a test to see if we get an error for public access
+          const testPath = 'test';
+          const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(testPath);
+          
+          if (!publicUrlData.publicUrl) {
             console.log(`Setting public policy for bucket ${bucketName}`);
             // This might fail depending on your Supabase permissions
             await supabase.rpc('update_bucket_public_access', { 

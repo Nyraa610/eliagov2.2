@@ -51,7 +51,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const handleImageInsert = () => {
     if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
+      editor.chain().focus().insertContent(`<img src="${imageUrl}" alt="Inserted image" />`).run();
       setImageUrl('');
       setImageDialogOpen(false);
       toast({
@@ -67,7 +67,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        editor.chain().focus().setImage({ src: result }).run();
+        editor.chain().focus().insertContent(`<img src="${result}" alt="Uploaded image" />`).run();
         setImageDialogOpen(false);
         toast({
           title: "Image uploaded",
@@ -82,7 +82,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     if (linkUrl) {
       // If text is selected, convert it to a link
       if (editor.isActive('link')) {
-        editor.chain().focus().unsetLink().run();
+        editor.chain().focus().extendMarkRange('link').unsetLink().run();
       }
       
       editor.chain().focus().setLink({ href: linkUrl }).run();
@@ -135,7 +135,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <ToggleGroupItem
                 value="underline"
                 aria-label="Toggle underline"
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                onClick={() => editor.chain().focus().toggleMark('underline').run()}
                 data-active={editor.isActive('underline')}
                 className={editor.isActive('underline') ? 'bg-accent' : ''}
               >
@@ -313,6 +313,26 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </TooltipTrigger>
           <TooltipContent>Link</TooltipContent>
         </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={insertTable}
+            >
+              <span className="sr-only">Insert table</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="3" y1="15" x2="21" y2="15" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+                <line x1="15" y1="3" x2="15" y2="21" />
+              </svg>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Table</TooltipContent>
+        </Tooltip>
       </TooltipProvider>
 
       <Separator orientation="vertical" className="mx-1 h-8" />
@@ -324,7 +344,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button 
               size="sm" 
               variant="ghost"
-              onClick={() => editor.chain().focus().undo().run()}
+              onClick={() => editor.commands.undo()}
               disabled={!editor.can().undo()}
             >
               <Undo className="h-4 w-4" />
@@ -339,7 +359,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button 
               size="sm" 
               variant="ghost"
-              onClick={() => editor.chain().focus().redo().run()}
+              onClick={() => editor.commands.redo()}
               disabled={!editor.can().redo()}
             >
               <Redo className="h-4 w-4" />
