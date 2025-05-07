@@ -1,5 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
+import { jsPDF } from "jspdf";
+import { toast } from "sonner";
 
 // Type for assessment results
 export type AssessmentType = 
@@ -262,23 +264,127 @@ export const assessmentService = {
     try {
       console.log(`Exporting ${assessmentType} as ${format}:`, { documentData, filename });
       
-      // In a real implementation, this would call an API to generate the document
-      // For now, just create a simple text file for download
-      const content = JSON.stringify(documentData, null, 2);
-      const blob = new Blob([content], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+      if (format === 'pdf') {
+        // Create PDF using jsPDF
+        const pdf = new jsPDF();
+        
+        // Add title
+        pdf.setFontSize(20);
+        pdf.text(documentData.title || "Assessment Document", 20, 20);
+        
+        // Add company info
+        pdf.setFontSize(14);
+        pdf.text(`Company: ${documentData.companyName || ""}`, 20, 35);
+        pdf.text(`Industry: ${documentData.industry || ""}`, 20, 45);
+        pdf.text(`Date: ${documentData.date || new Date().toLocaleDateString()}`, 20, 55);
+        
+        // Add content sections
+        let yPosition = 70;
+        
+        // Executive Summary
+        if (documentData.executiveSummary) {
+          pdf.setFontSize(16);
+          pdf.text("Executive Summary", 20, yPosition);
+          yPosition += 10;
+          pdf.setFontSize(12);
+          const summaryText = pdf.splitTextToSize(
+            documentData.executiveSummary.summary || "", 
+            170
+          );
+          pdf.text(summaryText, 20, yPosition);
+          yPosition += summaryText.length * 7 + 10;
+        }
+        
+        // Add more sections as needed based on documentData structure
+        // When we reach page limit, add a new page
+        if (yPosition > 270) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        // Save the PDF and trigger download
+        pdf.save(filename);
+        return true;
+      } 
+      else if (format === 'word') {
+        // Create a simple Word-compatible HTML document
+        let htmlContent = `
+          <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                xmlns:w='urn:schemas-microsoft-com:office:word'
+                xmlns='http://www.w3.org/TR/REC-html40'>
+          <head>
+            <meta charset="utf-8">
+            <title>${documentData.title || "Assessment Document"}</title>
+          </head>
+          <body>
+            <h1>${documentData.title || "Assessment Document"}</h1>
+            <p><strong>Company:</strong> ${documentData.companyName || ""}</p>
+            <p><strong>Industry:</strong> ${documentData.industry || ""}</p>
+            <p><strong>Date:</strong> ${documentData.date || new Date().toLocaleDateString()}</p>
+            
+            <h2>Executive Summary</h2>
+            <p>${documentData.executiveSummary?.summary || ""}</p>
+            
+            <h2>Approach</h2>
+            <p>${documentData.approach?.description || ""}</p>
+        `;
+        
+        // Add ESG Assessment section if available
+        if (documentData.esgAssessment) {
+          htmlContent += `
+            <h2>ESG Assessment</h2>
+            <p>${documentData.esgAssessment.introduction || ""}</p>
+            
+            <h3>ESG Pillars</h3>
+            <table border="1" cellpadding="5" cellspacing="0" width="100%">
+              <tr>
+                <th>Pillar</th>
+                <th>Assessment</th>
+              </tr>
+          `;
+          
+          if (Array.isArray(documentData.esgAssessment.pillars)) {
+            documentData.esgAssessment.pillars.forEach((pillar: any) => {
+              htmlContent += `
+                <tr>
+                  <td>${pillar.name || ""}</td>
+                  <td>${pillar.assessment || ""}</td>
+                </tr>
+              `;
+            });
+          }
+          
+          htmlContent += "</table>";
+        }
+        
+        // Close the HTML document
+        htmlContent += `
+          </body>
+          </html>
+        `;
+        
+        // Convert HTML to Blob with MS Word MIME type
+        const blob = new Blob([htmlContent], { 
+          type: 'application/vnd.ms-word;charset=utf-8' 
+        });
+        
+        // Create download link and trigger click
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        return true;
+      }
       
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      return true;
+      return false;
     } catch (error) {
       console.error(`Failed to export document as ${format}:`, error);
+      toast.error(`Failed to export document as ${format}`);
       return false;
     }
   }
