@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import {
@@ -80,19 +79,18 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const handleLinkInsert = () => {
     if (linkUrl) {
-      // If text is selected, convert it to a link
       if (editor.isActive('link')) {
-        editor.chain().focus().extendMarkRange('link').unsetLink().run();
+        editor.chain().focus().extendMarkRange('link').unsetMark('link').run();
       }
       
-      editor.chain().focus().setLink({ href: linkUrl }).run();
+      editor.chain().focus().setMark('link', { href: linkUrl }).run();
       setLinkUrl('');
       setLinkDialogOpen(false);
     }
   };
 
   const insertTable = () => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    editor.commands.insertTable({ rows: 3, cols: 3, withHeaderRow: true });
   };
 
   return (
@@ -105,7 +103,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <ToggleGroupItem
                 value="bold"
                 aria-label="Toggle bold"
-                onClick={() => editor.chain().focus().toggleBold().run()}
+                onClick={() => editor.chain().focus().toggleMark('bold').run()}
                 data-active={editor.isActive('bold')}
                 className={editor.isActive('bold') ? 'bg-accent' : ''}
               >
@@ -120,7 +118,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <ToggleGroupItem
                 value="italic"
                 aria-label="Toggle italic"
-                onClick={() => editor.chain().focus().toggleItalic().run()}
+                onClick={() => editor.chain().focus().toggleMark('italic').run()}
                 data-active={editor.isActive('italic')}
                 className={editor.isActive('italic') ? 'bg-accent' : ''}
               >
@@ -150,7 +148,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <ToggleGroupItem
                 value="strike"
                 aria-label="Toggle strikethrough"
-                onClick={() => editor.chain().focus().toggleStrike().run()}
+                onClick={() => editor.chain().focus().toggleMark('strike').run()}
                 data-active={editor.isActive('strike')}
                 className={editor.isActive('strike') ? 'bg-accent' : ''}
               >
@@ -180,15 +178,15 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </Tooltip>
           <DropdownMenuContent align="start">
             <DropdownMenuLabel>Heading</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 1 }).run()}>
               <Heading1 className="mr-2 h-4 w-4" />
               <span>Heading 1</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 2 }).run()}>
               <Heading2 className="mr-2 h-4 w-4" />
               <span>Heading 2</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 3 }).run()}>
               <Heading3 className="mr-2 h-4 w-4" />
               <span>Heading 3</span>
             </DropdownMenuItem>
@@ -205,7 +203,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              onClick={() => editor.chain().focus().toggleList('bulletList').run()}
               className={editor.isActive('bulletList') ? 'bg-accent' : ''}
             >
               <List className="h-4 w-4" />
@@ -220,7 +218,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              onClick={() => editor.chain().focus().toggleList('orderedList').run()}
               className={editor.isActive('orderedList') ? 'bg-accent' : ''}
             >
               <ListOrdered className="h-4 w-4" />
@@ -345,7 +343,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               size="sm" 
               variant="ghost"
               onClick={() => editor.commands.undo()}
-              disabled={!editor.can().undo()}
+              disabled={!editor.can().chain().focus().undo().run()}
             >
               <Undo className="h-4 w-4" />
               <span className="sr-only">Undo</span>
@@ -360,7 +358,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               size="sm" 
               variant="ghost"
               onClick={() => editor.commands.redo()}
-              disabled={!editor.can().redo()}
+              disabled={!editor.can().chain().focus().redo().run()}
             >
               <Redo className="h-4 w-4" />
               <span className="sr-only">Redo</span>

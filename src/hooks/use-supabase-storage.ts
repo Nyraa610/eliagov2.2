@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from "sonner";
@@ -65,9 +64,9 @@ export const useSupabaseStorage = () => {
         try {
           // This is a test to see if we get an error for public access
           const testPath = 'test';
-          const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(testPath);
+          const publicUrlData = supabase.storage.from(bucketName).getPublicUrl(testPath);
           
-          if (!publicUrlData.publicUrl) {
+          if (!publicUrlData.data.publicUrl) {
             console.log(`Setting public policy for bucket ${bucketName}`);
             // This might fail depending on your Supabase permissions
             await supabase.rpc('update_bucket_public_access', { 
@@ -171,18 +170,18 @@ export const useSupabaseStorage = () => {
       console.log(`Upload successful to ${bucketName}/${filePath}`);
       
       // Get public URL
-      const { data: urlData } = supabase.storage
+      const urlData = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
       
-      if (!urlData || !urlData.publicUrl) {
+      if (!urlData.data || !urlData.data.publicUrl) {
         throw new Error(`Failed to get public URL for ${bucketName}/${filePath}`);
       }
       
-      setUploadedUrl(urlData.publicUrl);
+      setUploadedUrl(urlData.data.publicUrl);
       setProgress(100);
       
-      return urlData.publicUrl;
+      return urlData.data.publicUrl;
     } catch (err) {
       console.error(`Error in uploadFile:`, err);
       setError(err instanceof Error ? err : new Error(String(err)));
