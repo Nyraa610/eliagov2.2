@@ -34,7 +34,6 @@ import ValueChainModeling from "./pages/assessment/ValueChainModeling";
 import ValueChainResults from "./pages/assessment/ValueChainResults";
 import CompanySettings from "./pages/company/CompanySettings";
 import DocumentEditor from "./pages/assessment/DocumentEditor";
-import OnlineReport from "./pages/assessment/OnlineReportViewer";
 import Engagement from "./pages/Engagement";
 import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -87,7 +86,6 @@ function App() {
       <Route path="/assessment/action-plan" element={<ProtectedRoute><UserLayout><ActionPlan /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/action-plan-results" element={<ProtectedRoute><UserLayout><ActionPlanResults /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/document-editor/:assessmentType" element={<ProtectedRoute><UserLayout><DocumentEditor /></UserLayout></ProtectedRoute>} />
-      <Route path="/assessment/report/:assessmentType" element={<ProtectedRoute><UserLayout><OnlineReport /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/iro" element={<ProtectedRoute><UserLayout><IRO /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/stakeholder-mapping" element={<ProtectedRoute><UserLayout><StakeholderMapping /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/value-chain-modeling" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />

@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { assessmentService } from "@/services/assessmentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button"; 
-import { CalendarDays, CheckCircle2, Clock, Target, FileText, Download, Eye } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Target, FileText, Download } from "lucide-react";
 
 export default function ActionPlanResults() {
   const { t } = useTranslation();
@@ -179,12 +179,6 @@ ${results?.initiatives?.map((initiative: any) =>
             <Button variant="default" className="gap-2">
               <FileText className="h-4 w-4" />
               Edit Document
-            </Button>
-          </Link>
-          <Link to="/assessment/report/action_plan">
-            <Button variant="default" className="gap-2">
-              <Eye className="h-4 w-4" />
-              View Full Report
             </Button>
           </Link>
         </>
