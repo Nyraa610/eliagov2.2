@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import {
@@ -79,18 +80,22 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const handleLinkInsert = () => {
     if (linkUrl) {
+      // Fixed: Removing unsetLink and using standard methods
       if (editor.isActive('link')) {
         editor.chain().focus().extendMarkRange('link').unsetMark('link').run();
       }
       
-      editor.chain().focus().setMark('link', { href: linkUrl }).run();
+      // Add link with proper attributes
+      editor.chain().focus().extendMarkRange('link').setMark('link', { href: linkUrl }).run();
       setLinkUrl('');
       setLinkDialogOpen(false);
     }
   };
 
+  // Fixed: Replace insertTable with custom implementation
   const insertTable = () => {
-    editor.commands.insertTable({ rows: 3, cols: 3, withHeaderRow: true });
+    // Using insertContent instead as a workaround since insertTable isn't available
+    editor.chain().focus().insertContent('<table><tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody></table>').run();
   };
 
   return (
@@ -178,15 +183,16 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </Tooltip>
           <DropdownMenuContent align="start">
             <DropdownMenuLabel>Heading</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 1 }).run()}>
+            {/* Fixed: Corrected toggleNode parameters */}
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', 'paragraph', { level: 1 }).run()}>
               <Heading1 className="mr-2 h-4 w-4" />
               <span>Heading 1</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 2 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', 'paragraph', { level: 2 }).run()}>
               <Heading2 className="mr-2 h-4 w-4" />
               <span>Heading 2</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', { level: 3 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleNode('heading', 'paragraph', { level: 3 }).run()}>
               <Heading3 className="mr-2 h-4 w-4" />
               <span>Heading 3</span>
             </DropdownMenuItem>
