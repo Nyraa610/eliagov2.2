@@ -209,7 +209,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => editor.chain().focus().toggleList('bulletList').run()}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
               className={editor.isActive('bulletList') ? 'bg-accent' : ''}
             >
               <List className="h-4 w-4" />
@@ -224,7 +224,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => editor.chain().focus().toggleList('orderedList').run()}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
               className={editor.isActive('orderedList') ? 'bg-accent' : ''}
             >
               <ListOrdered className="h-4 w-4" />
