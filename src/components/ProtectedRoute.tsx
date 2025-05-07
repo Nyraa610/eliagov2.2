@@ -10,9 +10,11 @@ import { useToast } from "@/components/ui/use-toast";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
+  requireAdmin?: boolean; // Added this property
+  requireConsultant?: boolean; // Added this property
 }
 
-export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireConsultant }: ProtectedRouteProps) => {
   const location = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [hasRequiredRole, setHasRequiredRole] = useState<boolean | null>(null);
@@ -23,25 +25,31 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const [roleChecked, setRoleChecked] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || !requiredRole || !user || roleChecked) {
+    // Convert the requireAdmin/requireConsultant props to the corresponding role
+    const effectiveRequiredRole = 
+      requireAdmin ? 'admin' as UserRole : 
+      requireConsultant ? 'consultant' as UserRole : 
+      requiredRole;
+
+    if (!isAuthenticated || !effectiveRequiredRole || !user || roleChecked) {
       return;
     }
 
     const checkUserRole = async () => {
       try {
         setIsRoleLoading(true);
-        console.log(`ProtectedRoute: Checking if user has role: ${requiredRole}`);
+        console.log(`ProtectedRoute: Checking if user has role: ${effectiveRequiredRole}`);
         
-        const hasRole = await supabaseService.hasRole(requiredRole);
+        const hasRole = await supabaseService.hasRole(effectiveRequiredRole);
         setHasRequiredRole(hasRole);
         setRoleChecked(true);
         
         if (!hasRole) {
-          console.log("ProtectedRoute: User doesn't have required role:", requiredRole);
+          console.log("ProtectedRoute: User doesn't have required role:", effectiveRequiredRole);
           toast({
             variant: "destructive",
             title: "Access Denied",
-            description: `You don't have the required ${requiredRole} role to access this page.`
+            description: `You don't have the required ${effectiveRequiredRole} role to access this page.`
           });
         }
       } catch (error: any) {
@@ -58,9 +66,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     };
     
     checkUserRole();
-  }, [isAuthenticated, requiredRole, user, toast, roleChecked]);
+  }, [isAuthenticated, requiredRole, requireAdmin, requireConsultant, user, toast, roleChecked]);
 
-  if (authLoading || (requiredRole && isAuthenticated && isRoleLoading)) {
+  if (authLoading || (isAuthenticated && (requiredRole || requireAdmin || requireConsultant) && isRoleLoading)) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
@@ -76,7 +84,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && hasRequiredRole === false) {
+  if ((requiredRole || requireAdmin || requireConsultant) && hasRequiredRole === false) {
     console.log("ProtectedRoute: Doesn't have required role, redirecting to unauthorized");
     return <Navigate to="/unauthorized" replace />;
   }
