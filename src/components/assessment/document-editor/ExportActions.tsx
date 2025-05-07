@@ -41,17 +41,23 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       const dateStr = new Date().toISOString().split('T')[0];
       const filename = `${cleanCompanyName}-${assessmentType}-${dateStr}.${format === 'word' ? 'docx' : 'pdf'}`;
       
-      // In a real implementation, you'd call the actual export service
-      await assessmentService.exportDocument(assessmentType, documentData, format, filename);
+      // Call the export function from assessmentService
+      const success = await assessmentService.exportDocument(
+        assessmentType, 
+        documentData, 
+        format, 
+        filename
+      );
       
-      // For now, we'll just simulate a success
-      setTimeout(() => {
-        toast.success(`${format.toUpperCase()} export started. Your document will download shortly.`);
-        setIsExporting(null);
-      }, 1500);
+      if (success) {
+        toast.success(`${format.toUpperCase()} export completed. Your document has been downloaded.`);
+      } else {
+        toast.error(`Failed to export as ${format}`);
+      }
     } catch (error) {
       console.error(`Failed to export as ${format}:`, error);
       toast.error(`Failed to export as ${format}`);
+    } finally {
       setIsExporting(null);
     }
   };
@@ -71,8 +77,7 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
         <DropdownMenuTrigger asChild>
           <Button disabled={!!isExporting}>
             <Download className="h-4 w-4 mr-2" />
-            Export
-            {isExporting ? `ing ${isExporting.toUpperCase()}...` : ''}
+            {isExporting ? `Exporting ${isExporting.toUpperCase()}...` : 'Export'}
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
         </DropdownMenuTrigger>

@@ -34,18 +34,18 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
       
       <Card>
         <CardHeader>
-          <CardTitle>{t("assessment.results.summary")}</CardTitle>
-          <CardDescription>{t("assessment.results.summaryDescription")}</CardDescription>
+          <CardTitle>{t("assessment.results.summary", "Results Summary")}</CardTitle>
+          <CardDescription>{t("assessment.results.summaryDescription", "Review the findings and recommendations from your assessment")}</CardDescription>
         </CardHeader>
         <CardContent>
           {children}
           
           <div className="flex flex-wrap gap-4 mt-8">
-            {reportUrl && (
+            {reportUrl && reportUrl !== "#" && (
               <Button className="gap-2" asChild>
                 <a href={reportUrl} download>
                   <Download className="h-4 w-4" />
-                  {t("assessment.results.downloadReport")}
+                  {t("assessment.results.downloadReport", "Download Report")}
                 </a>
               </Button>
             )}
@@ -56,7 +56,7 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
               <Button variant="outline" className="gap-2" asChild>
                 <Link to="/deliverables">
                   <Share2 className="h-4 w-4" />
-                  {t("assessment.results.viewDeliverables")}
+                  {t("assessment.results.viewDeliverables", "View Deliverables")}
                 </Link>
               </Button>
             )}

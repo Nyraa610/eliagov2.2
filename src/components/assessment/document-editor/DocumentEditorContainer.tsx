@@ -26,12 +26,22 @@ export const DocumentEditorContainer: React.FC<DocumentEditorContainerProps> = (
   const handleSaveDocument = async () => {
     try {
       setIsSaving(true);
-      await assessmentService.saveDocumentData(assessmentType, documentData);
+      console.log(`Saving document for ${assessmentType}:`, documentData);
       
-      toast({
-        title: "Success",
-        description: "Document saved successfully",
-      });
+      const success = await assessmentService.saveDocumentData(assessmentType, documentData);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Document saved successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save document",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Failed to save document:", error);
       toast({
@@ -45,13 +55,12 @@ export const DocumentEditorContainer: React.FC<DocumentEditorContainerProps> = (
   };
   
   const handleTemplateChange = (template: string) => {
-    // In a real implementation, this would fetch the new template
     toast({
       title: "Loading template",
       description: `Loading ${template} template...`,
     });
     
-    // For now, we'll just simulate a delay
+    // For now, we'll just simulate a delay and show a success toast
     setTimeout(() => {
       toast({
         title: "Template loaded",

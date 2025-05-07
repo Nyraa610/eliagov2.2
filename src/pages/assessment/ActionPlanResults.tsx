@@ -7,7 +7,7 @@ import { assessmentService } from "@/services/assessmentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button"; 
 import { Link } from "react-router-dom"; 
-import { CalendarDays, CheckCircle2, Clock, Target, FileText } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Target, FileText, Download } from "lucide-react";
 
 export default function ActionPlanResults() {
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ export default function ActionPlanResults() {
     const fetchResults = async () => {
       try {
         setLoading(true);
-        // In a real implementation, fetch actual results from the backend
+        // Fetch actual results from the backend
         const data = await assessmentService.getAssessmentResults('action_plan');
         
         if (data && typeof data === 'object') {
@@ -82,7 +82,59 @@ export default function ActionPlanResults() {
         completionPercentage: 0,
         owner: "Sustainability Committee"
       }
-    ]
+    ],
+    // Add form data from action plan
+    formData: {
+      shortTermGoals: "Reduce scope 1 emissions by 10% within 1 year",
+      midTermGoals: "Achieve 30% renewable energy usage within 2-3 years",
+      longTermGoals: "Become carbon neutral by 2030",
+      keyInitiatives: "Energy efficiency program, sustainable procurement, waste reduction initiatives"
+    }
+  };
+  
+  const handleDownloadReport = async () => {
+    try {
+      // Create report content based on results
+      const reportContent = `
+# Action Plan Report
+## Goals
+${results?.goals?.map((goal: any) => `- ${goal.title} (${goal.timeline}): ${goal.status}`).join('\n') || 'No goals available'}
+
+## Initiatives
+${results?.initiatives?.map((initiative: any) => 
+  `- ${initiative.title}: ${initiative.description}\n  Status: ${initiative.status}, Completion: ${initiative.completionPercentage}%`
+).join('\n\n') || 'No initiatives available'}
+
+## Action Plan Details
+- Short-term Goals: ${results?.formData?.shortTermGoals || 'N/A'}
+- Mid-term Goals: ${results?.formData?.midTermGoals || 'N/A'}
+- Long-term Goals: ${results?.formData?.longTermGoals || 'N/A'}
+- Key Initiatives: ${results?.formData?.keyInitiatives || 'N/A'}
+`;
+
+      // Create a Blob and download
+      const blob = new Blob([reportContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'action-plan-report.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "Report downloaded successfully",
+      });
+    } catch (error) {
+      console.error("Failed to download report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download report",
+        variant: "destructive"
+      });
+    }
   };
   
   const getStatusColor = (status: string) => {
@@ -106,26 +158,37 @@ export default function ActionPlanResults() {
   const safeResults = results || mockResults;
   const goals = Array.isArray(safeResults.goals) ? safeResults.goals : [];
   const initiatives = Array.isArray(safeResults.initiatives) ? safeResults.initiatives : [];
+  const formData = safeResults.formData || {};
 
   return (
     <ResultsContainer
-      title={t("assessment.actionPlan.resultsTitle")}
-      description={t("assessment.actionPlan.resultsDescription")}
-      reportUrl="/reports/action-plan-report.pdf"
+      title="Action Plan Results"
+      description="Review your sustainability action plan with specific goals, initiatives, and timelines."
+      reportUrl="#" // We'll handle download with custom function instead
       additionalActions={
-        <Link to="/assessment/document-editor/action-plan">
-          <Button variant="default" className="gap-2">
-            <FileText className="h-4 w-4" />
-            {t("assessment.results.editDocument")}
+        <>
+          <Button 
+            variant="default" 
+            onClick={handleDownloadReport}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Download Report
           </Button>
-        </Link>
+          <Link to="/assessment/document-editor/action-plan">
+            <Button variant="default" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Edit Document
+            </Button>
+          </Link>
+        </>
       }
     >
       <div className="space-y-8">
         <div>
           <h3 className="text-lg font-medium mb-4 flex items-center">
             <Target className="h-5 w-5 mr-2 text-primary" />
-            {t("assessment.actionPlan.goals")}
+            Goals
           </h3>
           {goals.length > 0 ? (
             <div className="grid gap-4">
@@ -148,14 +211,22 @@ export default function ActionPlanResults() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No goals available</p>
+            <div className="text-gray-500 p-4 bg-gray-100 rounded-md">
+              <p className="mb-2">No goals from the database yet.</p>
+              <p className="text-sm">Form data from action plan:</p>
+              <div className="mt-2 pl-3 border-l-2 border-gray-300">
+                <p className="text-sm mb-1"><strong>Short-term (1 year):</strong> {formData.shortTermGoals || "Not specified"}</p>
+                <p className="text-sm mb-1"><strong>Mid-term (2-3 years):</strong> {formData.midTermGoals || "Not specified"}</p>
+                <p className="text-sm"><strong>Long-term (5+ years):</strong> {formData.longTermGoals || "Not specified"}</p>
+              </div>
+            </div>
           )}
         </div>
         
         <div>
           <h3 className="text-lg font-medium mb-4 flex items-center">
             <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
-            {t("assessment.actionPlan.initiatives")}
+            Initiatives
           </h3>
           {initiatives.length > 0 ? (
             <div className="space-y-6">
@@ -191,7 +262,13 @@ export default function ActionPlanResults() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 p-4 bg-gray-100 rounded-md">No initiatives available</p>
+            <div className="text-gray-500 p-4 bg-gray-100 rounded-md">
+              <p className="mb-2">No initiatives from the database yet.</p>
+              <p className="text-sm">Key initiatives from action plan:</p>
+              <div className="mt-2 pl-3 border-l-2 border-gray-300">
+                <p className="text-sm">{formData.keyInitiatives || "Not specified"}</p>
+              </div>
+            </div>
           )}
         </div>
       </div>
