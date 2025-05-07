@@ -6,11 +6,14 @@ import './index.css'
 import '@xyflow/react/dist/style.css'
 import './styles/value-chain.css'
 import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )
