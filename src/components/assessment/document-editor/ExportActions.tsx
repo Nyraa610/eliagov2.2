@@ -12,9 +12,11 @@ import {
   Save,
   Download,
   FileText,
-  ChevronDown
+  ChevronDown,
+  Eye
 } from "lucide-react";
 import { assessmentService } from "@/services/assessmentService";
+import { useNavigate } from "react-router-dom";
 
 interface ExportActionsProps {
   documentData: any;
@@ -30,6 +32,7 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
   assessmentType
 }) => {
   const [isExporting, setIsExporting] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const handleExport = async (format: 'pdf' | 'word') => {
     try {
@@ -39,7 +42,7 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       const companyName = documentData.companyName || 'company';
       const cleanCompanyName = companyName.toLowerCase().replace(/\s+/g, '-');
       const dateStr = new Date().toISOString().split('T')[0];
-      const fileExtension = format === 'word' ? 'doc' : 'pdf';
+      const fileExtension = format === 'word' ? 'docx' : 'pdf';
       const filename = `${cleanCompanyName}-${assessmentType}-${dateStr}.${fileExtension}`;
       
       // Call the export function from assessmentService
@@ -62,6 +65,10 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       setIsExporting(null);
     }
   };
+
+  const handleViewOnline = () => {
+    navigate(`/assessment/report/${assessmentType}`);
+  };
   
   return (
     <div className="flex items-center gap-2">
@@ -72,6 +79,14 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       >
         <Save className="h-4 w-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save'}
+      </Button>
+      
+      <Button
+        variant="outline"
+        onClick={handleViewOnline}
+      >
+        <Eye className="h-4 w-4 mr-2" />
+        View Online
       </Button>
       
       <DropdownMenu>
