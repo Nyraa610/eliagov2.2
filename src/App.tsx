@@ -49,7 +49,7 @@ import EmissionFactors from "./pages/admin/EmissionFactors";
 import MigrationTools from "./pages/admin/MigrationTools";
 import TranslationAdmin from "./pages/admin/TranslationAdmin";
 import SubscriptionManager from "./pages/admin/SubscriptionManager";
-import Training as AdminTraining from "./pages/admin/Training";
+import AdminTraining from "./pages/admin/Training";
 
 // Consultant pages
 import ConsultantDashboard from "./pages/consultant/ConsultantDashboard";
