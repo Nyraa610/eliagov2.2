@@ -1,38 +1,26 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { 
-  Save,
-  Download,
-  FileText,
-  ChevronDown,
-  Eye
-} from "lucide-react";
+import { Save, FileText, Download } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { assessmentService } from "@/services/assessmentService";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface ExportActionsProps {
   documentData: any;
   isSaving: boolean;
-  onSave: () => void;
+  onSave: () => Promise<void>;
   assessmentType: string;
 }
 
-export const ExportActions: React.FC<ExportActionsProps> = ({
-  documentData,
+export function ExportActions({ 
+  documentData, 
   isSaving,
   onSave,
-  assessmentType
-}) => {
+  assessmentType 
+}: ExportActionsProps) {
   const [isExporting, setIsExporting] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const handleExport = async (format: 'pdf' | 'word') => {
     try {
@@ -54,60 +42,67 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
       );
       
       if (success) {
-        toast.success(`${format.toUpperCase()} export completed. Your document has been downloaded.`);
+        toast({
+          title: "Success",
+          description: `${format.toUpperCase()} exported successfully`,
+        });
       } else {
-        toast.error(`Failed to export as ${format}`);
+        toast({
+          title: "Error",
+          description: `Failed to export as ${format}`,
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error(`Failed to export as ${format}:`, error);
-      toast.error(`Failed to export as ${format}`);
+      toast({
+        title: "Error",
+        description: `Failed to export as ${format}`,
+        variant: "destructive"
+      });
     } finally {
       setIsExporting(null);
     }
   };
-
-  const handleViewOnline = () => {
-    navigate(`/assessment/report/${assessmentType}`);
-  };
   
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap gap-2">
       <Button 
-        onClick={onSave}
+        variant="outline" 
         disabled={isSaving}
-        variant="outline"
+        onClick={onSave}
+        className="flex items-center gap-2"
       >
-        <Save className="h-4 w-4 mr-2" />
-        {isSaving ? 'Saving...' : 'Save'}
+        <Save className="h-4 w-4" />
+        {isSaving ? "Saving..." : "Save"}
       </Button>
       
-      <Button
+      <Button 
         variant="outline"
-        onClick={handleViewOnline}
+        onClick={() => handleExport('word')}
+        disabled={isExporting !== null}
+        className="flex items-center gap-2" 
       >
-        <Eye className="h-4 w-4 mr-2" />
-        View Online
+        <FileText className="h-4 w-4" />
+        {isExporting === 'word' ? "Exporting..." : "Export as Word"}
       </Button>
       
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button disabled={!!isExporting}>
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? `Exporting ${isExporting.toUpperCase()}...` : 'Export'}
-            <ChevronDown className="h-4 w-4 ml-2" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleExport('pdf')}>
-            <FileText className="h-4 w-4 mr-2" />
-            Export as PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport('word')}>
-            <FileText className="h-4 w-4 mr-2" />
-            Export as Word
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button 
+        variant="outline"
+        onClick={() => handleExport('pdf')}
+        disabled={isExporting !== null}
+        className="flex items-center gap-2"
+      >
+        <Download className="h-4 w-4" />
+        {isExporting === 'pdf' ? "Exporting..." : "Export as PDF"}
+      </Button>
+      
+      <Link to={`/assessment/report/${assessmentType}`}>
+        <Button variant="default" className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          View Online
+        </Button>
+      </Link>
     </div>
   );
-};
+}

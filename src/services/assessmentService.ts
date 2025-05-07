@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
@@ -221,7 +220,10 @@ export const assessmentService = {
           introduction: "This section outlines the projected financial impacts of implementing the recommended sustainability actions.",
           summary: "Based on our analysis, implementing the full action plan is expected to result in net positive financial returns within 2-3 years through cost savings and new business opportunities.",
           details: "Key financial benefits include reduced energy costs (15-20% savings potential), waste management savings (10-15%), and potential new revenue from sustainable products and services."
-        }
+        },
+        sustainabilityContext: "Operating in the Mediterranean region presents unique sustainability challenges and opportunities. Water scarcity, climate change impacts on agriculture, and energy transition are key focus areas for businesses in this region.",
+        assessmentImportance: "This assessment serves as a foundation for strategic decision-making, risk management, and identifying competitive advantages through sustainability initiatives tailored to your business context.",
+        methodology: "The Elia Go methodology integrates global frameworks (ISO 26000, GRI Standards) with specialized Mediterranean insights, providing a comprehensive yet practical approach to sustainability assessment and planning."
       };
       
       console.log("Returning default template data");
@@ -295,6 +297,25 @@ export const assessmentService = {
           yPosition += summaryText.length * 7 + 10;
         }
         
+        // Sustainability Context
+        if (documentData.sustainabilityContext) {
+          if (yPosition > 270) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.setFontSize(16);
+          pdf.text("Sustainability in the Mediterranean", 20, yPosition);
+          yPosition += 10;
+          pdf.setFontSize(12);
+          const contextText = pdf.splitTextToSize(
+            documentData.sustainabilityContext || "", 
+            170
+          );
+          pdf.text(contextText, 20, yPosition);
+          yPosition += contextText.length * 7 + 10;
+        }
+        
+        // Continue adding other sections...
         // Add more sections as needed based on documentData structure
         // When we reach page limit, add a new page
         if (yPosition > 270) {
@@ -307,273 +328,140 @@ export const assessmentService = {
         return true;
       } 
       else if (format === 'word') {
-        // Create a Word-compatible document using proper Word XML format
-        let wordContent = `
-          <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-          <?mso-application progid="Word.Document"?>
-          <w:wordDocument 
-            xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml"
-            xmlns:v="urn:schemas-microsoft-com:vml"
-            xmlns:w10="urn:schemas-microsoft-com:office:word"
-            xmlns:sl="http://schemas.microsoft.com/schemaLibrary/2003/11/core"
-            xmlns:aml="http://schemas.microsoft.com/aml/2001/core"
-            xmlns:wx="http://schemas.microsoft.com/office/word/2003/auxHint"
-            xmlns:o="urn:schemas-microsoft-com:office:office"
-            xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
-            w:macrosPresent="no" w:embeddedObjPresent="no" w:ocxPresent="no"
-            xml:space="preserve">
-            <w:body>
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading1"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>${documentData.title || "Assessment Document"}</w:t>
-                </w:r>
-              </w:p>
-              
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Company: </w:t>
-                </w:r>
-                <w:r>
-                  <w:t>${documentData.companyName || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Industry: </w:t>
-                </w:r>
-                <w:r>
-                  <w:t>${documentData.industry || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Date: </w:t>
-                </w:r>
-                <w:r>
-                  <w:t>${documentData.date || new Date().toLocaleDateString()}</w:t>
-                </w:r>
-              </w:p>
-              
-              <!-- Executive Summary -->
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading2"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>Executive Summary</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.executiveSummary?.summary || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <!-- Approach -->
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading2"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>Approach</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.approach?.description || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <!-- ESG Assessment -->
-              ${documentData.esgAssessment ? `
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading2"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>ESG Assessment</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.esgAssessment.introduction || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <!-- ESG Pillars Table -->
-              <w:tbl>
-                <w:tblPr>
-                  <w:tblW w:w="5000" w:type="pct"/>
-                  <w:tblBorders>
-                    <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                    <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                    <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                    <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                    <w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                    <w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/>
-                  </w:tblBorders>
-                </w:tblPr>
-                <w:tr>
-                  <w:tc>
-                    <w:tcPr>
-                      <w:tcW w:w="2500" w:type="pct"/>
-                      <w:shd w:val="clear" w:color="auto" w:fill="D3D3D3"/>
-                    </w:tcPr>
-                    <w:p>
-                      <w:r>
-                        <w:rPr><w:b/></w:rPr>
-                        <w:t>Pillar</w:t>
-                      </w:r>
-                    </w:p>
-                  </w:tc>
-                  <w:tc>
-                    <w:tcPr>
-                      <w:tcW w:w="2500" w:type="pct"/>
-                      <w:shd w:val="clear" w:color="auto" w:fill="D3D3D3"/>
-                    </w:tcPr>
-                    <w:p>
-                      <w:r>
-                        <w:rPr><w:b/></w:rPr>
-                        <w:t>Assessment</w:t>
-                      </w:r>
-                    </w:p>
-                  </w:tc>
-                </w:tr>
-                ${Array.isArray(documentData.esgAssessment.pillars) ? 
-                  documentData.esgAssessment.pillars.map((pillar: any) => `
-                    <w:tr>
-                      <w:tc>
-                        <w:tcPr>
-                          <w:tcW w:w="2500" w:type="pct"/>
-                        </w:tcPr>
-                        <w:p>
-                          <w:r>
-                            <w:t>${pillar.name || ""}</w:t>
-                          </w:r>
-                        </w:p>
-                      </w:tc>
-                      <w:tc>
-                        <w:tcPr>
-                          <w:tcW w:w="2500" w:type="pct"/>
-                        </w:tcPr>
-                        <w:p>
-                          <w:r>
-                            <w:t>${pillar.assessment || ""}</w:t>
-                          </w:r>
-                        </w:p>
-                      </w:tc>
-                    </w:tr>
-                  `).join('') : ''}
-              </w:tbl>
-              ` : ''}
-              
-              <!-- Carbon Footprint -->
-              ${documentData.carbonFootprint ? `
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading2"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>Carbon Footprint</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.carbonFootprint.introduction || ""}</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.carbonFootprint.summary || ""}</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:t>${documentData.carbonFootprint.recommendations || ""}</w:t>
-                </w:r>
-              </w:p>
-              ` : ''}
-              
-              <!-- Action Plan -->
-              ${documentData.actionPlan ? `
-              <w:p>
-                <w:pPr>
-                  <w:pStyle w:val="Heading2"/>
-                </w:pPr>
-                <w:r>
-                  <w:t>Action Plan</w:t>
-                </w:r>
-              </w:p>
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Objective: </w:t>
-                </w:r>
-                <w:r>
-                  <w:t>${documentData.actionPlan.objective || ""}</w:t>
-                </w:r>
-              </w:p>
-              
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Key Actions:</w:t>
-                </w:r>
-              </w:p>
-              ${Array.isArray(documentData.actionPlan.keyActions) ? 
-                documentData.actionPlan.keyActions.map((action: string) => `
+        try {
+          // Create a Word-compatible document based on the template
+          const createWordDoc = async () => {
+            // For now, we just create a basic Word XML file with the content
+            // In the future, this would use the docx-template library to populate the template
+            let wordContent = `
+              <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <?mso-application progid="Word.Document"?>
+              <w:wordDocument 
+                xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml"
+                xmlns:v="urn:schemas-microsoft-com:vml"
+                xmlns:w10="urn:schemas-microsoft-com:office:word"
+                xmlns:sl="http://schemas.microsoft.com/schemaLibrary/2003/11/core"
+                xmlns:aml="http://schemas.microsoft.com/aml/2001/core"
+                xmlns:wx="http://schemas.microsoft.com/office/word/2003/auxHint"
+                xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+                w:macrosPresent="no" w:embeddedObjPresent="no" w:ocxPresent="no"
+                xml:space="preserve">
+                <w:body>
                   <w:p>
                     <w:pPr>
-                      <w:pStyle w:val="ListParagraph"/>
-                      <w:numPr>
-                        <w:ilvl w:val="0"/>
-                        <w:numId w:val="1"/>
-                      </w:numPr>
+                      <w:pStyle w:val="Heading1"/>
                     </w:pPr>
                     <w:r>
-                      <w:t>${action || ""}</w:t>
+                      <w:t>${documentData.title || "Sustainability Assessment"}</w:t>
                     </w:r>
                   </w:p>
-                `).join('') : ''}
-                
-              <w:p>
-                <w:r>
-                  <w:rPr><w:b/></w:rPr>
-                  <w:t>Benefits: </w:t>
-                </w:r>
-                <w:r>
-                  <w:t>${documentData.actionPlan.benefits || ""}</w:t>
-                </w:r>
-              </w:p>
-              ` : ''}
-            </w:body>
-          </w:wordDocument>
-        `;
-        
-        // Create Blob with proper Word MIME type
-        const blob = new Blob([wordContent], { 
-          type: 'application/msword' 
-        });
-        
-        // Create download link and trigger click
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        return true;
+                  
+                  <w:p>
+                    <w:r>
+                      <w:rPr><w:b/></w:rPr>
+                      <w:t>Company: </w:t>
+                    </w:r>
+                    <w:r>
+                      <w:t>${documentData.companyName || ""}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <w:p>
+                    <w:r>
+                      <w:rPr><w:b/></w:rPr>
+                      <w:t>Industry: </w:t>
+                    </w:r>
+                    <w:r>
+                      <w:t>${documentData.industry || ""}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <w:p>
+                    <w:r>
+                      <w:rPr><w:b/></w:rPr>
+                      <w:t>Date: </w:t>
+                    </w:r>
+                    <w:r>
+                      <w:t>${documentData.date || new Date().toLocaleDateString()}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <!-- Executive Summary -->
+                  <w:p>
+                    <w:pPr>
+                      <w:pStyle w:val="Heading2"/>
+                    </w:pPr>
+                    <w:r>
+                      <w:t>Executive Summary</w:t>
+                    </w:r>
+                  </w:p>
+                  <w:p>
+                    <w:r>
+                      <w:t>${documentData.executiveSummary || ""}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <!-- Sustainability Context -->
+                  <w:p>
+                    <w:pPr>
+                      <w:pStyle w:val="Heading2"/>
+                    </w:pPr>
+                    <w:r>
+                      <w:t>Sustainability in the Mediterranean</w:t>
+                    </w:r>
+                  </w:p>
+                  <w:p>
+                    <w:r>
+                      <w:t>${documentData.sustainabilityContext || ""}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <!-- Assessment Importance -->
+                  <w:p>
+                    <w:pPr>
+                      <w:pStyle w:val="Heading2"/>
+                    </w:pPr>
+                    <w:r>
+                      <w:t>Why This Assessment Matters</w:t>
+                    </w:r>
+                  </w:p>
+                  <w:p>
+                    <w:r>
+                      <w:t>${documentData.assessmentImportance || ""}</w:t>
+                    </w:r>
+                  </w:p>
+                  
+                  <!-- Add more sections based on template structure -->
+                </w:body>
+              </w:wordDocument>
+            `;
+            
+            // Create Blob with proper Word MIME type
+            const blob = new Blob([wordContent], { 
+              type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+            });
+            
+            return blob;
+          };
+          
+          const wordBlob = await createWordDoc();
+          
+          // Create download link and trigger click
+          const url = URL.createObjectURL(wordBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          return true;
+        } catch (error) {
+          console.error("Error creating Word document:", error);
+          return false;
+        }
       }
       
       return false;
