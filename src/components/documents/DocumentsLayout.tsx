@@ -12,11 +12,13 @@ import { toast } from "sonner";
 import { documentService, DocumentFolder, companyFolderService } from "@/services/document";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalDocumentsList } from "./list/PersonalDocumentsList";
-import { storageService } from "@/services/storage"; // Assurez-vous que le chemin d'importation est correct
+import { useSupabaseStorage } from "@/hooks/use-supabase-storage";
 
 export function DocumentsLayout() {
   const { company, loading: companyLoading } = useCompanyProfile();
   const { user } = useAuth();
+  const { ensureBucketExists, bucketsInitialized } = useSupabaseStorage();
+  
   const [activeTab, setActiveTab] = useState("documents");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
@@ -24,6 +26,7 @@ export function DocumentsLayout() {
   const [breadcrumb, setBreadcrumb] = useState<DocumentFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [storageInitialized, setStorageInitialized] = useState(false);
   
   useEffect(() => {
     if (company || user) {
@@ -34,27 +37,65 @@ export function DocumentsLayout() {
   // Initialize storage when component loads
   useEffect(() => {
     const initializeStorage = async () => {
+      if (storageInitialized) return;
+      
       try {
-        // 1. Ensure bucket exists - utilisation de storageService au lieu de documentService
-        await storageService.ensureStorageBucketExists('training_materials');
+        console.log("Initializing storage buckets...");
+        
+        // 1. Ensure all required buckets exist
+        await ensureBucketExists('company_documents_storage').catch(err => {
+          console.warn("Error ensuring company_documents_storage bucket exists:", err);
+          // Continue despite error
+        });
+        
+        await ensureBucketExists('training_materials').catch(err => {
+          console.warn("Error ensuring training_materials bucket exists:", err);
+          // Continue despite error
+        });
+        
+        await ensureBucketExists('value_chain_documents').catch(err => {
+          console.warn("Error ensuring value_chain_documents bucket exists:", err);
+          // Continue despite error
+        });
         
         // 2. Initialize company folder if company is available
         if (company?.id) {
-          await companyFolderService.initializeCompanyFolder(company.id, company.name);
+          try {
+            await companyFolderService.initializeCompanyFolder(company.id, company.name);
+            console.log(`Initialized company folder for ${company.name}`);
+          } catch (folderErr) {
+            console.warn("Error initializing company folder:", folderErr);
+            // Continue despite error
+          }
         }
         
         // 3. Initialize user folder if user is available
         if (user?.id) {
-          await companyFolderService.initializeCompanyFolder(user.id, user.email);
+          try {
+            await companyFolderService.initializeCompanyFolder(user.id, user.email);
+            console.log(`Initialized user folder for ${user.email}`);
+          } catch (userFolderErr) {
+            console.warn("Error initializing user folder:", userFolderErr);
+            // Continue despite error
+          }
         }
+        
+        setStorageInitialized(true);
+        console.log("Storage initialization completed");
       } catch (err) {
         console.error("Error initializing storage:", err);
-        setError("Failed to initialize storage");
+        // Don't set error state to avoid blocking the UI
+        // setError("Failed to initialize storage");
+        
+        // Mark as initialized anyway to prevent retries
+        setStorageInitialized(true);
       }
     };
     
-    initializeStorage();
-  }, [company, user]);
+    if (!storageInitialized && (company || user)) {
+      initializeStorage();
+    }
+  }, [company, user, ensureBucketExists, storageInitialized]);
   
   const navigateToFolder = async (folder: DocumentFolder | null) => {
     try {
@@ -80,14 +121,15 @@ export function DocumentsLayout() {
         } catch (err) {
           console.error("Error fetching parent folder:", err);
           parentId = null;
-          setError("Failed to retrieve folder structure");
+          // Don't set error state to avoid blocking the UI
+          // setError("Failed to retrieve folder structure");
         }
       }
       
       setBreadcrumb(newBreadcrumb);
     } catch (err) {
       console.error("Error navigating to folder:", err);
-      setError("Failed to navigate to folder");
+      toast.error("Failed to navigate to folder");
     }
   };
   
