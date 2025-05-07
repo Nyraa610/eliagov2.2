@@ -63,6 +63,7 @@
     "date-fns": "^3.6.0",
     "docx-templates": "^4.11.3",
     "embla-carousel-react": "^8.3.0",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.4.7",
     "html-to-image": "^1.11.11",
     "i18next": "^23.10.1",
