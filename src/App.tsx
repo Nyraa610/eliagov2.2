@@ -12,7 +12,7 @@ import Training from "./pages/Training";
 import CourseView from "./pages/CourseView";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Deliverables from "./pages/Deliverables";
 import RegisterValidation from "./pages/RegisterValidation";
 import RegisterConfirmation from "./pages/RegisterConfirmation";
