@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { FolderStructure } from "./FolderStructure";
@@ -13,6 +12,7 @@ import { toast } from "sonner";
 import { documentService, DocumentFolder, companyFolderService } from "@/services/document";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalDocumentsList } from "./list/PersonalDocumentsList";
+import { storageService } from "@/services/storage"; // Assurez-vous que le chemin d'importation est correct
 
 export function DocumentsLayout() {
   const { company, loading: companyLoading } = useCompanyProfile();
@@ -35,8 +35,8 @@ export function DocumentsLayout() {
   useEffect(() => {
     const initializeStorage = async () => {
       try {
-        // 1. Ensure bucket exists
-        await documentService.ensureStorageBucketExists();
+        // 1. Ensure bucket exists - utilisation de storageService au lieu de documentService
+        await storageService.ensureStorageBucketExists('training_materials');
         
         // 2. Initialize company folder if company is available
         if (company?.id) {
@@ -49,6 +49,7 @@ export function DocumentsLayout() {
         }
       } catch (err) {
         console.error("Error initializing storage:", err);
+        setError("Failed to initialize storage");
       }
     };
     
