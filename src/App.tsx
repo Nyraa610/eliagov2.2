@@ -79,6 +79,8 @@ function App() {
       <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
       
       {/* Assessment routes */}
+      <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
+      <Route path="/assessment/value-chain" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/esg-diagnostic-results" element={<ProtectedRoute><UserLayout><ESGDiagnosticResults /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/carbon-evaluation" element={<ProtectedRoute><UserLayout><CarbonEvaluation /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/carbon-evaluation-results" element={<ProtectedRoute><UserLayout><CarbonEvaluationResults /></UserLayout></ProtectedRoute>} />
