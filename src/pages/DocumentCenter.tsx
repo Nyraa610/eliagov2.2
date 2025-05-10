@@ -7,10 +7,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
 import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
+import { DeliverablesList } from "@/components/documents/list/DeliverablesList";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function DocumentCenter() {
   const { user, companyId } = useAuth();
   const [activeTab, setActiveTab] = useState("company");
+  const [isConsultant, setIsConsultant] = useState(false);
+  
+  // Check if user is a consultant
+  useEffect(() => {
+    const checkConsultantRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        setIsConsultant(data?.role === 'consultant' || data?.role === 'admin');
+      } catch (err) {
+        console.error("Error checking consultant role:", err);
+      }
+    };
+    
+    checkConsultantRole();
+  }, [user?.id]);
   
   return (
     <div className="container mx-auto">
@@ -32,6 +58,7 @@ export default function DocumentCenter() {
                 <TabsTrigger value="company">Company Documents</TabsTrigger>
                 <TabsTrigger value="personal">Personal Documents</TabsTrigger>
                 <TabsTrigger value="value-chain">Value Chain Documents</TabsTrigger>
+                {isConsultant && <TabsTrigger value="deliverables">Elia Go Deliverables</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="company" className="space-y-4">
@@ -45,6 +72,12 @@ export default function DocumentCenter() {
               <TabsContent value="value-chain" className="space-y-4">
                 {companyId && <ValueChainDocumentsList companyId={companyId} />}
               </TabsContent>
+              
+              {isConsultant && (
+                <TabsContent value="deliverables" className="space-y-4">
+                  {companyId && <DeliverablesList companyId={companyId} />}
+                </TabsContent>
+              )}
             </Tabs>
           </CardContent>
         </Card>
