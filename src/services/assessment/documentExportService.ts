@@ -1,8 +1,7 @@
 
 import { saveAs } from 'file-saver';
-import { createReport } from 'docx-templates';
-import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { toast } from 'sonner';
 
 /**
  * Export document in the specified format
@@ -23,9 +22,8 @@ export async function exportDocument(
       if (documentData.markdownContent) {
         return await exportMarkdownAsPdf(documentData, filename);
       } else {
-        // Fallback to Word export if no markdown
-        toast.warning("PDF export is using Word template. For better PDF output, use the Markdown editor.");
-        return await exportWordDocument(documentData, filename.replace('.pdf', '.docx'));
+        // Fallback to simple PDF
+        return await exportSimplePdf(documentData, filename);
       }
     }
     
@@ -136,86 +134,81 @@ async function exportMarkdownAsPdf(documentData: any, filename: string): Promise
 }
 
 /**
- * Export document as Word document
+ * Export document as a simple PDF without markdown processing
+ */
+async function exportSimplePdf(documentData: any, filename: string): Promise<boolean> {
+  try {
+    const doc = new jsPDF();
+    
+    // Add title
+    const title = documentData.title || "Sustainability Report";
+    doc.setFontSize(20);
+    doc.text(title, 20, 20);
+    
+    // Add company name if available
+    if (documentData.companyName) {
+      doc.setFontSize(16);
+      doc.text(`For: ${documentData.companyName}`, 20, 30);
+    }
+    
+    // Add date
+    const date = documentData.date || new Date().toLocaleDateString();
+    doc.setFontSize(12);
+    doc.text(`Date: ${date}`, 20, 38);
+    
+    let y = 50;
+    
+    // Add sections
+    if (documentData.executiveSummary) {
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Executive Summary", 20, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      const summaryText = stripHtml(documentData.executiveSummary);
+      const lines = doc.splitTextToSize(summaryText, 170);
+      doc.text(lines, 20, y);
+      y += 10 + (lines.length * 7);
+    }
+    
+    // Add more sections as needed
+    // Check for page overflow and add pages as necessary
+    
+    // Save the PDF
+    doc.save(filename);
+    return true;
+  } catch (error) {
+    console.error("Failed to export PDF:", error);
+    toast.error("Failed to generate PDF");
+    return false;
+  }
+}
+
+/**
+ * Export document as Word document - this is a simplified version without docx-templates
  */
 async function exportWordDocument(documentData: any, filename: string): Promise<boolean> {
   try {
-    console.log("Starting Word export...");
+    toast.info("Downloading Word template...");
     
-    // Use the correct template path
-    // Assuming the template is stored in the public folder
+    // Simply download the template file directly
     const templatePath = '/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
-    
-    console.log("Fetching template from:", templatePath);
-    
-    // Fetch the template file
     const response = await fetch(templatePath);
+    
     if (!response.ok) {
-      const errorMessage = `Failed to fetch template: ${response.status} ${response.statusText}`;
-      console.error(errorMessage);
-      toast.error(errorMessage);
-      throw new Error(errorMessage);
+      throw new Error(`Failed to fetch template: ${response.status} ${response.statusText}`);
     }
     
-    const templateBuffer = await response.arrayBuffer();
-    console.log("Template loaded, size:", templateBuffer.byteLength);
+    // Convert to blob and save
+    const blob = await response.blob();
+    saveAs(blob, filename);
     
-    try {
-      // Process the template with docx-templates
-      const templateBufferData = Buffer.from(templateBuffer);
-      
-      // Include markdown content if available
-      const dataForTemplate = {
-        ...documentData,
-        // Ensure these fields are available for the template
-        title: documentData.title || "Sustainability Report",
-        companyName: documentData.companyName || "",
-        date: documentData.date || new Date().toLocaleDateString(),
-        content: documentData.markdownContent || documentData.content || ""
-      };
-      
-      console.log("Processing template with data:", Object.keys(dataForTemplate));
-      
-      const result = await createReport({
-        template: templateBufferData,
-        data: dataForTemplate,
-        cmdDelimiter: '[', // Using placeholders with [] format like [CompanyName]
-        failFast: false,
-      });
-      
-      console.log("Template processed successfully");
-      
-      // Convert the result to a Blob
-      const blob = new Blob([result], { 
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-      });
-      
-      // Save the file
-      saveAs(blob, filename);
-      toast.success("Word document exported successfully");
-      
-      return true;
-    } catch (docxError) {
-      console.error("Error processing with docx-templates:", docxError);
-      
-      // Show a better error message
-      toast.error(`Failed to process template: ${docxError.message}`);
-      
-      // Fallback: Just download the original template if docx-templates fails
-      const blob = new Blob([templateBuffer], { 
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-      });
-      saveAs(blob, filename);
-      
-      // Show a warning
-      toast.warning("Could not process template with custom data. Downloading original template instead.");
-      
-      return true;
-    }
+    toast.success("Template downloaded successfully. Please open in Word to fill in your details.");
+    return true;
   } catch (error) {
-    const errorMessage = `Failed to export Word document: ${error instanceof Error ? error.message : 'Unknown error'}`;
-    console.error(errorMessage);
-    toast.error(errorMessage);
+    console.error("Failed to download template:", error);
+    toast.error(`Failed to download template: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
   }
 }
@@ -255,4 +248,12 @@ export async function getDocumentPreview(documentData: any): Promise<Blob | null
     console.error("Failed to get document preview:", error);
     return null;
   }
+}
+
+/**
+ * Helper function to strip HTML tags from content
+ */
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
 }

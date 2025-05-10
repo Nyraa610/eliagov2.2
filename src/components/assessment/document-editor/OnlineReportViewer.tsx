@@ -6,7 +6,7 @@ import { DocumentContent } from './DocumentContent';
 import { FileText, Download, FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { assessmentService } from '@/services/assessment';
-import { toast } from 'sonner';
+import { toast as sonnerToast } from 'sonner';
 
 interface OnlineReportViewerProps {
   documentData: any;
@@ -39,12 +39,12 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
   }, [documentData, assessmentType]);
   
   const loadDocumentPreview = async () => {
-    if (!assessmentType) return;
+    if (!documentData) return;
     
     try {
       setIsPreviewLoading(true);
       
-      // Fix: Pass only documentData to getDocumentPreview
+      // Generate HTML preview of the document
       const blob = await assessmentService.getDocumentPreview(documentData);
       if (blob) {
         // Create a URL for the blob
@@ -53,7 +53,7 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
       }
     } catch (error) {
       console.error("Error loading document preview:", error);
-      toast.error("Failed to load document preview");
+      sonnerToast.error("Failed to load document preview");
     } finally {
       setIsPreviewLoading(false);
     }

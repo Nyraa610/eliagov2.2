@@ -58,7 +58,6 @@ export function exportToPDF(items: IROItem[], companyName: string = "Your Compan
       });
       
       // Get the final Y position after the risks table
-      // @ts-ignore - We know this exists from the library even if TypeScript doesn't recognize it
       yPos = (doc as any).lastAutoTable.finalY + 20;
     }
     
@@ -84,7 +83,6 @@ export function exportToPDF(items: IROItem[], companyName: string = "Your Compan
       });
       
       // Update the Y position after the opportunities table
-      // @ts-ignore - We know this exists from the library even if TypeScript doesn't recognize it
       yPos = (doc as any).lastAutoTable.finalY + 15;
     }
     
