@@ -2,27 +2,26 @@
 import { useState, useEffect } from "react";
 import { documentService } from "@/services/value-chain/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, File, Trash2, RefreshCcw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SimpleUploadButton } from "@/components/shared/DocumentUpload";
-
-interface Document {
-  id: string;
-  name: string;
-  file_type: string;
-  url: string;
-  created_at: string;
-}
+import { FolderView } from "@/components/shared/FolderManagement/FolderView";
+import { folderService } from "@/services/document/storage/folderService";
 
 interface ValueChainDocumentsListProps {
   companyId: string;
 }
 
 export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListProps) {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [folderItems, setFolderItems] = useState<any[]>([]);
+  const [currentPath, setCurrentPath] = useState(`value_chain/${companyId}`);
+  const [breadcrumbs, setBreadcrumbs] = useState<{name: string; path: string;}[]>(
+    [{ name: 'Root', path: `value_chain/${companyId}` }]
+  );
 
   // Load documents when component mounts
   const loadDocuments = async () => {
@@ -32,8 +31,17 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
     setError(null);
     try {
       console.log("Loading value chain documents for company:", companyId);
+      
+      // Load folder structure
+      const items = await folderService.listFolderContents(
+        'value_chain_documents',
+        currentPath
+      );
+      
+      setFolderItems(items);
+      
+      // Also load database records for additional metadata
       const docs = await documentService.getDocuments(companyId);
-      console.log("Loaded documents:", docs);
       setDocuments(docs);
     } catch (err) {
       console.error("Error loading value chain documents:", err);
@@ -46,25 +54,57 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
 
   useEffect(() => {
     loadDocuments();
-  }, [companyId]);
-
-  const handleDeleteDocument = async (documentId: string) => {
-    if (!window.confirm("Are you sure you want to delete this document?")) {
+  }, [companyId, currentPath]);
+  
+  // Update breadcrumbs when path changes
+  useEffect(() => {
+    const basePath = `value_chain/${companyId}`;
+    
+    if (currentPath === basePath) {
+      setBreadcrumbs([{ name: 'Root', path: basePath }]);
       return;
     }
+    
+    const relativePath = currentPath.slice(basePath.length + 1);
+    const parts = relativePath.split('/');
+    const crumbs = [{ name: 'Root', path: basePath }];
+    
+    let pathBuild = basePath;
+    for (let i = 0; i < parts.length; i++) {
+      pathBuild += '/' + parts[i];
+      crumbs.push({
+        name: parts[i],
+        path: pathBuild
+      });
+    }
+    
+    setBreadcrumbs(crumbs);
+  }, [currentPath, companyId]);
 
+  const handleDeleteDocument = async (item: any) => {
+    if (!item.id && !item.isFolder) {
+      // Handle storage-only file deletion
+      return await folderService.deleteItem(
+        'value_chain_documents',
+        item.path,
+        false
+      );
+    }
+    
     try {
-      const success = await documentService.deleteDocument(documentId);
+      const success = await documentService.deleteDocument(item.id);
       
       if (success) {
-        setDocuments(documents.filter(doc => doc.id !== documentId));
         toast.success("Document deleted successfully");
+        return true;
       } else {
         toast.error("Failed to delete document");
+        return false;
       }
     } catch (err) {
       console.error("Error deleting document:", err);
       toast.error("Error deleting document");
+      return false;
     }
   };
 
@@ -73,78 +113,33 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
     loadDocuments();
     toast.success("Document uploaded successfully");
   };
+  
+  const handleNavigateTo = (path: string) => {
+    setCurrentPath(path);
+  };
+  
+  const handleDeleteItem = async (item: any) => {
+    return await folderService.deleteItem(
+      'value_chain_documents',
+      item.path,
+      item.isFolder
+    );
+  };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Value Chain Documents</CardTitle>
-        <div className="flex gap-2">
-          <SimpleUploadButton 
-            companyId={companyId}
-            documentType="value_chain"
-            onUploadComplete={handleUploadComplete}
-            buttonText="Upload Document"
-            size="sm"
-          />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadDocuments} 
-            disabled={loading}
-          >
-            <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center items-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : error ? (
-          <div className="text-center p-8">
-            <p className="text-red-500 mb-2">{error}</p>
-            <Button onClick={loadDocuments}>Retry</Button>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="text-center p-8 border rounded-md bg-muted/20">
-            <p className="text-muted-foreground">No value chain documents found</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {documents.map((doc) => (
-              <div 
-                key={doc.id} 
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/20 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <File className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <a 
-                      href={doc.url} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="font-medium hover:underline text-blue-600"
-                    >
-                      {doc.name}
-                    </a>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleDeleteDocument(doc.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <FolderView 
+      title="Value Chain Documents"
+      items={folderItems}
+      currentPath={currentPath}
+      onNavigate={handleNavigateTo}
+      onRefresh={loadDocuments}
+      onCreateFile={() => {
+        // Show upload dialog or handle upload via SimpleUploadButton
+      }}
+      onDeleteItem={handleDeleteItem}
+      isLoading={loading}
+      bucketName="value_chain_documents"
+      breadcrumbs={breadcrumbs}
+    />
   );
 }
