@@ -180,8 +180,6 @@ async function exportWordDocument(documentData: any, filename: string): Promise<
         template: templateBufferData,
         data: dataForTemplate,
         cmdDelimiter: '[', // Using placeholders with [] format like [CompanyName]
-        cmdOpenDelimiter: '[',
-        cmdCloseDelimiter: ']',
         failFast: false,
       });
       
