@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import { 
   Bold, Italic, List, ListOrdered, Heading1, Heading2, 
   Link as LinkIcon, Image, Code, Quote, Table
@@ -48,6 +49,15 @@ export function EditorToolbar({ content, onApply }: EditorToolbarProps) {
     const url = window.prompt('Enter image URL:', 'https://images.unsplash.com/');
     if (url) {
       insertAtCursor('![', `](${url})`, 'Image description');
+      
+      // Show toast notification about image insertion
+      toast.success("Image inserted. It will appear in the preview tab.");
+      
+      // Force refresh preview if visible
+      setTimeout(() => {
+        const previewEvent = new CustomEvent('markdown-preview-refresh');
+        document.dispatchEvent(previewEvent);
+      }, 100);
     }
   };
 

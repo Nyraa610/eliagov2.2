@@ -25,7 +25,7 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [htmlContent, setHtmlContent] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>('visual');
+  const [activeTab, setActiveTab] = useState<string>('markdown');
 
   // Initialize editor content
   useEffect(() => {
@@ -45,6 +45,20 @@ export function MarkdownEditor({
       setMarkdownContent(convertHtmlToMarkdown(content));
     }
   }, [content]);
+  
+  // Listen to markdown preview refresh event
+  useEffect(() => {
+    const handleRefreshPreview = () => {
+      const updatedHtml = convertMarkdownToHtml(markdownContent);
+      setHtmlContent(updatedHtml);
+    };
+    
+    document.addEventListener('markdown-preview-refresh', handleRefreshPreview);
+    
+    return () => {
+      document.removeEventListener('markdown-preview-refresh', handleRefreshPreview);
+    };
+  }, [markdownContent]);
 
   // Update content when markdown changes
   const handleMarkdownChange = (newMarkdown: string) => {
@@ -74,19 +88,11 @@ export function MarkdownEditor({
           onValueChange={handleTabChange} 
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="visual">Visual Editor</TabsTrigger>
+          <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="markdown">Markdown</TabsTrigger>
+            <TabsTrigger value="visual">Visual Editor</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="visual" className="mt-2">
-            <RichTextEditor
-              content={htmlContent}
-              onChange={handleHtmlChange}
-              placeholder={placeholder}
-              readonly={readonly}
-            />
-          </TabsContent>
           
           <TabsContent value="markdown" className="mt-2">
             <EditorToolbar onApply={handleMarkdownChange} content={markdownContent} />
@@ -99,6 +105,21 @@ export function MarkdownEditor({
                 disabled={readonly}
                 spellCheck="false"
               />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="visual" className="mt-2">
+            <RichTextEditor
+              content={htmlContent}
+              onChange={handleHtmlChange}
+              placeholder={placeholder}
+              readonly={readonly}
+            />
+          </TabsContent>
+          
+          <TabsContent value="preview" className="mt-2">
+            <div className="border border-input rounded-md p-4 bg-white min-h-[500px]">
+              <MarkdownPreview content={markdownContent} />
             </div>
           </TabsContent>
         </Tabs>

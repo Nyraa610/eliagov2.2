@@ -140,16 +140,25 @@ async function exportMarkdownAsPdf(documentData: any, filename: string): Promise
  */
 async function exportWordDocument(documentData: any, filename: string): Promise<boolean> {
   try {
-    // Use a default template path
-    const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
+    console.log("Starting Word export...");
+    
+    // Use the correct template path
+    // Assuming the template is stored in the public folder
+    const templatePath = '/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
+    
+    console.log("Fetching template from:", templatePath);
     
     // Fetch the template file
     const response = await fetch(templatePath);
     if (!response.ok) {
-      throw new Error(`Failed to fetch template: ${response.status} ${response.statusText}`);
+      const errorMessage = `Failed to fetch template: ${response.status} ${response.statusText}`;
+      console.error(errorMessage);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
     
     const templateBuffer = await response.arrayBuffer();
+    console.log("Template loaded, size:", templateBuffer.byteLength);
     
     try {
       // Process the template with docx-templates
@@ -162,13 +171,21 @@ async function exportWordDocument(documentData: any, filename: string): Promise<
         title: documentData.title || "Sustainability Report",
         companyName: documentData.companyName || "",
         date: documentData.date || new Date().toLocaleDateString(),
+        content: documentData.markdownContent || documentData.content || ""
       };
+      
+      console.log("Processing template with data:", Object.keys(dataForTemplate));
       
       const result = await createReport({
         template: templateBufferData,
         data: dataForTemplate,
-        cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
+        cmdDelimiter: '[', // Using placeholders with [] format like [CompanyName]
+        cmdOpenDelimiter: '[',
+        cmdCloseDelimiter: ']',
+        failFast: false,
       });
+      
+      console.log("Template processed successfully");
       
       // Convert the result to a Blob
       const blob = new Blob([result], { 
@@ -177,10 +194,14 @@ async function exportWordDocument(documentData: any, filename: string): Promise<
       
       // Save the file
       saveAs(blob, filename);
+      toast.success("Word document exported successfully");
       
       return true;
     } catch (docxError) {
-      console.error("Error processing with docx-templates, falling back to basic download:", docxError);
+      console.error("Error processing with docx-templates:", docxError);
+      
+      // Show a better error message
+      toast.error(`Failed to process template: ${docxError.message}`);
       
       // Fallback: Just download the original template if docx-templates fails
       const blob = new Blob([templateBuffer], { 
@@ -194,14 +215,15 @@ async function exportWordDocument(documentData: any, filename: string): Promise<
       return true;
     }
   } catch (error) {
-    console.error("Failed to export Word document:", error);
+    const errorMessage = `Failed to export Word document: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    console.error(errorMessage);
+    toast.error(errorMessage);
     return false;
   }
 }
 
 /**
  * Get document preview as a blob
- * Modified to take only one parameter (documentData)
  */
 export async function getDocumentPreview(documentData: any): Promise<Blob | null> {
   try {
@@ -217,6 +239,7 @@ export async function getDocumentPreview(documentData: any): Promise<Blob | null
             h1 { color: #333; }
             h2 { color: #555; }
             h3 { color: #777; }
+            img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 4px; }
           </style>
         </head>
         <body>
