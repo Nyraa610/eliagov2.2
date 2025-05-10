@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -243,16 +242,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                     handleDocumentUpload(files);
                   }}
                   buttonText="Upload Documents"
-                  validationRules={{
-                    allowedTypes: [
-                      'application/pdf',
-                      'application/msword',
-                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                      'application/vnd.ms-excel',
-                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    ],
-                    maxFiles: 10, // Use maxFiles instead of maxFileSize
-                  }}
+                  companyId="placeholder-company-id" // This needs to be replaced with actual company ID
                 />
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-4">

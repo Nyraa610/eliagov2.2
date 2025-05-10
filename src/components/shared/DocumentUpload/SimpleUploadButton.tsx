@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { DocumentUploadDialog } from "./DocumentUploadDialog";
-import { UploadedDocument } from "@/services/document/genericDocumentService";
+import { UploadedDocument, ValidationRules } from "@/services/document/genericDocumentService";
 import { supabase } from "@/lib/supabase";
 
 interface SimpleUploadButtonProps {
@@ -17,6 +17,7 @@ interface SimpleUploadButtonProps {
   className?: string;
   size?: "default" | "sm" | "lg" | "icon" | null;
   onUploadComplete?: (documents: UploadedDocument[]) => void;
+  validationRules?: ValidationRules;
 }
 
 export function SimpleUploadButton({
@@ -29,7 +30,8 @@ export function SimpleUploadButton({
   buttonText = "Upload",
   className = "",
   size,
-  onUploadComplete
+  onUploadComplete,
+  validationRules
 }: SimpleUploadButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -91,6 +93,7 @@ export function SimpleUploadButton({
         isPersonal={isPersonal}
         customPath={customPath}
         onUploadComplete={handleUploadComplete}
+        validationRules={validationRules}
       />
     </>
   );
