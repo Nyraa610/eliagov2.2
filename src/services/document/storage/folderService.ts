@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 export const folderService = {
@@ -174,6 +173,7 @@ export const folderService = {
       console.log(`Initialized folder structure for company ID: ${companyId}`);
     } catch (error) {
       console.error("Error initializing folders:", error);
+      throw error; // Re-throw to allow caller to catch and handle
     }
   },
   

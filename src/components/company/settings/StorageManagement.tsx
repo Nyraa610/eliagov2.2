@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, FolderOpen, HardDrive, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
@@ -162,13 +161,9 @@ export function StorageManagement({ company }: StorageManagementProps) {
         if (!foldersSuccess) {
           diagnostics += "Method 2: Using folder service...\n";
           try {
-            const result = await folderService.initializeAllFolders(company.id);
-            if (result) {
-              diagnostics += "Folder service completed successfully\n";
-              foldersSuccess = true;
-            } else {
-              diagnostics += "Folder service failed\n";
-            }
+            await folderService.initializeAllFolders(company.id);
+            diagnostics += "Folder service completed successfully\n";
+            foldersSuccess = true;
           } catch (folderServiceErr) {
             const errorMessage = folderServiceErr instanceof Error ? folderServiceErr.message : String(folderServiceErr);
             diagnostics += `Folder service exception: ${errorMessage}\n`;
