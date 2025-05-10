@@ -89,6 +89,7 @@ async function exportWordDocument(documentData: any, filename: string): Promise<
 
 /**
  * Get document preview as a blob
+ * Modified to take only one parameter (documentData)
  */
 export async function getDocumentPreview(documentData: any): Promise<Blob | null> {
   try {

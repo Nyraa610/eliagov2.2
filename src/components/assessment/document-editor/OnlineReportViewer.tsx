@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,7 +44,8 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
     try {
       setIsPreviewLoading(true);
       
-      const blob = await assessmentService.getDocumentPreview(assessmentType, documentData);
+      // Fix: Pass only documentData to getDocumentPreview
+      const blob = await assessmentService.getDocumentPreview(documentData);
       if (blob) {
         // Create a URL for the blob
         const url = URL.createObjectURL(blob);
