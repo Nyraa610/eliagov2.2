@@ -27,6 +27,7 @@ export function ExportActions({
   const handleExport = async (format: 'pdf' | 'word') => {
     try {
       setIsExporting(format);
+      toast.loading(`Exporting as ${format.toUpperCase()}...`);
       
       // Prepare filename
       const companyName = documentData.companyName || 'company';
@@ -65,7 +66,7 @@ export function ExportActions({
       <Button 
         variant="outline" 
         onClick={() => handleExport('pdf')}
-        disabled={!!isExporting}
+        disabled={!!isExporting || isSaving}
         className="flex items-center gap-2"
       >
         {isExporting === 'pdf' ? (
@@ -79,7 +80,7 @@ export function ExportActions({
       <Button 
         variant="outline" 
         onClick={() => handleExport('word')}
-        disabled={!!isExporting}
+        disabled={!!isExporting || isSaving}
         className="flex items-center gap-2"
       >
         {isExporting === 'word' ? (
@@ -108,6 +109,7 @@ export function ExportActions({
       <Button
         variant="secondary"
         onClick={handleMarkdownEditor}
+        disabled={!!isExporting || isSaving}
         className="flex items-center gap-2"
       >
         <FileType className="h-4 w-4" />

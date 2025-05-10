@@ -1,14 +1,10 @@
 
-import { jsPDF } from "jspdf";
-import { toast } from "sonner";
-import {
-  createDocumentFromTemplate,
-  createDocumentBlobFromTemplate,
-  prepareDocumentData
-} from '@/utils/documentUtils';
+import { saveAs } from 'file-saver';
+import { createReport } from 'docx-templates';
+import { toast } from 'sonner';
 
 /**
- * Export document as PDF or Word
+ * Export document in the specified format
  */
 export async function exportDocument(
   assessmentType: string, 
@@ -17,113 +13,89 @@ export async function exportDocument(
   filename: string
 ): Promise<boolean> {
   try {
-    console.log(`Exporting ${assessmentType} as ${format}:`, { documentData, filename });
+    console.log(`Exporting ${assessmentType} document as ${format}`);
     
-    if (format === 'pdf') {
-      // Create PDF using jsPDF
-      const pdf = new jsPDF();
-      
-      // Add title
-      pdf.setFontSize(20);
-      pdf.text(documentData.title || "Assessment Document", 20, 20);
-      
-      // Add company info
-      pdf.setFontSize(14);
-      pdf.text(`Company: ${documentData.companyName || ""}`, 20, 35);
-      pdf.text(`Industry: ${documentData.industry || ""}`, 20, 45);
-      pdf.text(`Date: ${documentData.date || new Date().toLocaleDateString()}`, 20, 55);
-      
-      // Add content sections
-      let yPosition = 70;
-      
-      // Executive Summary
-      if (documentData.executiveSummary) {
-        pdf.setFontSize(16);
-        pdf.text("Executive Summary", 20, yPosition);
-        yPosition += 10;
-        pdf.setFontSize(12);
-        const summaryText = pdf.splitTextToSize(
-          documentData.executiveSummary.summary || "", 
-          170
-        );
-        pdf.text(summaryText, 20, yPosition);
-        yPosition += summaryText.length * 7 + 10;
-      }
-      
-      // Sustainability Context
-      if (documentData.sustainabilityContext) {
-        if (yPosition > 270) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        pdf.setFontSize(16);
-        pdf.text("Sustainability in the Mediterranean", 20, yPosition);
-        yPosition += 10;
-        pdf.setFontSize(12);
-        const contextText = pdf.splitTextToSize(
-          documentData.sustainabilityContext || "", 
-          170
-        );
-        pdf.text(contextText, 20, yPosition);
-        yPosition += contextText.length * 7 + 10;
-      }
-      
-      // Continue adding other sections...
-      // When we reach page limit, add a new page
-      if (yPosition > 270) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      
-      // Save the PDF and trigger download
-      pdf.save(filename);
-      return true;
-    } 
-    else if (format === 'word') {
-      try {
-        // Get the template path - update path to ensure it can be found
-        const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
-        
-        // Prepare the data for the template
-        const preparedData = prepareDocumentData(documentData);
-        
-        // Generate the document from template
-        return await createDocumentFromTemplate(templatePath, preparedData, filename);
-      } catch (error) {
-        console.error("Error creating Word document:", error);
-        return false;
-      }
+    // For now, we only support Word export
+    if (format === 'word') {
+      return await exportWordDocument(documentData, filename);
+    } else if (format === 'pdf') {
+      // PDF export is not fully implemented yet
+      // This is a placeholder for future implementation
+      toast.warning("PDF export is not fully implemented yet. Exporting as Word document instead.");
+      return await exportWordDocument(documentData, filename.replace('.pdf', '.docx'));
     }
     
     return false;
   } catch (error) {
     console.error(`Failed to export document as ${format}:`, error);
-    toast.error(`Failed to export document as ${format}`);
     return false;
   }
 }
 
 /**
- * Generate document preview for online viewing
+ * Export document as Word document
  */
-export async function getDocumentPreview(
-  assessmentType: string, 
-  documentData: any
-): Promise<Blob | null> {
+async function exportWordDocument(documentData: any, filename: string): Promise<boolean> {
   try {
-    console.log(`Generating preview for ${assessmentType}:`, documentData);
-    
-    // Get the template path - update path to ensure it can be found
+    // Use a default template path
     const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
     
-    // Prepare the data for the template
-    const preparedData = prepareDocumentData(documentData);
+    // Fetch the template file
+    const response = await fetch(templatePath);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch template: ${response.status} ${response.statusText}`);
+    }
     
-    // Generate the document blob from template
-    return await createDocumentBlobFromTemplate(templatePath, preparedData);
+    const templateBuffer = await response.arrayBuffer();
+    
+    try {
+      // Process the template with docx-templates
+      const templateBufferData = Buffer.from(templateBuffer);
+      
+      const result = await createReport({
+        template: templateBufferData,
+        data: documentData,
+        cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
+      });
+      
+      // Convert the result to a Blob
+      const blob = new Blob([result], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      
+      // Save the file
+      saveAs(blob, filename);
+      
+      return true;
+    } catch (docxError) {
+      console.error("Error processing with docx-templates, falling back to basic download:", docxError);
+      
+      // Fallback: Just download the original template if docx-templates fails
+      const blob = new Blob([templateBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      saveAs(blob, filename);
+      
+      // Show a warning
+      toast.warning("Could not process template with custom data. Downloading original template instead.");
+      
+      return true;
+    }
   } catch (error) {
-    console.error("Error creating document preview:", error);
-    toast.error("Failed to generate document preview");
+    console.error("Failed to export Word document:", error);
+    return false;
+  }
+}
+
+/**
+ * Get document preview as a blob
+ */
+export async function getDocumentPreview(documentData: any): Promise<Blob | null> {
+  try {
+    // For now, we'll return null as preview is not fully implemented
+    return null;
+  } catch (error) {
+    console.error("Failed to get document preview:", error);
     return null;
   }
 }

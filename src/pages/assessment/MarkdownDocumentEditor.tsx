@@ -9,6 +9,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { assessmentService } from "@/services/assessment";
 import { MarkdownEditor } from "@/components/assessment/document-editor/markdown-editor/MarkdownEditor";
+import { toast as sonnerToast } from "sonner";
 
 export default function MarkdownDocumentEditor() {
   const { assessmentType } = useParams();
@@ -46,8 +47,12 @@ export default function MarkdownDocumentEditor() {
         
         setDocumentData(data);
         
-        // Generate initial markdown content
-        const initialMarkdown = `# ${data.title || 'Sustainability Report'}
+        // Check if there's already saved markdown content
+        if (data.markdownContent) {
+          setMarkdownContent(data.markdownContent);
+        } else {
+          // Generate initial markdown content if none exists
+          const initialMarkdown = `# ${data.title || 'Sustainability Report'}
 ## For ${data.companyName || 'Your Company'}
 
 *${data.date || new Date().toLocaleDateString()}*
@@ -110,8 +115,9 @@ ${data.actionPlanRoadmap || 'Timeline and steps for implementing the action plan
 
 ${data.financialImpact || 'Analysis of the financial impact of sustainability initiatives.'}
 `;
-        
-        setMarkdownContent(initialMarkdown);
+          
+          setMarkdownContent(initialMarkdown);
+        }
       } catch (error) {
         console.error("Failed to fetch document data:", error);
         toast({
@@ -134,6 +140,7 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
   const handleSave = async () => {
     try {
       setSaving(true);
+      sonnerToast.loading("Saving document...");
       
       // Update document data with markdown content
       const updatedDocumentData = {
@@ -147,24 +154,13 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
       );
       
       if (success) {
-        toast({
-          title: "Success",
-          description: "Document saved successfully",
-        });
+        sonnerToast.success("Document saved successfully");
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to save document",
-          variant: "destructive"
-        });
+        sonnerToast.error("Failed to save document");
       }
     } catch (error) {
       console.error("Failed to save document:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save document",
-        variant: "destructive"
-      });
+      sonnerToast.error("Failed to save document");
     } finally {
       setSaving(false);
     }
@@ -219,10 +215,23 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
               content={markdownContent}
               onChange={setMarkdownContent}
               placeholder="Write your document..."
+              className="min-h-[500px]"
             />
           </div>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end mb-8 pb-8">
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          size="lg"
+          className="flex items-center gap-2"
+        >
+          <Save className="h-4 w-4" />
+          {saving ? "Saving..." : "Save Document"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -29,6 +29,12 @@ export function MarkdownEditor({
 
   // Initialize editor content
   useEffect(() => {
+    if (!content) {
+      setMarkdownContent('');
+      setHtmlContent('');
+      return;
+    }
+    
     // If content is markdown, convert to HTML for the visual editor
     if (content.includes('#') || content.includes('*') || content.includes('```') || content.includes('- ')) {
       setMarkdownContent(content);
