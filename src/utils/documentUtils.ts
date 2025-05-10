@@ -15,25 +15,37 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
     
     const templateBuffer = await response.arrayBuffer();
     
-    // Process the template with docx-templates
-    // Convert ArrayBuffer to Buffer as required by docx-templates
-    const templateBufferData = Buffer.from(templateBuffer);
-    
-    const result = await createReport({
-      template: templateBufferData,
-      data: data,
-      cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
-    });
-    
-    // Convert the result to a Blob
-    const blob = new Blob([result], { 
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-    });
-    
-    // Save the file
-    saveAs(blob, outputFilename);
-    
-    return true;
+    try {
+      // Process the template with docx-templates
+      // Convert ArrayBuffer to Buffer as required by docx-templates
+      const templateBufferData = Buffer.from(templateBuffer);
+      
+      const result = await createReport({
+        template: templateBufferData,
+        data: data,
+        cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
+      });
+      
+      // Convert the result to a Blob
+      const blob = new Blob([result], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      
+      // Save the file
+      saveAs(blob, outputFilename);
+      
+      return true;
+    } catch (docxError) {
+      console.error("Error processing with docx-templates, falling back to basic download:", docxError);
+      
+      // Fallback: Just download the original template if docx-templates fails
+      const blob = new Blob([templateBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      saveAs(blob, outputFilename);
+      
+      return true;
+    }
   } catch (error) {
     console.error("Error creating document from template:", error);
     return false;
@@ -54,19 +66,28 @@ export async function createDocumentBlobFromTemplate(templatePath: string, data:
     
     const templateBuffer = await response.arrayBuffer();
     
-    // Convert ArrayBuffer to Buffer as required by docx-templates
-    const templateBufferData = Buffer.from(templateBuffer);
-    
-    const result = await createReport({
-      template: templateBufferData,
-      data: data,
-      cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
-    });
-    
-    // Convert the result to a Blob
-    return new Blob([result], { 
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-    });
+    try {
+      // Convert ArrayBuffer to Buffer as required by docx-templates
+      const templateBufferData = Buffer.from(templateBuffer);
+      
+      const result = await createReport({
+        template: templateBufferData,
+        data: data,
+        cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
+      });
+      
+      // Convert the result to a Blob
+      return new Blob([result], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+    } catch (docxError) {
+      console.error("Error processing with docx-templates, returning original template:", docxError);
+      
+      // Fallback: Return the original template if docx-templates fails
+      return new Blob([templateBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+    }
   } catch (error) {
     console.error("Error creating document blob from template:", error);
     return null;

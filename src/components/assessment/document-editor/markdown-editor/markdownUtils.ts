@@ -23,7 +23,7 @@ turndownService.addRule('listItem', {
 marked.setOptions({
   gfm: true,
   breaks: true,
-  smartLists: true,
+  // smartLists option has been removed as it's not in the current MarkedOptions type
   smartypants: true
 });
 
