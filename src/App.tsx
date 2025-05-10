@@ -35,6 +35,7 @@ import CompanySettings from "./pages/company/CompanySettings";
 import DocumentEditor from "./pages/assessment/DocumentEditor";
 import OnlineReport from "./pages/assessment/OnlineReportViewer";
 import Engagement from "./pages/Engagement";
+import MarkdownDocumentEditor from "./pages/assessment/MarkdownDocumentEditor";
 import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 

@@ -1,7 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RichTextEditor } from "./rich-text-editor/RichTextEditor";
+import { MarkdownEditor } from "./markdown-editor/MarkdownEditor";
 import "../../../components/assessment/document-editor/rich-text-editor/RichTextEditor.css";
 
 interface DocumentContentProps {
@@ -15,6 +17,8 @@ export function DocumentContent({
   setDocumentData,
   readOnly = false
 }: DocumentContentProps) {
+  const [editorType, setEditorType] = useState<"rich-text" | "markdown">("rich-text");
+  
   if (!documentData) return <div>Loading document...</div>;
 
   const handleContentChange = (section: string, content: string) => {
@@ -24,18 +28,46 @@ export function DocumentContent({
     });
   };
 
+  const renderEditor = (content: string, section: string) => {
+    if (editorType === "markdown") {
+      return (
+        <MarkdownEditor 
+          content={content} 
+          onChange={(newContent) => handleContentChange(section, newContent)} 
+          placeholder={`Write ${section} content...`}
+          readonly={readOnly}
+        />
+      );
+    } else {
+      return (
+        <RichTextEditor 
+          content={content} 
+          onChange={(newContent) => handleContentChange(section, newContent)} 
+          placeholder={`Write ${section} content...`}
+          readonly={readOnly}
+        />
+      );
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {!readOnly && (
+        <div className="flex justify-end mb-4">
+          <Tabs value={editorType} onValueChange={(value) => setEditorType(value as "rich-text" | "markdown")}>
+            <TabsList>
+              <TabsTrigger value="rich-text">Rich Text</TabsTrigger>
+              <TabsTrigger value="markdown">Markdown</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+      
       {/* Executive Summary */}
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">Executive Summary</h2>
-          <RichTextEditor 
-            content={documentData.executiveSummary || ""} 
-            onChange={(content) => handleContentChange("executiveSummary", content)} 
-            placeholder="Write the executive summary..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.executiveSummary || "", "executiveSummary")}
         </CardContent>
       </Card>
 
@@ -43,12 +75,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">Sustainability in the Mediterranean</h2>
-          <RichTextEditor 
-            content={documentData.sustainabilityContext || ""} 
-            onChange={(content) => handleContentChange("sustainabilityContext", content)} 
-            placeholder="Describe the sustainability context..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.sustainabilityContext || "", "sustainabilityContext")}
         </CardContent>
       </Card>
 
@@ -56,12 +83,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">Why This Assessment Matters</h2>
-          <RichTextEditor 
-            content={documentData.assessmentImportance || ""} 
-            onChange={(content) => handleContentChange("assessmentImportance", content)} 
-            placeholder="Explain why this assessment is important..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.assessmentImportance || "", "assessmentImportance")}
         </CardContent>
       </Card>
 
@@ -69,12 +91,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">Our Approach: The Elia Go Methodology</h2>
-          <RichTextEditor 
-            content={documentData.methodology || ""} 
-            onChange={(content) => handleContentChange("methodology", content)} 
-            placeholder="Describe the methodology used..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.methodology || "", "methodology")}
         </CardContent>
       </Card>
 
@@ -82,12 +99,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">1. ESG Assessment Based on ISO 26000</h2>
-          <RichTextEditor 
-            content={documentData.esgAssessment || ""} 
-            onChange={(content) => handleContentChange("esgAssessment", content)} 
-            placeholder="Detail the ESG assessment findings..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.esgAssessment || "", "esgAssessment")}
         </CardContent>
       </Card>
 
@@ -95,12 +107,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">2. Carbon Footprint Snapshot</h2>
-          <RichTextEditor 
-            content={documentData.carbonFootprint || ""} 
-            onChange={(content) => handleContentChange("carbonFootprint", content)} 
-            placeholder="Present the carbon footprint data..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.carbonFootprint || "", "carbonFootprint")}
         </CardContent>
       </Card>
 
@@ -110,20 +117,10 @@ export function DocumentContent({
           <h2 className="text-xl font-bold mb-4">3. Risk & Opportunity Matrix</h2>
           
           <h3 className="text-lg font-semibold mb-3">3.1 Risks</h3>
-          <RichTextEditor 
-            content={documentData.risks || ""} 
-            onChange={(content) => handleContentChange("risks", content)} 
-            placeholder="List and describe risks..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.risks || "", "risks")}
           
           <h3 className="text-lg font-semibold mb-3 mt-6">3.2 Key Opportunities</h3>
-          <RichTextEditor 
-            content={documentData.opportunities || ""} 
-            onChange={(content) => handleContentChange("opportunities", content)} 
-            placeholder="List and describe opportunities..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.opportunities || "", "opportunities")}
         </CardContent>
       </Card>
 
@@ -133,36 +130,16 @@ export function DocumentContent({
           <h2 className="text-xl font-bold mb-4">4. Sustainability Action Plan</h2>
           
           <h3 className="text-lg font-semibold mb-3">Objective</h3>
-          <RichTextEditor 
-            content={documentData.actionPlanObjective || ""} 
-            onChange={(content) => handleContentChange("actionPlanObjective", content)} 
-            placeholder="Define objectives..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.actionPlanObjective || "", "actionPlanObjective")}
           
           <h3 className="text-lg font-semibold mb-3 mt-6">Key Actions</h3>
-          <RichTextEditor 
-            content={documentData.actionPlanKeyActions || ""} 
-            onChange={(content) => handleContentChange("actionPlanKeyActions", content)} 
-            placeholder="List key actions..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.actionPlanKeyActions || "", "actionPlanKeyActions")}
           
           <h3 className="text-lg font-semibold mb-3 mt-6">Why This Works / Expected Benefits</h3>
-          <RichTextEditor 
-            content={documentData.actionPlanBenefits || ""} 
-            onChange={(content) => handleContentChange("actionPlanBenefits", content)} 
-            placeholder="Describe expected benefits..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.actionPlanBenefits || "", "actionPlanBenefits")}
           
           <h3 className="text-lg font-semibold mb-3 mt-6">Practical Action Roadmap</h3>
-          <RichTextEditor 
-            content={documentData.actionPlanRoadmap || ""} 
-            onChange={(content) => handleContentChange("actionPlanRoadmap", content)} 
-            placeholder="Outline the roadmap..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.actionPlanRoadmap || "", "actionPlanRoadmap")}
         </CardContent>
       </Card>
 
@@ -170,12 +147,7 @@ export function DocumentContent({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-bold mb-4">5. Financial Impact Projection</h2>
-          <RichTextEditor 
-            content={documentData.financialImpact || ""} 
-            onChange={(content) => handleContentChange("financialImpact", content)} 
-            placeholder="Project financial impacts..."
-            readonly={readOnly}
-          />
+          {renderEditor(documentData.financialImpact || "", "financialImpact")}
         </CardContent>
       </Card>
     </div>

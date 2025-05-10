@@ -1,25 +1,28 @@
-import { useState } from "react";
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Save, FileText, Download, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { 
+  Download, FileDown, Save, FileType, Loader2
+} from "lucide-react";
 import { assessmentService } from "@/services/assessment";
-import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ExportActionsProps {
   documentData: any;
-  isSaving: boolean;
-  onSave: () => Promise<void>;
+  isSaving?: boolean;
+  onSave?: () => Promise<void>;
   assessmentType: string;
 }
 
 export function ExportActions({ 
   documentData, 
-  isSaving,
+  isSaving = false,
   onSave,
-  assessmentType 
+  assessmentType
 }: ExportActionsProps) {
   const [isExporting, setIsExporting] = useState<string | null>(null);
-  const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleExport = async (format: 'pdf' | 'word') => {
     try {
@@ -41,59 +44,28 @@ export function ExportActions({
       );
       
       if (success) {
-        toast({
-          title: "Success",
-          description: `${format.toUpperCase()} exported successfully`,
-        });
+        toast.success(`${format.toUpperCase()} export completed. Your document has been downloaded.`);
       } else {
-        toast({
-          title: "Error",
-          description: `Failed to export as ${format}`,
-          variant: "destructive"
-        });
+        toast.error(`Failed to export as ${format}`);
       }
     } catch (error) {
       console.error(`Failed to export as ${format}:`, error);
-      toast({
-        title: "Error",
-        description: `Failed to export as ${format}`,
-        variant: "destructive"
-      });
+      toast.error(`Failed to export as ${format}`);
     } finally {
       setIsExporting(null);
     }
+  };
+
+  const handleMarkdownEditor = () => {
+    navigate(`/assessment/markdown-editor/${assessmentType}`);
   };
   
   return (
     <div className="flex flex-wrap gap-2">
       <Button 
         variant="outline" 
-        disabled={isSaving}
-        onClick={onSave}
-        className="flex items-center gap-2"
-      >
-        <Save className="h-4 w-4" />
-        {isSaving ? "Saving..." : "Save"}
-      </Button>
-      
-      <Button 
-        variant="outline"
-        onClick={() => handleExport('word')}
-        disabled={isExporting !== null}
-        className="flex items-center gap-2" 
-      >
-        {isExporting === 'word' ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <FileText className="h-4 w-4" />
-        )}
-        {isExporting === 'word' ? "Exporting..." : "Export as Word"}
-      </Button>
-      
-      <Button 
-        variant="outline"
         onClick={() => handleExport('pdf')}
-        disabled={isExporting !== null}
+        disabled={!!isExporting}
         className="flex items-center gap-2"
       >
         {isExporting === 'pdf' ? (
@@ -101,15 +73,46 @@ export function ExportActions({
         ) : (
           <Download className="h-4 w-4" />
         )}
-        {isExporting === 'pdf' ? "Exporting..." : "Export as PDF"}
+        {isExporting === 'pdf' ? 'Exporting...' : 'Export as PDF'}
       </Button>
       
-      <Link to={`/assessment/report/${assessmentType}`}>
-        <Button variant="default" className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          View Online
+      <Button 
+        variant="outline" 
+        onClick={() => handleExport('word')}
+        disabled={!!isExporting}
+        className="flex items-center gap-2"
+      >
+        {isExporting === 'word' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <FileDown className="h-4 w-4" />
+        )}
+        {isExporting === 'word' ? 'Exporting...' : 'Export as Word'}
+      </Button>
+      
+      {onSave && (
+        <Button 
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex items-center gap-2"
+        >
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isSaving ? 'Saving...' : 'Save Draft'}
         </Button>
-      </Link>
+      )}
+      
+      <Button
+        variant="secondary"
+        onClick={handleMarkdownEditor}
+        className="flex items-center gap-2"
+      >
+        <FileType className="h-4 w-4" />
+        Markdown Editor
+      </Button>
     </div>
   );
 }
