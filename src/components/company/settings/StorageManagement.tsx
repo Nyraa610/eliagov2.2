@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface StorageManagementProps {
   company: Company;
@@ -16,6 +17,7 @@ interface StorageManagementProps {
 export function StorageManagement({ company }: StorageManagementProps) {
   const navigate = useNavigate();
   const [isInitializing, setIsInitializing] = useState(false);
+  const [initStatus, setInitStatus] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleInitializeStorage = async () => {
     if (!company?.id) {
@@ -24,46 +26,75 @@ export function StorageManagement({ company }: StorageManagementProps) {
     }
     
     setIsInitializing(true);
+    setInitStatus(null);
     
     try {
       // Initialize all buckets
       const buckets = ['company_documents_storage', 'value_chain_documents', 'training_materials'];
       const results = await Promise.all(buckets.map(async (bucketName) => {
-        const { data, error } = await supabase.functions.invoke("initialize-storage", {
-          body: { bucketName }
-        });
-        
-        if (error) {
-          console.error(`Error initializing bucket ${bucketName}:`, error);
+        try {
+          const { data, error } = await supabase.functions.invoke("initialize-storage", {
+            body: { bucketName }
+          });
+          
+          if (error) {
+            console.error(`Error initializing bucket ${bucketName}:`, error);
+            return { bucketName, success: false };
+          }
+          return { bucketName, success: true };
+        } catch (err) {
+          console.error(`Exception initializing bucket ${bucketName}:`, err);
           return { bucketName, success: false };
         }
-        return { bucketName, success: true };
       }));
       
       const bucketsSuccessful = results.every(r => r.success);
       
       // Initialize company folders
-      const { data: folderData, error: folderError } = await supabase.functions.invoke("initialize-company-storage", {
-        body: { companyId: company.id, companyName: company.name }
-      });
-      
-      if (folderError) {
-        console.error("Error initializing company folders:", folderError);
-        toast.error("Failed to initialize company folders");
-        setIsInitializing(false);
-        return;
+      let folderSuccess = false;
+      try {
+        const { data: folderData, error: folderError } = await supabase.functions.invoke("initialize-company-storage", {
+          body: { companyId: company.id, companyName: company.name }
+        });
+        
+        if (folderError) {
+          console.error("Error initializing company folders:", folderError);
+          setInitStatus({ 
+            success: false, 
+            message: `Failed to initialize company folders: ${folderError.message}` 
+          });
+        } else {
+          folderSuccess = true;
+        }
+      } catch (folderErr) {
+        console.error("Exception initializing company folders:", folderErr);
+        setInitStatus({ 
+          success: false, 
+          message: `Exception when initializing folders: ${folderErr instanceof Error ? folderErr.message : String(folderErr)}` 
+        });
       }
       
-      if (bucketsSuccessful) {
+      if (bucketsSuccessful && folderSuccess) {
         console.log("Storage initialized successfully:", results);
         toast.success("Storage initialized successfully");
+        setInitStatus({ success: true, message: "All storage components initialized successfully" });
+      } else if (bucketsSuccessful) {
+        const message = "Storage buckets initialized but folder creation had issues. Try again or contact support.";
+        toast.warning(message);
+        setInitStatus({ success: false, message });
       } else {
         const failed = results.filter(r => !r.success).map(r => r.bucketName).join(", ");
-        toast.warning(`Partially initialized. Issues with: ${failed}`);
+        const message = `Storage partially initialized. Issues with: ${failed}`;
+        toast.warning(message);
+        setInitStatus({ success: false, message });
       }
     } catch (err) {
       console.error("Error initializing storage:", err);
       toast.error("Failed to initialize storage");
+      setInitStatus({ 
+        success: false, 
+        message: `Initialization error: ${err instanceof Error ? err.message : String(err)}` 
+      });
     } finally {
       setIsInitializing(false);
     }
@@ -87,6 +118,13 @@ export function StorageManagement({ company }: StorageManagementProps) {
             Each company has dedicated storage for documents and files.
           </p>
 
+          {initStatus && (
+            <Alert className={`mb-4 ${initStatus.success ? 'bg-green-50' : 'bg-amber-50'}`}>
+              <AlertTitle>{initStatus.success ? "Success" : "Warning"}</AlertTitle>
+              <AlertDescription>{initStatus.message}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex items-center gap-4">
             <Database className="h-6 w-6 text-primary" />
             <Button 
@@ -100,7 +138,7 @@ export function StorageManagement({ company }: StorageManagementProps) {
               ) : (
                 <Database className="h-4 w-4" />
               )}
-              Initialize Storage Buckets
+              {isInitializing ? "Initializing..." : "Initialize Storage Buckets"}
             </Button>
           </div>
         </div>

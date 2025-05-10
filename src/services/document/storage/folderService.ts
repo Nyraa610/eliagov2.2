@@ -28,22 +28,40 @@ export const folderService = {
         return true;
       }
       
-      const { error } = await supabase.storage
-        .from('company_documents_storage')
-        .upload(folderPath, new Uint8Array(0), {
-          contentType: 'application/x-directory',
-          upsert: true
-        });
+      // Try direct upload first
+      try {
+        const { error } = await supabase.storage
+          .from('company_documents_storage')
+          .upload(folderPath, new Uint8Array(0), {
+            contentType: 'application/x-directory',
+            upsert: true
+          });
+          
+        if (!error) {
+          console.log(`Company folder for ID ${companyId} initialized directly`);
+          
+          // Also create personal documents subfolder
+          await this.ensurePersonalDocumentsFolder(companyId);
+          
+          return true;
+        }
         
-      if (error) {
-        console.error('Error creating company folder:', error);
+        console.log(`Direct folder creation failed: ${error.message}. Trying via edge function...`);
+      } catch (directError) {
+        console.log('Direct folder creation failed, trying edge function:', directError);
+      }
+      
+      // If direct upload fails, try using edge function
+      const { error: functionError } = await supabase.functions.invoke("initialize-company-storage", {
+        body: { companyId }
+      });
+      
+      if (functionError) {
+        console.error('Error initializing company folder via edge function:', functionError);
         return false;
       }
       
-      console.log(`Company folder for ID ${companyId} initialized`);
-      
-      // Also create personal documents subfolder
-      await this.ensurePersonalDocumentsFolder(companyId);
+      console.log(`Company folder for ID ${companyId} initialized via edge function`);
       
       return true;
     } catch (error) {
@@ -61,20 +79,37 @@ export const folderService = {
     try {
       const personalFolderPath = `personal/${companyId}/.folder`;
       
-      const { error } = await supabase.storage
-        .from('company_documents_storage')
-        .upload(personalFolderPath, new Uint8Array(0), {
-          contentType: 'application/x-directory',
-          upsert: true
-        });
+      // Try direct upload first
+      try {
+        const { error } = await supabase.storage
+          .from('company_documents_storage')
+          .upload(personalFolderPath, new Uint8Array(0), {
+            contentType: 'application/x-directory',
+            upsert: true
+          });
+          
+        if (!error) {
+          console.log(`Personal documents folder for company ${companyId} initialized directly`);
+          return true;
+        }
         
-      if (error) {
-        console.error('Error creating personal documents folder:', error);
-        return false;
+        console.log(`Direct personal folder creation failed: ${error.message}`);
+      } catch (directError) {
+        console.log('Direct personal folder creation failed:', directError);
       }
       
-      console.log(`Personal documents folder for company ${companyId} initialized`);
-      return true;
+      // If direct upload fails, check if edge function already created it
+      const { data: existingFiles, error: listError } = await supabase.storage
+        .from('company_documents_storage')
+        .list(`personal/${companyId}`);
+        
+      if (!listError && existingFiles && existingFiles.length > 0) {
+        console.log(`Personal documents folder for company ${companyId} already exists`);
+        return true;
+      }
+      
+      console.log(`Personal documents folder for company ${companyId} could not be initialized`);
+      return false;
     } catch (error) {
       console.error('Error initializing personal documents folder:', error);
       return false;
@@ -92,20 +127,37 @@ export const folderService = {
       
       await storageBucketService.ensureValueChainBucketExists();
       
-      const { error } = await supabase.storage
-        .from('value_chain_documents')
-        .upload(valueChainFolderPath, new Uint8Array(0), {
-          contentType: 'application/x-directory',
-          upsert: true
-        });
+      // Try direct upload first
+      try {
+        const { error } = await supabase.storage
+          .from('value_chain_documents')
+          .upload(valueChainFolderPath, new Uint8Array(0), {
+            contentType: 'application/x-directory',
+            upsert: true
+          });
+          
+        if (!error) {
+          console.log(`Value chain folder for company ${companyId} initialized directly`);
+          return true;
+        }
         
-      if (error) {
-        console.error('Error creating value chain folder:', error);
-        return false;
+        console.log(`Direct value chain folder creation failed: ${error.message}`);
+      } catch (directError) {
+        console.log('Direct value chain folder creation failed:', directError);
       }
       
-      console.log(`Value chain folder for company ${companyId} initialized`);
-      return true;
+      // If direct upload fails, check if edge function already created it
+      const { data: existingFiles, error: listError } = await supabase.storage
+        .from('value_chain_documents')
+        .list(`value_chain/${companyId}`);
+        
+      if (!listError && existingFiles && existingFiles.length > 0) {
+        console.log(`Value chain folder for company ${companyId} already exists`);
+        return true;
+      }
+      
+      console.log(`Value chain folder for company ${companyId} could not be initialized`);
+      return false;
     } catch (error) {
       console.error('Error initializing value chain folder:', error);
       return false;
