@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
@@ -12,6 +13,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { ChevronRight, Upload, Users } from "lucide-react";
 import { stakeholderService } from "@/services/stakeholderService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   companyDescription: z.string().min(10, "Please provide a brief description of your company"),
@@ -31,9 +33,11 @@ type StakeholderIdentificationProps = {
 };
 
 export function StakeholderIdentification({ onComplete }: StakeholderIdentificationProps) {
+  const { user, companyId } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -63,6 +67,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
   ];
 
   const handleDocumentUpload = async (files: File[]) => {
+    setStorageError(null);
     setIsUploading(true);
     try {
       const uploadedFiles = await stakeholderService.uploadStakeholderDocuments(files);
@@ -70,6 +75,7 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
       toast.success("Documents uploaded successfully");
     } catch (error) {
       console.error("Error uploading documents:", error);
+      setStorageError(error instanceof Error ? error.message : "Failed to upload documents");
       toast.error("Failed to upload documents");
     } finally {
       setIsUploading(false);
@@ -235,6 +241,14 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                 <FormDescription className="mb-4">
                   Upload documents that can help identify stakeholders (org charts, reports, etc.)
                 </FormDescription>
+                
+                {storageError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
+                    <p className="font-medium">Storage Error: {storageError}</p>
+                    <p className="mt-1">Please try again or contact support if the problem persists.</p>
+                  </div>
+                )}
+                
                 <SimpleUploadButton 
                   onUploadComplete={(documents) => {
                     // Convert UploadedDocument[] to File[] compatible format for our handler
@@ -242,7 +256,17 @@ export function StakeholderIdentification({ onComplete }: StakeholderIdentificat
                     handleDocumentUpload(files);
                   }}
                   buttonText="Upload Documents"
-                  companyId="placeholder-company-id" // This needs to be replaced with actual company ID
+                  companyId={companyId || ""} // Use the actual company ID from auth context
+                  validationRules={{
+                    allowedTypes: [
+                      'application/pdf',
+                      'application/msword',
+                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      'application/vnd.ms-excel',
+                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    ],
+                    maxFiles: 10
+                  }}
                 />
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-4">

@@ -29,10 +29,11 @@ export function useDocumentUpload({
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   const { files, handleFilesAdded: addFiles, removeFile, clearFiles } = useFileState();
   const { uploadProgress, startProgressSimulation, completeProgress, resetProgress } = useUploadProgress();
-  const { ensureBucketExists } = useBucketManagement();
+  const { ensureBucketExists, initializingBucket, bucketError } = useBucketManagement();
   
   // Process added files with validation
   const handleFilesAdded = useCallback((newFiles: File[]) => {
@@ -79,16 +80,36 @@ export function useDocumentUpload({
       ? 'company_documents_storage' 
       : documentType === 'value_chain' 
         ? 'value_chain_documents' 
-        : 'company_documents_storage';
+        : documentType === 'deliverable'
+          ? 'deliverables_storage'
+          : 'company_documents_storage';
         
     // Check if bucket exists (or create it)
     const bucketExists = await ensureBucketExists(bucketName);
     
     if (!bucketExists) {
-      setError('Failed to access storage. Please try again later.');
-      setIsUploading(false);
-      return [];
+      if (retryCount < 2) {
+        // Try again once more if it fails
+        setRetryCount(prev => prev + 1);
+        toast.warning("Storage initialization failed. Retrying...");
+        setIsUploading(false);
+        
+        // Wait a bit before retrying
+        setTimeout(() => {
+          uploadFiles();
+        }, 1500);
+        
+        return [];
+      } else {
+        setError('Failed to access storage. Please try again later or contact support.');
+        setIsUploading(false);
+        setRetryCount(0);
+        return [];
+      }
     }
+    
+    // Reset retry count on success
+    setRetryCount(0);
     
     // Start progress simulation
     const progressInterval = startProgressSimulation();
@@ -102,11 +123,13 @@ export function useDocumentUpload({
       };
       
       // Use company ID for company documents or user ID for personal docs
-      const effectiveEntityId = companyId || user.id;
+      const effectiveEntityId = isPersonal ? user.id : companyId;
+      
+      console.log(`Uploading to bucket ${bucketName} with entity ID ${effectiveEntityId}`);
       
       const documents = await genericDocumentService.uploadDocuments(
         files,
-        effectiveEntityId,
+        effectiveEntityId as string,
         uploadOptions,
         validationRules
       );
@@ -147,14 +170,16 @@ export function useDocumentUpload({
     ensureBucketExists,
     startProgressSimulation,
     completeProgress,
-    resetProgress
+    resetProgress,
+    retryCount
   ]);
   
   return {
     files,
     isUploading,
+    initializingBucket,
     uploadProgress,
-    error,
+    error: error || (bucketError ? bucketError.message : null),
     handleFilesAdded,
     removeFile,
     clearFiles,
