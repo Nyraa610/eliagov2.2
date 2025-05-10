@@ -16,11 +16,11 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
     const templateBuffer = await response.arrayBuffer();
     
     // Process the template with docx-templates
-    // Convert ArrayBuffer to Uint8Array as required by docx-templates
-    const templateUint8Array = new Uint8Array(templateBuffer);
+    // Convert ArrayBuffer to Buffer as required by docx-templates
+    const templateBufferData = Buffer.from(templateBuffer);
     
     const result = await createReport({
-      template: templateUint8Array,
+      template: templateBufferData,
       data: data,
       cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
     });
@@ -54,11 +54,11 @@ export async function createDocumentBlobFromTemplate(templatePath: string, data:
     
     const templateBuffer = await response.arrayBuffer();
     
-    // Convert ArrayBuffer to Uint8Array as required by docx-templates
-    const templateUint8Array = new Uint8Array(templateBuffer);
+    // Convert ArrayBuffer to Buffer as required by docx-templates
+    const templateBufferData = Buffer.from(templateBuffer);
     
     const result = await createReport({
-      template: templateUint8Array,
+      template: templateBufferData,
       data: data,
       cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
     });
