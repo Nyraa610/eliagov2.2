@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AssessmentBase } from "@/components/assessment/AssessmentBase";
 import { useTranslation } from "react-i18next";
@@ -9,7 +8,7 @@ import { Link } from "react-router-dom";
 import { FeatureStatus } from "@/types/training";
 import { actionPlanSchema, ActionPlanFormValues } from "@/components/assessment/action-plan/formSchema";
 import { ActionPlanTabs } from "@/components/assessment/action-plan/ActionPlanTabs";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useToast } from "@/components/ui/use-toast";
 import { engagementService } from "@/services/engagement";
 

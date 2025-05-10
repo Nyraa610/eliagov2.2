@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { OnlineReportViewer } from "@/components/assessment/document-editor/OnlineReportViewer";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 

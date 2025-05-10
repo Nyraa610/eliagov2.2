@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Save, FileText, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { Link } from "react-router-dom";
 
 interface ExportActionsProps {

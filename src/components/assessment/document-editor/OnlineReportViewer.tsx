@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DocumentContent } from './DocumentContent';
 import { FileText, Download, FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { assessmentService } from '@/services/assessmentService';
+import { assessmentService } from '@/services/assessment';
 import { toast } from 'sonner';
 
 interface OnlineReportViewerProps {

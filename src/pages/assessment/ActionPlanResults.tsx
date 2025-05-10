@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ResultsContainer } from "@/components/assessment/results/ResultsContainer";
 import { useToast } from "@/components/ui/use-toast";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button"; 
 import { CalendarDays, CheckCircle2, Clock, Target, FileText, Download } from "lucide-react";
