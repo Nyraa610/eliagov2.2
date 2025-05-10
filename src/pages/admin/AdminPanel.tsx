@@ -3,11 +3,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPanelContent } from "@/components/admin/panel/AdminPanelContent";
-import { useAdminPanelAuth } from "@/components/admin/panel/useAdminPanelAuth";
+import { useAuthProtection } from "@/hooks/useAuthProtection";
 import { Loader2 } from "lucide-react";
 
 export default function AdminPanel() {
-  const { isAdmin, isLoading } = useAdminPanelAuth();
+  const { isAuthenticated, hasRequiredRole, isLoading } = useAuthProtection("admin");
 
   if (isLoading) {
     return (
@@ -22,8 +22,18 @@ export default function AdminPanel() {
     );
   }
 
-  if (!isAdmin) {
-    return null;
+  if (!isAuthenticated || !hasRequiredRole) {
+    return (
+      <AdminLayout 
+        title="Access Denied" 
+        description="You do not have permission to access this page."
+      >
+        <div className="flex flex-col items-center justify-center py-12">
+          <h2 className="text-xl font-semibold text-destructive mb-2">Unauthorized Access</h2>
+          <p className="text-muted-foreground">Please contact an administrator if you believe this is an error.</p>
+        </div>
+      </AdminLayout>
+    );
   }
 
   return (

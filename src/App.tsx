@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -111,7 +110,8 @@ function App() {
       <Route path="/experts" element={<ProtectedRoute><UserLayout><TalkWithExperts /></UserLayout></ProtectedRoute>} />
 
       {/* Protected routes - Admin */}
-      <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminLayout><AdminPanel /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/panel" element={<ProtectedRoute requireAdmin={true}><AdminPanel /></ProtectedRoute>} />
+      <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
       <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/content" element={<ProtectedRoute requireAdmin={true}><AdminLayout><ContentManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/course/new" element={<ProtectedRoute requireAdmin={true}><AdminLayout><CourseForm /></AdminLayout></ProtectedRoute>} />

@@ -6,10 +6,24 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Users, Award } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 
 export function OverviewTabContent() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { hasTrainingAccess, hasUserAccess } = useAdminPermissions();
+
+  const handleNavigation = (path: string, hasAccess: boolean) => {
+    if (hasAccess) {
+      navigate(path);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Access denied",
+        description: "You don't have permission to access this feature."
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -37,7 +51,7 @@ export function OverviewTabContent() {
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => navigate("/admin/training")}
+              onClick={() => handleNavigation("/admin/training", hasTrainingAccess)}
             >
               Go to Instructor Panel
             </Button>
@@ -63,7 +77,7 @@ export function OverviewTabContent() {
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => navigate("/admin/users")}
+              onClick={() => handleNavigation("/admin/users", hasUserAccess)}
             >
               User Management
             </Button>
