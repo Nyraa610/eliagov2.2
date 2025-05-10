@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ResultsContainer } from "@/components/assessment/results/ResultsContainer";
 import { useToast } from "@/components/ui/use-toast";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 
 export default function CarbonEvaluationResults() {
   const { t } = useTranslation();

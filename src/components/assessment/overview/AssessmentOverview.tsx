@@ -1,11 +1,10 @@
-
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { FeatureStatus } from "@/types/training";
 import { History, HelpCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { engagementService } from "@/services/engagement";
 
 interface AssessmentOverviewProps {

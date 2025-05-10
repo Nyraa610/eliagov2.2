@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { DocumentContent } from "./DocumentContent";
 import { ExportActions } from "./ExportActions";
 import { TemplateSelector } from "./TemplateSelector";
 import { useToast } from "@/components/ui/use-toast";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 
 interface DocumentEditorContainerProps {
   documentData: any;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +7,7 @@ import { carbonEvaluationSchema, CarbonEvaluationFormValues } from "./formSchema
 import { FeatureStatus } from "@/types/training";
 import { useTranslation } from "react-i18next";
 import { useProgressTracker } from "./useProgressTracker";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { FrameworkSelection } from "./FrameworkSelection";
 import { EliaCarbonTabs } from "./elia-framework/EliaCarbonTabs";
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +6,7 @@ import { IROTabs } from "./IROTabs";
 import { iroFormSchema, IROFormValues } from "./formSchema";
 import { FeatureStatus } from "@/types/training";
 import { useTranslation } from "react-i18next";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useToast } from "@/components/ui/use-toast";
 
 // Default data to pre-populate the form

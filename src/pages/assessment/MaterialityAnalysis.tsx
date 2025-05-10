@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { FeatureStatus } from "@/types/training";
 import { MaterialityAnalysisForm } from "@/components/assessment/materiality-analysis/MaterialityAnalysisForm";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function MaterialityAnalysis() {

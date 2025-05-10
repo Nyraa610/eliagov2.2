@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ResultsContainer } from "@/components/assessment/results/ResultsContainer";
 import { useToast } from "@/components/ui/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
 import { ESGFormValues, esgFormSchema } from "../../esg-diagnostic/ESGFormSchema";
 import { supabase } from "@/lib/supabase";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { useUnifiedAssessment } from "../context/UnifiedAssessmentContext";
 import { engagementService } from "@/services/engagement";
 

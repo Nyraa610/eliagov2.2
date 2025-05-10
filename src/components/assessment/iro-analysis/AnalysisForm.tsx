@@ -1,11 +1,10 @@
-
 import { UseFormReturn } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TwoColumnTable } from "./two-column-table/TwoColumnTable";
 import { IROFormValues, IROItem } from "./formSchema";
-import { assessmentService } from "@/services/assessmentService";
+import { assessmentService } from "@/services/assessment";
 import { FeatureStatus } from "@/types/training";
 import { useToast } from "@/components/ui/use-toast";
 import { useEngagement } from "@/hooks/useEngagement";

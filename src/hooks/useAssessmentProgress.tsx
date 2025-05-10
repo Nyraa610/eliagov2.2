@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { FeatureStatus } from "@/types/training";
-import { assessmentService, AssessmentType } from "@/services/assessmentService";
+import { assessmentService, AssessmentType } from "@/services/assessment";
 
 export function useAssessmentProgress() {
   const [diagStatus, setDiagStatus] = useState<FeatureStatus>("not-started");
