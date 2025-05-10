@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -89,6 +90,7 @@ function App() {
       <Route path="/assessment/action-plan" element={<ProtectedRoute><UserLayout><ActionPlan /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/action-plan-results" element={<ProtectedRoute><UserLayout><ActionPlanResults /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/document-editor/:assessmentType" element={<ProtectedRoute><UserLayout><DocumentEditor /></UserLayout></ProtectedRoute>} />
+      <Route path="/assessment/markdown-editor/:assessmentType" element={<ProtectedRoute><UserLayout><MarkdownDocumentEditor /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/report/:assessmentType" element={<ProtectedRoute><UserLayout><OnlineReport /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/iro" element={<ProtectedRoute><UserLayout><IRO /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/stakeholder-mapping" element={<ProtectedRoute><UserLayout><StakeholderMapping /></UserLayout></ProtectedRoute>} />
