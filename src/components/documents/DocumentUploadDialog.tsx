@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -101,16 +102,15 @@ export function DocumentUploadDialog({
               .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: true,
-                onUploadProgress: (event) => {
-                  const percent = Math.round((event.loaded / event.total) * 100);
-                  setProgress(prev => ({
-                    ...prev,
-                    [file.name]: percent
-                  }));
-                }
               });
               
             if (uploadError) throw uploadError;
+            
+            // Track progress manually since onUploadProgress is not available
+            setProgress(prev => ({
+              ...prev,
+              [file.name]: 100
+            }));
             
             // Get the public URL
             const { data } = supabase.storage

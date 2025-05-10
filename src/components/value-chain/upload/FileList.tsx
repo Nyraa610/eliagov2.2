@@ -5,9 +5,10 @@ import { CheckCircle, File, X } from "lucide-react";
 interface FileListProps {
   files: File[];
   onRemoveFile: (index: number) => void;
+  disabled?: boolean;
 }
 
-export function FileList({ files, onRemoveFile }: FileListProps) {
+export function FileList({ files, onRemoveFile, disabled = false }: FileListProps) {
   if (files.length === 0) return null;
 
   const getFileIcon = (file: File) => {
@@ -63,6 +64,7 @@ export function FileList({ files, onRemoveFile }: FileListProps) {
                 size="sm"
                 onClick={() => onRemoveFile(index)}
                 className="h-6 w-6 p-0"
+                disabled={disabled}
               >
                 <X className="h-4 w-4" />
               </Button>

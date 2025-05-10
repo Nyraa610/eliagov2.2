@@ -10,6 +10,7 @@ interface UploadAreaProps {
   onDrop: (e: React.DragEvent) => void;
   onFilesSelected: (files: File[]) => void;
   acceptedFormats?: string;
+  disabled?: boolean;
 }
 
 export function UploadArea({ 
@@ -18,7 +19,8 @@ export function UploadArea({
   onDragLeave, 
   onDrop, 
   onFilesSelected,
-  acceptedFormats = ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+  acceptedFormats = ".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif",
+  disabled = false
 }: UploadAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +40,7 @@ export function UploadArea({
     <div
       className={`border-2 border-dashed rounded-lg p-8 text-center ${
         isDragging ? "border-primary bg-primary/5" : "border-gray-300"
-      }`}
+      } ${disabled ? "opacity-50 pointer-events-none" : ""}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -54,6 +56,7 @@ export function UploadArea({
         variant="outline"
         size="sm"
         onClick={() => fileInputRef.current?.click()}
+        disabled={disabled}
       >
         Browse Files
       </Button>
@@ -64,6 +67,7 @@ export function UploadArea({
         accept={acceptedFormats}
         multiple
         onChange={handleFileInputChange}
+        disabled={disabled}
       />
     </div>
   );
