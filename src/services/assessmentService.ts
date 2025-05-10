@@ -1,7 +1,6 @@
-
 import { supabase } from "@/lib/supabase";
 import { jsPDF } from "jspdf";
-import { toast as sonnerToast } from "sonner";
+import { toast } from "sonner";
 
 // Type for assessment results
 export type AssessmentType = 
@@ -317,7 +316,6 @@ export const assessmentService = {
         }
         
         // Continue adding other sections...
-        // Add more sections as needed based on documentData structure
         // When we reach page limit, add a new page
         if (yPosition > 270) {
           pdf.addPage();
@@ -330,7 +328,7 @@ export const assessmentService = {
       } 
       else if (format === 'word') {
         try {
-          // Get the template path
+          // Get the template path - update path to ensure it can be found
           const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
           
           // Prepare the data for the template
@@ -347,11 +345,35 @@ export const assessmentService = {
       return false;
     } catch (error) {
       console.error(`Failed to export document as ${format}:`, error);
-      sonnerToast.error(`Failed to export document as ${format}`);
+      toast.error(`Failed to export document as ${format}`);
       return false;
+    }
+  },
+  
+  getDocumentPreview: async (assessmentType: string, documentData: any): Promise<Blob | null> => {
+    try {
+      console.log(`Generating preview for ${assessmentType}:`, documentData);
+      
+      // Get the template path - update path to ensure it can be found
+      const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
+      
+      // Prepare the data for the template
+      const preparedData = prepareDocumentData(documentData);
+      
+      // Generate the document blob from template
+      return await createDocumentBlobFromTemplate(templatePath, preparedData);
+    } catch (error) {
+      console.error("Error creating document preview:", error);
+      toast.error("Failed to generate document preview");
+      return null;
     }
   }
 };
 
 // Import the document utils
-import { createDocumentFromTemplate, replacePlaceholders, prepareDocumentData } from '@/utils/documentUtils';
+import { 
+  createDocumentFromTemplate, 
+  createDocumentBlobFromTemplate,
+  replacePlaceholders, 
+  prepareDocumentData 
+} from '@/utils/documentUtils';

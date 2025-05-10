@@ -1,31 +1,72 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DocumentContent } from './DocumentContent';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { createDocumentFromTemplate } from '@/utils/documentUtils';
+import { assessmentService } from '@/services/assessmentService';
+import { toast } from 'sonner';
 
 interface OnlineReportViewerProps {
   documentData: any;
   onExport?: (format: 'pdf' | 'word') => void;
+  assessmentType?: string;
 }
 
 export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
   documentData,
-  onExport
+  onExport,
+  assessmentType
 }) => {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Load document preview when component mounts and documentData is available
+    if (documentData && assessmentType) {
+      loadDocumentPreview();
+    }
+    
+    // Clean up URL on unmount
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [documentData, assessmentType]);
+  
+  const loadDocumentPreview = async () => {
+    if (!assessmentType) return;
+    
+    try {
+      setIsPreviewLoading(true);
+      
+      const blob = await assessmentService.getDocumentPreview(assessmentType, documentData);
+      if (blob) {
+        // Create a URL for the blob
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+      }
+    } catch (error) {
+      console.error("Error loading document preview:", error);
+      toast.error("Failed to load document preview");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
   
   // Handle template download without processing
   const handleDownloadTemplate = async () => {
     try {
-      const templatePath = '/src/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
+      setIsDownloadingTemplate(true);
+      const templatePath = '/DocumentTemplates/EliaGo_SustainabilityAssessment.docx';
       const response = await fetch(templatePath);
       
       if (!response.ok) {
-        toast({
+        uiToast({
           title: "Error",
           description: "Failed to download template",
           variant: "destructive"
@@ -45,18 +86,31 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast({
+      uiToast({
         title: "Success",
         description: "Template downloaded successfully",
       });
     } catch (error) {
       console.error("Error downloading template:", error);
-      toast({
+      uiToast({
         title: "Error",
         description: "Failed to download template",
         variant: "destructive"
       });
+    } finally {
+      setIsDownloadingTemplate(false);
     }
+  };
+  
+  const handleReloadPreview = async () => {
+    // Clear current preview
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    
+    // Load preview again
+    await loadDocumentPreview();
   };
   
   if (!documentData) {
@@ -85,10 +139,15 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
           <Button 
             variant="outline" 
             onClick={handleDownloadTemplate}
+            disabled={isDownloadingTemplate}
             className="flex items-center gap-2"
           >
-            <FileText className="h-4 w-4" />
-            Download Template
+            {isDownloadingTemplate ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {isDownloadingTemplate ? "Downloading..." : "Download Template"}
           </Button>
           
           {onExport && (
@@ -111,18 +170,46 @@ export const OnlineReportViewer: React.FC<OnlineReportViewerProps> = ({
               </Button>
             </>
           )}
+          
+          {previewUrl && (
+            <Button 
+              variant="outline" 
+              onClick={handleReloadPreview}
+              className="flex items-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Reload Preview
+            </Button>
+          )}
         </div>
       </div>
       
-      <Card className="border shadow-sm">
-        <CardContent className="pt-6">
-          <DocumentContent 
-            documentData={documentData} 
-            setDocumentData={() => {}} 
-            readOnly={true}
+      {isPreviewLoading ? (
+        <div className="flex justify-center items-center h-96 border rounded-md bg-gray-50">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-gray-500">Generating document preview...</p>
+          </div>
+        </div>
+      ) : previewUrl ? (
+        <div className="border rounded-md overflow-hidden bg-white">
+          <iframe 
+            src={previewUrl} 
+            className="w-full h-screen"
+            title="Document Preview" 
           />
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <Card className="border shadow-sm">
+          <CardContent className="pt-6">
+            <DocumentContent 
+              documentData={documentData} 
+              setDocumentData={() => {}} 
+              readOnly={true}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

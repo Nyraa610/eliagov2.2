@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, FileText, Download } from "lucide-react";
+import { Save, FileText, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { assessmentService } from "@/services/assessmentService";
 import { Link } from "react-router-dom";
@@ -83,7 +83,11 @@ export function ExportActions({
         disabled={isExporting !== null}
         className="flex items-center gap-2" 
       >
-        <FileText className="h-4 w-4" />
+        {isExporting === 'word' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <FileText className="h-4 w-4" />
+        )}
         {isExporting === 'word' ? "Exporting..." : "Export as Word"}
       </Button>
       
@@ -93,7 +97,11 @@ export function ExportActions({
         disabled={isExporting !== null}
         className="flex items-center gap-2"
       >
-        <Download className="h-4 w-4" />
+        {isExporting === 'pdf' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="h-4 w-4" />
+        )}
         {isExporting === 'pdf' ? "Exporting..." : "Export as PDF"}
       </Button>
       

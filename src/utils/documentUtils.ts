@@ -22,7 +22,7 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
     const result = await createReport({
       template: templateUint8Array,
       data: data,
-      cmdDelimiter: '[]', // Assuming placeholders use [] format like [CompanyName]
+      cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
     });
     
     // Convert the result to a Blob
@@ -37,6 +37,39 @@ export async function createDocumentFromTemplate(templatePath: string, data: any
   } catch (error) {
     console.error("Error creating document from template:", error);
     return false;
+  }
+}
+
+/**
+ * Creates a document from template but returns it as a blob instead of downloading
+ * This is useful for preview and other operations that don't need a download
+ */
+export async function createDocumentBlobFromTemplate(templatePath: string, data: any) {
+  try {
+    // Fetch the template file
+    const response = await fetch(templatePath);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch template: ${response.status} ${response.statusText}`);
+    }
+    
+    const templateBuffer = await response.arrayBuffer();
+    
+    // Convert ArrayBuffer to Uint8Array as required by docx-templates
+    const templateUint8Array = new Uint8Array(templateBuffer);
+    
+    const result = await createReport({
+      template: templateUint8Array,
+      data: data,
+      cmdDelimiter: '[]', // Using placeholders with [] format like [CompanyName]
+    });
+    
+    // Convert the result to a Blob
+    return new Blob([result], { 
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+    });
+  } catch (error) {
+    console.error("Error creating document blob from template:", error);
+    return null;
   }
 }
 

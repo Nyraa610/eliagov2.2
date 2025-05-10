@@ -91,6 +91,7 @@ export default function OnlineReport() {
     <OnlineReportViewer 
       documentData={documentData}
       onExport={handleExport}
+      assessmentType={assessmentType}
     />
   );
 }
