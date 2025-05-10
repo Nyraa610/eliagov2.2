@@ -91,6 +91,8 @@ function App() {
       <Route path="/assessment/action-plan-results" element={<ProtectedRoute><UserLayout><ActionPlanResults /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/document-editor/:assessmentType" element={<ProtectedRoute><UserLayout><DocumentEditor /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/markdown-editor/:assessmentType" element={<ProtectedRoute><UserLayout><MarkdownDocumentEditor /></UserLayout></ProtectedRoute>} />
+      {/* Ensure this specific route exists for direct navigation */}
+      <Route path="/assessment/markdown-editor/action-plan" element={<Navigate replace to="/assessment/markdown-editor/action_plan" />} />
       <Route path="/assessment/report/:assessmentType" element={<ProtectedRoute><UserLayout><OnlineReport /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/iro" element={<ProtectedRoute><UserLayout><IRO /></UserLayout></ProtectedRoute>} />
       <Route path="/assessment/stakeholder-mapping" element={<ProtectedRoute><UserLayout><StakeholderMapping /></UserLayout></ProtectedRoute>} />
