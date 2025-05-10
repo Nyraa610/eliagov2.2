@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,6 +93,18 @@ export function FolderView({
     }
   };
   
+  // Function to extract the folder/file name from path
+  const getDisplayName = (item: FolderItem): string => {
+    // If the item already has a name property, use it
+    if (item.name && !item.name.includes('/')) {
+      return item.name;
+    }
+    
+    // Otherwise extract name from the path
+    const pathParts = item.path.split('/');
+    return pathParts[pathParts.length - 1];
+  };
+  
   return (
     <>
       <Card className="w-full">
@@ -182,7 +193,10 @@ export function FolderView({
                           className="px-2 h-6"
                           onClick={() => onNavigate(item.path)}
                         >
-                          {item.name}
+                          {/* Display last part of path as folder name */}
+                          {item.name.includes('/') 
+                            ? item.name.split('/').pop() 
+                            : item.name}
                         </Button>
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -224,8 +238,8 @@ export function FolderView({
                           {item.type?.split('/')[1]?.substring(0, 3) || 'doc'}
                         </div>
                       )}
-                      <span className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={item.name}>
-                        {item.name}
+                      <span className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={getDisplayName(item)}>
+                        {getDisplayName(item)}
                       </span>
                     </div>
                     

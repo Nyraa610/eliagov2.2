@@ -73,7 +73,7 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
     for (let i = 0; i < parts.length; i++) {
       pathBuild += '/' + parts[i];
       crumbs.push({
-        name: parts[i],
+        name: parts[i], // Use the actual folder name rather than the path
         path: pathBuild
       });
     }
@@ -125,6 +125,20 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
       item.isFolder
     );
   };
+  
+  const handleCreateFolder = async (path: string, folderName: string) => {
+    const success = await folderService.createNewFolder(
+      'value_chain_documents',
+      path,
+      folderName
+    );
+    
+    if (success) {
+      loadDocuments();
+      return true;
+    }
+    return false;
+  };
 
   return (
     <FolderView 
@@ -133,9 +147,7 @@ export function ValueChainDocumentsList({ companyId }: ValueChainDocumentsListPr
       currentPath={currentPath}
       onNavigate={handleNavigateTo}
       onRefresh={loadDocuments}
-      onCreateFile={() => {
-        // Show upload dialog or handle upload via SimpleUploadButton
-      }}
+      onCreateFolder={handleCreateFolder}
       onDeleteItem={handleDeleteItem}
       isLoading={loading}
       bucketName="value_chain_documents"

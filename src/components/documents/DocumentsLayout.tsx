@@ -84,7 +84,7 @@ export function DocumentsLayout() {
     for (let i = 0; i < parts.length; i++) {
       currentPathBuild += (i === 0 ? '' : '/') + parts[i];
       crumbs.push({
-        name: parts[i],
+        name: parts[i], // Use the actual folder name rather than the full path
         path: currentPathBuild
       });
     }
