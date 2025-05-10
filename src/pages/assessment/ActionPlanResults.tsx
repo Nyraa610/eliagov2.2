@@ -117,9 +117,9 @@ export default function ActionPlanResults() {
           </Button>
           
           <Button
-            as={Link}
-            to="/assessment/markdown-editor/action_plan"
+            variant="outline"
             className="flex items-center gap-2"
+            onClick={() => navigate("/assessment/markdown-editor/action_plan")}
           >
             <FileEdit className="h-4 w-4" />
             Edit in Markdown Editor
