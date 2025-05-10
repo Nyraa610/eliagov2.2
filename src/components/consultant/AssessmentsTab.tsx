@@ -23,7 +23,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Search, RefreshCw, ExternalLink, Calendar, ClipboardCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { AssessmentType } from "@/services/assessmentService";
+import { AssessmentType } from "@/services/assessment"; // Updated import path
 import { Link } from "react-router-dom";
 
 interface Company {
