@@ -14,14 +14,9 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
   const { toast } = useToast();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   
-  // Use a reference to track if the role check has been performed
-  const roleCheckPerformed = useState<boolean>(false);
-  
   useEffect(() => {
-    // Only check role if authenticated, a role is required, user exists,
-    // and we haven't already performed the role check for this user/role combination
-    if (!isAuthenticated || !requiredRole || !user || roleCheckPerformed[0]) {
-      // If no role is required, set hasRequiredRole to true
+    // Skip role check if no role is required or user isn't authenticated yet
+    if (!isAuthenticated || !requiredRole || !user) {
       if (!requiredRole) {
         setHasRequiredRole(true);
       }
@@ -36,9 +31,9 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
         const hasRole = await supabaseService.hasRole(requiredRole);
         console.log(`useAuthProtection: User has required role: ${hasRole}`);
         setHasRequiredRole(hasRole);
-        roleCheckPerformed[0] = true;
         
         if (!hasRole) {
+          console.warn("User doesn't have required role:", requiredRole);
           toast({
             variant: "destructive",
             title: "Access denied",
@@ -61,7 +56,7 @@ export const useAuthProtection = (requiredRole?: UserRole) => {
     };
     
     checkRole();
-  }, [requiredRole, isAuthenticated, user, toast, location.pathname, roleCheckPerformed]);
+  }, [requiredRole, isAuthenticated, user, toast, location.pathname]);
 
   return { 
     isAuthenticated, 

@@ -4,14 +4,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Users, Award } from "lucide-react";
+import { Book, Users, Award, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 
 export function OverviewTabContent() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasTrainingAccess, hasUserAccess } = useAdminPermissions();
+  const { hasTrainingAccess, hasUserAccess, isLoading } = useAdminPermissions();
 
   const handleNavigation = (path: string, hasAccess: boolean) => {
     if (hasAccess) {
@@ -52,6 +52,7 @@ export function OverviewTabContent() {
               variant="outline" 
               className="w-full"
               onClick={() => handleNavigation("/admin/training", hasTrainingAccess)}
+              disabled={isLoading}
             >
               Go to Instructor Panel
             </Button>
@@ -78,6 +79,7 @@ export function OverviewTabContent() {
               variant="outline" 
               className="w-full"
               onClick={() => handleNavigation("/admin/users", hasUserAccess)}
+              disabled={isLoading}
             >
               User Management
             </Button>
@@ -109,8 +111,36 @@ export function OverviewTabContent() {
                   description: "This feature will be available in a future update."
                 });
               }}
+              disabled={isLoading}
             >
               Certification Management
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl flex items-center">
+              <Settings className="h-5 w-5 mr-2 text-primary" />
+              System Settings
+            </CardTitle>
+            <CardDescription>
+              Configure platform settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2">
+            <p className="text-sm">
+              Update platform settings and configuration parameters.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleNavigation("/admin/panel?tab=settings", true)}
+              disabled={isLoading}
+            >
+              System Settings
             </Button>
           </CardFooter>
         </Card>

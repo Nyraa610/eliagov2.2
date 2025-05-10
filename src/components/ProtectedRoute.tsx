@@ -10,8 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
-  requireAdmin?: boolean; // Added this property
-  requireConsultant?: boolean; // Added this property
+  requireAdmin?: boolean;
+  requireConsultant?: boolean;
 }
 
 export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireConsultant }: ProtectedRouteProps) => {
@@ -21,8 +21,6 @@ export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireCo
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
   const [roleError, setRoleError] = useState<string | null>(null);
   const { toast } = useToast();
-  
-  const [roleChecked, setRoleChecked] = useState(false);
 
   useEffect(() => {
     // Convert the requireAdmin/requireConsultant props to the corresponding role
@@ -31,7 +29,8 @@ export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireCo
       requireConsultant ? 'consultant' as UserRole : 
       requiredRole;
 
-    if (!isAuthenticated || !effectiveRequiredRole || !user || roleChecked) {
+    // Skip role check if no role is required or user isn't authenticated yet
+    if (!isAuthenticated || !effectiveRequiredRole || !user) {
       return;
     }
 
@@ -41,11 +40,11 @@ export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireCo
         console.log(`ProtectedRoute: Checking if user has role: ${effectiveRequiredRole}`);
         
         const hasRole = await supabaseService.hasRole(effectiveRequiredRole);
+        console.log(`ProtectedRoute: User has required role ${effectiveRequiredRole}: ${hasRole}`);
         setHasRequiredRole(hasRole);
-        setRoleChecked(true);
         
         if (!hasRole) {
-          console.log("ProtectedRoute: User doesn't have required role:", effectiveRequiredRole);
+          console.warn(`ProtectedRoute: User doesn't have required role: ${effectiveRequiredRole}`);
           toast({
             variant: "destructive",
             title: "Access Denied",
@@ -66,7 +65,7 @@ export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireCo
     };
     
     checkUserRole();
-  }, [isAuthenticated, requiredRole, requireAdmin, requireConsultant, user, toast, roleChecked]);
+  }, [isAuthenticated, requiredRole, requireAdmin, requireConsultant, user, toast]);
 
   if (authLoading || (isAuthenticated && (requiredRole || requireAdmin || requireConsultant) && isRoleLoading)) {
     return (

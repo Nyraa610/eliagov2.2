@@ -17,6 +17,7 @@ export default function AdminPanel() {
       >
         <div className="flex justify-center items-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Verifying permissions...</span>
         </div>
       </AdminLayout>
     );
@@ -30,7 +31,7 @@ export default function AdminPanel() {
       >
         <div className="flex flex-col items-center justify-center py-12">
           <h2 className="text-xl font-semibold text-destructive mb-2">Unauthorized Access</h2>
-          <p className="text-muted-foreground">Please contact an administrator if you believe this is an error.</p>
+          <p className="text-muted-foreground mb-4">Please contact an administrator if you believe this is an error.</p>
         </div>
       </AdminLayout>
     );
