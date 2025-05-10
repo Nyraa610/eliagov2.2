@@ -82,9 +82,28 @@
   font-weight: 600;
 }
 
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 0.25rem;
+}
+
 .markdown-document-editor {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 500px;
+}
+
+.markdown-editor textarea {
+  min-height: 500px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  outline: none;
+  resize: vertical;
 }

@@ -92,11 +92,12 @@ export function MarkdownEditor({
             <EditorToolbar onApply={handleMarkdownChange} content={markdownContent} />
             <div className="border border-input rounded-md p-2 min-h-[200px]">
               <textarea
-                className="w-full h-[300px] focus:outline-none resize-none font-mono text-sm p-2"
+                className="w-full h-[500px] focus:outline-none resize-vertical font-mono text-sm p-2"
                 value={markdownContent}
                 onChange={(e) => handleMarkdownChange(e.target.value)}
                 placeholder={placeholder}
                 disabled={readonly}
+                spellCheck="false"
               />
             </div>
           </TabsContent>

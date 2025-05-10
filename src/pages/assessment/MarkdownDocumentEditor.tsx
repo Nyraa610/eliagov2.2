@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Download, FileText } from "lucide-react";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { assessmentService } from "@/services/assessment";
 import { MarkdownEditor } from "@/components/assessment/document-editor/markdown-editor/MarkdownEditor";
@@ -18,6 +18,7 @@ export default function MarkdownDocumentEditor() {
   const { company } = useCompanyProfile();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState<'pdf' | 'word' | null>(null);
   const [documentData, setDocumentData] = useState<any>(null);
   const [markdownContent, setMarkdownContent] = useState<string>('');
   
@@ -114,6 +115,8 @@ ${data.actionPlanRoadmap || 'Timeline and steps for implementing the action plan
 ## Financial Impact
 
 ${data.financialImpact || 'Analysis of the financial impact of sustainability initiatives.'}
+
+![Sustainability Image](https://images.unsplash.com/photo-1649972904349-6e44c42644a7)
 `;
           
           setMarkdownContent(initialMarkdown);
@@ -166,6 +169,46 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
     }
   };
   
+  const handleExport = async (format: 'pdf' | 'word') => {
+    try {
+      setExporting(format);
+      sonnerToast.loading(`Exporting as ${format.toUpperCase()}...`);
+      
+      // Add markdown content to the document data before exporting
+      const exportData = {
+        ...documentData,
+        markdownContent,
+        content: markdownContent // Some exporters might look for this field
+      };
+      
+      // Prepare filename
+      const companyName = documentData?.companyName || 'company';
+      const cleanCompanyName = companyName.toLowerCase().replace(/\s+/g, '-');
+      const dateStr = new Date().toISOString().split('T')[0];
+      const fileExtension = format === 'word' ? 'docx' : 'pdf';
+      const filename = `${cleanCompanyName}-${assessmentType}-${dateStr}.${fileExtension}`;
+      
+      // Call the export function from assessmentService
+      const success = await assessmentService.exportDocument(
+        assessmentType || '', 
+        exportData, 
+        format, 
+        filename
+      );
+      
+      if (success) {
+        sonnerToast.success(`${format.toUpperCase()} export completed. Your document has been downloaded.`);
+      } else {
+        sonnerToast.error(`Failed to export as ${format}`);
+      }
+    } catch (error) {
+      console.error(`Failed to export as ${format}:`, error);
+      sonnerToast.error(`Failed to export as ${format}`);
+    } finally {
+      setExporting(null);
+    }
+  };
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -186,14 +229,36 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
           Back to Results
         </Button>
         
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? "Saving..." : "Save Document"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleExport('pdf')}
+            disabled={exporting !== null || saving}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {exporting === 'pdf' ? 'Exporting...' : 'Export PDF'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => handleExport('word')}
+            disabled={exporting !== null || saving}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            {exporting === 'word' ? 'Exporting...' : 'Export Word'}
+          </Button>
+          
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save Document"}
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -222,15 +287,36 @@ ${data.financialImpact || 'Analysis of the financial impact of sustainability in
       </Card>
 
       <div className="flex justify-end mb-8 pb-8">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          size="lg"
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? "Saving..." : "Save Document"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleExport('pdf')}
+            disabled={exporting !== null || saving}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {exporting === 'pdf' ? 'Exporting...' : 'Export PDF'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => handleExport('word')}
+            disabled={exporting !== null || saving}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            {exporting === 'word' ? 'Exporting...' : 'Export Word'}
+          </Button>
+          
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save Document"}
+          </Button>
+        </div>
       </div>
     </div>
   );

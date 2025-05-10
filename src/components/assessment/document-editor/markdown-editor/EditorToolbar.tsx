@@ -43,6 +43,14 @@ export function EditorToolbar({ content, onApply }: EditorToolbarProps) {
     }, 0);
   };
 
+  const insertImage = () => {
+    // Show a simple prompt for image URL input
+    const url = window.prompt('Enter image URL:', 'https://images.unsplash.com/');
+    if (url) {
+      insertAtCursor('![', `](${url})`, 'Image description');
+    }
+  };
+
   const formatButton = (
     icon: React.ReactNode,
     tooltip: string,
@@ -88,7 +96,7 @@ export function EditorToolbar({ content, onApply }: EditorToolbarProps) {
         () => insertAtCursor('[', '](https://example.com)', 'link text'))}
       
       {formatButton(<Image className="h-4 w-4" />, "Insert Image", 
-        () => insertAtCursor('![', '](https://example.com/image.jpg)', 'image alt text'))}
+        () => insertImage())}
       
       {formatButton(<Code className="h-4 w-4" />, "Code Block", 
         () => insertAtCursor('```\n', '\n```', 'code'))}
