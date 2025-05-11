@@ -28,18 +28,67 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { email, companyId, makeAdmin = false } = await req.json();
+    const { email, companyId, makeAdmin = false, inviterInfo } = await req.json();
     console.log(`Sending invitation to ${email} for company ${companyId} (admin: ${makeAdmin})`);
 
     if (!email || !companyId) {
       throw new Error('Email and company ID are required');
     }
 
-    // Send invitation email
+    // Get company details
+    const { data: companyData, error: companyError } = await supabaseAdmin
+      .from('companies')
+      .select('name')
+      .eq('id', companyId)
+      .single();
+      
+    if (companyError) {
+      console.error("Error fetching company details:", companyError);
+      throw new Error(`Failed to get company details: ${companyError.message}`);
+    }
+    
+    // Create custom email template with proper invitation details
+    const emailSubject = `Invitation to join ${companyData.name} on ELIA GO`;
+    const appUrl = Deno.env.get('APP_URL') || 'https://app.eliago.com';
+    const loginUrl = `${appUrl}/login?invitation=true&email=${encodeURIComponent(email)}`;
+    
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
+        <h1 style="color: #4F46E5;">You've Been Invited!</h1>
+        <p>Hello,</p>
+        <p>You've been invited to join <strong>${companyData.name}</strong> on the ELIA GO platform.</p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Invitation Details:</h3>
+          <p><strong>Organization:</strong> ${companyData.name}</p>
+          <p><strong>Invited by:</strong> ${inviterInfo?.name || 'A company administrator'} (${inviterInfo?.email || 'No email provided'})</p>
+          <p><strong>Role:</strong> ${makeAdmin ? 'Company Administrator' : 'Company Member'}</p>
+        </div>
+        
+        <p>ELIA GO is a sustainability management platform that helps companies track ESG metrics, generate reports, and develop action plans.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${loginUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Accept Invitation</a>
+        </div>
+        
+        <p style="font-size: 14px; color: #666;">If the button doesn't work, please copy and paste this URL into your browser: ${loginUrl}</p>
+        
+        <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;">
+        <p style="font-size: 12px; color: #999;">If you believe this invitation was sent by mistake, you can safely ignore this email.</p>
+      </div>
+    `;
+
+    // Send invitation via Supabase Auth
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: loginUrl,
       data: {
         company_id: companyId,
         is_company_admin: makeAdmin,
+        invitation_details: {
+          company_name: companyData.name,
+          inviter: inviterInfo || { name: 'A company administrator' },
+          role: makeAdmin ? 'Company Administrator' : 'Company Member'
+        }
       },
     });
 
@@ -48,8 +97,24 @@ serve(async (req) => {
       throw new Error(`Failed to send invitation: ${error.message}`);
     }
     
-    // Create a temporary record in a pending_invitations table (optional)
-    // This could be implemented if you want to track pending invitations
+    // Send a custom email with better formatting and details
+    try {
+      const { error: emailError } = await supabaseAdmin.functions.invoke("send-email-native", {
+        body: {
+          to: email,
+          subject: emailSubject,
+          html: emailHtml
+        }
+      });
+      
+      if (emailError) {
+        console.error("Error sending formatted email:", emailError);
+        // Don't throw an error here, as the official invitation was already sent
+      }
+    } catch (emailErr) {
+      console.error("Exception sending formatted email:", emailErr);
+      // Don't throw an error here, as the official invitation was already sent
+    }
 
     return new Response(
       JSON.stringify({ 

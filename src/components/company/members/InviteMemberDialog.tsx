@@ -73,6 +73,19 @@ export function InviteMemberDialog({
     setIsSubmitting(true);
     
     try {
+      // Get current user info to include in the invitation
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user?.id)
+        .single();
+        
+      const inviterInfo = {
+        name: userProfile?.full_name || user?.email?.split('@')[0] || 'Company Admin',
+        email: userProfile?.email || user?.email || ''
+      };
+
       // First check if the user already exists
       const { data: existingUsers, error: userError } = await supabase
         .from('profiles')
@@ -133,7 +146,8 @@ export function InviteMemberDialog({
           body: { 
             email: values.email,
             companyId,
-            makeAdmin: values.makeAdmin
+            makeAdmin: values.makeAdmin,
+            inviterInfo: inviterInfo
           }
         });
         
