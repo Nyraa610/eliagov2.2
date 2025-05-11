@@ -102,7 +102,7 @@ export function InviteMemberDialog({
       // Send the invitation request to our edge function
       console.log("Sending invitation to new user:", values.email);
       
-      const { data, error, status } = await supabase.functions.invoke("send-invitation", {
+      const { data, error } = await supabase.functions.invoke("send-invitation", {
         body: { 
           email: values.email,
           companyId,
@@ -111,28 +111,27 @@ export function InviteMemberDialog({
         }
       });
       
-      console.log("Invitation function response:", data, error, status);
+      console.log("Invitation function response:", data, error);
       
       if (error) {
-        // If it's a 409 status (conflict) with DUPLICATE_INVITATION code, 
-        // show a specific warning but don't treat as an error
-        if (status === 409 && data?.code === "DUPLICATE_INVITATION") {
-          setInviteWarning(`An invitation has already been sent to ${values.email}. Please wait for the user to respond.`);
-          toast({
-            title: "Invitation Already Sent",
-            description: `An invitation has already been sent to ${values.email}`,
-            variant: "default",
-          });
-          form.reset();
-          setTimeout(() => {
-            if (onInviteSuccess) onInviteSuccess();
-            onOpenChange(false);
-            setInviteWarning(null);
-          }, 3000);
-          return;
-        }
-        
         throw new Error(error.message || "Failed to send invitation");
+      }
+      
+      // Check if it's a 409 conflict (duplicate invitation)
+      if (data && data.code === "DUPLICATE_INVITATION") {
+        setInviteWarning(`An invitation has already been sent to ${values.email}. Please wait for the user to respond.`);
+        toast({
+          title: "Invitation Already Sent",
+          description: `An invitation has already been sent to ${values.email}`,
+          variant: "default",
+        });
+        form.reset();
+        setTimeout(() => {
+          if (onInviteSuccess) onInviteSuccess();
+          onOpenChange(false);
+          setInviteWarning(null);
+        }, 3000);
+        return;
       }
       
       // Check for partial success (invitation saved but email failed)
@@ -141,7 +140,7 @@ export function InviteMemberDialog({
         toast({
           title: "Partial Success",
           description: "Invitation saved but email delivery failed. User can still join when they login.",
-          variant: "warning",
+          variant: "default",
         });
         setInviteSuccess(true);
       } else if (data && data.success === true) {
