@@ -10,6 +10,9 @@ import {
 import { MembersList } from "./members/MembersList";
 import { InviteMemberDialog } from "./members/InviteMemberDialog";
 import { useMembersList } from "./members/useMembersList";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface CompanyMembersProps {
   companyId: string;
@@ -17,7 +20,7 @@ interface CompanyMembersProps {
 
 export function CompanyMembers({ companyId }: CompanyMembersProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
-  const { members, pendingInvitations, loading, fetchMembers } = useMembersList(companyId);
+  const { members, pendingInvitations, loading, error, fetchMembers } = useMembersList(companyId);
   
   // Automatically refresh members list when the component mounts
   useEffect(() => {
@@ -26,6 +29,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
   
   // Handle successful invitation by refreshing the members list
   const handleInviteSuccess = () => {
+    console.log("Invitation successful, refreshing members list");
     fetchMembers();
   };
   
@@ -44,6 +48,21 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
         />
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error}
+              <div className="mt-2">
+                <Button size="sm" variant="outline" onClick={fetchMembers}>
+                  Try Again
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <MembersList 
           members={members} 
           pendingInvitations={pendingInvitations}

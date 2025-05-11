@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Loader2, Check } from "lucide-react";
+import { UserPlus, Loader2, Check, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
@@ -58,8 +58,8 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Add success state to show success UI feedback
   const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -81,6 +81,7 @@ export function InviteMemberDialog({
     
     setIsSubmitting(true);
     setInviteSuccess(false);
+    setInviteError(null);
     
     try {
       // First check if the invitation already exists
@@ -169,6 +170,35 @@ export function InviteMemberDialog({
           throw new Error(updateError.message);
         }
         
+        // Try to send notification email even though they're already a user
+        try {
+          const { data: emailResult, error: emailError } = await supabase.functions.invoke("send-email-native", {
+            body: { 
+              to: values.email,
+              subject: `You've been added to a company on ELIA GO`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
+                  <h1 style="color: #4F46E5;">You've Been Added to a Company</h1>
+                  <p>Hello,</p>
+                  <p>${inviterInfo.name} has added you to their company on the ELIA GO platform.</p>
+                  <p>You can log in to your existing account to access this company.</p>
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${window.location.origin}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Log In Now</a>
+                  </div>
+                </div>
+              `
+            }
+          });
+          
+          if (emailError) {
+            console.log("Email notification attempt failed:", emailError);
+            // Non-blocking error - we don't throw here as the user was already added
+          }
+        } catch (emailErr) {
+          console.log("Email sending exception:", emailErr);
+          // Non-blocking error
+        }
+        
         toast({
           title: "Success",
           description: "User added to company successfully.",
@@ -177,6 +207,8 @@ export function InviteMemberDialog({
         setInviteSuccess(true);
       } else {
         // User doesn't exist, send invitation
+        console.log("Sending invitation to new user:", values.email);
+        
         const { data, error } = await supabase.functions.invoke("send-invitation", {
           body: { 
             email: values.email,
@@ -186,8 +218,24 @@ export function InviteMemberDialog({
           }
         });
         
+        console.log("Invitation function response:", data, error);
+        
         if (error) {
           throw new Error(error.message);
+        }
+        
+        // Double check if invitation was stored in database
+        const { data: savedInvitation, error: checkError } = await supabase
+          .from('invitations')
+          .select('id')
+          .eq('email', values.email.toLowerCase())
+          .eq('company_id', companyId)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.log("Error checking if invitation was saved:", checkError);
+        } else if (!savedInvitation) {
+          console.log("Warning: Invitation might not have been properly saved in database");
         }
         
         toast({
@@ -215,6 +263,10 @@ export function InviteMemberDialog({
       
     } catch (error) {
       console.error("Error inviting user:", error);
+      
+      // Set the error message for display
+      setInviteError(error instanceof Error ? error.message : "Failed to send invitation. Please try again.");
+      
       toast({
         variant: "destructive",
         title: "Invitation Failed",
@@ -251,6 +303,21 @@ export function InviteMemberDialog({
             <p className="text-center text-muted-foreground">
               The invitation has been sent successfully. We'll notify you when they join.
             </p>
+          </div>
+        ) : inviteError ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-3 mb-4">
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Invitation Failed</h3>
+            <p className="text-center text-muted-foreground">{inviteError}</p>
+            <Button 
+              variant="outline" 
+              onClick={() => setInviteError(null)} 
+              className="mt-4"
+            >
+              Try Again
+            </Button>
           </div>
         ) : (
           <Form {...form}>

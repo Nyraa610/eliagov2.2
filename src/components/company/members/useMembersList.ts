@@ -24,12 +24,21 @@ export function useMembersList(companyId: string) {
   const [members, setMembers] = useState<CompanyMember[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchMembers = async () => {
+    if (!companyId) {
+      console.log("No company ID provided, skipping member fetch");
+      setLoading(false);
+      return;
+    }
+    
+    console.log("Fetching members for company:", companyId);
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      
       // Get all profiles associated with this company
       const { data, error } = await supabase
         .from('profiles')
@@ -40,9 +49,11 @@ export function useMembersList(companyId: string) {
         
       if (error) {
         console.error("Error fetching company members:", error);
+        setError(error.message);
         throw error;
       }
       
+      console.log(`Found ${data?.length || 0} members for company ${companyId}`);
       setMembers(data as CompanyMember[]);
       
       // Get pending invitations for this company
@@ -55,12 +66,16 @@ export function useMembersList(companyId: string) {
       if (invitationsError) {
         console.error("Error fetching invitations:", invitationsError);
         // Continue without invitations data
+        setError(prev => prev || invitationsError.message);
       } else {
+        console.log(`Found ${invitations?.length || 0} pending invitations for company ${companyId}`);
         setPendingInvitations(invitations as PendingInvitation[]);
       }
       
-    } catch (error) {
-      console.error("Error fetching members:", error);
+    } catch (error: any) {
+      console.error("Error in fetchMembers:", error);
+      setError(error.message || "Failed to load company members");
+      
       toast({
         title: "Error",
         description: "Failed to load company members.",
@@ -81,6 +96,7 @@ export function useMembersList(companyId: string) {
     members,
     pendingInvitations,
     loading,
+    error,
     fetchMembers
   };
 }
