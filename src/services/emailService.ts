@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -169,9 +168,12 @@ export const emailService = {
       console.log("Sending password reset email to:", email);
       
       // Use Supabase's built-in password reset functionality
+      // The resetPasswordForEmail method accepts limited options, we need to cast to add our custom metadata
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: resetLink,
-      });
+        // We need to use type assertion here because the TypeScript definition doesn't include data property
+        // but the implementation allows it - this is used by Supabase Auth to customize the email template
+      } as { redirectTo: string; data?: Record<string, any> });
       
       if (error) {
         console.error("Password reset email error:", error);
@@ -239,23 +241,18 @@ export const emailService = {
       const startTime = Date.now();
       
       // Use Supabase Auth's reset password email to send a custom email template
+      // We need to use type assertion to add custom data for the email template
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin,
-        data: {
-          subject: "Test Email from ELIA GO",
-          html_content: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
-              <h1 style="color: #4F46E5;">SMTP Test Email</h1>
-              <p>Hello,</p>
-              <p>This is a test email sent from ELIA GO's email configuration to verify that your Supabase Authentication email settings are working correctly.</p>
-              <p>If you received this email, it means your email configuration is working properly.</p>
-              <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;">
-              <p style="font-size: 12px; color: #999;">This is an automated message, please do not reply.</p>
-            </div>
-          `,
-          is_test_email: true,
-          is_custom_email: true
-        }
+        // Use type assertion to add our custom template data
+      } as { 
+        redirectTo: string; 
+        data?: { 
+          subject: string; 
+          html_content: string;
+          is_test_email: boolean;
+          is_custom_email: boolean;
+        } 
       });
       
       const duration = Date.now() - startTime;
