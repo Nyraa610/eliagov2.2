@@ -24,4 +24,6 @@ enabled = true
 [functions]
 [functions.send-invitation]
 verify_jwt = true
+[functions.send-email-native]
+verify_jwt = true
 

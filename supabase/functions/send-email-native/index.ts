@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { Resend } from "https://esm.sh/resend@1.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,11 +16,6 @@ interface EmailRequest {
   cc?: string | string[];
   bcc?: string | string[];
   replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: string; // Base64 encoded content
-    contentType: string;
-  }>;
 }
 
 // Structured logging helper
@@ -56,17 +52,15 @@ serve(async (req) => {
       throw new Error("Missing required fields: to, subject, or html");
     }
     
-    // Create a Supabase client with the service role key
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    // Get the Resend API key from environment variables
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    
+    if (!resendApiKey) {
+      logEvent('config', 'error', "Missing Resend API key");
+      throw new Error("Server configuration error: Missing Resend API key");
+    }
+    
+    const resend = new Resend(resendApiKey);
     
     logEvent('request', 'info', `Processing email request with subject: ${emailRequest.subject}`);
     
@@ -83,55 +77,47 @@ serve(async (req) => {
       ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc : [emailRequest.bcc]) 
       : [];
     
-    // Verify the SMTP settings are available
-    if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
-      logEvent('config', 'error', "Missing required environment variables for Supabase client");
-      throw new Error("Server configuration error: Missing required environment variables");
-    }
-    
-    // Log the SMTP configuration we're using (without sensitive data)
-    logEvent('config', 'info', "Using Supabase native email service", {
-      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-      hasServiceRoleKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    // Log the email configuration we're using
+    logEvent('config', 'info', "Using Resend email service", {
+      hasResendApiKey: !!resendApiKey,
       recipients: recipients.join(','),
       hasCC: ccRecipients.length > 0,
       hasBCC: bccRecipients.length > 0
     });
     
-    // Send email using Supabase's built-in email service
+    // Send email using Resend
     const startTime = Date.now();
-    const { data, error } = await supabaseAdmin.functions.invoke('send-email-v2', {
-      body: {
-        to: recipients.join(','),
-        cc: ccRecipients.length > 0 ? ccRecipients.join(',') : undefined,
-        bcc: bccRecipients.length > 0 ? bccRecipients.join(',') : undefined,
-        subject: emailRequest.subject,
-        html: emailRequest.html,
-        text: emailRequest.text || undefined,
-        reply_to: emailRequest.replyTo || undefined,
-      }
+    const emailResponse = await resend.emails.send({
+      from: 'ELIA GO <no-reply@eliago.com>',
+      to: recipients,
+      cc: ccRecipients.length > 0 ? ccRecipients : undefined,
+      bcc: bccRecipients.length > 0 ? bccRecipients : undefined,
+      subject: emailRequest.subject,
+      html: emailRequest.html,
+      text: emailRequest.text
     });
+    
     const responseTime = Date.now() - startTime;
     
-    if (error) {
-      logEvent('delivery', 'error', `Email error: ${error.message}`, {
-        errorName: error.name,
-        errorMessage: error.message,
+    if (!emailResponse || emailResponse.error) {
+      logEvent('delivery', 'error', `Email error: ${emailResponse?.error?.message || 'Unknown error'}`, {
+        errorDetails: emailResponse?.error,
         responseTimeMs: responseTime
       });
-      throw error;
+      throw new Error(emailResponse?.error?.message || 'Failed to send email');
     }
     
-    logEvent('response', 'info', "Email processed successfully", {
+    logEvent('response', 'info', "Email sent successfully", {
       responseTimeMs: responseTime,
-      recipients: recipients.length
+      recipients: recipients.length,
+      messageId: emailResponse.data?.id
     });
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: {
-          messageId: `supabase-email-${Date.now()}`,
+          messageId: emailResponse.data?.id || `email-${Date.now()}`,
           recipients: [...recipients, ...ccRecipients, ...bccRecipients],
           responseTime: responseTime
         }
