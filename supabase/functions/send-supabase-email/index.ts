@@ -7,13 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type EmailConfig = {
-  from: string;
-  fromName: string;
-};
-
 // Get environment-based email configuration
-const getEmailConfig = (): EmailConfig => {
+const getEmailConfig = () => {
   const isDevelopment = Deno.env.get("ENVIRONMENT") === "development";
   
   if (isDevelopment) {
@@ -23,124 +18,74 @@ const getEmailConfig = (): EmailConfig => {
     };
   } else {
     return {
-      from: "no-reply@eliago.com",  // This should match your verified sender in Supabase
+      from: Deno.env.get("EMAIL_FROM") || "no-reply@eliago.com",
       fromName: Deno.env.get("EMAIL_FROM_NAME") || "ELIA GO"
     };
   }
 };
 
-interface EmailRequest {
-  to: string | string[];
-  subject: string;
-  html: string;
-  text?: string;
-  cc?: string | string[];
-  bcc?: string | string[];
-  replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: string; // Base64 encoded content
-    contentType: string;
-  }>;
-}
-
-// Structured logging helper
-const logEvent = (category: string, level: 'info' | 'warn' | 'error', message: string, details?: any) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    category,
-    level,
-    message,
-    ...(details && { details })
-  };
-  
-  console.log(`[EMAIL:${category}][${level}] ${message}`);
-  if (details) {
-    console.log(JSON.stringify(details, null, 2));
-  }
-};
-
-// Send email using Supabase's admin API
-async function sendEmail(emailRequest: EmailRequest) {
-  const config = getEmailConfig();
-  
-  logEvent('config', 'info', `Using Supabase email sender: ${config.fromName} <${config.from}>`, {
-    from: config.from,
-    fromName: config.fromName,
-  });
-  
-  // Create a Supabase client with the service role key (has admin privileges)
-  const supabaseAdmin = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
-  
+// Function to send email using Supabase's built-in email service
+async function sendEmail(emailData) {
   try {
-    const recipients = Array.isArray(emailRequest.to) 
-      ? emailRequest.to 
-      : [emailRequest.to];
+    const config = getEmailConfig();
+    console.log("[EMAIL:config][info] Using Supabase email sender:", `${config.fromName} <${config.from}>`);
     
-    const ccRecipients = emailRequest.cc 
-      ? (Array.isArray(emailRequest.cc) ? emailRequest.cc : [emailRequest.cc]) 
-      : [];
-      
-    const bccRecipients = emailRequest.bcc 
-      ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc : [emailRequest.bcc]) 
-      : [];
+    // Create a Supabase client with the service role key
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
     
-    const allRecipients = [...recipients, ...ccRecipients, ...bccRecipients];
+    const recipients = Array.isArray(emailData.to) ? emailData.to : [emailData.to];
     
-    logEvent('delivery', 'info', `Sending email to recipients`, {
+    console.log("[EMAIL:delivery][info] Sending email to recipients", {
       recipientCount: recipients.length,
-      subject: emailRequest.subject
+      subject: emailData.subject
     });
     
     // Log specific details before attempting to send
-    logEvent('delivery', 'info', `Email details before sending`, {
+    console.log("[EMAIL:delivery][info] Email details before sending", {
       from: `${config.fromName} <${config.from}>`,
       to: recipients,
-      subject: emailRequest.subject,
-      hasHtml: !!emailRequest.html,
-      hasAttachments: !!emailRequest.attachments && emailRequest.attachments.length > 0
+      subject: emailData.subject,
+      hasHtml: !!emailData.html,
+      hasAttachments: false
     });
     
-    // Use service role to access email send API
-    const { error } = await supabaseAdmin.functions.invoke('send-email-v2', {
-      body: {
-        from: `${config.fromName} <${config.from}>`,
-        to: recipients.join(','),
-        cc: ccRecipients.join(',') || undefined,
-        bcc: bccRecipients.join(',') || undefined,
-        subject: emailRequest.subject,
-        html: emailRequest.html,
-        text: emailRequest.text || undefined,
-        reply_to: emailRequest.replyTo || undefined,
+    // Send email using Supabase's built-in email sender
+    // This uses the email provider configured in the Supabase project settings
+    const { error } = await supabaseAdmin.auth.admin.sendEmail(
+      emailData.to,
+      {
+        subject: emailData.subject,
+        html: emailData.html,
+        textContent: emailData.text
       }
-    });
+    );
     
     if (error) {
+      console.log("[EMAIL:error][error] Email error:", error.message);
       throw error;
     }
     
-    logEvent('delivery', 'info', `Email sent successfully`);
+    console.log("[EMAIL:delivery][info] Email sent successfully");
     
     return {
       success: true,
-      messageId: `supabase-email-${new Date().getTime()}`,
-      recipients: allRecipients
+      messageId: `supabase-email-${Date.now()}`,
+      recipients
     };
   } catch (error) {
-    logEvent('error', 'error', `Email error: ${error.message}`, {
+    console.log("[EMAIL:error][error] Email error:", error.message, {
       errorName: error.name,
       errorStack: error.stack
     });
-    
     throw error;
   }
 }
@@ -152,23 +97,23 @@ serve(async (req) => {
   }
 
   try {
-    logEvent('request', 'info', "Email request received");
+    console.log("[EMAIL:request][info] Email request received");
     
     // Parse the email request
-    const emailRequest: EmailRequest = await req.json();
+    const emailData = await req.json();
     
     // Validate the request
-    if (!emailRequest.to || !emailRequest.subject || !emailRequest.html) {
-      logEvent('validation', 'error', "Missing required fields in email request");
+    if (!emailData.to || !emailData.subject || !emailData.html) {
+      console.log("[EMAIL:validation][error] Missing required fields in email request");
       throw new Error("Missing required fields: to, subject, or html");
     }
     
-    logEvent('request', 'info', `Processing email request with subject: ${emailRequest.subject}`);
+    console.log("[EMAIL:request][info] Processing email request with subject:", emailData.subject);
     
     // Send the email
-    const result = await sendEmail(emailRequest);
+    const result = await sendEmail(emailData);
     
-    logEvent('response', 'info', "Email processed successfully");
+    console.log("[EMAIL:response][info] Email processed successfully");
     
     return new Response(
       JSON.stringify({ success: true, data: result }),
@@ -178,7 +123,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    logEvent('response', 'error', `Error sending email: ${error.message}`, {
+    console.log("[EMAIL:response][error] Error sending email:", error.message, {
       errorName: error.name,
       errorStack: error.stack
     });

@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Loader2, Check, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +59,7 @@ export function InviteMemberDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteWarning, setInviteWarning] = useState<string | null>(null);
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -82,30 +82,9 @@ export function InviteMemberDialog({
     setIsSubmitting(true);
     setInviteSuccess(false);
     setInviteError(null);
+    setInviteWarning(null);
     
     try {
-      // First check if the invitation already exists
-      const { data: existingInvitation, error: invitationError } = await supabase
-        .from('invitations')
-        .select('id, email, status')
-        .eq('email', values.email.toLowerCase())
-        .eq('company_id', companyId)
-        .single();
-        
-      if (invitationError && invitationError.code !== 'PGRST116') { // PGRST116 = Not found error
-        throw new Error(invitationError.message);
-      }
-      
-      if (existingInvitation) {
-        toast({
-          variant: "default",
-          title: "Invitation Already Exists",
-          description: `An invitation has already been sent to ${values.email}. Please wait for the user to respond.`,
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
       // Get current user info to include in the invitation
       const { data: { user } } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
@@ -120,130 +99,60 @@ export function InviteMemberDialog({
         email: userProfile?.email || user?.email || ''
       };
 
-      // Check if the user already exists
-      const { data: existingUsers, error: userError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', values.email.toLowerCase());
-        
-      if (userError) {
-        throw new Error(userError.message);
-      }
+      // Send the invitation request to our edge function
+      console.log("Sending invitation to new user:", values.email);
       
-      if (existingUsers && existingUsers.length > 0) {
-        // User exists, add them to the company
-        const userId = existingUsers[0].id;
-        
-        // Check if user is already in this company
-        const { data: existingMember, error: memberError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', userId)
-          .eq('company_id', companyId)
-          .single();
-          
-        if (memberError && memberError.code !== 'PGRST116') {
-          throw new Error(memberError.message);
+      const { data, error, status } = await supabase.functions.invoke("send-invitation", {
+        body: { 
+          email: values.email,
+          companyId,
+          role: values.role,
+          inviterInfo: inviterInfo
         }
-        
-        if (existingMember) {
+      });
+      
+      console.log("Invitation function response:", data, error, status);
+      
+      if (error) {
+        // If it's a 409 status (conflict) with DUPLICATE_INVITATION code, 
+        // show a specific warning but don't treat as an error
+        if (status === 409 && data?.code === "DUPLICATE_INVITATION") {
+          setInviteWarning(`An invitation has already been sent to ${values.email}. Please wait for the user to respond.`);
           toast({
+            title: "Invitation Already Sent",
+            description: `An invitation has already been sent to ${values.email}`,
             variant: "default",
-            title: "User Already Member",
-            description: "This user is already a member of this company.",
           });
-          setIsSubmitting(false);
+          form.reset();
+          setTimeout(() => {
+            if (onInviteSuccess) onInviteSuccess();
+            onOpenChange(false);
+            setInviteWarning(null);
+          }, 3000);
           return;
         }
         
-        // Add user to company
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            company_id: companyId,
-            is_company_admin: values.role === 'admin',
-            role: values.role as UserRole
-          })
-          .eq('id', userId);
-          
-        if (updateError) {
-          throw new Error(updateError.message);
-        }
-        
-        // Try to send notification email even though they're already a user
-        try {
-          const { data: emailResult, error: emailError } = await supabase.functions.invoke("send-email-native", {
-            body: { 
-              to: values.email,
-              subject: `You've been added to a company on ELIA GO`,
-              html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
-                  <h1 style="color: #4F46E5;">You've Been Added to a Company</h1>
-                  <p>Hello,</p>
-                  <p>${inviterInfo.name} has added you to their company on the ELIA GO platform.</p>
-                  <p>You can log in to your existing account to access this company.</p>
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="${window.location.origin}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Log In Now</a>
-                  </div>
-                </div>
-              `
-            }
-          });
-          
-          if (emailError) {
-            console.log("Email notification attempt failed:", emailError);
-            // Non-blocking error - we don't throw here as the user was already added
-          }
-        } catch (emailErr) {
-          console.log("Email sending exception:", emailErr);
-          // Non-blocking error
-        }
-        
+        throw new Error(error.message || "Failed to send invitation");
+      }
+      
+      // Check for partial success (invitation saved but email failed)
+      if (data && data.savedInvitation === true && data.success === false) {
+        setInviteWarning(`Invitation saved, but the email notification failed: ${data.error}`);
         toast({
-          title: "Success",
-          description: "User added to company successfully.",
-          variant: "success",
+          title: "Partial Success",
+          description: "Invitation saved but email delivery failed. User can still join when they login.",
+          variant: "warning",
         });
         setInviteSuccess(true);
-      } else {
-        // User doesn't exist, send invitation
-        console.log("Sending invitation to new user:", values.email);
-        
-        const { data, error } = await supabase.functions.invoke("send-invitation", {
-          body: { 
-            email: values.email,
-            companyId,
-            role: values.role,
-            inviterInfo: inviterInfo
-          }
-        });
-        
-        console.log("Invitation function response:", data, error);
-        
-        if (error) {
-          throw new Error(error.message);
-        }
-        
-        // Double check if invitation was stored in database
-        const { data: savedInvitation, error: checkError } = await supabase
-          .from('invitations')
-          .select('id')
-          .eq('email', values.email.toLowerCase())
-          .eq('company_id', companyId)
-          .maybeSingle();
-          
-        if (checkError) {
-          console.log("Error checking if invitation was saved:", checkError);
-        } else if (!savedInvitation) {
-          console.log("Warning: Invitation might not have been properly saved in database");
-        }
-        
+      } else if (data && data.success === true) {
         toast({
           title: "Invitation Sent",
           description: `An invitation has been sent to ${values.email}`,
           variant: "success",
         });
         setInviteSuccess(true);
+      } else {
+        throw new Error("Unknown response from invitation service");
       }
       
       // Reset form
@@ -259,7 +168,8 @@ export function InviteMemberDialog({
         // Close dialog
         onOpenChange(false);
         setInviteSuccess(false);
-      }, 1500);
+        setInviteWarning(null);
+      }, 2000);
       
     } catch (error) {
       console.error("Error inviting user:", error);
@@ -303,6 +213,12 @@ export function InviteMemberDialog({
             <p className="text-center text-muted-foreground">
               The invitation has been sent successfully. We'll notify you when they join.
             </p>
+            
+            {inviteWarning && (
+              <div className="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-md">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">{inviteWarning}</p>
+              </div>
+            )}
           </div>
         ) : inviteError ? (
           <div className="flex flex-col items-center justify-center py-8">
@@ -322,6 +238,12 @@ export function InviteMemberDialog({
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleInvite)} className="space-y-4 py-2">
+              {inviteWarning && (
+                <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-md mb-4">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">{inviteWarning}</p>
+                </div>
+              )}
+              
               <FormField
                 control={form.control}
                 name="email"

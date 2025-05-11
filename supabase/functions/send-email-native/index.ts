@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,28 +15,7 @@ interface EmailRequest {
   cc?: string | string[];
   bcc?: string | string[];
   replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: string; // Base64 encoded content
-    contentType: string;
-  }>;
 }
-
-// Structured logging helper
-const logEvent = (category: string, level: 'info' | 'warn' | 'error', message: string, details?: any) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    category,
-    level,
-    message,
-    ...(details && { details })
-  };
-  
-  console.log(`[EMAIL:${category}][${level}] ${message}`);
-  if (details) {
-    console.log(JSON.stringify(details, null, 2));
-  }
-};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -46,16 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    logEvent('request', 'info', "Email request received");
-    
-    // Parse the email request
-    const emailRequest: EmailRequest = await req.json();
-    
-    // Validate the request
-    if (!emailRequest.to || !emailRequest.subject || !emailRequest.html) {
-      logEvent('validation', 'error', "Missing required fields in email request");
-      throw new Error("Missing required fields: to, subject, or html");
-    }
+    console.log("Email request received");
     
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
@@ -68,89 +37,84 @@ serve(async (req) => {
         },
       }
     );
+
+    const emailRequest: EmailRequest = await req.json();
     
-    logEvent('request', 'info', `Processing email request with subject: ${emailRequest.subject}`);
+    // Validate required fields
+    if (!emailRequest.to || !emailRequest.subject || !emailRequest.html) {
+      console.log("Missing required email fields");
+      throw new Error("Missing required fields: to, subject, or html");
+    }
+
+    console.log(`Sending email to ${Array.isArray(emailRequest.to) ? emailRequest.to.join(', ') : emailRequest.to}`);
+    console.log(`Subject: ${emailRequest.subject}`);
     
-    // Convert recipients to arrays
-    const recipients = Array.isArray(emailRequest.to) 
-      ? emailRequest.to 
-      : [emailRequest.to];
-    
-    const ccRecipients = emailRequest.cc 
-      ? (Array.isArray(emailRequest.cc) ? emailRequest.cc : [emailRequest.cc]) 
-      : [];
+    try {
+      // Prepare recipients
+      const recipients = Array.isArray(emailRequest.to) 
+        ? emailRequest.to.join(',') 
+        : emailRequest.to;
       
-    const bccRecipients = emailRequest.bcc 
-      ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc : [emailRequest.bcc]) 
-      : [];
-    
-    // Verify the SMTP settings are available
-    if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
-      logEvent('config', 'error', "Missing required environment variables for Supabase client");
-      throw new Error("Server configuration error: Missing required environment variables");
-    }
-    
-    // Log the SMTP configuration we're using (without sensitive data)
-    logEvent('config', 'info', "Using Supabase native email service", {
-      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-      hasServiceRoleKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-      recipients: recipients.join(','),
-      hasCC: ccRecipients.length > 0,
-      hasBCC: bccRecipients.length > 0
-    });
-    
-    // Send email using Supabase's built-in email service
-    const startTime = Date.now();
-    
-    const { data, error } = await supabaseAdmin.functions.invoke('send-supabase-email', {
-      body: {
-        to: recipients,
-        cc: ccRecipients.length > 0 ? ccRecipients : undefined,
-        bcc: bccRecipients.length > 0 ? bccRecipients : undefined,
-        subject: emailRequest.subject,
-        html: emailRequest.html,
-        text: emailRequest.text || undefined,
-        replyTo: emailRequest.replyTo || undefined,
-        attachments: emailRequest.attachments || undefined
-      }
-    });
-    
-    const responseTime = Date.now() - startTime;
-    
-    if (error) {
-      logEvent('delivery', 'error', `Email error: ${error.message}`, {
-        errorName: error.name,
-        errorMessage: error.message,
-        responseTimeMs: responseTime
+      const ccRecipients = emailRequest.cc 
+        ? (Array.isArray(emailRequest.cc) ? emailRequest.cc.join(',') : emailRequest.cc) 
+        : undefined;
+        
+      const bccRecipients = emailRequest.bcc 
+        ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc.join(',') : emailRequest.bcc) 
+        : undefined;
+      
+      // Set email sender information
+      const emailFrom = Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com';
+      const emailFromName = Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO';
+      const sender = `${emailFromName} <${emailFrom}>`;
+      
+      console.log(`Sending from: ${sender}`);
+      
+      // Use Supabase's Email API directly via edge function
+      // This approach should be more reliable than the previous implementation
+      // that was generating the errors
+      const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-supabase-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({
+          from: sender,
+          to: recipients,
+          subject: emailRequest.subject,
+          html: emailRequest.html,
+          text: emailRequest.text,
+          cc: ccRecipients,
+          bcc: bccRecipients,
+          replyTo: emailRequest.replyTo,
+        }),
       });
-      throw error;
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Email sending failed:", errorData);
+        throw new Error(`Email service error: ${errorData.error || response.statusText}`);
+      }
+      
+      const result = await response.json();
+      console.log("Email sent successfully", result);
+      
+      return new Response(
+        JSON.stringify({ success: true, messageId: result.data?.messageId || 'email-sent' }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+      
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      throw new Error(`Email sending failed: ${emailError.message}`);
     }
     
-    logEvent('response', 'info', "Email processed successfully", {
-      responseTimeMs: responseTime,
-      recipients: recipients.length
-    });
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: {
-          messageId: `supabase-email-${Date.now()}`,
-          recipients: [...recipients, ...ccRecipients, ...bccRecipients],
-          responseTime: responseTime
-        }
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-  } catch (error: any) {
-    logEvent('response', 'error', `Error sending email: ${error.message}`, {
-      errorName: error.name,
-      errorStack: error.stack,
-      errorDetails: error.details || {}
-    });
+  } catch (error) {
+    console.error("Error in send-email-native function:", error);
     
     return new Response(
       JSON.stringify({ 
