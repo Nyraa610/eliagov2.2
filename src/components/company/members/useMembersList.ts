@@ -24,7 +24,9 @@ export function useMembersList(companyId: string) {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, avatar_url, is_company_admin')
-        .eq('company_id', companyId);
+        .eq('company_id', companyId)
+        .order('is_company_admin', { ascending: false }) // List admins first
+        .order('full_name', { ascending: true });
         
       if (error) {
         console.error("Error fetching company members:", error);
@@ -45,7 +47,9 @@ export function useMembersList(companyId: string) {
   };
 
   useEffect(() => {
-    fetchMembers();
+    if (companyId) {
+      fetchMembers();
+    }
   }, [companyId]);
 
   return {

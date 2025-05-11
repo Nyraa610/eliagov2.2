@@ -28,23 +28,34 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { email, role } = await req.json();
-    console.log(`Sending invitation to ${email} with role ${role}`);
+    const { email, companyId, makeAdmin = false } = await req.json();
+    console.log(`Sending invitation to ${email} for company ${companyId} (admin: ${makeAdmin})`);
 
-    if (!email) {
-      throw new Error('Email is required');
+    if (!email || !companyId) {
+      throw new Error('Email and company ID are required');
     }
 
     // Send invitation email
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
+        company_id: companyId,
+        is_company_admin: makeAdmin,
+      },
+    });
 
     if (error) {
       console.error("Error sending invitation:", error);
       throw new Error(`Failed to send invitation: ${error.message}`);
     }
+    
+    // Create a temporary record in a pending_invitations table (optional)
+    // This could be implemented if you want to track pending invitations
 
     return new Response(
-      JSON.stringify({ data }),
+      JSON.stringify({ 
+        success: true, 
+        message: `Invitation sent to ${email}` 
+      }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

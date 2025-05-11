@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompanyGeneralSettings } from "@/components/company/settings/CompanyGeneralSettings";
 import { CompanyAPIConnectors } from "@/components/company/settings/CompanyAPIConnectors";
-import { CompanyUserManagement } from "@/components/company/settings/CompanyUserManagement";
+import { StorageManagement } from "@/components/company/settings/StorageManagement";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 
 export default function CompanySettings() {
@@ -49,7 +49,7 @@ export default function CompanySettings() {
           <TabsTrigger value="general">General</TabsTrigger>
           {isAdmin && (
             <>
-              <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="storage">Storage</TabsTrigger>
               <TabsTrigger value="api">API Connectors</TabsTrigger>
             </>
           )}
@@ -61,8 +61,8 @@ export default function CompanySettings() {
         
         {isAdmin && (
           <>
-            <TabsContent value="users">
-              <CompanyUserManagement company={company} />
+            <TabsContent value="storage">
+              <StorageManagement company={company} />
             </TabsContent>
             <TabsContent value="api">
               <CompanyAPIConnectors company={company} />
@@ -70,6 +70,10 @@ export default function CompanySettings() {
           </>
         )}
       </Tabs>
+      
+      <div className="mt-6 text-sm text-muted-foreground">
+        <p>Member management has been consolidated to the Members tab in the main company view.</p>
+      </div>
     </>
   );
 }

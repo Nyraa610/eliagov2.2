@@ -10,6 +10,7 @@ import {
 import { MembersList } from "./members/MembersList";
 import { InviteMemberDialog } from "./members/InviteMemberDialog";
 import { useMembersList } from "./members/useMembersList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CompanyMembersProps {
   companyId: string;
@@ -28,7 +29,9 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
         </div>
         <InviteMemberDialog 
           open={inviteOpen} 
-          onOpenChange={setInviteOpen} 
+          onOpenChange={setInviteOpen}
+          companyId={companyId}
+          onInviteSuccess={fetchMembers}
         />
       </CardHeader>
       <CardContent>
@@ -36,6 +39,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
           members={members} 
           isLoading={loading} 
           onMemberUpdate={fetchMembers} 
+          companyId={companyId}
         />
       </CardContent>
     </Card>
