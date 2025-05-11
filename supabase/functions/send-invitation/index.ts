@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
@@ -161,65 +162,10 @@ serve(async (req) => {
     console.log(`Found ${existingUsers.length} existing users with this email`);
 
     try {
-      // Send the custom email notification directly with Supabase Auth
-      console.log("Sending formatted email via Supabase Auth");
-
-      // Get configured email details for sending
-      const emailFrom = Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com';
-      const emailFromName = Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO';
-      
-      console.log(`Email will be sent from: ${emailFromName} <${emailFrom}>`);
-      
-      // Use the configured email setup via send-email-native function
-      try {
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-native`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-          },
-          body: JSON.stringify({
-            to: email,
-            subject: emailSubject,
-            html: emailHtml
-          })
-        });
-        
-        // Get the full response text for debugging
-        const responseText = await response.text();
-        let responseJson;
-        
+      // Use the direct Supabase Auth invitation system for new users
+      if (existingUsers.length === 0) {
+        console.log("Sending invitation to new user via Supabase Auth");
         try {
-          responseJson = JSON.parse(responseText);
-          console.log("Email API response:", responseJson);
-        } catch (parseError) {
-          console.error("Failed to parse email API response:", responseText);
-          responseJson = { error: "Invalid JSON response" };
-        }
-        
-        if (!response.ok) {
-          throw new Error(`Email service error: ${responseJson.error || response.statusText}`);
-        }
-        
-        if (responseJson.success === false) {
-          throw new Error(`Email sending failed: ${responseJson.error || "Unknown error"}`);
-        }
-        
-        console.log("Email sent successfully:", responseJson);
-        invitationSent = true;
-      } catch (emailErr) {
-        console.error("Exception sending formatted email:", emailErr);
-        throw new Error(`Failed to send invitation email: ${emailErr.message || "Unknown error"}`);
-      }
-      
-      // If the user exists but we're just sending a notification, we're done
-      if (existingUsers.length > 0) {
-        console.log("User already exists, notification sent");
-      } else {
-        // For new users, try to send the Supabase auth invitation as a backup
-        try {
-          console.log("Sending Supabase auth invitation to new user");
-          
           const { data: inviteResult, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             redirectTo: loginUrl,
             data: {
@@ -235,20 +181,46 @@ serve(async (req) => {
 
           if (error) {
             console.error("Error sending auth invitation:", error);
-            // Not a fatal error if the email notification was already sent
-            if (!invitationSent) {
-              throw new Error(`Failed to send invitation: ${error.message}`);
-            }
+            throw new Error(`Failed to send auth invitation: ${error.message}`);
           } else {
             console.log("Supabase auth invitation sent successfully");
             invitationSent = true;
           }
         } catch (inviteError) {
           console.error("Failed to send auth invitation:", inviteError);
-          // Not a fatal error if the email notification was already sent
-          if (!invitationSent) {
-            throw inviteError;
+          throw inviteError;
+        }
+      } else {
+        // For existing users, send a notification email
+        console.log("Sending notification email to existing user");
+        
+        // We'll use the Supabase Auth's password reset email functionality as a way to send custom emails
+        try {
+          // For existing users, send a custom email notification using the reset password function
+          // but with custom template data
+          const { error } = await supabaseAdmin.auth.resetPasswordForEmail(
+            email,
+            { 
+              redirectTo: loginUrl,
+              data: {
+                subject: emailSubject,
+                html_content: emailHtml,
+                is_invitation: true,
+                is_custom_email: true
+              }
+            }
+          );
+          
+          if (error) {
+            console.error("Error sending notification email:", error);
+            throw new Error(`Failed to send notification email: ${error.message}`);
           }
+          
+          console.log("Email notification sent successfully");
+          invitationSent = true;
+        } catch (emailErr) {
+          console.error("Exception sending email notification:", emailErr);
+          throw new Error(`Failed to send invitation email: ${emailErr.message}`);
         }
       }
     } catch (emailSendError) {
@@ -264,7 +236,7 @@ serve(async (req) => {
           error: emailSendError.message
         }),
         { 
-          status: 200, // Changed from 202 to avoid error parsing issues
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -294,7 +266,7 @@ serve(async (req) => {
         details: error.message
       }),
       { 
-        status: 200, // Changed from 400 to avoid error parsing issues
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

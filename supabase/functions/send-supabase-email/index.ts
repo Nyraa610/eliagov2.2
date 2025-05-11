@@ -51,14 +51,21 @@ serve(async (req) => {
     console.log(`Subject: ${emailRequest.subject}`);
     
     try {
-      // Use Supabase Auth's built-in email functionality
-      // We'll use the raw email API which is accessible via the admin API
-      const { error: emailError } = await supabaseAdmin.auth.admin.sendRawEmail({
-        email: emailRequest.to,
-        subject: emailRequest.subject,
-        html_body: emailRequest.html,
-        text_body: emailRequest.text,
-      });
+      // Use Supabase Auth's email API to send email
+      // Instead of sendRawEmail, we use resetPasswordForEmail with custom template
+      const { error: emailError } = await supabaseAdmin.auth.resetPasswordForEmail(
+        emailRequest.to,
+        { 
+          redirectTo: Deno.env.get('SITE_URL') || 'https://app.eliago.com',
+          data: {
+            subject: emailRequest.subject,
+            html_content: emailRequest.html,
+            text_content: emailRequest.text || '',
+            from_email: emailRequest.from,
+            is_custom_email: true
+          }
+        }
+      );
       
       if (emailError) {
         console.error("Error sending email via Supabase Auth:", emailError);

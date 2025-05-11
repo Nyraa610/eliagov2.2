@@ -64,19 +64,27 @@ serve(async (req) => {
       
       console.log(`Sending from: ${sender}`);
       
-      // Send emails to each recipient using Supabase Auth
+      // Send emails to each recipient using Supabase Auth's email API
       let successCount = 0;
       const errors = [];
       
       for (const recipient of allRecipients) {
         try {
-          // Use Supabase Auth's raw email API
-          const { error } = await supabaseAdmin.auth.admin.sendRawEmail({
-            email: recipient,
-            subject: emailRequest.subject,
-            html_body: emailRequest.html,
-            text_body: emailRequest.text || '',
-          });
+          // Use Supabase Auth's email API
+          // Note: Instead of sendRawEmail which doesn't exist, we use resetPasswordForEmail
+          // but with a custom template param to send a custom email
+          const { error } = await supabaseAdmin.auth.resetPasswordForEmail(
+            recipient,
+            { 
+              redirectTo: Deno.env.get('SITE_URL') || 'https://app.eliago.com',
+              data: {
+                subject: emailRequest.subject,
+                html_content: emailRequest.html,
+                text_content: emailRequest.text || '',
+                is_custom_email: true
+              }
+            }
+          );
           
           if (error) {
             console.error(`Error sending to ${recipient}:`, error);

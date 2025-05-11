@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -237,12 +238,12 @@ export const emailService = {
       console.log("Sending test email to:", email);
       const startTime = Date.now();
       
-      // Use the send-email-native function which leverages Supabase Auth configuration
-      const response = await supabase.functions.invoke("send-email-native", {
-        body: {
-          to: email,
+      // Use Supabase Auth's reset password email to send a custom email template
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+        data: {
           subject: "Test Email from ELIA GO",
-          html: `
+          html_content: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
               <h1 style="color: #4F46E5;">SMTP Test Email</h1>
               <p>Hello,</p>
@@ -251,26 +252,24 @@ export const emailService = {
               <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;">
               <p style="font-size: 12px; color: #999;">This is an automated message, please do not reply.</p>
             </div>
-          `
+          `,
+          is_test_email: true,
+          is_custom_email: true
         }
       });
       
       const duration = Date.now() - startTime;
-      console.log("Test email response:", response);
       
-      if (response.error) {
+      if (error) {
+        console.error("Test email error:", error);
         return {
           success: false,
-          error: response.error,
-          details: response.data || null
-        };
-      }
-      
-      if (response.data && response.data.success === false) {
-        return {
-          success: false,
-          error: response.data.error || "Unknown error occurred",
-          details: response.data
+          error: error.message,
+          details: {
+            error: error.message,
+            name: error.name,
+            duration
+          }
         };
       }
       
@@ -278,7 +277,7 @@ export const emailService = {
         success: true,
         message: `Test email sent successfully to ${email}`,
         details: {
-          ...response.data,
+          method: "supabase-auth-reset",
           duration
         }
       };

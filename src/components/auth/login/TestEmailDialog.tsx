@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Dialog, 
@@ -16,7 +17,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { emailService } from "@/services/emailService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, AlertCircleIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
+import { InfoIcon, AlertCircleIcon, CheckCircleIcon, ClockIcon, HelpCircleIcon } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -79,7 +80,7 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
           <DialogTitle>Test Email Configuration</DialogTitle>
           <DialogDescription>
             Send a test email to verify your email configuration is working correctly.
-            This will use the configured SMTP provider (like Brevo).
+            This will use the configured SMTP provider in Supabase Authentication.
           </DialogDescription>
         </DialogHeader>
         
@@ -143,6 +144,11 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
                       <li>Verify that an email provider is configured (e.g., SMTP)</li>
                       <li>Test the email configuration directly in the Supabase dashboard</li>
                     </ul>
+                  </div>
+                  
+                  <div className="mt-2 flex items-center text-sm p-2 border border-yellow-200 bg-yellow-50 rounded">
+                    <HelpCircleIcon className="h-4 w-4 mr-2 text-yellow-600" />
+                    <span>Using <code>resetPasswordForEmail</code> as an alternative method to send custom emails. Check logs for more details.</span>
                   </div>
                   
                   {details && (
