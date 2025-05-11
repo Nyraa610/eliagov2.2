@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -205,7 +204,7 @@ export function MembersList({
       
       const { error } = await supabase
         .from('invitations')
-        .update({ status: 'cancelled' })
+        .update({ status: 'deleted' }) // Changed from 'cancelled' to 'deleted' to allow re-inviting
         .eq('id', invitationToCancel.id);
         
       if (error) {

@@ -54,12 +54,13 @@ serve(async (req) => {
     
     console.log("Company data retrieved:", companyData);
 
-    // Check if invitation already exists
+    // Check if invitation already exists and is still pending
     const { data: existingInvitation, error: inviteCheckError } = await supabaseAdmin
       .from('invitations')
       .select('id, status')
       .eq('email', email.toLowerCase())
       .eq('company_id', companyId)
+      .eq('status', 'pending') // Only consider pending invitations as duplicates
       .maybeSingle();
       
     if (inviteCheckError && inviteCheckError.code !== 'PGRST116') {
