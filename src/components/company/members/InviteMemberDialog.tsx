@@ -83,6 +83,28 @@ export function InviteMemberDialog({
     setInviteSuccess(false);
     
     try {
+      // First check if the invitation already exists
+      const { data: existingInvitation, error: invitationError } = await supabase
+        .from('invitations')
+        .select('id, email, status')
+        .eq('email', values.email.toLowerCase())
+        .eq('company_id', companyId)
+        .single();
+        
+      if (invitationError && invitationError.code !== 'PGRST116') { // PGRST116 = Not found error
+        throw new Error(invitationError.message);
+      }
+      
+      if (existingInvitation) {
+        toast({
+          variant: "default",
+          title: "Invitation Already Exists",
+          description: `An invitation has already been sent to ${values.email}. Please wait for the user to respond.`,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Get current user info to include in the invitation
       const { data: { user } } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
@@ -97,7 +119,7 @@ export function InviteMemberDialog({
         email: userProfile?.email || user?.email || ''
       };
 
-      // First check if the user already exists
+      // Check if the user already exists
       const { data: existingUsers, error: userError } = await supabase
         .from('profiles')
         .select('id, email')
