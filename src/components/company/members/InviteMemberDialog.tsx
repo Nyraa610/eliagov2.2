@@ -101,7 +101,8 @@ export function InviteMemberDialog({
         
         if (existingMember) {
           toast({
-            variant: "warning",
+            // Change from "warning" to "default" as "warning" is not a valid variant
+            variant: "default",
             title: "User Already Member",
             description: "This user is already a member of this company.",
           });
