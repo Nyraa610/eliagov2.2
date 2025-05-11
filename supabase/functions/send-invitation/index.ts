@@ -161,18 +161,19 @@ serve(async (req) => {
     console.log(`Found ${existingUsers.length} existing users with this email`);
 
     try {
-      // Send the custom email notification using send-email-native function
-      console.log("Sending formatted email notification");
+      // Send the custom email notification directly with SMTP
+      console.log("Sending formatted email via SMTP");
       
-      // Using emailService through the send-email-native function
+      // Use the configured SMTP directly via send-supabase-email function
       try {
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-native`, {
+        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-supabase-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
           },
           body: JSON.stringify({
+            from: `${Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO'} <${Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com'}>`,
             to: email,
             subject: emailSubject,
             html: emailHtml
@@ -180,13 +181,19 @@ serve(async (req) => {
         });
         
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Error sending formatted email:", errorData);
+          const errorText = await response.text();
+          console.error("Email API error response:", errorText);
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = { error: errorText || response.statusText };
+          }
           throw new Error(`Email service error: ${errorData.error || response.statusText}`);
         }
         
         const result = await response.json();
-        console.log("Email sent successfully", result);
+        console.log("Email sent successfully:", result);
         invitationSent = true;
       } catch (emailErr) {
         console.error("Exception sending formatted email:", emailErr);

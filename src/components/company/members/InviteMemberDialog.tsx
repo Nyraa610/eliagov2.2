@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Dialog,
@@ -147,7 +146,6 @@ export function InviteMemberDialog({
         toast({
           title: "Invitation Sent",
           description: `An invitation has been sent to ${values.email}`,
-          variant: "success",
         });
         setInviteSuccess(true);
       } else {
