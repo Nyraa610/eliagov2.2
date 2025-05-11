@@ -72,14 +72,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Invitation already exists",
           code: "DUPLICATE_INVITATION",
           details: {
             status: existingInvitation.status
           }
         }),
         { 
-          status: 409, // Conflict
+          status: 200, // Changed from 409 to avoid error parsing issues in the frontend
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -167,20 +166,27 @@ serve(async (req) => {
       
       // Using emailService through the send-email-native function
       try {
-        const { data: emailResult, error: emailError } = await supabaseAdmin.functions.invoke("send-email-native", {
-          body: {
+        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-native`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({
             to: email,
             subject: emailSubject,
             html: emailHtml
-          }
+          })
         });
         
-        if (emailError) {
-          console.error("Error sending formatted email:", emailError);
-          throw emailError;
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error sending formatted email:", errorData);
+          throw new Error(`Email service error: ${errorData.error || response.statusText}`);
         }
         
-        console.log("Email notification sent successfully");
+        const result = await response.json();
+        console.log("Email sent successfully", result);
         invitationSent = true;
       } catch (emailErr) {
         console.error("Exception sending formatted email:", emailErr);
@@ -239,7 +245,7 @@ serve(async (req) => {
           error: emailSendError.message
         }),
         { 
-          status: 202, // Accepted but with warnings
+          status: 200, // Changed from 202 to avoid error parsing issues
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -269,7 +275,7 @@ serve(async (req) => {
         details: error.message
       }),
       { 
-        status: 400, 
+        status: 200, // Changed from 400 to avoid error parsing issues
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

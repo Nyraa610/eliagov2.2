@@ -117,7 +117,7 @@ export function InviteMemberDialog({
         throw new Error(error.message || "Failed to send invitation");
       }
       
-      // Check if it's a 409 conflict (duplicate invitation)
+      // Check if it's a duplicate invitation
       if (data && data.code === "DUPLICATE_INVITATION") {
         setInviteWarning(`An invitation has already been sent to ${values.email}. Please wait for the user to respond.`);
         toast({
