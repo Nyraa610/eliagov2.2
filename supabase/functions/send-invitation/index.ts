@@ -164,6 +164,16 @@ serve(async (req) => {
     try {
       // Send the custom email notification directly with SMTP
       console.log("Sending formatted email via SMTP");
+
+      // Get configured SMTP details for debug purposes
+      const smtpHost = Deno.env.get("SMTP_HOST");
+      const smtpPort = Deno.env.get("SMTP_PORT") || "587";
+      const smtpUser = Deno.env.get("SMTP_USERNAME");
+      const emailFrom = Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com';
+      const emailFromName = Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO';
+      
+      console.log(`SMTP Configuration check - Host: ${smtpHost ? "Set" : "Not set"}, Port: ${smtpPort}, User: ${smtpUser ? "Set" : "Not set"}`);
+      console.log(`Email will be sent from: ${emailFromName} <${emailFrom}>`);
       
       // Use the configured SMTP directly via send-supabase-email function
       try {
@@ -174,27 +184,34 @@ serve(async (req) => {
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
           },
           body: JSON.stringify({
-            from: `${Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO'} <${Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com'}>`,
+            from: `${emailFromName} <${emailFrom}>`,
             to: email,
             subject: emailSubject,
             html: emailHtml
           })
         });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Email API error response:", errorText);
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-          } catch (e) {
-            errorData = { error: errorText || response.statusText };
-          }
-          throw new Error(`Email service error: ${errorData.error || response.statusText}`);
+        // Get the full response text for debugging
+        const responseText = await response.text();
+        let responseJson;
+        
+        try {
+          responseJson = JSON.parse(responseText);
+          console.log("Email API response:", responseJson);
+        } catch (parseError) {
+          console.error("Failed to parse email API response:", responseText);
+          responseJson = { error: "Invalid JSON response" };
         }
         
-        const result = await response.json();
-        console.log("Email sent successfully:", result);
+        if (!response.ok) {
+          throw new Error(`Email service error: ${responseJson.error || response.statusText}`);
+        }
+        
+        if (responseJson.success === false) {
+          throw new Error(`Email sending failed: ${responseJson.error || "Unknown error"}`);
+        }
+        
+        console.log("Email sent successfully:", responseJson);
         invitationSent = true;
       } catch (emailErr) {
         console.error("Exception sending formatted email:", emailErr);

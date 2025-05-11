@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -233,60 +232,62 @@ export const emailService = {
   /**
    * Send a test email to verify email configuration
    */
-  sendTestEmail: async (toEmail: string): Promise<EmailResponse> => {
+  sendTestEmail: async (email: string) => {
     try {
-      console.log("Sending test email to:", toEmail);
-      
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #4F46E5;">Email Test Successful!</h1>
-          <p>Hello,</p>
-          <p>This is a test email to verify that the email configuration for ELIA GO is working correctly.</p>
-          <p>If you're receiving this email, it means that:</p>
-          <ul>
-            <li>Your SMTP settings are correctly configured</li>
-            <li>Emails can be successfully delivered through your configured email provider</li>
-          </ul>
-          <p>Configuration details:</p>
-          <ul>
-            <li>Provider: SMTP (Brevo or other configured provider)</li>
-            <li>Test sent: ${new Date().toLocaleString()}</li>
-          </ul>
-          <p>Best regards,<br>The ELIA GO Team</p>
-        </div>
-      `;
-      
+      console.log("Sending test email to:", email);
       const startTime = Date.now();
-      const response = await emailService.sendEmail({
-        to: toEmail,
-        subject: "ELIA GO - Email Test",
-        html
-      });
-      const duration = Date.now() - startTime;
       
-      console.log(`Test email ${response.success ? 'success' : 'failed'} in ${duration}ms`);
+      const response = await supabase.functions.invoke("send-supabase-email", {
+        body: {
+          from: "ELIA GO <no-reply@eliago.com>",
+          to: email,
+          subject: "Test Email from ELIA GO",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
+              <h1 style="color: #4F46E5;">SMTP Test Email</h1>
+              <p>Hello,</p>
+              <p>This is a test email sent from ELIA GO's email configuration to verify that your SMTP settings are working correctly.</p>
+              <p>If you received this email, it means your email configuration is working properly.</p>
+              <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;">
+              <p style="font-size: 12px; color: #999;">This is an automated message, please do not reply.</p>
+            </div>
+          `
+        }
+      });
+      
+      const duration = Date.now() - startTime;
+      console.log("Test email response:", response);
+      
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error,
+          details: response.data || null
+        };
+      }
+      
+      if (response.data && response.data.success === false) {
+        return {
+          success: false,
+          error: response.data.error || "Unknown error occurred",
+          details: response.data
+        };
+      }
       
       return {
-        ...response,
+        success: true,
+        message: `Test email sent successfully to ${email}`,
         details: {
-          ...response.details,
-          emailType: "test",
+          ...response.data,
           duration
         }
       };
     } catch (error: any) {
-      console.error("Failed to send test email:", error);
-      return { 
-        success: false, 
-        error: error.message || "Failed to send test email",
-        details: {
-          type: "exception",
-          emailType: "test",
-          errorInfo: {
-            message: error.message,
-            name: error.name
-          }
-        }
+      console.error("Error sending test email:", error);
+      return {
+        success: false,
+        error: error.message || "An unexpected error occurred",
+        details: error
       };
     }
   }

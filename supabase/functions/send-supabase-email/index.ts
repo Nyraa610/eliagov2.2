@@ -48,6 +48,9 @@ serve(async (req) => {
     // Check if we have all required SMTP configuration
     if (!smtpHost || !smtpUser || !smtpPassword) {
       console.error("Missing SMTP configuration");
+      console.error(`SMTP_HOST: ${smtpHost ? "Set" : "Not set"}`);
+      console.error(`SMTP_USERNAME: ${smtpUser ? "Set" : "Not set"}`);
+      console.error(`SMTP_PASSWORD: ${smtpPassword ? "Length: " + smtpPassword.length : "Not set"}`);
       throw new Error("SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD.");
     }
 
@@ -55,44 +58,57 @@ serve(async (req) => {
 
     // Configure SMTP client
     const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: smtpHost,
-      port: smtpPort,
-      username: smtpUser,
-      password: smtpPassword,
-    });
+    
+    try {
+      await client.connectTLS({
+        hostname: smtpHost,
+        port: smtpPort,
+        username: smtpUser,
+        password: smtpPassword,
+      });
+      
+      console.log("Successfully connected to SMTP server");
+    } catch (connectionError) {
+      console.error("Failed to connect to SMTP server:", connectionError);
+      throw new Error(`SMTP connection error: ${connectionError.message}`);
+    }
 
     // Parse CC and BCC recipients if provided
     const ccRecipients = emailRequest.cc ? emailRequest.cc.split(',') : [];
     const bccRecipients = emailRequest.bcc ? emailRequest.bcc.split(',') : [];
 
     // Send the email
-    const sendResult = await client.send({
-      from: emailRequest.from,
-      to: [emailRequest.to],
-      cc: ccRecipients,
-      bcc: bccRecipients,
-      subject: emailRequest.subject,
-      content: emailRequest.html,
-      html: emailRequest.html,
-    });
-
-    // Close the SMTP connection
-    await client.close();
-    
-    console.log("Email sent successfully:", sendResult);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: { messageId: sendResult.messageId || `smtp-${Date.now()}` },
-        message: "Email sent successfully"
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    try {
+      const sendResult = await client.send({
+        from: emailRequest.from,
+        to: [emailRequest.to],
+        cc: ccRecipients,
+        bcc: bccRecipients,
+        subject: emailRequest.subject,
+        content: emailRequest.html,
+        html: emailRequest.html,
+      });
+      
+      console.log("Email sent successfully:", sendResult);
+      
+      // Close the SMTP connection
+      await client.close();
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: { messageId: sendResult.messageId || `smtp-${Date.now()}` },
+          message: "Email sent successfully"
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (sendError) {
+      console.error("Failed to send email:", sendError);
+      throw new Error(`Email sending failed: ${sendError.message}`);
+    }
   } catch (error) {
     console.error("Error in send-supabase-email function:", error);
     
