@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -19,6 +19,16 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const { members, pendingInvitations, loading, fetchMembers } = useMembersList(companyId);
   
+  // Automatically refresh members list when the component mounts
+  useEffect(() => {
+    fetchMembers();
+  }, [companyId]);
+  
+  // Handle successful invitation by refreshing the members list
+  const handleInviteSuccess = () => {
+    fetchMembers();
+  };
+  
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -30,7 +40,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
           open={inviteOpen} 
           onOpenChange={setInviteOpen}
           companyId={companyId}
-          onInviteSuccess={fetchMembers}
+          onInviteSuccess={handleInviteSuccess}
         />
       </CardHeader>
       <CardContent>

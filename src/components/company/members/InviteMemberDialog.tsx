@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
@@ -58,6 +58,8 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Add success state to show success UI feedback
+  const [inviteSuccess, setInviteSuccess] = useState(false);
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -78,6 +80,7 @@ export function InviteMemberDialog({
     }
     
     setIsSubmitting(true);
+    setInviteSuccess(false);
     
     try {
       // Get current user info to include in the invitation
@@ -147,7 +150,9 @@ export function InviteMemberDialog({
         toast({
           title: "Success",
           description: "User added to company successfully.",
+          variant: "success",
         });
+        setInviteSuccess(true);
       } else {
         // User doesn't exist, send invitation
         const { data, error } = await supabase.functions.invoke("send-invitation", {
@@ -166,17 +171,25 @@ export function InviteMemberDialog({
         toast({
           title: "Invitation Sent",
           description: `An invitation has been sent to ${values.email}`,
+          variant: "success",
         });
+        setInviteSuccess(true);
       }
       
-      // Reset form and close dialog
+      // Reset form
       form.reset();
-      onOpenChange(false);
       
-      // Call success callback if provided
-      if (onInviteSuccess) {
-        onInviteSuccess();
-      }
+      // Wait a moment to show success state before closing dialog
+      setTimeout(() => {
+        // Call success callback if provided
+        if (onInviteSuccess) {
+          onInviteSuccess();
+        }
+        
+        // Close dialog
+        onOpenChange(false);
+        setInviteSuccess(false);
+      }, 1500);
       
     } catch (error) {
       console.error("Error inviting user:", error);
@@ -185,6 +198,7 @@ export function InviteMemberDialog({
         title: "Invitation Failed",
         description: error instanceof Error ? error.message : "Failed to send invitation. Please try again.",
       });
+      setInviteSuccess(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -206,82 +220,94 @@ export function InviteMemberDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleInvite)} className="space-y-4 py-2">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email address</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="colleague@example.com" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    We'll send an invitation to this email address.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+        {inviteSuccess ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="bg-green-100 dark:bg-green-900/20 rounded-full p-3 mb-4">
+              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Invitation Sent!</h3>
+            <p className="text-center text-muted-foreground">
+              The invitation has been sent successfully. We'll notify you when they join.
+            </p>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleInvite)} className="space-y-4 py-2">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email address</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
+                      <Input 
+                        placeholder="colleague@example.com" 
+                        {...field} 
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="user">Company Member</SelectItem>
-                      <SelectItem value="admin">Company Admin</SelectItem>
-                      <SelectItem value="consultant">Consultant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Select the role for this user.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => onOpenChange(false)} 
-                type="button"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Send Invitation
-                  </>
+                    <FormDescription>
+                      We'll send an invitation to this email address.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              />
+              
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="user">Company Member</SelectItem>
+                        <SelectItem value="admin">Company Admin</SelectItem>
+                        <SelectItem value="consultant">Consultant</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Select the role for this user.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)} 
+                  type="button"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Send Invitation
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );
