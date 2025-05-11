@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,17 +38,55 @@ serve(async (req) => {
     console.log(`Sending email from ${emailRequest.from} to ${emailRequest.to}`);
     console.log(`Subject: ${emailRequest.subject}`);
     
-    // Here we would normally send the actual email using Supabase or another service.
-    // This is a placeholder implementation for development purposes
+    // Get SMTP configuration from environment variables
+    const smtpHost = Deno.env.get("SMTP_HOST");
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
+    const smtpUser = Deno.env.get("SMTP_USERNAME");
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+    const secure = (Deno.env.get("SMTP_SECURE") || "false") === "true";
+
+    // Check if we have all required SMTP configuration
+    if (!smtpHost || !smtpUser || !smtpPassword) {
+      console.error("Missing SMTP configuration");
+      throw new Error("SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD.");
+    }
+
+    console.log(`Connecting to SMTP server at ${smtpHost}:${smtpPort}`);
+
+    // Configure SMTP client
+    const client = new SmtpClient();
+    await client.connectTLS({
+      hostname: smtpHost,
+      port: smtpPort,
+      username: smtpUser,
+      password: smtpPassword,
+    });
+
+    // Parse CC and BCC recipients if provided
+    const ccRecipients = emailRequest.cc ? emailRequest.cc.split(',') : [];
+    const bccRecipients = emailRequest.bcc ? emailRequest.bcc.split(',') : [];
+
+    // Send the email
+    const sendResult = await client.send({
+      from: emailRequest.from,
+      to: [emailRequest.to],
+      cc: ccRecipients,
+      bcc: bccRecipients,
+      subject: emailRequest.subject,
+      content: emailRequest.html,
+      html: emailRequest.html,
+    });
+
+    // Close the SMTP connection
+    await client.close();
     
-    // Mock successful response
-    console.log("Email submitted successfully (mock implementation)");
+    console.log("Email sent successfully:", sendResult);
     
     return new Response(
       JSON.stringify({
         success: true,
-        data: { messageId: `mock-${Date.now()}` },
-        message: "Email queued for sending"
+        data: { messageId: sendResult.messageId || `smtp-${Date.now()}` },
+        message: "Email sent successfully"
       }),
       { 
         status: 200, 

@@ -61,12 +61,12 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
         setMessage(`Test email sent successfully to ${values.email}`);
       } else {
         setStatus('error');
-        setMessage(result.error || "Failed to send test email. Please check your email configuration.");
+        setMessage(result.error || "Failed to send test email. Please check the SMTP configuration in Supabase.");
       }
     } catch (error: any) {
       console.error("Test email error:", error);
       setStatus('error');
-      setMessage("An unexpected error occurred. Please try again later.");
+      setMessage("An unexpected error occurred. Please check that SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD are configured in Supabase.");
       setDetails({ error: error.message });
     } finally {
       setIsSubmitting(false);
@@ -80,7 +80,7 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
           <DialogTitle>Test Email Configuration</DialogTitle>
           <DialogDescription>
             Send a test email to verify your email configuration is working correctly.
-            This will use the native Supabase SMTP configuration.
+            This will use the configured SMTP provider (like Brevo).
           </DialogDescription>
         </DialogHeader>
         
@@ -136,6 +136,18 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                   {message}
+                  
+                  <div className="mt-2 p-2 bg-gray-100 rounded">
+                    <p className="font-semibold text-sm mb-1">Make sure you've configured these environment variables in Supabase:</p>
+                    <ul className="text-xs list-disc pl-4">
+                      <li>SMTP_HOST (e.g., smtp.brevo.com)</li>
+                      <li>SMTP_PORT (e.g., 587)</li>
+                      <li>SMTP_USERNAME (your Brevo SMTP username)</li>
+                      <li>SMTP_PASSWORD (your Brevo SMTP API key)</li>
+                      <li>EMAIL_FROM (e.g., no-reply@yourdomain.com)</li>
+                      <li>EMAIL_FROM_NAME (e.g., ELIA GO)</li>
+                    </ul>
+                  </div>
                   
                   {details && (
                     <div className="mt-2 text-xs overflow-auto max-h-32 p-2 bg-gray-100 rounded">

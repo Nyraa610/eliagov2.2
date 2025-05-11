@@ -40,9 +40,8 @@ export const emailService = {
     try {
       console.log("Sending email to:", options.to);
       
-      // Use Supabase Auth API for sending emails directly
-      // This utilizes the SMTP configuration set up in Supabase
-      const { error } = await supabase.functions.invoke("send-email-native", {
+      // Call the send-email-native function which will handle the email sending
+      const { data, error } = await supabase.functions.invoke("send-email-native", {
         body: options
       });
       
@@ -53,7 +52,7 @@ export const emailService = {
           success: false, 
           error: error.message,
           details: {
-            type: "supabase_auth_error",
+            type: "supabase_function_error",
             errorInfo: {
               message: error.message,
               name: error.name,
@@ -62,16 +61,26 @@ export const emailService = {
         };
       }
       
-      console.log("Email sent successfully");
+      // Handle the case where we got a successful response but there was an error in the function
+      if (data && !data.success) {
+        console.error("Email function error:", data.error);
+        toast.error(data.error || "Failed to send email");
+        return {
+          success: false,
+          error: data.error || "Failed to send email",
+          details: data.details || {}
+        };
+      }
+      
+      console.log("Email sent successfully:", data);
+      
       return {
         success: true,
         data: {
-          messageId: `supabase-email-${Date.now()}`,
+          messageId: data?.messageId || `email-${Date.now()}`,
           recipients: Array.isArray(options.to) ? options.to : [options.to]
         },
-        details: {
-          responseType: "success"
-        }
+        details: data
       };
     } catch (error: any) {
       console.error("Exception sending email:", error);
@@ -235,12 +244,12 @@ export const emailService = {
           <p>This is a test email to verify that the email configuration for ELIA GO is working correctly.</p>
           <p>If you're receiving this email, it means that:</p>
           <ul>
-            <li>Your Supabase SMTP settings are correctly configured</li>
+            <li>Your SMTP settings are correctly configured</li>
             <li>Emails can be successfully delivered through your configured email provider</li>
           </ul>
           <p>Configuration details:</p>
           <ul>
-            <li>Provider: Supabase Auth SMTP</li>
+            <li>Provider: SMTP (Brevo or other configured provider)</li>
             <li>Test sent: ${new Date().toLocaleString()}</li>
           </ul>
           <p>Best regards,<br>The ELIA GO Team</p>

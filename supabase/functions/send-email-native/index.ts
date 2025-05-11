@@ -70,20 +70,17 @@ serve(async (req) => {
       
       console.log(`Sending from: ${sender}`);
       
-      // Fall back to direct SMTP if Supabase email API isn't configured
+      // Check for direct SMTP configuration
+      const smtpHost = Deno.env.get("SMTP_HOST");
+      const smtpUser = Deno.env.get("SMTP_USERNAME");
+      const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+      
       let emailResponse;
       
-      if (Deno.env.get('SMTP_HOST') && Deno.env.get('SMTP_USERNAME') && Deno.env.get('SMTP_PASSWORD')) {
-        console.log("Using direct SMTP connection");
-        // Implementation for direct SMTP would go here
-        // This is just a placeholder to show where it would be implemented
-        emailResponse = { success: true, messageId: 'smtp-direct' };
-      } else {
-        // Try sending via Supabase's email API 
+      if (smtpHost && smtpUser && smtpPassword) {
+        console.log("Using direct SMTP connection via send-supabase-email");
+        // Call our send-supabase-email function which handles SMTP
         try {
-          console.log("Attempting to send through send-supabase-email function");
-          
-          // Direct fetch to the Supabase URL to avoid circular reference
           const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-supabase-email`, {
             method: 'POST',
             headers: {
@@ -116,17 +113,24 @@ serve(async (req) => {
           
           const result = await response.json();
           console.log("Email service response:", result);
-          emailResponse = { success: true, messageId: result.data?.messageId || 'email-sent' };
+          emailResponse = result;
         } catch (err) {
           console.error("Error using send-supabase-email:", err);
           throw new Error(`Email API error: ${err.message}`);
         }
+      } else {
+        console.log("No SMTP configuration found, cannot send email");
+        throw new Error("Missing SMTP configuration. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD.");
       }
       
       console.log("Email sent successfully");
       
       return new Response(
-        JSON.stringify({ success: true, messageId: emailResponse.messageId || 'email-sent' }),
+        JSON.stringify({ 
+          success: true, 
+          messageId: emailResponse?.data?.messageId || 'email-sent',
+          details: emailResponse?.data 
+        }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
