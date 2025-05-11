@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +27,18 @@ serve(async (req) => {
   try {
     console.log("Send Supabase email request received");
     
+    // Create a Supabase client with the service role key
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     const emailRequest: EmailRequest = await req.json();
     
     // Validate required fields
@@ -38,67 +50,28 @@ serve(async (req) => {
     console.log(`Sending email from ${emailRequest.from} to ${emailRequest.to}`);
     console.log(`Subject: ${emailRequest.subject}`);
     
-    // Get SMTP configuration from environment variables
-    const smtpHost = Deno.env.get("SMTP_HOST");
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
-    const smtpUser = Deno.env.get("SMTP_USERNAME");
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
-    const secure = (Deno.env.get("SMTP_SECURE") || "false") === "true";
-
-    // Check if we have all required SMTP configuration
-    if (!smtpHost || !smtpUser || !smtpPassword) {
-      console.error("Missing SMTP configuration");
-      console.error(`SMTP_HOST: ${smtpHost ? "Set" : "Not set"}`);
-      console.error(`SMTP_USERNAME: ${smtpUser ? "Set" : "Not set"}`);
-      console.error(`SMTP_PASSWORD: ${smtpPassword ? "Length: " + smtpPassword.length : "Not set"}`);
-      throw new Error("SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD.");
-    }
-
-    console.log(`Connecting to SMTP server at ${smtpHost}:${smtpPort}`);
-
-    // Configure SMTP client
-    const client = new SmtpClient();
-    
     try {
-      await client.connectTLS({
-        hostname: smtpHost,
-        port: smtpPort,
-        username: smtpUser,
-        password: smtpPassword,
-      });
-      
-      console.log("Successfully connected to SMTP server");
-    } catch (connectionError) {
-      console.error("Failed to connect to SMTP server:", connectionError);
-      throw new Error(`SMTP connection error: ${connectionError.message}`);
-    }
-
-    // Parse CC and BCC recipients if provided
-    const ccRecipients = emailRequest.cc ? emailRequest.cc.split(',') : [];
-    const bccRecipients = emailRequest.bcc ? emailRequest.bcc.split(',') : [];
-
-    // Send the email
-    try {
-      const sendResult = await client.send({
-        from: emailRequest.from,
-        to: [emailRequest.to],
-        cc: ccRecipients,
-        bcc: bccRecipients,
+      // Use Supabase Auth's built-in email functionality
+      // We'll use the raw email API which is accessible via the admin API
+      const { error: emailError } = await supabaseAdmin.auth.admin.sendRawEmail({
+        email: emailRequest.to,
         subject: emailRequest.subject,
-        content: emailRequest.html,
-        html: emailRequest.html,
+        html_body: emailRequest.html,
+        text_body: emailRequest.text,
       });
       
-      console.log("Email sent successfully:", sendResult);
+      if (emailError) {
+        console.error("Error sending email via Supabase Auth:", emailError);
+        throw new Error(`Email sending failed: ${emailError.message}`);
+      }
       
-      // Close the SMTP connection
-      await client.close();
+      console.log("Email sent successfully via Supabase Auth");
       
       return new Response(
         JSON.stringify({
           success: true,
-          data: { messageId: sendResult.messageId || `smtp-${Date.now()}` },
-          message: "Email sent successfully"
+          data: { messageId: `supabase-auth-email-${Date.now()}` },
+          message: "Email sent successfully via Supabase Auth"
         }),
         { 
           status: 200, 

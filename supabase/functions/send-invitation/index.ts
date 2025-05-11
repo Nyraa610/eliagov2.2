@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
@@ -162,29 +161,24 @@ serve(async (req) => {
     console.log(`Found ${existingUsers.length} existing users with this email`);
 
     try {
-      // Send the custom email notification directly with SMTP
-      console.log("Sending formatted email via SMTP");
+      // Send the custom email notification directly with Supabase Auth
+      console.log("Sending formatted email via Supabase Auth");
 
-      // Get configured SMTP details for debug purposes
-      const smtpHost = Deno.env.get("SMTP_HOST");
-      const smtpPort = Deno.env.get("SMTP_PORT") || "587";
-      const smtpUser = Deno.env.get("SMTP_USERNAME");
+      // Get configured email details for sending
       const emailFrom = Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com';
       const emailFromName = Deno.env.get('EMAIL_FROM_NAME') || 'ELIA GO';
       
-      console.log(`SMTP Configuration check - Host: ${smtpHost ? "Set" : "Not set"}, Port: ${smtpPort}, User: ${smtpUser ? "Set" : "Not set"}`);
       console.log(`Email will be sent from: ${emailFromName} <${emailFrom}>`);
       
-      // Use the configured SMTP directly via send-supabase-email function
+      // Use the configured email setup via send-email-native function
       try {
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-supabase-email`, {
+        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-native`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
           },
           body: JSON.stringify({
-            from: `${emailFromName} <${emailFrom}>`,
             to: email,
             subject: emailSubject,
             html: emailHtml

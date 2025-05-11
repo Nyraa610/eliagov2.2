@@ -237,16 +237,16 @@ export const emailService = {
       console.log("Sending test email to:", email);
       const startTime = Date.now();
       
-      const response = await supabase.functions.invoke("send-supabase-email", {
+      // Use the send-email-native function which leverages Supabase Auth configuration
+      const response = await supabase.functions.invoke("send-email-native", {
         body: {
-          from: "ELIA GO <no-reply@eliago.com>",
           to: email,
           subject: "Test Email from ELIA GO",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
               <h1 style="color: #4F46E5;">SMTP Test Email</h1>
               <p>Hello,</p>
-              <p>This is a test email sent from ELIA GO's email configuration to verify that your SMTP settings are working correctly.</p>
+              <p>This is a test email sent from ELIA GO's email configuration to verify that your Supabase Authentication email settings are working correctly.</p>
               <p>If you received this email, it means your email configuration is working properly.</p>
               <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;">
               <p style="font-size: 12px; color: #999;">This is an automated message, please do not reply.</p>

@@ -50,18 +50,12 @@ serve(async (req) => {
     console.log(`Subject: ${emailRequest.subject}`);
     
     try {
-      // Prepare recipients
-      const recipients = Array.isArray(emailRequest.to) 
-        ? emailRequest.to.join(',') 
-        : emailRequest.to;
-      
-      const ccRecipients = emailRequest.cc 
-        ? (Array.isArray(emailRequest.cc) ? emailRequest.cc.join(',') : emailRequest.cc) 
-        : undefined;
-        
-      const bccRecipients = emailRequest.bcc 
-        ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc.join(',') : emailRequest.bcc) 
-        : undefined;
+      // Process all recipients (to, cc, bcc)
+      const allRecipients = [
+        ...(Array.isArray(emailRequest.to) ? emailRequest.to : [emailRequest.to]),
+        ...(Array.isArray(emailRequest.cc) ? emailRequest.cc : emailRequest.cc ? [emailRequest.cc] : []),
+        ...(Array.isArray(emailRequest.bcc) ? emailRequest.bcc : emailRequest.bcc ? [emailRequest.bcc] : [])
+      ];
       
       // Set email sender information
       const emailFrom = Deno.env.get('EMAIL_FROM') || 'no-reply@eliago.com';
@@ -70,78 +64,57 @@ serve(async (req) => {
       
       console.log(`Sending from: ${sender}`);
       
-      // Check for direct SMTP configuration
-      const smtpHost = Deno.env.get("SMTP_HOST");
-      const smtpUser = Deno.env.get("SMTP_USERNAME");
-      const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+      // Send emails to each recipient using Supabase Auth
+      let successCount = 0;
+      const errors = [];
       
-      let emailResponse;
-      
-      if (smtpHost && smtpUser && smtpPassword) {
-        console.log("Using direct SMTP connection via send-supabase-email");
-        // Call our send-supabase-email function which handles SMTP
+      for (const recipient of allRecipients) {
         try {
-          const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-supabase-email`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            },
-            body: JSON.stringify({
-              from: sender,
-              to: recipients,
-              subject: emailRequest.subject,
-              html: emailRequest.html,
-              text: emailRequest.text,
-              cc: ccRecipients,
-              bcc: bccRecipients,
-              replyTo: emailRequest.replyTo,
-            }),
+          // Use Supabase Auth's raw email API
+          const { error } = await supabaseAdmin.auth.admin.sendRawEmail({
+            email: recipient,
+            subject: emailRequest.subject,
+            html_body: emailRequest.html,
+            text_body: emailRequest.text || '',
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Email API error response:", errorText);
-            let errorData;
-            try {
-              errorData = JSON.parse(errorText);
-            } catch (e) {
-              errorData = { error: errorText || response.statusText };
-            }
-            throw new Error(`Email service error: ${errorData.error || response.statusText}`);
+          if (error) {
+            console.error(`Error sending to ${recipient}:`, error);
+            errors.push({ recipient, error: error.message });
+          } else {
+            successCount++;
           }
-          
-          const result = await response.json();
-          console.log("Email service response:", result);
-          emailResponse = result;
         } catch (err) {
-          console.error("Error using send-supabase-email:", err);
-          throw new Error(`Email API error: ${err.message}`);
+          console.error(`Exception sending to ${recipient}:`, err);
+          errors.push({ recipient, error: err.message });
         }
-      } else {
-        console.log("No SMTP configuration found, cannot send email");
-        throw new Error("Missing SMTP configuration. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD.");
       }
       
-      console.log("Email sent successfully");
+      if (errors.length === 0) {
+        console.log(`Successfully sent email to all ${successCount} recipients`);
+      } else {
+        console.warn(`Sent to ${successCount}/${allRecipients.length} recipients with ${errors.length} errors`);
+      }
       
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          messageId: emailResponse?.data?.messageId || 'email-sent',
-          details: emailResponse?.data 
+          success: successCount > 0, 
+          messageId: `supabase-auth-email-${Date.now()}`,
+          details: { 
+            successCount,
+            totalRecipients: allRecipients.length,
+            errors: errors.length > 0 ? errors : undefined
+          } 
         }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
-      
     } catch (emailError) {
       console.error("Error sending email:", emailError);
       throw new Error(`Email sending failed: ${emailError.message}`);
     }
-    
   } catch (error) {
     console.error("Error in send-email-native function:", error);
     
@@ -151,7 +124,7 @@ serve(async (req) => {
         error: error.message || "Failed to send email" 
       }),
       { 
-        status: 200, // Changed from 500 to avoid error parsing issues
+        status: 200, // Using 200 to avoid error parsing issues
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

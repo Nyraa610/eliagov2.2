@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Dialog, 
@@ -61,12 +60,12 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
         setMessage(`Test email sent successfully to ${values.email}`);
       } else {
         setStatus('error');
-        setMessage(result.error || "Failed to send test email. Please check the SMTP configuration in Supabase.");
+        setMessage(result.error || "Failed to send test email. Check Supabase Authentication email settings.");
       }
     } catch (error: any) {
       console.error("Test email error:", error);
       setStatus('error');
-      setMessage("An unexpected error occurred. Please check that SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD are configured in Supabase.");
+      setMessage("An unexpected error occurred. Please check that your Supabase Authentication email setup is correctly configured.");
       setDetails({ error: error.message });
     } finally {
       setIsSubmitting(false);
@@ -138,14 +137,11 @@ export function TestEmailDialog({ open, onClose }: TestEmailDialogProps) {
                   {message}
                   
                   <div className="mt-2 p-2 bg-gray-100 rounded">
-                    <p className="font-semibold text-sm mb-1">Make sure you've configured these environment variables in Supabase:</p>
+                    <p className="font-semibold text-sm mb-1">Make sure you've correctly configured email provider in Supabase Authentication:</p>
                     <ul className="text-xs list-disc pl-4">
-                      <li>SMTP_HOST (e.g., smtp.brevo.com)</li>
-                      <li>SMTP_PORT (e.g., 587)</li>
-                      <li>SMTP_USERNAME (your Brevo SMTP username)</li>
-                      <li>SMTP_PASSWORD (your Brevo SMTP API key)</li>
-                      <li>EMAIL_FROM (e.g., no-reply@yourdomain.com)</li>
-                      <li>EMAIL_FROM_NAME (e.g., ELIA GO)</li>
+                      <li>Go to Supabase Dashboard &gt; Authentication &gt; Email Templates</li>
+                      <li>Verify that an email provider is configured (e.g., SMTP)</li>
+                      <li>Test the email configuration directly in the Supabase dashboard</li>
                     </ul>
                   </div>
                   
