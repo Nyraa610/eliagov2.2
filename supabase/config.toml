@@ -24,3 +24,4 @@ enabled = true
 [functions]
 [functions.send-invitation]
 verify_jwt = true
+

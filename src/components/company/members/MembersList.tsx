@@ -46,6 +46,7 @@ interface PendingInvitation {
   email: string;
   role: string;
   created_at: string;
+  status: string;
 }
 
 interface MembersListProps {
@@ -161,7 +162,7 @@ export function MembersList({
         throw error;
       }
       
-      // Send notification to the user (optional)
+      // Try to send notification to the user (may not have notifications table yet)
       try {
         await supabase
           .from('notifications')

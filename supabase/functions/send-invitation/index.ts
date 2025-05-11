@@ -48,7 +48,7 @@ serve(async (req) => {
     }
     
     // Store the invitation in the database
-    const { error: inviteError } = await supabaseAdmin
+    const { data: inviteData, error: inviteError } = await supabaseAdmin
       .from('invitations')
       .insert({
         email: email.toLowerCase(),
@@ -56,7 +56,9 @@ serve(async (req) => {
         role: role,
         invited_by: inviterInfo?.id,
         status: 'pending'
-      });
+      })
+      .select()
+      .single();
 
     if (inviteError) {
       console.error("Error storing invitation:", inviteError);
@@ -100,48 +102,85 @@ serve(async (req) => {
       </div>
     `;
 
-    // Send invitation via Supabase Auth
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: loginUrl,
-      data: {
-        company_id: companyId,
-        role: role,
-        invitation_details: {
-          company_name: companyData.name,
-          inviter: inviterInfo || { name: 'A company administrator' },
-          role: roleName
-        }
-      },
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers({
+      filter: {
+        email: email
+      }
     });
-
-    if (error) {
-      console.error("Error sending invitation:", error);
-      throw new Error(`Failed to send invitation: ${error.message}`);
-    }
     
-    // Send a custom email with better formatting and details
-    try {
-      const { error: emailError } = await supabaseAdmin.functions.invoke("send-email-native", {
-        body: {
-          to: email,
-          subject: emailSubject,
-          html: emailHtml
-        }
-      });
+    let invitationSent = false;
+
+    // If user exists, don't send auth invitation, just email them
+    if (existingUser?.users && existingUser.users.length > 0) {
+      console.log("User already exists, sending custom email only");
       
-      if (emailError) {
-        console.error("Error sending formatted email:", emailError);
+      try {
+        const { error: emailError } = await supabaseAdmin.functions.invoke("send-email-native", {
+          body: {
+            to: email,
+            subject: emailSubject,
+            html: emailHtml
+          }
+        });
+        
+        if (emailError) {
+          console.error("Error sending formatted email:", emailError);
+          throw emailError;
+        }
+        
+        invitationSent = true;
+      } catch (emailErr) {
+        console.error("Exception sending formatted email:", emailErr);
+        throw emailErr;
+      }
+    } else {
+      // New user - send Supabase auth invitation and custom email
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: loginUrl,
+        data: {
+          company_id: companyId,
+          role: role,
+          invitation_details: {
+            company_name: companyData.name,
+            inviter: inviterInfo || { name: 'A company administrator' },
+            role: roleName
+          }
+        },
+      });
+
+      if (error) {
+        console.error("Error sending invitation:", error);
+        throw new Error(`Failed to send invitation: ${error.message}`);
+      }
+      
+      // Send a custom email with better formatting and details
+      try {
+        const { error: emailError } = await supabaseAdmin.functions.invoke("send-email-native", {
+          body: {
+            to: email,
+            subject: emailSubject,
+            html: emailHtml
+          }
+        });
+        
+        if (emailError) {
+          console.error("Error sending formatted email:", emailError);
+          // Don't throw an error here, as the official invitation was already sent
+        } else {
+          invitationSent = true;
+        }
+      } catch (emailErr) {
+        console.error("Exception sending formatted email:", emailErr);
         // Don't throw an error here, as the official invitation was already sent
       }
-    } catch (emailErr) {
-      console.error("Exception sending formatted email:", emailErr);
-      // Don't throw an error here, as the official invitation was already sent
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Invitation sent to ${email}` 
+        message: `Invitation sent to ${email}`,
+        invitationSent
       }),
       { 
         status: 200, 
