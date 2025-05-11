@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -28,6 +27,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UserRole } from "@/services/base/profileTypes";
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -38,7 +45,7 @@ interface InviteMemberDialogProps {
 
 const inviteFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  makeAdmin: z.boolean().default(false),
+  role: z.string().default("user"),
 });
 
 type InviteFormValues = z.infer<typeof inviteFormSchema>;
@@ -56,7 +63,7 @@ export function InviteMemberDialog({
     resolver: zodResolver(inviteFormSchema),
     defaultValues: {
       email: "",
-      makeAdmin: false,
+      role: "user",
     },
   });
 
@@ -82,6 +89,7 @@ export function InviteMemberDialog({
         .single();
         
       const inviterInfo = {
+        id: user?.id,
         name: userProfile?.full_name || user?.email?.split('@')[0] || 'Company Admin',
         email: userProfile?.email || user?.email || ''
       };
@@ -114,7 +122,6 @@ export function InviteMemberDialog({
         
         if (existingMember) {
           toast({
-            // Change from "warning" to "default" as "warning" is not a valid variant
             variant: "default",
             title: "User Already Member",
             description: "This user is already a member of this company.",
@@ -128,7 +135,8 @@ export function InviteMemberDialog({
           .from('profiles')
           .update({ 
             company_id: companyId,
-            is_company_admin: values.makeAdmin 
+            is_company_admin: values.role === 'admin',
+            role: values.role as UserRole
           })
           .eq('id', userId);
           
@@ -146,7 +154,7 @@ export function InviteMemberDialog({
           body: { 
             email: values.email,
             companyId,
-            makeAdmin: values.makeAdmin,
+            role: values.role,
             inviterInfo: inviterInfo
           }
         });
@@ -222,23 +230,26 @@ export function InviteMemberDialog({
             
             <FormField
               control={form.control}
-              name="makeAdmin"
+              name="role"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Make company admin
-                    </FormLabel>
-                    <FormDescription>
-                      Admins can manage company settings and other users
-                    </FormDescription>
-                  </div>
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="user">Company Member</SelectItem>
+                      <SelectItem value="admin">Company Admin</SelectItem>
+                      <SelectItem value="consultant">Consultant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the role for this user.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />

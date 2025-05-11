@@ -28,8 +28,8 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { email, companyId, makeAdmin = false, inviterInfo } = await req.json();
-    console.log(`Sending invitation to ${email} for company ${companyId} (admin: ${makeAdmin})`);
+    const { email, companyId, role = 'user', inviterInfo } = await req.json();
+    console.log(`Sending invitation to ${email} for company ${companyId} (role: ${role})`);
 
     if (!email || !companyId) {
       throw new Error('Email and company ID are required');
@@ -47,10 +47,32 @@ serve(async (req) => {
       throw new Error(`Failed to get company details: ${companyError.message}`);
     }
     
+    // Store the invitation in the database
+    const { error: inviteError } = await supabaseAdmin
+      .from('invitations')
+      .insert({
+        email: email.toLowerCase(),
+        company_id: companyId,
+        role: role,
+        invited_by: inviterInfo?.id,
+        status: 'pending'
+      });
+
+    if (inviteError) {
+      console.error("Error storing invitation:", inviteError);
+      // If the error is a duplicate, we can continue (user was already invited)
+      if (inviteError.code !== '23505') { // Postgres unique constraint violation
+        throw new Error(`Failed to store invitation: ${inviteError.message}`);
+      }
+    }
+    
     // Create custom email template with proper invitation details
     const emailSubject = `Invitation to join ${companyData.name} on ELIA GO`;
     const appUrl = Deno.env.get('APP_URL') || 'https://app.eliago.com';
-    const loginUrl = `${appUrl}/login?invitation=true&email=${encodeURIComponent(email)}`;
+    const loginUrl = `${appUrl}/login?invitation=true&email=${encodeURIComponent(email)}&company=${companyId}`;
+    
+    const roleName = role === 'admin' ? 'Company Administrator' : 
+                   role === 'consultant' ? 'Consultant' : 'Company Member';
     
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
@@ -62,7 +84,7 @@ serve(async (req) => {
           <h3 style="margin-top: 0;">Invitation Details:</h3>
           <p><strong>Organization:</strong> ${companyData.name}</p>
           <p><strong>Invited by:</strong> ${inviterInfo?.name || 'A company administrator'} (${inviterInfo?.email || 'No email provided'})</p>
-          <p><strong>Role:</strong> ${makeAdmin ? 'Company Administrator' : 'Company Member'}</p>
+          <p><strong>Role:</strong> ${roleName}</p>
         </div>
         
         <p>ELIA GO is a sustainability management platform that helps companies track ESG metrics, generate reports, and develop action plans.</p>
@@ -83,11 +105,11 @@ serve(async (req) => {
       redirectTo: loginUrl,
       data: {
         company_id: companyId,
-        is_company_admin: makeAdmin,
+        role: role,
         invitation_details: {
           company_name: companyData.name,
           inviter: inviterInfo || { name: 'A company administrator' },
-          role: makeAdmin ? 'Company Administrator' : 'Company Member'
+          role: roleName
         }
       },
     });

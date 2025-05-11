@@ -10,7 +10,6 @@ import {
 import { MembersList } from "./members/MembersList";
 import { InviteMemberDialog } from "./members/InviteMemberDialog";
 import { useMembersList } from "./members/useMembersList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CompanyMembersProps {
   companyId: string;
@@ -18,7 +17,7 @@ interface CompanyMembersProps {
 
 export function CompanyMembers({ companyId }: CompanyMembersProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
-  const { members, loading, fetchMembers } = useMembersList(companyId);
+  const { members, pendingInvitations, loading, fetchMembers } = useMembersList(companyId);
   
   return (
     <Card className="w-full">
@@ -37,6 +36,7 @@ export function CompanyMembers({ companyId }: CompanyMembersProps) {
       <CardContent>
         <MembersList 
           members={members} 
+          pendingInvitations={pendingInvitations}
           isLoading={loading} 
           onMemberUpdate={fetchMembers} 
           companyId={companyId}
