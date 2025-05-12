@@ -7,6 +7,7 @@ import { roleService } from "@/services/base/roleService";
 import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, BarChart, ClipboardCheck } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function ConsultantDashboard() {
   const navigate = useNavigate();
@@ -69,134 +70,136 @@ export default function ConsultantDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-primary">Consultant Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage client assessments and track progress
-        </p>
-      </div>
-      
-      <ClientSelector onChange={handleClientChange} />
-      
-      {selectedClientId && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <TooltipProvider>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-primary">Consultant Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage client assessments and track progress
+          </p>
+        </div>
+        
+        <ClientSelector onChange={handleClientChange} />
+        
+        {selectedClientId && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <Users className="h-4 w-4 mr-2 text-primary" />
+                  Clients
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">1</div>
+                <p className="text-muted-foreground text-sm">Active client</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <ClipboardCheck className="h-4 w-4 mr-2 text-primary" />
+                  Assessments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">2</div>
+                <p className="text-muted-foreground text-sm">In progress</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <BarChart className="h-4 w-4 mr-2 text-primary" />
+                  Carbon Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">1</div>
+                <p className="text-muted-foreground text-sm">Generated</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <FileText className="h-4 w-4 mr-2 text-primary" />
+                  Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">5</div>
+                <p className="text-muted-foreground text-sm">Shared files</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="h-4 w-4 mr-2 text-primary" />
-                Clients
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest actions across client accounts</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-muted-foreground text-sm">Active client</p>
+              {selectedClientId ? (
+                <div className="space-y-4">
+                  <div className="border-b pb-2">
+                    <div className="font-medium">ESG Diagnostic Started</div>
+                    <div className="text-sm text-muted-foreground">Yesterday at 4:30 PM</div>
+                  </div>
+                  <div className="border-b pb-2">
+                    <div className="font-medium">Carbon Evaluation Updated</div>
+                    <div className="text-sm text-muted-foreground">2 days ago at 2:15 PM</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Document Uploaded</div>
+                    <div className="text-sm text-muted-foreground">Last week</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Select a client to view activities</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <ClipboardCheck className="h-4 w-4 mr-2 text-primary" />
-                Assessments
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Client Actions</CardTitle>
+              <CardDescription>Quick actions for the selected client</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-muted-foreground text-sm">In progress</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BarChart className="h-4 w-4 mr-2 text-primary" />
-                Carbon Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-muted-foreground text-sm">Generated</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-primary" />
-                Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-muted-foreground text-sm">Shared files</p>
+              {selectedClientId ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button onClick={() => navigate("/assessment")}>
+                    <ClipboardCheck className="h-4 w-4 mr-2" />
+                    View Assessments
+                  </Button>
+                  <Button onClick={() => navigate("/documents")}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Manage Documents
+                  </Button>
+                  <Button onClick={() => navigate("/assessment/carbon-evaluation")}>
+                    <BarChart className="h-4 w-4 mr-2" />
+                    Carbon Evaluation
+                  </Button>
+                  <Button onClick={() => navigate("/consultant/notifications")}>
+                    View Notifications
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Select a client to view actions</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
-      )}
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions across client accounts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedClientId ? (
-              <div className="space-y-4">
-                <div className="border-b pb-2">
-                  <div className="font-medium">ESG Diagnostic Started</div>
-                  <div className="text-sm text-muted-foreground">Yesterday at 4:30 PM</div>
-                </div>
-                <div className="border-b pb-2">
-                  <div className="font-medium">Carbon Evaluation Updated</div>
-                  <div className="text-sm text-muted-foreground">2 days ago at 2:15 PM</div>
-                </div>
-                <div>
-                  <div className="font-medium">Document Uploaded</div>
-                  <div className="text-sm text-muted-foreground">Last week</div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground">Select a client to view activities</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Actions</CardTitle>
-            <CardDescription>Quick actions for the selected client</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedClientId ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button onClick={() => navigate("/assessment")}>
-                  <ClipboardCheck className="h-4 w-4 mr-2" />
-                  View Assessments
-                </Button>
-                <Button onClick={() => navigate("/documents")}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Manage Documents
-                </Button>
-                <Button onClick={() => navigate("/assessment/carbon-evaluation")}>
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Carbon Evaluation
-                </Button>
-                <Button onClick={() => navigate("/consultant/notifications")}>
-                  View Notifications
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground">Select a client to view actions</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
