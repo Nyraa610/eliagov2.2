@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CompanyAnalysisResult } from "@/services/companyAnalysisService";
 
 export function useAnalysisProgress(
@@ -7,17 +7,22 @@ export function useAnalysisProgress(
   companyInfo: CompanyAnalysisResult | null
 ) {
   const [analyzingProgress, setAnalyzingProgress] = useState(0);
+  const intervalRef = useRef<number | null>(null);
 
   // Function to simulate progress while waiting for the API
   useEffect(() => {
-    let interval: number | null = null;
+    // Clear any existing interval to prevent multiple intervals running
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     
     if (isLoadingCompanyInfo && !companyInfo) {
       // Reset progress at the start
       setAnalyzingProgress(5);
       
       // Simulate progress to 90% (reserve the last 10% for actual data loading)
-      interval = window.setInterval(() => {
+      intervalRef.current = window.setInterval(() => {
         setAnalyzingProgress(prev => {
           if (prev >= 90) {
             return 90;
@@ -30,8 +35,12 @@ export function useAnalysisProgress(
       setAnalyzingProgress(100);
     }
     
+    // Cleanup function to clear interval when component unmounts or dependencies change
     return () => {
-      if (interval) window.clearInterval(interval);
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [isLoadingCompanyInfo, companyInfo]);
 

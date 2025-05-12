@@ -101,6 +101,18 @@ export function ESGLaunchpad() {
     return null;
   }, [recommendedStandards]);
 
+  // Handle standard selection - fixed to avoid infinite loop
+  const handleStandardSelection = useCallback((standardId: string) => {
+    const currentSelected = form.getValues("selectedStandards") || [];
+    const isSelected = currentSelected.includes(standardId);
+    
+    const newSelectedStandards = isSelected 
+      ? currentSelected.filter(id => id !== standardId)
+      : [...currentSelected, standardId];
+    
+    form.setValue("selectedStandards", newSelectedStandards);
+  }, [form]);
+
   // Use a variable for the JSX instead of directly rendering in the render method
   const standardsSelection = (
     <FormField
@@ -118,20 +130,13 @@ export function ESGLaunchpad() {
                     <FormItem
                       key={standard.id}
                       className="flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer"
-                      onClick={() => {
-                        const currentSelected = selectedStandards || [];
-                        const isSelected = currentSelected.includes(standard.id);
-                        
-                        form.setValue("selectedStandards", isSelected 
-                          ? currentSelected.filter(id => id !== standard.id)
-                          : [...currentSelected, standard.id]
-                        );
-                      }}
+                      onClick={() => handleStandardSelection(standard.id)}
                     >
                       <FormControl>
                         <Checkbox
                           checked={selectedStandards?.includes(standard.id) || false}
                           className="hidden"
+                          onChange={() => {}} // Empty onChange to avoid React warning about controlled components
                         />
                       </FormControl>
                       
