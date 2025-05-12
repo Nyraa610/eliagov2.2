@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { 
   Bold, Italic, List, ListOrdered, Heading1, Heading2, 
@@ -66,20 +66,22 @@ export function EditorToolbar({ content, onApply }: EditorToolbarProps) {
     tooltip: string,
     onClick: () => void
   ) => (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button 
-          type="button"
-          variant="ghost" 
-          onClick={onClick} 
-          className="h-8 w-8 p-0"
-        >
-          {icon}
-          <span className="sr-only">{tooltip}</span>
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            type="button"
+            variant="ghost" 
+            onClick={onClick} 
+            className="h-8 w-8 p-0"
+          >
+            {icon}
+            <span className="sr-only">{tooltip}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{tooltip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   return (
