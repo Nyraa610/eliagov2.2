@@ -112,59 +112,74 @@ export function ESGLaunchpad() {
     form.setValue("selectedStandards", newSelectedStandards);
   }, [form]);
 
+  // Handle "None" standard selection
+  const handleNoneSelection = useCallback(() => {
+    form.setValue("selectedStandards", []);
+  }, [form]);
+
   // Standards selection component
   const standardsSelection = (
-    <FormField
-      control={form.control}
-      name="selectedStandards"
-      render={() => (
-        <FormItem>
-          <div className="mb-3 text-sm font-medium">Select the standards you follow (or select none):</div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {esgStandards.map((standard) => (
-              <TooltipProvider key={standard.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <FormItem
-                      key={standard.id}
-                      className="flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer"
-                      onClick={() => handleStandardSelection(standard.id)}
-                    >
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={selectedStandards?.includes(standard.id) || false}
-                          className="hidden"
-                          onChange={() => {}} // Empty onChange to avoid React warning
-                        />
-                      </FormControl>
-                      
-                      {renderStandardLogo(standard.id) || (
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-xs">{standard.label.substring(0, 2)}</span>
-                        </div>
-                      )}
-                      
-                      <FormLabel className="text-sm font-normal text-center cursor-pointer">
-                        {standard.label}
-                      </FormLabel>
-                      
-                      {selectedStandards?.includes(standard.id) && (
-                        <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
-                      )}
-                    </FormItem>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p>{standard.description}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
+    <div>
+      <div className="mb-3 text-sm font-medium">Select the standards you follow (or select none):</div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* None option */}
+        <div
+          className={`flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer ${selectedStandards?.length === 0 ? 'border-primary bg-muted/40' : ''}`}
+          onClick={handleNoneSelection}
+        >
+          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+            <span className="text-xs">None</span>
           </div>
-        </FormItem>
-      )}
-    />
+          
+          <div className="text-sm font-normal text-center cursor-pointer">
+            No standards yet
+          </div>
+          
+          {selectedStandards?.length === 0 && (
+            <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
+          )}
+        </div>
+
+        {esgStandards.map((standard) => (
+          <TooltipProvider key={standard.id}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  key={standard.id}
+                  className={`flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer relative ${selectedStandards?.includes(standard.id) ? 'border-primary bg-muted/40' : ''}`}
+                  onClick={() => handleStandardSelection(standard.id)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStandards?.includes(standard.id) || false}
+                    className="hidden"
+                    readOnly
+                  />
+                  
+                  {renderStandardLogo(standard.id) || (
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs">{standard.label.substring(0, 2)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="text-sm font-normal text-center cursor-pointer">
+                    {standard.label}
+                  </div>
+                  
+                  {selectedStandards?.includes(standard.id) && (
+                    <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{standard.description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </div>
+    </div>
   );
 
   return (
@@ -376,11 +391,6 @@ export function ESGLaunchpad() {
                           </div>
                         </div>
                       )}
-                      
-                      <div className="mt-8 border-t pt-4">
-                        {/* Removed FormField for followsStandards that was here previously */}
-                        {standardsSelection}
-                      </div>
                     </>
                   )}
                 </div>

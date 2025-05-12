@@ -9,7 +9,7 @@ import { esgLaunchpadService, SectorProfile, PeerSnapshot } from "@/services/esg
 // Form schema for validation
 const formSchema = z.object({
   industry: z.string().min(1, "Please select your industry"),
-  selectedStandards: z.array(z.string()).optional(),
+  selectedStandards: z.array(z.string()).default([]),
 });
 
 export type ESGLaunchpadFormData = z.infer<typeof formSchema>;
