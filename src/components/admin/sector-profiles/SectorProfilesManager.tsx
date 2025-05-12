@@ -31,7 +31,6 @@ import { Loader2, Save, PlusCircle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   industrySectors, 
-  esgLaunchpadService,
   SectorProfile
 } from "@/services/esgLaunchpadService";
 
@@ -41,6 +40,7 @@ export function SectorProfilesManager() {
   const [profiles, setProfiles] = useState<SectorProfile[]>([]);
   const [selectedSectorId, setSelectedSectorId] = useState("");
   const [currentProfile, setCurrentProfile] = useState<SectorProfile | null>(null);
+  const [generatingWithAI, setGeneratingWithAI] = useState(false);
 
   // Initialize form
   const form = useForm({
@@ -101,49 +101,128 @@ export function SectorProfilesManager() {
       });
     } else {
       // Generate new profile with AI
-      setLoading(true);
-      try {
-        const newProfile = await esgLaunchpadService.generateSectorProfile(sectorId);
-        if (newProfile) {
-          setCurrentProfile(newProfile);
-          setProfiles(prev => [...prev, newProfile]);
-          form.reset({
-            description: newProfile.description,
-            risks: newProfile.key_risks.length > 0 
-              ? [...newProfile.key_risks, ...Array(4 - newProfile.key_risks.length).fill("")] 
-              : ["", "", "", ""],
-            opportunities: newProfile.key_opportunities.length > 0
-              ? [...newProfile.key_opportunities, ...Array(4 - newProfile.key_opportunities.length).fill("")]
-              : ["", "", "", ""],
-            procurement: newProfile.procurement_impacts.length > 0
-              ? [...newProfile.procurement_impacts, ...Array(3 - newProfile.procurement_impacts.length).fill("")]
-              : ["", "", ""]
-          });
-        } else {
-          // Create empty profile
-          const industry = industrySectors.find(s => s.id === sectorId);
-          const emptyProfile: SectorProfile = {
-            id: sectorId,
-            name: industry?.label || "",
-            description: "",
-            key_risks: [],
-            key_opportunities: [],
-            procurement_impacts: []
-          };
-          setCurrentProfile(emptyProfile);
-          form.reset({
-            description: "",
-            risks: ["", "", "", ""],
-            opportunities: ["", "", "", ""],
-            procurement: ["", "", ""]
-          });
-        }
-      } catch (error) {
-        console.error("Error generating profile:", error);
-        toast.error("Failed to generate sector profile");
-      } finally {
-        setLoading(false);
+      await generateProfileWithAI(sectorId);
+    }
+  };
+
+  // Generate profile with AI
+  const generateProfileWithAI = async (sectorId: string) => {
+    setLoading(true);
+    setGeneratingWithAI(true);
+    
+    try {
+      const industry = industrySectors.find(sector => sector.id === sectorId);
+      if (!industry) {
+        throw new Error("Industry not found");
       }
+      
+      // Generate profile using direct API call
+      const prompt = `Generate a comprehensive ESG (Environmental, Social, Governance) sector profile for the ${industry.label} industry. Include:
+      1. A brief description of the sector's ESG context (2-3 sentences)
+      2. 4-5 key ESG risks specific to this sector
+      3. 4-5 key ESG opportunities specific to this sector
+      4. 3 major procurement-chain impacts for this sector
+      Format the response as a JSON object with keys: description, key_risks (array), key_opportunities (array), and procurement_impacts (array).`;
+      
+      console.log("Sending AI generation request for sector:", industry.label);
+      
+      // Call AI analysis directly via the Supabase function
+      const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          type: 'esg-assistant',
+          content: prompt
+        })
+      });
+      
+      if (!result.ok) {
+        const errorText = await result.text();
+        console.error("AI generation failed:", errorText);
+        throw new Error(`AI generation failed: ${result.status} ${errorText}`);
+      }
+      
+      const data = await result.json();
+      console.log("AI generation response:", data);
+      
+      if (!data.result) {
+        throw new Error("Empty response from AI service");
+      }
+      
+      let profileData: any;
+      try {
+        profileData = JSON.parse(data.result);
+        console.log("Parsed profile data:", profileData);
+      } catch (e) {
+        console.error("Failed to parse AI response as JSON:", e, "Raw response:", data.result);
+        throw new Error("Failed to parse AI response");
+      }
+      
+      // Create a new profile
+      const newProfile: SectorProfile = {
+        id: sectorId,
+        name: industry.label,
+        description: profileData.description || "",
+        key_risks: profileData.key_risks || [],
+        key_opportunities: profileData.key_opportunities || [],
+        procurement_impacts: profileData.procurement_impacts || [],
+        is_ai_generated: true
+      };
+      
+      // Store the generated profile
+      const { error } = await supabase
+        .from('sector_profiles')
+        .insert(newProfile);
+      
+      if (error) {
+        console.error("Error saving generated sector profile:", error);
+        throw error;
+      }
+      
+      // Update UI
+      setCurrentProfile(newProfile);
+      setProfiles(prev => [...prev, newProfile]);
+      form.reset({
+        description: newProfile.description,
+        risks: newProfile.key_risks.length > 0 
+          ? [...newProfile.key_risks, ...Array(4 - newProfile.key_risks.length).fill("")] 
+          : ["", "", "", ""],
+        opportunities: newProfile.key_opportunities.length > 0
+          ? [...newProfile.key_opportunities, ...Array(4 - newProfile.key_opportunities.length).fill("")]
+          : ["", "", "", ""],
+        procurement: newProfile.procurement_impacts.length > 0
+          ? [...newProfile.procurement_impacts, ...Array(3 - newProfile.procurement_impacts.length).fill("")]
+          : ["", "", ""]
+      });
+      
+      toast.success("Profile generated successfully");
+    } catch (error) {
+      console.error("Error generating profile with AI:", error);
+      toast.error("Failed to generate profile with AI: " + (error instanceof Error ? error.message : 'Unknown error'));
+      
+      // Create empty profile if AI generation fails
+      const industry = industrySectors.find(s => s.id === sectorId);
+      const emptyProfile: SectorProfile = {
+        id: sectorId,
+        name: industry?.label || "",
+        description: "",
+        key_risks: [],
+        key_opportunities: [],
+        procurement_impacts: []
+      };
+      setCurrentProfile(emptyProfile);
+      form.reset({
+        description: "",
+        risks: ["", "", "", ""],
+        opportunities: ["", "", "", ""],
+        procurement: ["", "", ""]
+      });
+    } finally {
+      setLoading(false);
+      setGeneratingWithAI(false);
     }
   };
 
@@ -192,6 +271,86 @@ export function SectorProfilesManager() {
       toast.error("Failed to save sector profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Regenerate profile with AI
+  const handleRegenerateWithAI = async () => {
+    if (!selectedSectorId || !currentProfile) return;
+    
+    setGeneratingWithAI(true);
+    
+    try {
+      const industry = industrySectors.find(sector => sector.id === selectedSectorId);
+      if (!industry) {
+        throw new Error("Industry not found");
+      }
+      
+      // Generate profile using direct API call
+      const prompt = `Generate a comprehensive ESG (Environmental, Social, Governance) sector profile for the ${industry.label} industry. Include:
+      1. A brief description of the sector's ESG context (2-3 sentences)
+      2. 4-5 key ESG risks specific to this sector
+      3. 4-5 key ESG opportunities specific to this sector
+      4. 3 major procurement-chain impacts for this sector
+      Format the response as a JSON object with keys: description, key_risks (array), key_opportunities (array), and procurement_impacts (array).`;
+      
+      console.log("Sending AI regeneration request for sector:", industry.label);
+      
+      // Call AI analysis directly via the Supabase function
+      const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          type: 'esg-assistant',
+          content: prompt
+        })
+      });
+      
+      if (!result.ok) {
+        const errorText = await result.text();
+        console.error("AI regeneration failed:", errorText);
+        throw new Error(`AI regeneration failed: ${result.status} ${errorText}`);
+      }
+      
+      const data = await result.json();
+      console.log("AI regeneration response:", data);
+      
+      if (!data.result) {
+        throw new Error("Empty response from AI service");
+      }
+      
+      let profileData: any;
+      try {
+        profileData = JSON.parse(data.result);
+        console.log("Parsed profile data:", profileData);
+      } catch (e) {
+        console.error("Failed to parse AI response as JSON:", e, "Raw response:", data.result);
+        throw new Error("Failed to parse AI response");
+      }
+      
+      // Update form with AI generated content
+      form.reset({
+        description: profileData.description || "",
+        risks: profileData.key_risks?.length > 0 
+          ? [...profileData.key_risks, ...Array(4 - profileData.key_risks.length).fill("")] 
+          : ["", "", "", ""],
+        opportunities: profileData.key_opportunities?.length > 0
+          ? [...profileData.key_opportunities, ...Array(4 - profileData.key_opportunities.length).fill("")]
+          : ["", "", "", ""],
+        procurement: profileData.procurement_impacts?.length > 0
+          ? [...profileData.procurement_impacts, ...Array(3 - profileData.procurement_impacts.length).fill("")]
+          : ["", "", ""]
+      });
+      
+      toast.success("Profile regenerated with AI successfully");
+    } catch (error) {
+      console.error("Error regenerating profile with AI:", error);
+      toast.error("Failed to regenerate profile with AI: " + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setGeneratingWithAI(false);
     }
   };
 
@@ -388,33 +547,19 @@ export function SectorProfilesManager() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={async () => {
-                        if (!currentProfile) return;
-                        
-                        try {
-                          const newProfile = await esgLaunchpadService.generateSectorProfile(currentProfile.id);
-                          if (newProfile) {
-                            form.reset({
-                              description: newProfile.description,
-                              risks: newProfile.key_risks.length > 0 
-                                ? [...newProfile.key_risks, ...Array(4 - newProfile.key_risks.length).fill("")] 
-                                : ["", "", "", ""],
-                              opportunities: newProfile.key_opportunities.length > 0
-                                ? [...newProfile.key_opportunities, ...Array(4 - newProfile.key_opportunities.length).fill("")]
-                                : ["", "", "", ""],
-                              procurement: newProfile.procurement_impacts.length > 0
-                                ? [...newProfile.procurement_impacts, ...Array(3 - newProfile.procurement_impacts.length).fill("")]
-                                : ["", "", ""]
-                            });
-                            toast.success("Regenerated with AI successfully");
-                          }
-                        } catch (error) {
-                          console.error("Error regenerating profile:", error);
-                          toast.error("Failed to regenerate profile");
-                        }
-                      }}
+                      onClick={handleRegenerateWithAI}
+                      disabled={generatingWithAI}
                     >
-                      <PlusCircle className="h-4 w-4 mr-1" /> Regenerate with AI
+                      {generatingWithAI ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Regenerating...
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="h-4 w-4 mr-1" /> Regenerate with AI
+                        </>
+                      )}
                     </Button>
                     
                     <Button type="submit" disabled={saving}>
