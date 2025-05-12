@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { 
@@ -100,19 +99,23 @@ export function ESGLaunchpad() {
     setLoading(true);
     
     try {
+      console.log(`Fetching sector profile for industry: ${value}`);
       // Fetch sector profile
       const profile = await esgLaunchpadService.getSectorProfile(value);
+      console.log("Sector profile received:", profile);
       setSectorProfile(profile);
       
       // Fetch peer snapshots
+      console.log(`Fetching peer snapshots for industry: ${value}`);
       const snapshots = await esgLaunchpadService.getPeerSnapshots(value);
+      console.log(`Received ${snapshots.length} peer snapshots`);
       setPeerSnapshots(snapshots);
       
       // Move to the next step
       setStep(2);
     } catch (error) {
       console.error("Error fetching sector data:", error);
-      toast.error("Failed to load industry data");
+      toast.error("Failed to load industry data. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -131,6 +134,16 @@ export function ESGLaunchpad() {
       
       // Get user email from auth context
       const userEmail = user?.email;
+      if (!userEmail) {
+        console.log("No user email found in auth context");
+      }
+      
+      console.log("Generating report with data:", {
+        industry: data.industry,
+        followsStandards: data.followsStandards,
+        selectedStandards: data.selectedStandards || [],
+        email: userEmail
+      });
       
       // Generate the report
       const reportResult = await esgLaunchpadService.generateQuickStartReport({
@@ -141,9 +154,16 @@ export function ESGLaunchpad() {
       });
       
       if (!reportResult) {
-        toast.error("Failed to generate report");
+        console.error("Report generation returned null or undefined");
+        toast.error("Failed to generate report. Please try again later.");
         return;
       }
+      
+      console.log("Report generated successfully:", {
+        contentLength: reportResult.reportContent?.length || 0,
+        htmlContentAvailable: !!reportResult.htmlContent,
+        emailSent: reportResult.emailSent
+      });
       
       setReportContent(reportResult.reportContent);
       setHtmlReport(reportResult.htmlContent || "");
@@ -152,11 +172,13 @@ export function ESGLaunchpad() {
       // Report is automatically sent to user's email
       if (userEmail && reportResult.emailSent) {
         toast.success(`Report sent to your email: ${userEmail}`);
+      } else {
+        toast.success("Report generated successfully!");
       }
       
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error("Failed to generate report. Please try again later.");
+      toast.error(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
