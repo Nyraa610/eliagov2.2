@@ -1,13 +1,14 @@
+
 import React, { Suspense } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import "./App.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Navigation } from "./components/Navigation";
-import { LanguageProvider } from "./context/LanguageContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GlobalAIAssistant } from "./components/ai/GlobalAIAssistant";
-import { ClientContextProvider } from "./context/ClientContext";
+import { ClientContextProvider } from "@/contexts/ClientContext";
 import { Toaster } from "sonner";
 import { HotjarTracking } from "./components/analytics/HotjarTracking";
 
@@ -50,6 +51,7 @@ import Engagement from "./pages/Engagement";
 import MarkdownDocumentEditor from "./pages/assessment/MarkdownDocumentEditor";
 import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
+import ESGLaunchpadPage from "./pages/ESGLaunchpad";
 
 // Admin pages
 import UserManagement from "./pages/admin/UserManagement";
@@ -116,6 +118,7 @@ function App() {
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/unauthorized" element={<Unauthorized />} />
                   <Route path="/subscription/success" element={<Success />} />
+                  <Route path="/esg-launchpad" element={<ESGLaunchpadPage />} />
 
                   {/* Protected routes - User */}
                   <Route path="/dashboard" element={<ProtectedRoute><UserLayout><Dashboard /></UserLayout></ProtectedRoute>} />
