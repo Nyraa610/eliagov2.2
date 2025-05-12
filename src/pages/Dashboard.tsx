@@ -11,6 +11,7 @@ import { useSelectedClient } from "@/hooks/useSelectedClient";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Building } from "lucide-react";
 import { useState, useEffect } from 'react';
+import { useRoleCheck } from "@/components/user/sidebar/hooks/useRoleCheck";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ const Dashboard = () => {
   
   const { clientId, clientName, isLoading: clientLoading } = useSelectedClient();
   const [showLaunchpad, setShowLaunchpad] = useState(false);
+  const { isConsultant } = useRoleCheck();
   
   // Check if the user has completed the launchpad
   // We'll show it if they're new or haven't completed it
@@ -42,7 +44,7 @@ const Dashboard = () => {
   
   return (
     <>
-      {clientId && (
+      {isConsultant && clientId && (
         <Alert className="mb-6 bg-muted/50">
           <Building className="h-4 w-4" />
           <AlertTitle>Consultant View</AlertTitle>
