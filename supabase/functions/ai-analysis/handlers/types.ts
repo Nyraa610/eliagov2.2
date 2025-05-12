@@ -1,9 +1,8 @@
 
-// Type definitions for our request
 export interface AIAnalysisRequest {
   type: 'course-summary' | 'esg-assessment' | 'esg-assistant';
   content: string;
-  context?: any[];
-  analysisType?: 'integrated';
+  context?: Array<{ role: 'user' | 'assistant', content: string }>;
   additionalParams?: Record<string, any>;
+  analysisType?: string;
 }

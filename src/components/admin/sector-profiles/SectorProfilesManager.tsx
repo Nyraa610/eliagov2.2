@@ -116,7 +116,7 @@ export function SectorProfilesManager() {
         throw new Error("Industry not found");
       }
       
-      // Generate profile using direct API call
+      // Generate profile using AI analysis
       const prompt = `Generate a comprehensive ESG (Environmental, Social, Governance) sector profile for the ${industry.label} industry. Include:
       1. A brief description of the sector's ESG context (2-3 sentences)
       2. 4-5 key ESG risks specific to this sector
@@ -127,37 +127,30 @@ export function SectorProfilesManager() {
       console.log("Sending AI generation request for sector:", industry.label);
       
       // Call AI analysis directly via the Supabase function
-      const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-analysis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
+      const result = await supabase.functions.invoke('ai-analysis', {
+        body: {
           type: 'esg-assistant',
           content: prompt
-        })
+        }
       });
       
-      if (!result.ok) {
-        const errorText = await result.text();
-        console.error("AI generation failed:", errorText);
-        throw new Error(`AI generation failed: ${result.status} ${errorText}`);
+      if (result.error) {
+        console.error("Edge function error:", result.error);
+        throw new Error("Failed to generate profile: " + result.error.message);
       }
       
-      const data = await result.json();
-      console.log("AI generation response:", data);
+      console.log("AI generation response:", result.data);
       
-      if (!data.result) {
+      if (!result.data || !result.data.result) {
         throw new Error("Empty response from AI service");
       }
       
       let profileData: any;
       try {
-        profileData = JSON.parse(data.result);
+        profileData = JSON.parse(result.data.result);
         console.log("Parsed profile data:", profileData);
       } catch (e) {
-        console.error("Failed to parse AI response as JSON:", e, "Raw response:", data.result);
+        console.error("Failed to parse AI response as JSON:", e, "Raw response:", result.data.result);
         throw new Error("Failed to parse AI response");
       }
       
@@ -286,7 +279,7 @@ export function SectorProfilesManager() {
         throw new Error("Industry not found");
       }
       
-      // Generate profile using direct API call
+      // Generate profile using AI analysis
       const prompt = `Generate a comprehensive ESG (Environmental, Social, Governance) sector profile for the ${industry.label} industry. Include:
       1. A brief description of the sector's ESG context (2-3 sentences)
       2. 4-5 key ESG risks specific to this sector
@@ -296,38 +289,31 @@ export function SectorProfilesManager() {
       
       console.log("Sending AI regeneration request for sector:", industry.label);
       
-      // Call AI analysis directly via the Supabase function
-      const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-analysis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
+      // Call AI analysis via the Supabase function
+      const result = await supabase.functions.invoke('ai-analysis', {
+        body: {
           type: 'esg-assistant',
           content: prompt
-        })
+        }
       });
       
-      if (!result.ok) {
-        const errorText = await result.text();
-        console.error("AI regeneration failed:", errorText);
-        throw new Error(`AI regeneration failed: ${result.status} ${errorText}`);
+      if (result.error) {
+        console.error("Edge function error:", result.error);
+        throw new Error("Failed to regenerate profile: " + result.error.message);
       }
       
-      const data = await result.json();
-      console.log("AI regeneration response:", data);
+      console.log("AI regeneration response:", result.data);
       
-      if (!data.result) {
+      if (!result.data || !result.data.result) {
         throw new Error("Empty response from AI service");
       }
       
       let profileData: any;
       try {
-        profileData = JSON.parse(data.result);
+        profileData = JSON.parse(result.data.result);
         console.log("Parsed profile data:", profileData);
       } catch (e) {
-        console.error("Failed to parse AI response as JSON:", e, "Raw response:", data.result);
+        console.error("Failed to parse AI response as JSON:", e, "Raw response:", result.data.result);
         throw new Error("Failed to parse AI response");
       }
       
