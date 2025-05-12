@@ -20,7 +20,6 @@ export function useAnalysisProgress(
       interval = window.setInterval(() => {
         setAnalyzingProgress(prev => {
           if (prev >= 90) {
-            if (interval) clearInterval(interval);
             return 90;
           }
           return prev + Math.floor(Math.random() * 5 + 1); // More consistent progress
@@ -29,7 +28,6 @@ export function useAnalysisProgress(
     } else if (companyInfo) {
       // Set to 100% when data is loaded
       setAnalyzingProgress(100);
-      if (interval) clearInterval(interval);
     }
     
     return () => {

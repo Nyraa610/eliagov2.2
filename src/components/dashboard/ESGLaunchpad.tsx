@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { 
   Card, 
@@ -94,8 +94,8 @@ export function ESGLaunchpad() {
   const followsStandards = form.watch("followsStandards");
   const selectedStandards = form.watch("selectedStandards");
 
-  // Fetch sector profile and peer snapshots when industry is selected
-  const handleIndustryChange = async (value: string) => {
+  // Use useCallback to prevent the function from being recreated on every render
+  const handleIndustryChange = useCallback(async (value: string) => {
     form.setValue("industry", value);
     if (!value) return;
     
@@ -156,7 +156,7 @@ export function ESGLaunchpad() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
   // Handle generate report button click
   const onSubmit = async (data: FormData) => {
@@ -227,7 +227,8 @@ export function ESGLaunchpad() {
     }
   };
 
-  const renderStandardLogo = (standardId: string) => {
+  // Use memoized function to avoid infinite re-renders
+  const renderStandardLogo = useCallback((standardId: string) => {
     const found = recommendedStandards.find(std => std.id === standardId);
     if (found && found.logo) {
       return (
@@ -245,7 +246,68 @@ export function ESGLaunchpad() {
     }
     
     return null;
-  };
+  }, [recommendedStandards]);
+
+  // Use a variable for the JSX instead of directly rendering in the render method
+  const standardsSelection = (
+    <FormField
+      control={form.control}
+      name="selectedStandards"
+      render={() => (
+        <FormItem>
+          <div className="mb-3 text-sm font-medium">Select the standards you follow:</div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {esgStandards.map((standard) => (
+              <TooltipProvider key={standard.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <FormItem
+                      key={standard.id}
+                      className="flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer"
+                      onClick={() => {
+                        const currentSelected = selectedStandards || [];
+                        const isSelected = currentSelected.includes(standard.id);
+                        
+                        form.setValue("selectedStandards", isSelected 
+                          ? currentSelected.filter(id => id !== standard.id)
+                          : [...currentSelected, standard.id]
+                        );
+                      }}
+                    >
+                      <FormControl>
+                        <Checkbox
+                          checked={selectedStandards?.includes(standard.id) || false}
+                          className="hidden"
+                        />
+                      </FormControl>
+                      
+                      {renderStandardLogo(standard.id) || (
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-xs">{standard.label.substring(0, 2)}</span>
+                        </div>
+                      )}
+                      
+                      <FormLabel className="text-sm font-normal text-center cursor-pointer">
+                        {standard.label}
+                      </FormLabel>
+                      
+                      {selectedStandards?.includes(standard.id) && (
+                        <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
+                      )}
+                    </FormItem>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>{standard.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+        </FormItem>
+      )}
+    />
+  );
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -478,66 +540,7 @@ export function ESGLaunchpad() {
                           )}
                         />
                         
-                        {followsStandards && (
-                          <FormField
-                            control={form.control}
-                            name="selectedStandards"
-                            render={() => (
-                              <FormItem>
-                                <div className="mb-3 text-sm font-medium">Select the standards you follow:</div>
-                                
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                  {esgStandards.map((standard) => (
-                                    <TooltipProvider key={standard.id}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <FormItem
-                                            key={standard.id}
-                                            className="flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer"
-                                            onClick={() => {
-                                              const currentSelected = selectedStandards || [];
-                                              const isSelected = currentSelected.includes(standard.id);
-                                              
-                                              form.setValue("selectedStandards", isSelected 
-                                                ? currentSelected.filter(id => id !== standard.id)
-                                                : [...currentSelected, standard.id]
-                                              );
-                                            }}
-                                          >
-                                            <FormControl>
-                                              <Checkbox
-                                                checked={selectedStandards?.includes(standard.id) || false}
-                                                className="hidden"
-                                              />
-                                            </FormControl>
-                                            
-                                            {/* Logo or icon */}
-                                            {renderStandardLogo(standard.id) || (
-                                              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                                                <span className="text-xs">{standard.label.substring(0, 2)}</span>
-                                              </div>
-                                            )}
-                                            
-                                            <FormLabel className="text-sm font-normal text-center cursor-pointer">
-                                              {standard.label}
-                                            </FormLabel>
-                                            
-                                            {selectedStandards?.includes(standard.id) && (
-                                              <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
-                                            )}
-                                          </FormItem>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-xs">
-                                          <p>{standard.description}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ))}
-                                </div>
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                        {followsStandards && standardsSelection}
                       </div>
                     </>
                   )}
