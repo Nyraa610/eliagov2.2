@@ -22,7 +22,7 @@ export function useAnalysisProgress(
       setAnalyzingProgress(5);
       
       // Simulate progress to 90% (reserve the last 10% for actual data loading)
-      intervalRef.current = window.setInterval(() => {
+      const id = window.setInterval(() => {
         setAnalyzingProgress(prev => {
           if (prev >= 90) {
             return 90;
@@ -30,6 +30,8 @@ export function useAnalysisProgress(
           return prev + Math.floor(Math.random() * 5 + 1); // More consistent progress
         });
       }, 800);
+      
+      intervalRef.current = id;
     } else if (companyInfo) {
       // Set to 100% when data is loaded
       setAnalyzingProgress(100);

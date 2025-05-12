@@ -76,9 +76,9 @@ export function ESGLaunchpad() {
   const selectedStandards = form.watch("selectedStandards");
 
   // Handle generate report button click
-  const onSubmit = async (data: any) => {
+  const onSubmit = useCallback(async (data: any) => {
     await generateReport(data, user?.email);
-  };
+  }, [generateReport, user?.email]);
 
   // Use memoized function to avoid infinite re-renders
   const renderStandardLogo = useCallback((standardId: string) => {
