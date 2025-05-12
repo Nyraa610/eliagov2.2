@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { 
   Card, 
@@ -72,7 +71,6 @@ export function ESGLaunchpad() {
 
   // Watch for changes in the selected industry and standards
   const selectedIndustry = form.watch("industry");
-  const followsStandards = form.watch("followsStandards");
   const selectedStandards = form.watch("selectedStandards");
 
   // Handle generate report button click
@@ -113,14 +111,14 @@ export function ESGLaunchpad() {
     form.setValue("selectedStandards", newSelectedStandards);
   }, [form]);
 
-  // Use a variable for the JSX instead of directly rendering in the render method
+  // Standards selection component
   const standardsSelection = (
     <FormField
       control={form.control}
       name="selectedStandards"
       render={() => (
         <FormItem>
-          <div className="mb-3 text-sm font-medium">Select the standards you follow:</div>
+          <div className="mb-3 text-sm font-medium">Select the standards you follow (or select none):</div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {esgStandards.map((standard) => (
@@ -133,10 +131,11 @@ export function ESGLaunchpad() {
                       onClick={() => handleStandardSelection(standard.id)}
                     >
                       <FormControl>
-                        <Checkbox
+                        <input
+                          type="checkbox"
                           checked={selectedStandards?.includes(standard.id) || false}
                           className="hidden"
-                          onChange={() => {}} // Empty onChange to avoid React warning about controlled components
+                          onChange={() => {}} // Empty onChange to avoid React warning
                         />
                       </FormControl>
                       
@@ -405,11 +404,27 @@ export function ESGLaunchpad() {
                 </div>
               )}
               
-              {/* Step 3: Generate Report - Removed email field, showing text instead */}
-              {(step >= 2 && !loading && !reportGenerated) && (
+              {/* Step 3: ESG Standards Selection */}
+              {step >= 2 && !loading && !reportGenerated && (
                 <div className="border-t pt-4">
                   <h3 className="font-medium text-lg mb-4 flex items-center">
                     <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">3</span>
+                    Tell us about your ESG standards
+                  </h3>
+                  
+                  <p className="text-sm mb-4">
+                    Do you currently follow any ESG standards or labels? Select all that apply, or continue without selecting any if you don't follow standards yet.
+                  </p>
+                  
+                  {standardsSelection}
+                </div>
+              )}
+              
+              {/* Step 4: Generate Report */}
+              {step >= 2 && !loading && !reportGenerated && (
+                <div className="border-t pt-4">
+                  <h3 className="font-medium text-lg mb-4 flex items-center">
+                    <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">4</span>
                     Generate your free QuickStart report
                   </h3>
                   

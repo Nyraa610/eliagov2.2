@@ -9,7 +9,6 @@ import { esgLaunchpadService, SectorProfile, PeerSnapshot } from "@/services/esg
 // Form schema for validation
 const formSchema = z.object({
   industry: z.string().min(1, "Please select your industry"),
-  followsStandards: z.boolean().default(false),
   selectedStandards: z.array(z.string()).optional(),
 });
 
@@ -30,7 +29,6 @@ export function useESGLaunchpadForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       industry: "",
-      followsStandards: false,
       selectedStandards: [],
     }
   });
@@ -109,7 +107,6 @@ export function useESGLaunchpadForm() {
     try {
       console.log("Generating report with data:", {
         industry: data.industry,
-        followsStandards: data.followsStandards,
         selectedStandards: data.selectedStandards || [],
         email: userEmail
       });
@@ -121,7 +118,7 @@ export function useESGLaunchpadForm() {
       // Generate the report
       const reportResult = await esgLaunchpadService.generateQuickStartReport({
         industry: data.industry,
-        followsStandards: data.followsStandards,
+        followsStandards: data.selectedStandards?.length ? true : false,
         selectedStandards: data.selectedStandards || [],
         email: userEmail,
         requestId: requestId
