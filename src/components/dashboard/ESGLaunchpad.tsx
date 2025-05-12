@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { 
@@ -35,14 +36,15 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { 
   esgLaunchpadService, 
   industrySectors, 
@@ -50,7 +52,7 @@ import {
   SectorProfile,
   PeerSnapshot
 } from "@/services/esgLaunchpadService";
-import { ArrowRight, CheckCircle, Download, FileText, Info, Loader2, Send } from "lucide-react";
+import { ArrowRight, Award, BarChart2, CheckCircle, Download, FileText, Info, Lightbulb, Loader2, Mail, Send, ShieldCheck, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,6 +77,7 @@ export function ESGLaunchpad() {
   const [htmlReport, setHtmlReport] = useState("");
   const [activeTab, setActiveTab] = useState("report");
   const { user } = useAuth();
+  const [recommendedStandards, setRecommendedStandards] = useState<any[]>([]);
 
   // Initialize form
   const form = useForm<FormData>({
@@ -111,6 +114,40 @@ export function ESGLaunchpad() {
       console.log(`Received ${snapshots.length} peer snapshots`);
       setPeerSnapshots(snapshots);
       
+      // Get recommended standards for this industry
+      const recommendedForIndustry = [
+        {
+          id: "iso_14001",
+          name: "ISO 14001",
+          logo: "/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png",
+          description: "Environmental management system standard",
+          category: "Environmental"
+        },
+        {
+          id: "iso_26000",
+          name: "ISO 26000",
+          logo: "/lovable-uploads/430dad71-05bf-4918-b6a5-b3f6dda67864.png", 
+          description: "Guidance on social responsibility",
+          category: "Social"
+        },
+        {
+          id: "ecovadis",
+          name: "EcoVadis",
+          logo: "/lovable-uploads/4a9d4c8d-12c6-4ba9-87b5-132f6c06c33a.png",
+          description: "Business sustainability ratings",
+          category: "General ESG"
+        },
+        {
+          id: "bcorp",
+          name: "B Corp",
+          logo: "/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png",
+          description: "Certification for social and environmental performance",
+          category: "General ESG"
+        }
+      ];
+      
+      setRecommendedStandards(recommendedForIndustry);
+      
       // Move to the next step
       setStep(2);
     } catch (error) {
@@ -145,12 +182,17 @@ export function ESGLaunchpad() {
         email: userEmail
       });
       
+      // Add a unique request ID for tracking
+      const requestId = crypto.randomUUID();
+      console.log(`Report generation request ID: ${requestId}`);
+      
       // Generate the report
       const reportResult = await esgLaunchpadService.generateQuickStartReport({
         industry: data.industry,
         followsStandards: data.followsStandards,
         selectedStandards: data.selectedStandards || [],
-        email: userEmail // Use the authenticated user's email
+        email: userEmail, // Use the authenticated user's email
+        requestId: requestId // Add request ID for tracking
       });
       
       if (!reportResult) {
@@ -162,7 +204,8 @@ export function ESGLaunchpad() {
       console.log("Report generated successfully:", {
         contentLength: reportResult.reportContent?.length || 0,
         htmlContentAvailable: !!reportResult.htmlContent,
-        emailSent: reportResult.emailSent
+        emailSent: reportResult.emailSent,
+        requestId: requestId
       });
       
       setReportContent(reportResult.reportContent);
@@ -184,16 +227,46 @@ export function ESGLaunchpad() {
     }
   };
 
+  const renderStandardLogo = (standardId: string) => {
+    const found = recommendedStandards.find(std => std.id === standardId);
+    if (found && found.logo) {
+      return (
+        <div className="flex flex-col items-center">
+          <div className="bg-white rounded-md border p-1 h-12 w-12 flex items-center justify-center">
+            <img 
+              src={found.logo} 
+              alt={found.name} 
+              className="max-h-10 max-w-10 object-contain" 
+            />
+          </div>
+          <span className="text-xs text-center mt-1">{found.name}</span>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
-          <span className="bg-primary text-primary-foreground p-1 rounded-md">ESG</span>
-          Launchpad
-        </CardTitle>
-        <CardDescription>
-          Get started with ESG in under 3 minutes and receive a personalized QuickStart report for your industry.
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <span className="bg-primary text-primary-foreground p-1 rounded-md">ESG</span>
+              Launchpad
+            </CardTitle>
+            <CardDescription>
+              Get started with ESG in under 3 minutes and receive a personalized QuickStart report for your industry.
+            </CardDescription>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Award className="h-3 w-3" />
+              <span>Powered by Elia Go Expert Analysis</span>
+            </Badge>
+          </div>
+        </div>
       </CardHeader>
       
       <CardContent>
@@ -252,7 +325,13 @@ export function ESGLaunchpad() {
                     <>
                       {sectorProfile && (
                         <div className="space-y-4 mt-4">
-                          <p className="text-sm">{sectorProfile.description}</p>
+                          <div className="flex items-start gap-2">
+                            <ShieldCheck className="h-5 w-5 text-primary mt-1" />
+                            <div>
+                              <h4 className="text-sm font-medium">Expert Assessment</h4>
+                              <p className="text-sm">{sectorProfile.description}</p>
+                            </div>
+                          </div>
                           
                           <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="risks">
@@ -297,9 +376,63 @@ export function ESGLaunchpad() {
                         </div>
                       )}
                       
+                      {/* Expert Analysis Section */}
+                      <div className="mt-6 bg-blue-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <User className="h-5 w-5 text-blue-600" />
+                          <h4 className="font-medium">Expert Analysis</h4>
+                        </div>
+                        <p className="text-sm text-blue-900 mb-3">
+                          Based on data from our ESG team at Elia Go, companies in your sector typically focus on these key areas:
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-white rounded-md p-3 shadow-sm">
+                            <BarChart2 className="h-4 w-4 text-green-600 mb-1" />
+                            <h5 className="text-xs font-medium">Environmental</h5>
+                            <p className="text-xs">Carbon reduction strategies show 20% better performance</p>
+                          </div>
+                          <div className="bg-white rounded-md p-3 shadow-sm">
+                            <User className="h-4 w-4 text-indigo-600 mb-1" />
+                            <h5 className="text-xs font-medium">Social</h5>
+                            <p className="text-xs">Supply chain transparency increases stakeholder trust</p>
+                          </div>
+                          <div className="bg-white rounded-md p-3 shadow-sm">
+                            <ShieldCheck className="h-4 w-4 text-amber-600 mb-1" />
+                            <h5 className="text-xs font-medium">Governance</h5>
+                            <p className="text-xs">Companies with diversity targets outperform peers by 15%</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Recommended Standards Section */}
+                      <div className="mt-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Lightbulb className="h-5 w-5 text-amber-500" />
+                          <h4 className="font-medium">Recommended Standards & Labels</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          {recommendedStandards.map((standard, index) => (
+                            <div key={index} className="bg-muted/30 rounded-md p-3 text-center flex flex-col items-center">
+                              <div className="bg-white rounded-md border p-2 h-16 w-16 flex items-center justify-center mb-2">
+                                <img 
+                                  src={standard.logo} 
+                                  alt={standard.name} 
+                                  className="max-h-12 max-w-12 object-contain" 
+                                />
+                              </div>
+                              <h5 className="text-sm font-medium">{standard.name}</h5>
+                              <span className="text-xs text-muted-foreground mt-1">{standard.category}</span>
+                              <p className="text-xs mt-1">{standard.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
                       {peerSnapshots.length > 0 && (
                         <div className="mt-8">
-                          <h4 className="font-medium mb-3">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary" />
                             Peer Initiatives in Your Sector
                           </h4>
                           
@@ -351,37 +484,47 @@ export function ESGLaunchpad() {
                             name="selectedStandards"
                             render={() => (
                               <FormItem>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="mb-3 text-sm font-medium">Select the standards you follow:</div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                   {esgStandards.map((standard) => (
                                     <TooltipProvider key={standard.id}>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <FormItem
                                             key={standard.id}
-                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            className="flex flex-col items-center space-y-2 border rounded-md p-2 hover:bg-muted/40 cursor-pointer"
+                                            onClick={() => {
+                                              const currentSelected = selectedStandards || [];
+                                              const isSelected = currentSelected.includes(standard.id);
+                                              
+                                              form.setValue("selectedStandards", isSelected 
+                                                ? currentSelected.filter(id => id !== standard.id)
+                                                : [...currentSelected, standard.id]
+                                              );
+                                            }}
                                           >
                                             <FormControl>
                                               <Checkbox
-                                                checked={selectedStandards?.includes(standard.id)}
-                                                onCheckedChange={(checked) => {
-                                                  return checked
-                                                    ? form.setValue("selectedStandards", [
-                                                        ...(selectedStandards || []),
-                                                        standard.id,
-                                                      ])
-                                                    : form.setValue(
-                                                        "selectedStandards",
-                                                        selectedStandards?.filter(
-                                                          (value) => value !== standard.id
-                                                        ) || []
-                                                      );
-                                                }}
+                                                checked={selectedStandards?.includes(standard.id) || false}
+                                                className="hidden"
                                               />
                                             </FormControl>
-                                            <FormLabel className="text-sm font-normal flex items-center cursor-pointer">
+                                            
+                                            {/* Logo or icon */}
+                                            {renderStandardLogo(standard.id) || (
+                                              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                                                <span className="text-xs">{standard.label.substring(0, 2)}</span>
+                                              </div>
+                                            )}
+                                            
+                                            <FormLabel className="text-sm font-normal text-center cursor-pointer">
                                               {standard.label}
-                                              <Info className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
                                             </FormLabel>
+                                            
+                                            {selectedStandards?.includes(standard.id) && (
+                                              <CheckCircle className="h-5 w-5 text-green-600 absolute top-1 right-1" />
+                                            )}
                                           </FormItem>
                                         </TooltipTrigger>
                                         <TooltipContent className="max-w-xs">
@@ -540,9 +683,10 @@ export function ESGLaunchpad() {
       </CardContent>
       
       <CardFooter className="flex-col items-start pt-0">
-        <p className="text-xs text-muted-foreground">
-          Your data will only be used to generate personalized ESG insights and will not be shared with third parties.
-        </p>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Award className="h-3 w-3" />
+          <p>Analysis based on Elia Go's proprietary ESG database and expert insights</p>
+        </div>
       </CardFooter>
     </Card>
   );

@@ -5,4 +5,5 @@ export interface AIAnalysisRequest {
   context?: Array<{ role: 'user' | 'assistant', content: string }>;
   additionalParams?: Record<string, any>;
   analysisType?: string;
+  requestId?: string;
 }

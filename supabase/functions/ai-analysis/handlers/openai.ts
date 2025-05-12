@@ -83,9 +83,10 @@ export function getSystemPrompt(type: string, analysisType?: string): string {
 export async function createChatCompletion(
   openai: OpenAI, 
   messages: Array<{ role: string; content: string }>,
-  type: string
+  type: string,
+  requestId?: string
 ): Promise<OpenAIResponse> {
-  console.log(`Creating chat completion with ${messages.length} messages`);
+  console.log(`Creating chat completion with ${messages.length} messages${requestId ? `. Request ID: ${requestId}` : ''}`);
   
   try {
     const model = type === 'esg-assistant' ? 'gpt-4o-mini' : 'gpt-4o-mini';
@@ -110,7 +111,7 @@ export async function createChatCompletion(
       }
     };
   } catch (error) {
-    console.error('Error calling OpenAI:', error);
+    console.error(`Error calling OpenAI${requestId ? ` (Request ID: ${requestId})` : ''}:`, error);
     throw new Error(`Failed to connect to OpenAI: ${error.message}`);
   }
 }

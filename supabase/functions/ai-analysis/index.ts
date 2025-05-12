@@ -1,164 +1,125 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { AIAnalysisRequest } from "./handlers/types.ts";
 import { verifyAuth, corsHeaders } from "./handlers/auth.ts";
 import { initializeOpenAI, getSystemPrompt, createChatCompletion } from "./handlers/openai.ts";
-import { saveESGAssessment, saveChatHistory } from "./handlers/database.ts";
-import { AIAnalysisRequest } from "./handlers/types.ts";
+import { saveChatHistory, saveESGAssessment } from "./handlers/database.ts";
 
 serve(async (req) => {
-  const executionId = crypto.randomUUID();
-  console.log(`[${executionId}] Starting AI Analysis request`);
+  // Generate a request ID for tracking this request
+  const requestId = crypto.randomUUID();
+  console.log(`Starting AI Analysis request. Request ID: ${requestId}`);
   
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log(`Handling CORS preflight request. Request ID: ${requestId}`);
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
-    // Handle CORS for preflight requests
-    if (req.method === "OPTIONS") {
-      console.log(`[${executionId}] Handling CORS preflight request`);
-      return new Response(null, {
-        headers: corsHeaders,
-      });
-    }
+    // Verify authentication
+    console.log(`Verifying authentication. Request ID: ${requestId}`);
+    const authHeader = req.headers.get('Authorization');
     
-    // Verify JWT token - wrap in try/catch to allow anonymous access for certain types
-    let user = null;
     try {
-      console.log(`[${executionId}] Verifying authentication`);
-      user = await verifyAuth(req.headers.get('Authorization'));
-      console.log(`[${executionId}] Authentication successful for user: ${user.id.substring(0, 8)}...`);
+      const user = await verifyAuth(authHeader);
+      console.log(`Authentication successful for user: ${user.id.substring(0, 8)}... Request ID: ${requestId}`);
     } catch (authError) {
-      console.log(`[${executionId}] Auth verification failed, continuing as anonymous: ${authError.message}`);
-      // We'll continue as anonymous for certain request types
-    }
-    
-    // Parse request body
-    console.log(`[${executionId}] Parsing request body`);
-    const requestData: AIAnalysisRequest = await req.json();
-    const { type, content, context, analysisType } = requestData;
-    
-    console.log(`[${executionId}] Processing AI Analysis request:`, { 
-      type, 
-      analysisType, 
-      contentLength: content?.length,
-      contextLength: context?.length || 0
-    });
-    
-    if (!type || !content) {
-      console.error(`[${executionId}] Missing required fields: type or content`);
-      return new Response(JSON.stringify({ error: "Missing required fields: type or content" }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error(`Authentication error. Request ID: ${requestId}`, authError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+
+    // Parse request body
+    console.log(`Parsing request body. Request ID: ${requestId}`);
+    const requestData: AIAnalysisRequest = await req.json();
     
-    // Initialize OpenAI
-    console.log(`[${executionId}] Initializing OpenAI client`);
+    // Add request ID to tracking
+    requestData.requestId = requestId;
+    
+    console.log(`Processing AI Analysis request: ${JSON.stringify({
+      type: requestData.type,
+      analysisType: requestData.analysisType,
+      contentLength: requestData.content?.length || 0,
+      contextLength: requestData.context?.length || 0,
+      requestId: requestId
+    })}`);
+    
+    // Initialize OpenAI client
+    console.log(`Initializing OpenAI client. Request ID: ${requestId}`);
     const openai = initializeOpenAI();
     
-    // Get system prompt based on analysis type
-    console.log(`[${executionId}] Getting system prompt for type: ${type}, analysisType: ${analysisType || 'none'}`);
-    const systemPrompt = getSystemPrompt(type, analysisType);
+    // Get system prompt based on type
+    console.log(`Getting system prompt for type: ${requestData.type}, analysisType: ${requestData.analysisType || 'none'}. Request ID: ${requestId}`);
+    const systemPrompt = getSystemPrompt(requestData.type, requestData.analysisType);
     
-    // Define messages for OpenAI chat completion
-    let messages = [
-      { role: "system", content: systemPrompt }
+    // Prepare messages for OpenAI
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: requestData.content }
     ];
     
-    // For chat assistant, include context from previous messages if available
-    if (type === 'esg-assistant' && context && Array.isArray(context)) {
-      console.log(`[${executionId}] Including ${context.length} context messages for chat assistant`);
-      for (const msg of context) {
-        if (msg.role === 'user' || msg.role === 'assistant') {
-          messages.push({ 
-            role: msg.role, 
-            content: msg.content 
-          });
-        }
+    // Add conversation context if provided
+    if (requestData.context && requestData.context.length > 0) {
+      console.log(`Adding ${requestData.context.length} context messages. Request ID: ${requestId}`);
+      messages.push(...requestData.context);
+    }
+    
+    // Call OpenAI
+    console.log(`Calling OpenAI with ${messages.length} messages. Request ID: ${requestId}`);
+    const response = await createChatCompletion(openai, messages, requestData.type, requestId);
+    
+    console.log(`OpenAI response received: ${response && response.data ? 'object has data' : 'no data'}. Request ID: ${requestId}`);
+    
+    // Extract result
+    const responseContent = response.data.choices[0].message.content;
+    console.log(`Response content type: ${typeof responseContent}. Request ID: ${requestId}`);
+    
+    const result = responseContent;
+    console.log(`Extracted result: ${result.substring(0, 100)}... Request ID: ${requestId}`);
+    
+    // Save chat history if it's a conversation
+    if (requestData.type === 'esg-assistant') {
+      console.log(`Saving chat history. Request ID: ${requestId}`);
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const user = await verifyAuth(authHeader);
+        const savedSuccessfully = await saveChatHistory(user.id, requestData.content, result);
+        console.log(`Chat history saved successfully: ${savedSuccessfully}. Request ID: ${requestId}`);
       }
     }
     
-    // Add the current user message
-    messages.push({ role: "user", content: content });
-    
-    console.log(`[${executionId}] Calling OpenAI with ${messages.length} messages`);
-    
-    // Call OpenAI API
-    const completion = await createChatCompletion(openai, messages, type);
-    
-    console.log(`[${executionId}] OpenAI response received:`, typeof completion, completion ? "has data" : "no data");
-    
-    // Extract the result properly, handling potential undefined values
-    let result = "No result generated";
-    
-    try {
-      if (completion && completion.data && completion.data.choices && 
-          completion.data.choices.length > 0 && completion.data.choices[0].message) {
-        result = completion.data.choices[0].message.content || "No result generated";
-        console.log(`[${executionId}] Response content type: ${typeof result}`);
-        console.log(`[${executionId}] Extracted result: ${result.substring(0, 100)}...`);
-      } else {
-        console.error(`[${executionId}] Invalid completion structure:`, JSON.stringify(completion, null, 2));
-        
-        // Attempt to recover from non-standard response formats
-        if (completion && typeof completion === 'object') {
-          // Try various paths to find the content
-          if (completion.choices && completion.choices[0] && completion.choices[0].message) {
-            result = completion.choices[0].message.content || "No result generated";
-            console.log(`[${executionId}] Recovered result from direct completion object`);
-          } else if (completion.message && typeof completion.message.content === 'string') {
-            result = completion.message.content;
-            console.log(`[${executionId}] Recovered result from message.content`);
-          } else if (typeof completion.content === 'string') {
-            result = completion.content;
-            console.log(`[${executionId}] Recovered result from direct content property`);
-          } else {
-            console.error(`[${executionId}] Could not parse completion structure:`, JSON.stringify(completion, null, 2));
-          }
-        }
+    // Save ESG assessment if it's an assessment
+    if (requestData.type === 'esg-assessment') {
+      console.log(`Saving ESG assessment. Request ID: ${requestId}`);
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const user = await verifyAuth(authHeader);
+        const savedSuccessfully = await saveESGAssessment(user.id, requestData.content, result);
+        console.log(`ESG assessment saved successfully: ${savedSuccessfully}. Request ID: ${requestId}`);
       }
-    } catch (parseError) {
-      console.error(`[${executionId}] Error parsing completion:`, parseError);
-      console.error(`[${executionId}] Completion object:`, JSON.stringify(completion, null, 2));
     }
     
-    // Save ESG assessment data if it's an ESG assessment and we have a user
-    if (type === 'esg-assessment' && user) {
-      console.log(`[${executionId}] Saving ESG assessment data`);
-      await saveESGAssessment(user.id, content, result);
-    }
+    console.log(`Sending response: ${JSON.stringify({ result: result.substring(0, 100) + '...' })}. Request ID: ${requestId}`);
     
-    // Save chat history if it's the ESG assistant and we have a user
-    if (type === 'esg-assistant' && user && result !== "No result generated") {
-      console.log(`[${executionId}] Saving chat history`);
-      const saved = await saveChatHistory(user.id, content, result);
-      console.log(`[${executionId}] Chat history saved successfully: ${saved}`);
-    }
-    
-    // Return the analysis result
-    const response = { result, requestId: executionId };
-    console.log(`[${executionId}] Sending response: ${JSON.stringify(response).substring(0, 100)}...`);
-    
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
+    return new Response(
+      JSON.stringify({ result }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
     
   } catch (error) {
-    console.error(`[${executionId}] Error processing request:`, error);
-    console.error(`[${executionId}] Error details:`, JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    console.error(`Error in AI analysis (Request ID: ${requestId}):`, error);
     
-    return new Response(JSON.stringify({ 
-      error: error.message || "An unexpected error occurred", 
-      executionId,
-      stack: error.stack
-    }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
+    return new Response(
+      JSON.stringify({ error: `Analysis failed: ${error.message}`, requestId: requestId }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
   }
 });
