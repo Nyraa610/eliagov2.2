@@ -13,6 +13,7 @@ interface RequestData {
   followsStandards: boolean;
   selectedStandards: string[];
   reportContent: string;
+  email?: string;
 }
 
 serve(async (req) => {
@@ -48,10 +49,25 @@ serve(async (req) => {
       // For now, we'll just simulate a PDF by returning the content
       const reportText = requestData.reportContent;
       
+      // If email is provided, send the report by email
+      if (requestData.email) {
+        try {
+          // This would be implemented in a real application
+          // We'd connect to an email service like SendGrid or use SMTP
+          console.log(`Sending report to email: ${requestData.email}`);
+          
+          // In a real implementation, this would be a call to an email service
+          // For now, we'll simulate success
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          // Continue with returning the report even if email fails
+        }
+      }
+      
       // Encode the content as base64 (simulating a PDF)
       const encoder = new TextEncoder();
       const reportBytes = encoder.encode(reportText);
-      const reportBase64 = btoa(String.fromCharCode(...reportBytes));
+      const reportBase64 = btoa(String.fromCharCode(...new Uint8Array(reportBytes)));
       
       return new Response(
         JSON.stringify({

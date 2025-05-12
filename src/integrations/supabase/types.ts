@@ -724,6 +724,47 @@ export type Database = {
           },
         ]
       }
+      peer_snapshots: {
+        Row: {
+          company_size: string
+          created_at: string | null
+          id: string
+          impact_area: string
+          initiative_description: string
+          initiative_title: string
+          results: string
+          sector_id: string | null
+        }
+        Insert: {
+          company_size: string
+          created_at?: string | null
+          id?: string
+          impact_area: string
+          initiative_description: string
+          initiative_title: string
+          results: string
+          sector_id?: string | null
+        }
+        Update: {
+          company_size?: string
+          created_at?: string | null
+          id?: string
+          impact_area?: string
+          initiative_description?: string
+          initiative_title?: string
+          results?: string
+          sector_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peer_snapshots_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sector_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       point_transactions: {
         Row: {
           created_at: string
@@ -949,6 +990,42 @@ export type Database = {
           name?: string
           points_required?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sector_profiles: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          is_ai_generated: boolean | null
+          key_opportunities: string[]
+          key_risks: string[]
+          name: string
+          procurement_impacts: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id: string
+          is_ai_generated?: boolean | null
+          key_opportunities?: string[]
+          key_risks?: string[]
+          name: string
+          procurement_impacts?: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_ai_generated?: boolean | null
+          key_opportunities?: string[]
+          key_risks?: string[]
+          name?: string
+          procurement_impacts?: string[]
+          updated_at?: string | null
         }
         Relationships: []
       }
