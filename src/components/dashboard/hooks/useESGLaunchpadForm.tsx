@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { esgLaunchpadService, SectorProfile, PeerSnapshot } from "@/services/esgLaunchpadService";
+import { pdfReportService } from "@/services/reports/pdfReportService";
 
 // Form schema for validation
 const formSchema = z.object({
@@ -23,6 +24,7 @@ export function useESGLaunchpadForm() {
   const [reportContent, setReportContent] = useState("");
   const [htmlReport, setHtmlReport] = useState("");
   const [recommendedStandards, setRecommendedStandards] = useState<any[]>([]);
+  const [industryName, setIndustryName] = useState("");
 
   // Initialize form
   const form = useForm<ESGLaunchpadFormData>({
@@ -85,6 +87,10 @@ export function useESGLaunchpadForm() {
       ];
       
       setRecommendedStandards(recommendedForIndustry);
+      
+      // Store industry name for PDF report
+      const selectedIndustry = esgLaunchpadService.industrySectors.find(sector => sector.id === value);
+      setIndustryName(selectedIndustry?.label || value);
       
       // Move to the next step
       setStep(2);
@@ -158,6 +164,24 @@ export function useESGLaunchpadForm() {
     }
   }, []);
 
+  const downloadPDFReport = useCallback(async () => {
+    if (!sectorProfile || !form.getValues().industry) {
+      toast.error("Missing required data to generate PDF");
+      return false;
+    }
+
+    const data = {
+      industry: form.getValues().industry,
+      industryName: industryName,
+      sectorProfile: sectorProfile,
+      selectedStandards: form.getValues().selectedStandards || [],
+      standardsData: recommendedStandards,
+      reportContent: reportContent
+    };
+
+    return await pdfReportService.generateESGQuickStartReport(data);
+  }, [form, industryName, recommendedStandards, reportContent, sectorProfile]);
+
   return {
     form,
     step,
@@ -171,6 +195,7 @@ export function useESGLaunchpadForm() {
     htmlReport,
     recommendedStandards,
     handleIndustryChange,
-    generateReport
+    generateReport,
+    downloadPDFReport
   };
 }

@@ -48,13 +48,14 @@ import {
   industrySectors, 
   esgStandards
 } from "@/services/esgLaunchpadService";
-import { ArrowRight, Award, BarChart2, CheckCircle, Download, FileText, Info, Lightbulb, Loader2, Mail, Send, ShieldCheck, Sparkles, User } from "lucide-react";
+import { ArrowRight, Award, BarChart2, CheckCircle, Download, FileDown, FileText, Info, Lightbulb, Loader2, Mail, Send, ShieldCheck, Sparkles, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useESGLaunchpadForm } from "./hooks/useESGLaunchpadForm";
 
 export function ESGLaunchpad() {
   const [activeTab, setActiveTab] = useState("report");
   const { user } = useAuth();
+  const [exportingPDF, setExportingPDF] = useState(false);
   
   const { 
     form, 
@@ -67,7 +68,8 @@ export function ESGLaunchpad() {
     htmlReport, 
     recommendedStandards,
     handleIndustryChange,
-    generateReport
+    generateReport,
+    downloadPDFReport
   } = useESGLaunchpadForm();
 
   // Watch for changes in the selected industry and standards
@@ -78,6 +80,16 @@ export function ESGLaunchpad() {
   const onSubmit = useCallback(async (data: any) => {
     await generateReport(data, user?.email);
   }, [generateReport, user?.email]);
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    setExportingPDF(true);
+    try {
+      await downloadPDFReport();
+    } finally {
+      setExportingPDF(false);
+    }
+  };
 
   // Use memoized function to avoid infinite re-renders
   const renderStandardLogo = useCallback((standardId: string) => {
@@ -494,6 +506,21 @@ export function ESGLaunchpad() {
                 <Button
                   type="button"
                   className="flex-1"
+                  variant={activeTab === "report" ? "default" : "outline"}
+                  onClick={handleDownloadPDF}
+                  disabled={exportingPDF}
+                >
+                  {exportingPDF ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileDown className="mr-2 h-4 w-4" />
+                  )}
+                  {exportingPDF ? 'Creating PDF...' : 'Download as PDF'}
+                </Button>
+                
+                <Button
+                  type="button"
+                  className="flex-1"
                   variant="outline"
                   onClick={() => {
                     // Download report as text file
@@ -507,7 +534,7 @@ export function ESGLaunchpad() {
                     document.body.removeChild(link);
                   }}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <FileText className="mr-2 h-4 w-4" />
                   Download as text
                 </Button>
                 
@@ -529,13 +556,14 @@ export function ESGLaunchpad() {
                     }
                   }}
                 >
-                  <FileText className="mr-2 h-4 w-4" />
+                  <Download className="mr-2 h-4 w-4" />
                   Download as HTML
                 </Button>
                 
                 <Button
                   type="button"
                   className="flex-1"
+                  variant="secondary"
                   onClick={() => {
                     // Open email client
                     window.location.href = "mailto:contact@eliago.com?subject=Schedule%20ESG%20Expert%20Call&body=I'd%20like%20to%20schedule%20a%20call%20with%20an%20ESG%20expert%20to%20discuss%20my%20QuickStart%20report.";
