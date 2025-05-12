@@ -8,7 +8,7 @@ import { Navigation } from "./components/Navigation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GlobalAIAssistant } from "./components/ai/GlobalAIAssistant";
-import { ClientContextProvider } from "@/contexts/ClientContext";
+import { ClientProvider } from "@/contexts/ClientContext";
 import { Toaster } from "sonner";
 import { HotjarTracking } from "./components/analytics/HotjarTracking";
 
@@ -101,7 +101,7 @@ function App() {
     <QueryProvider>
       <AuthProvider>
         <LanguageProvider>
-          <ClientContextProvider>
+          <ClientProvider>
             <Router>
               <HotjarTracking />
               <Navigation />
@@ -183,7 +183,7 @@ function App() {
               <GlobalAIAssistant />
               <Toaster />
             </Router>
-          </ClientContextProvider>
+          </ClientProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryProvider>
