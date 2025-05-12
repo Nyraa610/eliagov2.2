@@ -31,7 +31,7 @@ export function useAnalysisProgress(
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) window.clearInterval(interval);
     };
   }, [isLoadingCompanyInfo, companyInfo]);
 

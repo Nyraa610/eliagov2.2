@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { companyAnalysisService, CompanyAnalysisResult } from "@/services/companyAnalysisService";
@@ -24,11 +24,95 @@ export function useCompanyFetch({
   const { toast } = useToast();
   const { setFormData } = useUnifiedAssessment();
 
+  // Use useCallback to prevent function recreation on every render
+  const analyzeCompany = useCallback(async (companyName: string, country?: string | null) => {
+    if (!companyName.trim()) {
+      setIsLoadingCompanyInfo(false);
+      setAnalysisError("Company name is required");
+      toast({
+        title: "Missing Information",
+        description: "Company name is required for analysis",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalysisError(null);
+    
+    try {
+      console.log(`Analyzing company: ${companyName}, Country: ${country || 'not specified'}`);
+      const result = await companyAnalysisService.getCompanyAnalysis(companyName, country || undefined);
+      console.log("Analysis result:", result);
+      
+      setCompanyInfo(result);
+      
+      setFormData((prevData: ESGFormValues | null) => {
+        return {
+          ...(prevData || {}),
+          companyName: companyName,
+          industry: result.industry,
+          employeeCount: result.employeeCount
+        };
+      });
+      
+      toast({
+        title: "Analysis Complete",
+        description: "Company information has been successfully analyzed",
+      });
+    } catch (error) {
+      console.error("Error analyzing company:", error);
+      
+      let errorMessage = "An unexpected error occurred during company analysis";
+      let errorTitle = "Analysis Failed";
+      
+      if (error instanceof Error) {
+        const errorText = error.message;
+        
+        if (errorText.includes("Edge function error")) {
+          errorMessage = "The analysis service is currently unavailable. Please try again later.";
+          errorTitle = "Service Unavailable";
+        } else if (errorText.includes("Invalid response format")) {
+          errorMessage = "The analysis service returned an invalid response. Our team has been notified.";
+          errorTitle = "Data Error";
+        } else if (errorText.includes("OpenAI API error")) {
+          errorMessage = "The AI analysis engine encountered an issue. Please try again in a few minutes.";
+          errorTitle = "AI Service Error";
+        } else if (errorText.includes("Failed to analyze company")) {
+          errorMessage = errorText;
+        }
+      }
+      
+      setAnalysisError(errorMessage);
+      
+      toast({
+        title: errorTitle,
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingCompanyInfo(false);
+    }
+  }, [setAnalysisError, setCompanyInfo, setIsLoadingCompanyInfo, setFormData, toast]);
+  
+  const handleRetryAnalysis = useCallback(() => {
+    if (userCompany) {
+      setIsLoadingCompanyInfo(true);
+      analyzeCompany(userCompany);
+    } else {
+      toast({
+        title: "Retry Failed",
+        description: "Cannot retry analysis: Company name is missing",
+        variant: "destructive"
+      });
+    }
+  }, [userCompany, setIsLoadingCompanyInfo, analyzeCompany, toast]);
+
   useEffect(() => {
+    // Skip this effect if userCompany is already set
+    if (userCompany) return;
+    
     const getUserCompanyAndAnalyze = async () => {
       try {
-        if (userCompany) return;
-        
         setIsLoadingCompanyInfo(true);
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
@@ -100,89 +184,7 @@ export function useCompanyFetch({
     };
     
     getUserCompanyAndAnalyze();
-  }, [userCompany, setUserCompany, setCompanyInfo, setIsLoadingCompanyInfo, setAnalysisError, toast, setFormData]);
-  
-  const analyzeCompany = async (companyName: string, country?: string | null) => {
-    if (!companyName.trim()) {
-      setIsLoadingCompanyInfo(false);
-      setAnalysisError("Company name is required");
-      toast({
-        title: "Missing Information",
-        description: "Company name is required for analysis",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setAnalysisError(null);
-    
-    try {
-      console.log(`Analyzing company: ${companyName}, Country: ${country || 'not specified'}`);
-      const result = await companyAnalysisService.getCompanyAnalysis(companyName, country || undefined);
-      console.log("Analysis result:", result);
-      
-      setCompanyInfo(result);
-      
-      setFormData((prevData: ESGFormValues | null) => {
-        return {
-          ...(prevData || {}),
-          companyName: companyName,
-          industry: result.industry,
-          employeeCount: result.employeeCount
-        };
-      });
-      
-      toast({
-        title: "Analysis Complete",
-        description: "Company information has been successfully analyzed",
-      });
-    } catch (error) {
-      console.error("Error analyzing company:", error);
-      
-      let errorMessage = "An unexpected error occurred during company analysis";
-      let errorTitle = "Analysis Failed";
-      
-      if (error instanceof Error) {
-        const errorText = error.message;
-        
-        if (errorText.includes("Edge function error")) {
-          errorMessage = "The analysis service is currently unavailable. Please try again later.";
-          errorTitle = "Service Unavailable";
-        } else if (errorText.includes("Invalid response format")) {
-          errorMessage = "The analysis service returned an invalid response. Our team has been notified.";
-          errorTitle = "Data Error";
-        } else if (errorText.includes("OpenAI API error")) {
-          errorMessage = "The AI analysis engine encountered an issue. Please try again in a few minutes.";
-          errorTitle = "AI Service Error";
-        } else if (errorText.includes("Failed to analyze company")) {
-          errorMessage = errorText;
-        }
-      }
-      
-      setAnalysisError(errorMessage);
-      
-      toast({
-        title: errorTitle,
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingCompanyInfo(false);
-    }
-  };
-  
-  const handleRetryAnalysis = () => {
-    if (userCompany) {
-      setIsLoadingCompanyInfo(true);
-      analyzeCompany(userCompany);
-    } else {
-      toast({
-        title: "Retry Failed",
-        description: "Cannot retry analysis: Company name is missing",
-        variant: "destructive"
-      });
-    }
-  };
+  }, [userCompany, setUserCompany, setCompanyInfo, setIsLoadingCompanyInfo, setAnalysisError, toast, setFormData, analyzeCompany]);
 
   return {
     analyzeCompany,

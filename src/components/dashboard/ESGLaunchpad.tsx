@@ -1,6 +1,5 @@
 
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
 import { 
   Card, 
   CardContent, 
@@ -46,185 +45,39 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { 
-  esgLaunchpadService, 
   industrySectors, 
-  esgStandards,
-  SectorProfile,
-  PeerSnapshot
+  esgStandards
 } from "@/services/esgLaunchpadService";
 import { ArrowRight, Award, BarChart2, CheckCircle, Download, FileText, Info, Lightbulb, Loader2, Mail, Send, ShieldCheck, Sparkles, User } from "lucide-react";
-import { toast } from "sonner";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Form schema for validation
-const formSchema = z.object({
-  industry: z.string().min(1, "Please select your industry"),
-  followsStandards: z.boolean().default(false),
-  selectedStandards: z.array(z.string()).optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { useESGLaunchpadForm } from "./hooks/useESGLaunchpadForm";
 
 export function ESGLaunchpad() {
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [sectorProfile, setSectorProfile] = useState<SectorProfile | null>(null);
-  const [peerSnapshots, setPeerSnapshots] = useState<PeerSnapshot[]>([]);
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [reportContent, setReportContent] = useState("");
-  const [htmlReport, setHtmlReport] = useState("");
   const [activeTab, setActiveTab] = useState("report");
   const { user } = useAuth();
-  const [recommendedStandards, setRecommendedStandards] = useState<any[]>([]);
-
-  // Initialize form
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      industry: "",
-      followsStandards: false,
-      selectedStandards: [],
-    }
-  });
+  
+  const { 
+    form, 
+    step, 
+    loading, 
+    sectorProfile, 
+    peerSnapshots,
+    reportGenerated, 
+    reportContent, 
+    htmlReport, 
+    recommendedStandards,
+    handleIndustryChange,
+    generateReport
+  } = useESGLaunchpadForm();
 
   // Watch for changes in the selected industry and standards
   const selectedIndustry = form.watch("industry");
   const followsStandards = form.watch("followsStandards");
   const selectedStandards = form.watch("selectedStandards");
 
-  // Use useCallback to prevent the function from being recreated on every render
-  const handleIndustryChange = useCallback(async (value: string) => {
-    form.setValue("industry", value);
-    if (!value) return;
-    
-    setLoading(true);
-    
-    try {
-      console.log(`Fetching sector profile for industry: ${value}`);
-      // Fetch sector profile
-      const profile = await esgLaunchpadService.getSectorProfile(value);
-      console.log("Sector profile received:", profile);
-      setSectorProfile(profile);
-      
-      // Fetch peer snapshots
-      console.log(`Fetching peer snapshots for industry: ${value}`);
-      const snapshots = await esgLaunchpadService.getPeerSnapshots(value);
-      console.log(`Received ${snapshots.length} peer snapshots`);
-      setPeerSnapshots(snapshots);
-      
-      // Get recommended standards for this industry
-      const recommendedForIndustry = [
-        {
-          id: "iso_14001",
-          name: "ISO 14001",
-          logo: "/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png",
-          description: "Environmental management system standard",
-          category: "Environmental"
-        },
-        {
-          id: "iso_26000",
-          name: "ISO 26000",
-          logo: "/lovable-uploads/430dad71-05bf-4918-b6a5-b3f6dda67864.png", 
-          description: "Guidance on social responsibility",
-          category: "Social"
-        },
-        {
-          id: "ecovadis",
-          name: "EcoVadis",
-          logo: "/lovable-uploads/4a9d4c8d-12c6-4ba9-87b5-132f6c06c33a.png",
-          description: "Business sustainability ratings",
-          category: "General ESG"
-        },
-        {
-          id: "bcorp",
-          name: "B Corp",
-          logo: "/lovable-uploads/5a9bda6d-1916-4bf1-a783-f3ba753aeff1.png",
-          description: "Certification for social and environmental performance",
-          category: "General ESG"
-        }
-      ];
-      
-      setRecommendedStandards(recommendedForIndustry);
-      
-      // Move to the next step
-      setStep(2);
-    } catch (error) {
-      console.error("Error fetching sector data:", error);
-      toast.error("Failed to load industry data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  }, [form]);
-
   // Handle generate report button click
-  const onSubmit = async (data: FormData) => {
-    setLoading(true);
-    
-    try {
-      // Validate industry selection
-      if (!data.industry) {
-        toast.error("Please select your industry");
-        return;
-      }
-      
-      // Get user email from auth context
-      const userEmail = user?.email;
-      if (!userEmail) {
-        console.log("No user email found in auth context");
-      }
-      
-      console.log("Generating report with data:", {
-        industry: data.industry,
-        followsStandards: data.followsStandards,
-        selectedStandards: data.selectedStandards || [],
-        email: userEmail
-      });
-      
-      // Add a unique request ID for tracking
-      const requestId = crypto.randomUUID();
-      console.log(`Report generation request ID: ${requestId}`);
-      
-      // Generate the report
-      const reportResult = await esgLaunchpadService.generateQuickStartReport({
-        industry: data.industry,
-        followsStandards: data.followsStandards,
-        selectedStandards: data.selectedStandards || [],
-        email: userEmail, // Use the authenticated user's email
-        requestId: requestId // Add request ID for tracking
-      });
-      
-      if (!reportResult) {
-        console.error("Report generation returned null or undefined");
-        toast.error("Failed to generate report. Please try again later.");
-        return;
-      }
-      
-      console.log("Report generated successfully:", {
-        contentLength: reportResult.reportContent?.length || 0,
-        htmlContentAvailable: !!reportResult.htmlContent,
-        emailSent: reportResult.emailSent,
-        requestId: requestId
-      });
-      
-      setReportContent(reportResult.reportContent);
-      setHtmlReport(reportResult.htmlContent || "");
-      setReportGenerated(true);
-      
-      // Report is automatically sent to user's email
-      if (userEmail && reportResult.emailSent) {
-        toast.success(`Report sent to your email: ${userEmail}`);
-      } else {
-        toast.success("Report generated successfully!");
-      }
-      
-    } catch (error) {
-      console.error("Error generating report:", error);
-      toast.error(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = async (data: any) => {
+    await generateReport(data, user?.email);
   };
 
   // Use memoized function to avoid infinite re-renders
@@ -491,7 +344,7 @@ export function ESGLaunchpad() {
                         </div>
                       </div>
                       
-                      {peerSnapshots.length > 0 && (
+                      {peerSnapshots && peerSnapshots.length > 0 && (
                         <div className="mt-8">
                           <h4 className="font-medium mb-3 flex items-center gap-2">
                             <Sparkles className="h-4 w-4 text-primary" />
