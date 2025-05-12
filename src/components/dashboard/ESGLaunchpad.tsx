@@ -25,7 +25,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -39,7 +38,6 @@ import {
 } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   Tooltip,
   TooltipContent,
@@ -57,13 +55,13 @@ import { ArrowRight, CheckCircle, Download, FileText, Info, Loader2, Send } from
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Form schema for validation
 const formSchema = z.object({
   industry: z.string().min(1, "Please select your industry"),
   followsStandards: z.boolean().default(false),
   selectedStandards: z.array(z.string()).optional(),
-  email: z.string().email("Please enter a valid email").optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -77,6 +75,7 @@ export function ESGLaunchpad() {
   const [reportContent, setReportContent] = useState("");
   const [htmlReport, setHtmlReport] = useState("");
   const [activeTab, setActiveTab] = useState("report");
+  const { user } = useAuth();
 
   // Initialize form
   const form = useForm<FormData>({
@@ -85,7 +84,6 @@ export function ESGLaunchpad() {
       industry: "",
       followsStandards: false,
       selectedStandards: [],
-      email: ""
     }
   });
 
@@ -131,12 +129,15 @@ export function ESGLaunchpad() {
         return;
       }
       
+      // Get user email from auth context
+      const userEmail = user?.email;
+      
       // Generate the report
       const reportResult = await esgLaunchpadService.generateQuickStartReport({
         industry: data.industry,
         followsStandards: data.followsStandards,
         selectedStandards: data.selectedStandards || [],
-        email: data.email
+        email: userEmail // Use the authenticated user's email
       });
       
       if (!reportResult) {
@@ -148,14 +149,14 @@ export function ESGLaunchpad() {
       setHtmlReport(reportResult.htmlContent || "");
       setReportGenerated(true);
       
-      // Send report by email if email is provided
-      if (data.email && reportResult.emailSent) {
-        toast.success(`Report sent to ${data.email}`);
+      // Report is automatically sent to user's email
+      if (userEmail && reportResult.emailSent) {
+        toast.success(`Report sent to your email: ${userEmail}`);
       }
       
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error("Failed to generate report");
+      toast.error("Failed to generate report. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -378,7 +379,7 @@ export function ESGLaunchpad() {
                 </div>
               )}
               
-              {/* Step 3: Generate Report */}
+              {/* Step 3: Generate Report - Removed email field, showing text instead */}
               {(step >= 2 && !loading && !reportGenerated) && (
                 <div className="border-t pt-4">
                   <h3 className="font-medium text-lg mb-4 flex items-center">
@@ -386,25 +387,12 @@ export function ESGLaunchpad() {
                     Generate your free QuickStart report
                   </h3>
                   
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email (optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="your.email@company.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter your email to receive your report via email
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    The report will be generated for your selected industry and will be available online. 
+                    {user?.email && (
+                      <span> A copy will also be sent to your email ({user.email}).</span>
                     )}
-                  />
+                  </p>
                 </div>
               )}
               

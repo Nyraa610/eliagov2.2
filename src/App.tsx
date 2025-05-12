@@ -118,12 +118,12 @@ function App() {
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/unauthorized" element={<Unauthorized />} />
                   <Route path="/subscription/success" element={<Success />} />
-                  <Route path="/esg-launchpad" element={<ESGLaunchpadPage />} />
 
                   {/* Protected routes - User */}
                   <Route path="/dashboard" element={<ProtectedRoute><UserLayout><Dashboard /></UserLayout></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><UserLayout><Profile /></UserLayout></ProtectedRoute>} />
                   <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
+                  <Route path="/esg-launchpad" element={<ProtectedRoute><UserLayout><ESGLaunchpadPage /></UserLayout></ProtectedRoute>} />
                   
                   {/* Assessment routes */}
                   <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
