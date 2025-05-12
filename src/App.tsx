@@ -110,7 +110,7 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route path="/register/validation" element={<RegisterValidation />} />
+                  <Route path="/register/validate" element={<RegisterValidation />} />
                   <Route path="/register/confirmation" element={<RegisterConfirmation />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/features" element={<Features />} />
