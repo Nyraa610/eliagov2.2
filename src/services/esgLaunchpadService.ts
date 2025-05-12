@@ -76,6 +76,14 @@ export interface LaunchpadFormData {
   industry: string;
   followsStandards: boolean;
   selectedStandards: string[];
+  email?: string;
+}
+
+export interface ReportResult {
+  reportContent: string;
+  htmlContent?: string;
+  pdfUrl?: string;
+  emailSent?: boolean;
 }
 
 export const esgLaunchpadService = {
@@ -249,7 +257,7 @@ export const esgLaunchpadService = {
   /**
    * Generate a QuickStart report based on user inputs
    */
-  generateQuickStartReport: async (formData: LaunchpadFormData): Promise<string | null> => {
+  generateQuickStartReport: async (formData: LaunchpadFormData): Promise<ReportResult | null> => {
     try {
       // Find industry name from the ID
       const industry = industrySectors.find(sector => sector.id === formData.industry);
@@ -279,7 +287,81 @@ export const esgLaunchpadService = {
         content: prompt
       });
       
-      return response.result;
+      const reportContent = response.result;
+      
+      let emailSent = false;
+      let htmlContent = "";
+      
+      // If email is provided, send the report by email
+      if (formData.email) {
+        try {
+          // Call the edge function to generate the report and send email
+          const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-esg-report`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              industry: formData.industry,
+              industry_name: industry.label,
+              followsStandards: formData.followsStandards,
+              selectedStandards: formData.selectedStandards,
+              reportContent,
+              email: formData.email
+            })
+          });
+          
+          const data = await result.json();
+          
+          if (data.success) {
+            emailSent = true;
+            
+            // Decode HTML content if available
+            if (data.data.htmlBase64) {
+              const decodedHtml = atob(data.data.htmlBase64);
+              htmlContent = decodedHtml;
+            }
+          } else {
+            console.error("Error generating report:", data.error);
+          }
+        } catch (error) {
+          console.error("Error calling generate-esg-report function:", error);
+        }
+      } else {
+        // Just generate the HTML content without sending email
+        try {
+          const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-esg-report`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              industry: formData.industry,
+              industry_name: industry.label,
+              followsStandards: formData.followsStandards,
+              selectedStandards: formData.selectedStandards,
+              reportContent
+            })
+          });
+          
+          const data = await result.json();
+          
+          if (data.success && data.data.htmlBase64) {
+            const decodedHtml = atob(data.data.htmlBase64);
+            htmlContent = decodedHtml;
+          }
+        } catch (error) {
+          console.error("Error generating HTML report:", error);
+        }
+      }
+      
+      return {
+        reportContent,
+        htmlContent,
+        emailSent
+      };
     } catch (error) {
       console.error("Exception in generateQuickStartReport:", error);
       return null;

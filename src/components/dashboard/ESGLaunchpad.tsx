@@ -31,6 +31,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +53,7 @@ import {
   SectorProfile,
   PeerSnapshot
 } from "@/services/esgLaunchpadService";
-import { ArrowRight, CheckCircle, Download, Info, Loader2, Send } from "lucide-react";
+import { ArrowRight, CheckCircle, Download, FileText, Info, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -69,6 +75,8 @@ export function ESGLaunchpad() {
   const [peerSnapshots, setPeerSnapshots] = useState<PeerSnapshot[]>([]);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportContent, setReportContent] = useState("");
+  const [htmlReport, setHtmlReport] = useState("");
+  const [activeTab, setActiveTab] = useState("report");
 
   // Initialize form
   const form = useForm<FormData>({
@@ -124,34 +132,25 @@ export function ESGLaunchpad() {
       }
       
       // Generate the report
-      const report = await esgLaunchpadService.generateQuickStartReport({
+      const reportResult = await esgLaunchpadService.generateQuickStartReport({
         industry: data.industry,
         followsStandards: data.followsStandards,
-        selectedStandards: data.selectedStandards || []
+        selectedStandards: data.selectedStandards || [],
+        email: data.email
       });
       
-      if (!report) {
+      if (!reportResult) {
         toast.error("Failed to generate report");
         return;
       }
       
-      setReportContent(report);
+      setReportContent(reportResult.reportContent);
+      setHtmlReport(reportResult.htmlContent || "");
       setReportGenerated(true);
       
       // Send report by email if email is provided
-      if (data.email) {
-        const industryName = industrySectors.find(s => s.id === data.industry)?.label || "";
-        const emailSent = await esgLaunchpadService.sendReportByEmail(
-          data.email, 
-          report,
-          industryName
-        );
-        
-        if (emailSent) {
-          toast.success(`Report sent to ${data.email}`);
-        } else {
-          toast.error("Failed to send report by email");
-        }
+      if (data.email && reportResult.emailSent) {
+        toast.success(`Report sent to ${data.email}`);
       }
       
     } catch (error) {
@@ -417,9 +416,34 @@ export function ESGLaunchpad() {
                     <p className="text-green-700">Your ESG QuickStart report has been generated!</p>
                   </div>
                   
-                  <div className="bg-muted/30 p-4 rounded-md mb-4 whitespace-pre-wrap text-sm">
-                    <div dangerouslySetInnerHTML={{ __html: reportContent.replace(/\n/g, '<br>') }} />
-                  </div>
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="report">Report</TabsTrigger>
+                      <TabsTrigger value="online">Online Version</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="report">
+                      <div className="bg-muted/30 p-4 rounded-md mb-4 whitespace-pre-wrap text-sm">
+                        <div dangerouslySetInnerHTML={{ __html: reportContent.replace(/\n/g, '<br>') }} />
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="online">
+                      {htmlReport ? (
+                        <div className="border rounded-md overflow-hidden bg-white h-[500px]">
+                          <iframe
+                            srcDoc={htmlReport}
+                            className="w-full h-full"
+                            title="ESG QuickStart Report"
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-muted/30 p-4 rounded-md mb-4">
+                          <p>Online version not available. Please use the text report.</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>
@@ -463,7 +487,29 @@ export function ESGLaunchpad() {
                   }}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download report
+                  Download as text
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    // Download report as HTML
+                    if (htmlReport) {
+                      const blob = new Blob([htmlReport], { type: "text/html;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = "ESG_QuickStart_Report.html";
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  }}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Download as HTML
                 </Button>
                 
                 <Button
