@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { aiService } from "./aiService";
 import { emailService } from "./emailService";

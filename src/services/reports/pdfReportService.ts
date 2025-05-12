@@ -53,14 +53,18 @@ export const pdfReportService = {
       doc.text("Industry ESG Profile", 20, 60);
       
       // Add sector description
+      let yPos = 70;
       if (sectorProfile?.description) {
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
         const splitDescription = doc.splitTextToSize(sectorProfile.description, 170);
-        doc.text(splitDescription, 20, 70);
+        doc.text(splitDescription, 20, yPos);
+        
+        // Update yPos based on the description height
+        yPos += Math.min(splitDescription.length * 7, 30);
       }
       
-      let yPos = 90 + (sectorProfile?.description ? Math.min(splitDescription.length * 7, 30) : 0);
+      yPos += 20;  // Add some spacing
       
       // Check if we need to add a new page
       if (yPos > 250) {

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { esgLaunchpadService, SectorProfile, PeerSnapshot } from "@/services/esgLaunchpadService";
+import { esgLaunchpadService, SectorProfile, PeerSnapshot, industrySectors } from "@/services/esgLaunchpadService";
 import { pdfReportService } from "@/services/reports/pdfReportService";
 
 // Form schema for validation
@@ -89,7 +89,7 @@ export function useESGLaunchpadForm() {
       setRecommendedStandards(recommendedForIndustry);
       
       // Store industry name for PDF report
-      const selectedIndustry = esgLaunchpadService.industrySectors.find(sector => sector.id === value);
+      const selectedIndustry = industrySectors.find(sector => sector.id === value);
       setIndustryName(selectedIndustry?.label || value);
       
       // Move to the next step
