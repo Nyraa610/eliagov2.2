@@ -41,32 +41,48 @@ file_size_limit = "50MiB"
 [auth]
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://app.eliago.com"
-# A list of *exact* URLs that auth providers are permitted to redirect to post-authentication.
-additional_redirect_urls = ["https://localhost:3000", "http://localhost:5173", "https://preview--eliago-v2.lovable.app"]
+site_url = "http://localhost:3000"
+# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+additional_redirect_urls = ["https://localhost:3000"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (one
 # week).
 jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
 enable_signup = true
-# If enabled, a user will be required to confirm any email change on their profile.
-enable_confirm_email_change = false
+# If disabled, the first user to sign up for your project will be a super administrator.
+disable_signup = false
+
+[auth.email]
+# Allow/disallow new user signups via email to your project.
+enable_signup = true
+# If enabled, a user will be required to confirm any email change on both the old, and new email
+# addresses. If disabled, only the new email is required to confirm.
+double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_email_confirmation = true
-# If enabled, users will be automatically confirmed on signup.
-enable_auto_confirm_signup = false
+enable_confirmations = false
+
+# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
+# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
+# `twitter`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+# Overrides the default auth redirectUrl.
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
+# or any other third-party OIDC providers.
+url = ""
 
 [functions]
-# Port to use for Functions server.
+# Port to use for Functions.
 port = 54321
 
-# Allow/disallow public access to edge functions without JWT
 [functions.send-email-native]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-supabase-email]
-verify_jwt = false
+verify_jwt = true
 
-# Allow any user to call the function without a valid JWT
-[functions.send-invitation]
-verify_jwt = false
+[functions.generate-esg-report]
+verify_jwt = true
