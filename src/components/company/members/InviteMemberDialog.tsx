@@ -59,6 +59,7 @@ export function InviteMemberDialog({
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteWarning, setInviteWarning] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null); // Pour le débogage
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -82,32 +83,57 @@ export function InviteMemberDialog({
     setInviteSuccess(false);
     setInviteError(null);
     setInviteWarning(null);
+    setDebugInfo(null);
     
     try {
-      // Get current user info to include in the invitation
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: userProfile } = await supabase
+      // Vérifier que l'utilisateur est authentifié
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
+        console.error("Authentication error:", authError);
+        throw new Error("You must be logged in to send invitations");
+      }
+      
+      const user = authData.user;
+      
+      // Récupérer le profil utilisateur avec gestion d'erreur
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, email')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
         
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+        // Continuer avec les informations disponibles
+      }
+      
       const inviterInfo = {
-        id: user?.id,
-        name: userProfile?.full_name || user?.email?.split('@')[0] || 'Company Admin',
-        email: userProfile?.email || user?.email || ''
+        id: user.id,
+        name: userProfile?.full_name || user.email?.split('@')[0] || 'Company Admin',
+        email: userProfile?.email || user.email || ''
       };
 
-      // Send the invitation request to our edge function
-      console.log("Sending invitation to new user:", values.email);
+      // Préparer les données pour l'invitation
+      const inviteData = { 
+        email: values.email,
+        companyId,
+        role: values.role,
+        inviterInfo: inviterInfo
+      };
       
+      console.log("Sending invitation with data:", JSON.stringify(inviteData, null, 2));
+      
+      // Appeler la fonction Edge de Supabase
       const { data, error } = await supabase.functions.invoke("send-invitation", {
-        body: { 
-          email: values.email,
-          companyId,
-          role: values.role,
-          inviterInfo: inviterInfo
-        }
+        body: inviteData
+      });
+      
+      // Enregistrer les informations de débogage
+      setDebugInfo({
+        requestData: inviteData,
+        responseData: data,
+        responseError: error
       });
       
       console.log("Invitation function response:", data, error);
@@ -116,8 +142,13 @@ export function InviteMemberDialog({
         throw new Error(error.message || "Failed to send invitation");
       }
       
-      // Check if it's a duplicate invitation
-      if (data && data.code === "DUPLICATE_INVITATION") {
+      // Vérifier si la réponse est valide
+      if (!data) {
+        throw new Error("No response from invitation service");
+      }
+      
+      // Vérifier s'il s'agit d'une invitation en double
+      if (data.code === "DUPLICATE_INVITATION") {
         setInviteWarning(`An invitation has already been sent to ${values.email}. Please wait for the user to respond.`);
         toast({
           title: "Invitation Already Sent",
@@ -133,8 +164,8 @@ export function InviteMemberDialog({
         return;
       }
       
-      // Check for partial success (invitation saved but email failed)
-      if (data && data.savedInvitation === true && data.success === false) {
+      // Vérifier le succès partiel (invitation enregistrée mais email échoué)
+      if (data.savedInvitation === true && data.success === false) {
         setInviteWarning(`Invitation saved, but the email notification failed: ${data.error}`);
         toast({
           title: "Partial Success",
@@ -142,27 +173,24 @@ export function InviteMemberDialog({
           variant: "default",
         });
         setInviteSuccess(true);
-      } else if (data && data.success === true) {
+      } else if (data.success === true) {
         toast({
           title: "Invitation Sent",
           description: `An invitation has been sent to ${values.email}`,
         });
         setInviteSuccess(true);
       } else {
-        throw new Error("Unknown response from invitation service");
+        throw new Error(data.error || "Unknown response from invitation service");
       }
       
-      // Reset form
+      // Réinitialiser le formulaire
       form.reset();
       
-      // Wait a moment to show success state before closing dialog
+      // Attendre un moment pour montrer l'état de succès avant de fermer la boîte de dialogue
       setTimeout(() => {
-        // Call success callback if provided
         if (onInviteSuccess) {
           onInviteSuccess();
         }
-        
-        // Close dialog
         onOpenChange(false);
         setInviteSuccess(false);
         setInviteWarning(null);
@@ -171,7 +199,7 @@ export function InviteMemberDialog({
     } catch (error) {
       console.error("Error inviting user:", error);
       
-      // Set the error message for display
+      // Définir le message d'erreur pour l'affichage
       setInviteError(error instanceof Error ? error.message : "Failed to send invitation. Please try again.");
       
       toast({
@@ -224,6 +252,16 @@ export function InviteMemberDialog({
             </div>
             <h3 className="text-lg font-semibold mb-2">Invitation Failed</h3>
             <p className="text-center text-muted-foreground">{inviteError}</p>
+            
+            {debugInfo && (
+              <details className="mt-4 text-xs border p-2 rounded">
+                <summary className="cursor-pointer">Debug Information</summary>
+                <pre className="whitespace-pre-wrap overflow-auto max-h-40">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </details>
+            )}
+            
             <Button 
               variant="outline" 
               onClick={() => setInviteError(null)} 
