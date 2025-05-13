@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 // Password reset form schema
 const resetPasswordSchema = z.object({
@@ -28,12 +28,11 @@ type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPassword() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [isValidToken, setIsValidToken] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get the hash fragment from the URL
-  const hash = location.hash;
   
   // Use the useForm hook with zod resolver
   const form = useForm<ResetPasswordValues>({
@@ -46,21 +45,62 @@ export default function ResetPassword() {
 
   // Parse token from URL on component mount
   useEffect(() => {
-    // The hash will contain the access token after # 
-    if (!hash) {
-      toast({
-        variant: "destructive",
-        title: "Invalid reset link",
-        description: "Please request a new password reset link.",
-      });
-      navigate("/login");
+    async function verifyResetToken() {
+      try {
+        setIsVerifying(true);
+        
+        // Extract the access token from the URL
+        // The URL format is typically: /reset-password#access_token=xxx&type=recovery
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get("access_token");
+        const tokenType = hashParams.get("type");
+        
+        if (!accessToken || tokenType !== "recovery") {
+          toast({
+            variant: "destructive",
+            title: "Invalid reset link",
+            description: "Please request a new password reset link.",
+          });
+          navigate("/login");
+          return;
+        }
+        
+        // Verify the token by getting the user's session
+        const { data, error } = await supabase.auth.getUser(accessToken);
+        
+        if (error || !data.user) {
+          console.error("Error verifying reset token:", error);
+          toast({
+            variant: "destructive",
+            title: "Invalid or expired reset link",
+            description: "Please request a new password reset link.",
+          });
+          navigate("/login");
+          return;
+        }
+        
+        // Token is valid
+        setIsValidToken(true);
+      } catch (error) {
+        console.error("Error during token verification:", error);
+        toast({
+          variant: "destructive",
+          title: "Error verifying reset link",
+          description: "Please request a new password reset link.",
+        });
+        navigate("/login");
+      } finally {
+        setIsVerifying(false);
+      }
     }
-  }, [hash, toast, navigate]);
+    
+    verifyResetToken();
+  }, [location.hash, toast, navigate]);
 
   async function onSubmit(data: ResetPasswordValues) {
     setIsProcessing(true);
     try {
-      // Update the user's password using the token in the URL
+      // Update the user's password
       const { error } = await supabase.auth.updateUser({
         password: data.password,
       });
@@ -71,21 +111,49 @@ export default function ResetPassword() {
 
       toast({
         title: "Password reset successful",
-        description: "Your password has been changed successfully.",
+        description: "Your password has been changed successfully. You can now log in with your new password.",
       });
 
       // Redirect to login page
       navigate("/login");
     } catch (error: any) {
       console.error("Error resetting password:", error);
+      
+      // More specific error messages
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (error.message.includes("expired")) {
+        errorMessage = "Your password reset link has expired. Please request a new one.";
+      } else if (error.message.includes("invalid")) {
+        errorMessage = "Invalid reset link. Please request a new password reset link.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Failed to reset password",
-        description: error.message || "An unexpected error occurred. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsProcessing(false);
     }
+  }
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+        <Navigation />
+        <main className="container mx-auto px-4 py-16 md:py-24">
+          <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-gray-600">Verifying your reset link...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isValidToken) {
+    return null; // This will prevent flash of content before redirect in useEffect
   }
 
   return (
@@ -147,7 +215,14 @@ export default function ResetPassword() {
                   className="w-full" 
                   disabled={isProcessing}
                 >
-                  {isProcessing ? "Resetting..." : "Reset Password"}
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
                 </Button>
               </form>
             </Form>
