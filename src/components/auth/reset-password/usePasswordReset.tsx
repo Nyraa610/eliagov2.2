@@ -14,13 +14,6 @@ export const usePasswordReset = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Fonction pour nettoyer l'URL après extraction des tokens
-  const cleanupUrlHash = () => {
-    if (window.history && window.history.replaceState) {
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-    }
-  };
-
   useEffect(() => {
     const handlePasswordReset = async () => {
       try {
@@ -47,13 +40,10 @@ export const usePasswordReset = () => {
           throw new Error("No access token found in URL");
         }
         
-        // Nettoyer l'URL pour des raisons de sécurité
-        cleanupUrlHash();
-        
         // Set the session with the access token
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: refreshToken || null, // Null au lieu d'une chaîne vide
+          refresh_token: refreshToken || "",
         });
 
         if (error) {
@@ -63,9 +53,8 @@ export const usePasswordReset = () => {
 
         // Validation successful
         setIsInitialized(true);
-      } catch (err) {
-        console.error("Password reset initialization error:", err);
-        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+      } catch (error: any) {
+        console.error("Password reset initialization error:", error);
         toast({
           variant: "destructive",
           title: "Invalid reset link",
@@ -76,7 +65,7 @@ export const usePasswordReset = () => {
     };
 
     handlePasswordReset();
-  }, [navigate, toast, location, window.location.hash]); // Ajout de window.location.hash comme dépendance
+  }, [navigate, toast, location]);
 
   const validatePassword = (password: string) => {
     if (password.length < 8) {
@@ -90,9 +79,6 @@ export const usePasswordReset = () => {
     }
     if (!/[0-9]/.test(password)) {
       return "Password must contain at least one number";
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return "Password must contain at least one special character";
     }
     return null;
   };
@@ -165,8 +151,8 @@ export const usePasswordReset = () => {
             console.error("Failed to send password change confirmation:", emailError);
           }
         }
-      } catch (emailErr) {
-        console.error("Exception sending password change email:", emailErr);
+      } catch (emailError) {
+        console.error("Exception sending password change email:", emailError);
         // Don't block the flow if email fails
       }
       
@@ -175,15 +161,14 @@ export const usePasswordReset = () => {
       
       // Redirect to login
       navigate("/login");
-    } catch (err) {
-      console.error("Password reset error:", err);
-      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+    } catch (error: any) {
+      console.error("Password reset error:", error);
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: errorMessage,
+        description: error.message || "An unexpected error occurred. Please try again.",
       });
-      setError(errorMessage);
+      setError(error.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -201,3 +186,5 @@ export const usePasswordReset = () => {
     navigateToLogin: () => navigate("/login")
   };
 };
+
+est ce qu'il ya un probleme dans ce code  ?
