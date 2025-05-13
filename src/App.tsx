@@ -113,7 +113,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/register/validate" element={<RegisterValidation />} />
                   <Route path="/register/confirmation" element={<RegisterConfirmation />} />
-                  <Route path="/reset/password" element={<ResetPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/features" element={<Features />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/unauthorized" element={<Unauthorized />} />
