@@ -13,7 +13,8 @@ import {
   MessageSquare,
   CheckSquare,
   Target,
-  List
+  List,
+  FileCheck2
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
@@ -67,18 +68,24 @@ const mainMenuItems: MenuItem[] = [
         requiresCompany: true,
       },
       {
-        title: "Action Plan",
-        href: "/assessment/action-plan",
-        icon: FileText,
-        requiresCompany: true,
-      },
-      {
         title: "Assessment Results",
         href: "/assessment/action-plan-results",
         icon: FileText,
         requiresCompany: true,
       },
     ],
+  },
+  {
+    title: "ESG Strategy",
+    href: "/esg-strategy",
+    icon: Sparkles,
+    requiresCompany: true,
+  },
+  {
+    title: "Action Plan",
+    href: "/assessment/action-plan",
+    icon: FileCheck2,
+    requiresCompany: true,
   },
   {
     title: "Talk with Experts",

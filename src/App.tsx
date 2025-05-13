@@ -51,6 +51,7 @@ import MarkdownDocumentEditor from "./pages/assessment/MarkdownDocumentEditor";
 import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import ESGLaunchpadPage from "./pages/ESGLaunchpad";
+import ESGStrategy from "./pages/ESGStrategy";
 
 // Admin pages
 import UserManagement from "./pages/admin/UserManagement";
@@ -123,6 +124,7 @@ function App() {
                   <Route path="/profile" element={<ProtectedRoute><UserLayout><Profile /></UserLayout></ProtectedRoute>} />
                   <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
                   <Route path="/esg-launchpad" element={<ProtectedRoute><UserLayout><ESGLaunchpadPage /></UserLayout></ProtectedRoute>} />
+                  <Route path="/esg-strategy" element={<ProtectedRoute><UserLayout><ESGStrategy /></UserLayout></ProtectedRoute>} />
                   
                   {/* Assessment routes */}
                   <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
