@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -9,8 +10,6 @@ import { GlobalAIAssistant } from "./components/ai/GlobalAIAssistant";
 import { ClientProvider } from "@/contexts/ClientContext";
 import { Toaster } from "sonner";
 import { HotjarTracking } from "./components/analytics/HotjarTracking";
-import { I18nextProvider } from 'react-i18next';
-import i18n from './i18n/i18n';
 
 // Pages
 import Index from "./pages/Index";
@@ -101,96 +100,96 @@ function QueryProvider({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <QueryProvider>
-      <I18nextProvider i18n={i18n}>
-        <AuthProvider>
-          <LanguageProvider>
-            <ClientProvider>
-              <Router>
-                <HotjarTracking />
-                <Navigation />
-                <SuspenseProvider>
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/register/validate" element={<RegisterValidation />} />
-                    <Route path="/register/confirmation" element={<RegisterConfirmation />} />
-                    <Route path="/reset-password" element={<usePasswordReset />} />
-                    <Route path="/reset/password" element={<ResetPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/features" element={<Features />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                    <Route path="/unauthorized" element={<Unauthorized />} />
-                    <Route path="/subscription/success" element={<Success />} />
+      <AuthProvider>
+        <LanguageProvider>
+          <ClientProvider>
+            <Router>
+              <HotjarTracking />
+              <Navigation />
+              <SuspenseProvider>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/register/validate" element={<RegisterValidation />} />
+                  <Route path="/register/confirmation" element={<RegisterConfirmation />} />
+                  <Route path="/reset-password" element={<usePasswordReset />} />
+                  <Route path="/reset/password" element={<ResetPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/unauthorized" element={<Unauthorized />} />
+                  <Route path="/subscription/success" element={<Success />} />
 
-                    {/* Protected routes - User */}
-                    <Route path="/dashboard" element={<ProtectedRoute><UserLayout><Dashboard /></UserLayout></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><UserLayout><Profile /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
-                    <Route path="/esg-launchpad" element={<ProtectedRoute><UserLayout><ESGLaunchpadPage /></UserLayout></ProtectedRoute>} />
-                    <Route path="/esg-strategy" element={<ProtectedRoute><UserLayout><ESGStrategy /></UserLayout></ProtectedRoute>} />
-                    
-                    {/* Assessment routes */}
-                    <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/value-chain" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/esg-diagnostic-results" element={<ProtectedRoute><UserLayout><ESGDiagnosticResults /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/carbon-evaluation" element={<ProtectedRoute><UserLayout><CarbonEvaluation /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/carbon-evaluation-results" element={<ProtectedRoute><UserLayout><CarbonEvaluationResults /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/materiality-analysis" element={<ProtectedRoute><UserLayout><MaterialityAnalysis /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/action-plan" element={<ProtectedRoute><UserLayout><ActionPlan /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/action-plan-results" element={<ProtectedRoute><UserLayout><ActionPlanResults /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/document-editor/:assessmentType" element={<ProtectedRoute><UserLayout><DocumentEditor /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/markdown-editor/:assessmentType" element={<ProtectedRoute><UserLayout><MarkdownDocumentEditor /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/markdown-editor/action-plan" element={<Navigate replace to="/assessment/markdown-editor/action_plan" />} />
-                    <Route path="/assessment/report/:assessmentType" element={<ProtectedRoute><UserLayout><OnlineReport /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/iro" element={<ProtectedRoute><UserLayout><IRO /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/stakeholder-mapping" element={<ProtectedRoute><UserLayout><StakeholderMapping /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/value-chain-modeling" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />
-                    <Route path="/assessment/value-chain-results" element={<ProtectedRoute><UserLayout><ValueChainResults /></UserLayout></ProtectedRoute>} />
-                    
-                    <Route path="/training" element={<ProtectedRoute><UserLayout><Training /></UserLayout></ProtectedRoute>} />
-                    <Route path="/course/:courseId" element={<ProtectedRoute><UserLayout><CourseView /></UserLayout></ProtectedRoute>} />
-                    <Route path="/deliverables" element={<ProtectedRoute><UserLayout><Deliverables /></UserLayout></ProtectedRoute>} />
-                    <Route path="/documents" element={<ProtectedRoute><UserLayout><DocumentCenter /></UserLayout></ProtectedRoute>} />
-                    <Route path="/company/new" element={<ProtectedRoute><UserLayout><NewCompany /></UserLayout></ProtectedRoute>} />
-                    <Route path="/companies" element={<ProtectedRoute><UserLayout><Companies /></UserLayout></ProtectedRoute>} />
-                    <Route path="/company/:companyId" element={<ProtectedRoute><UserLayout><CompanyProfile /></UserLayout></ProtectedRoute>} />
-                    <Route path="/company/:companyId/settings" element={<ProtectedRoute><UserLayout><CompanySettings /></UserLayout></ProtectedRoute>} />
-                    <Route path="/engagement" element={<ProtectedRoute><UserLayout><Engagement /></UserLayout></ProtectedRoute>} />
-                    <Route path="/experts" element={<ProtectedRoute><UserLayout><TalkWithExperts /></UserLayout></ProtectedRoute>} />
+                  {/* Protected routes - User */}
+                  <Route path="/dashboard" element={<ProtectedRoute><UserLayout><Dashboard /></UserLayout></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><UserLayout><Profile /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
+                  <Route path="/esg-launchpad" element={<ProtectedRoute><UserLayout><ESGLaunchpadPage /></UserLayout></ProtectedRoute>} />
+                  <Route path="/esg-strategy" element={<ProtectedRoute><UserLayout><ESGStrategy /></UserLayout></ProtectedRoute>} />
+                  
+                  {/* Assessment routes */}
+                  <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/value-chain" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/esg-diagnostic-results" element={<ProtectedRoute><UserLayout><ESGDiagnosticResults /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/carbon-evaluation" element={<ProtectedRoute><UserLayout><CarbonEvaluation /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/carbon-evaluation-results" element={<ProtectedRoute><UserLayout><CarbonEvaluationResults /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/materiality-analysis" element={<ProtectedRoute><UserLayout><MaterialityAnalysis /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/action-plan" element={<ProtectedRoute><UserLayout><ActionPlan /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/action-plan-results" element={<ProtectedRoute><UserLayout><ActionPlanResults /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/document-editor/:assessmentType" element={<ProtectedRoute><UserLayout><DocumentEditor /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/markdown-editor/:assessmentType" element={<ProtectedRoute><UserLayout><MarkdownDocumentEditor /></UserLayout></ProtectedRoute>} />
+                  {/* Ensure this specific route exists for direct navigation */}
+                  <Route path="/assessment/markdown-editor/action-plan" element={<Navigate replace to="/assessment/markdown-editor/action_plan" />} />
+                  <Route path="/assessment/report/:assessmentType" element={<ProtectedRoute><UserLayout><OnlineReport /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/iro" element={<ProtectedRoute><UserLayout><IRO /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/stakeholder-mapping" element={<ProtectedRoute><UserLayout><StakeholderMapping /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/value-chain-modeling" element={<ProtectedRoute><UserLayout><ValueChainModeling /></UserLayout></ProtectedRoute>} />
+                  <Route path="/assessment/value-chain-results" element={<ProtectedRoute><UserLayout><ValueChainResults /></UserLayout></ProtectedRoute>} />
+                  
+                  <Route path="/training" element={<ProtectedRoute><UserLayout><Training /></UserLayout></ProtectedRoute>} />
+                  <Route path="/course/:courseId" element={<ProtectedRoute><UserLayout><CourseView /></UserLayout></ProtectedRoute>} />
+                  <Route path="/deliverables" element={<ProtectedRoute><UserLayout><Deliverables /></UserLayout></ProtectedRoute>} />
+                  <Route path="/documents" element={<ProtectedRoute><UserLayout><DocumentCenter /></UserLayout></ProtectedRoute>} />
+                  <Route path="/company/new" element={<ProtectedRoute><UserLayout><NewCompany /></UserLayout></ProtectedRoute>} />
+                  <Route path="/companies" element={<ProtectedRoute><UserLayout><Companies /></UserLayout></ProtectedRoute>} />
+                  <Route path="/company/:companyId" element={<ProtectedRoute><UserLayout><CompanyProfile /></UserLayout></ProtectedRoute>} />
+                  <Route path="/company/:companyId/settings" element={<ProtectedRoute><UserLayout><CompanySettings /></UserLayout></ProtectedRoute>} />
+                  <Route path="/engagement" element={<ProtectedRoute><UserLayout><Engagement /></UserLayout></ProtectedRoute>} />
+                  <Route path="/experts" element={<ProtectedRoute><UserLayout><TalkWithExperts /></UserLayout></ProtectedRoute>} />
 
-                    {/* Protected routes - Admin */}
-                    <Route path="/admin/panel" element={<ProtectedRoute requireAdmin={true}><AdminPanel /></ProtectedRoute>} />
-                    <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
-                    <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/content" element={<ProtectedRoute requireAdmin={true}><AdminLayout><ContentManagement /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/course/new" element={<ProtectedRoute requireAdmin={true}><AdminLayout><CourseForm /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/course/:courseId" element={<ProtectedRoute requireAdmin={true}><AdminLayout><CourseForm /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/modules" element={<ProtectedRoute requireAdmin={true}><AdminLayout><ModuleManagement /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/quizzes" element={<ProtectedRoute requireAdmin={true}><AdminLayout><QuizManagement /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/emission-factors" element={<ProtectedRoute requireAdmin={true}><AdminLayout><EmissionFactors /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/migration" element={<ProtectedRoute requireAdmin={true}><AdminLayout><MigrationTools /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/translations" element={<ProtectedRoute requireAdmin={true}><AdminLayout><TranslationAdmin /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/subscriptions" element={<ProtectedRoute requireAdmin={true}><AdminLayout><SubscriptionManager /></AdminLayout></ProtectedRoute>} />
-                    <Route path="/admin/training" element={<ProtectedRoute requireAdmin={true}><AdminLayout><AdminTraining /></AdminLayout></ProtectedRoute>} />
+                  {/* Protected routes - Admin */}
+                  {/* Fixed admin panel route with explicit admin role check */}
+                  <Route path="/admin/panel" element={<ProtectedRoute requireAdmin={true}><AdminPanel /></ProtectedRoute>} />
+                  <Route path="/admin" element={<Navigate to="/admin/panel" replace />} />
+                  <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/content" element={<ProtectedRoute requireAdmin={true}><AdminLayout><ContentManagement /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/course/new" element={<ProtectedRoute requireAdmin={true}><AdminLayout><CourseForm /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/course/:courseId" element={<ProtectedRoute requireAdmin={true}><AdminLayout><CourseForm /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/modules" element={<ProtectedRoute requireAdmin={true}><AdminLayout><ModuleManagement /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/quizzes" element={<ProtectedRoute requireAdmin={true}><AdminLayout><QuizManagement /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/emission-factors" element={<ProtectedRoute requireAdmin={true}><AdminLayout><EmissionFactors /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/migration" element={<ProtectedRoute requireAdmin={true}><AdminLayout><MigrationTools /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/translations" element={<ProtectedRoute requireAdmin={true}><AdminLayout><TranslationAdmin /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/subscriptions" element={<ProtectedRoute requireAdmin={true}><AdminLayout><SubscriptionManager /></AdminLayout></ProtectedRoute>} />
+                  <Route path="/admin/training" element={<ProtectedRoute requireAdmin={true}><AdminLayout><AdminTraining /></AdminLayout></ProtectedRoute>} />
 
-                    {/* Protected routes - Consultant */}
-                    <Route path="/consultant/dashboard" element={<ProtectedRoute requireConsultant={true}><UserLayout><ConsultantDashboard /></UserLayout></ProtectedRoute>} />
-                    <Route path="/consultant/notifications" element={<ProtectedRoute requireConsultant={true}><UserLayout><ConsultantNotifications /></UserLayout></ProtectedRoute>} />
+                  {/* Protected routes - Consultant */}
+                  <Route path="/consultant/dashboard" element={<ProtectedRoute requireConsultant={true}><UserLayout><ConsultantDashboard /></UserLayout></ProtectedRoute>} />
+                  <Route path="/consultant/notifications" element={<ProtectedRoute requireConsultant={true}><UserLayout><ConsultantNotifications /></UserLayout></ProtectedRoute>} />
 
-                    {/* Fallback routes */}
-                    <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </SuspenseProvider>
-                <GlobalAIAssistant />
-                <Toaster />
-              </Router>
-            </ClientProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </I18nextProvider>
+                  {/* Fallback routes */}
+                  <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </SuspenseProvider>
+              <GlobalAIAssistant />
+              <Toaster />
+            </Router>
+          </ClientProvider>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryProvider>
   );
 }
