@@ -24,80 +24,88 @@ const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+// Email schema for requesting password reset
+const requestResetSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
 export default function ResetPassword() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(true);
-  const [isValidToken, setIsValidToken] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Use the useForm hook with zod resolver
-  const form = useForm<ResetPasswordValues>({
+  // Get the hash fragment from the URL
+  const hash = location.hash;
+  
+  // Use the useForm hook with zod resolver for password reset
+  const resetForm = useForm({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
     },
   });
+  
+  // Use the useForm hook for requesting password reset
+  const requestForm = useForm({
+    resolver: zodResolver(requestResetSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
   // Parse token from URL on component mount
   useEffect(() => {
-    async function verifyResetToken() {
-      try {
-        setIsVerifying(true);
-        
-        // Extract the access token from the URL
-        // The URL format is typically: /reset-password#access_token=xxx&type=recovery
-        const hashParams = new URLSearchParams(location.hash.substring(1));
-        const accessToken = hashParams.get("access_token");
-        const tokenType = hashParams.get("type");
-        
-        if (!accessToken || tokenType !== "recovery") {
-          toast({
-            variant: "destructive",
-            title: "Invalid reset link",
-            description: "Please request a new password reset link.",
-          });
-          navigate("/login");
-          return;
-        }
-        
-        // Verify the token by getting the user's session
-        const { data, error } = await supabase.auth.getUser(accessToken);
-        
-        if (error || !data.user) {
-          console.error("Error verifying reset token:", error);
-          toast({
-            variant: "destructive",
-            title: "Invalid or expired reset link",
-            description: "Please request a new password reset link.",
-          });
-          navigate("/login");
-          return;
-        }
-        
-        // Token is valid
-        setIsValidToken(true);
-      } catch (error) {
-        console.error("Error during token verification:", error);
+    if (hash) {
+      setIsVerifying(true);
+      
+      // Extract the access token from the URL
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+      const tokenType = hashParams.get("type");
+      
+      if (!accessToken || tokenType !== "recovery") {
         toast({
           variant: "destructive",
-          title: "Error verifying reset link",
+          title: "Invalid reset link",
           description: "Please request a new password reset link.",
         });
-        navigate("/login");
-      } finally {
         setIsVerifying(false);
+        return;
       }
+      
+      // Verify the token
+      supabase.auth.getUser(accessToken)
+        .then(({ data, error }) => {
+          if (error || !data.user) {
+            toast({
+              variant: "destructive",
+              title: "Invalid or expired reset link",
+              description: "Please request a new password reset link.",
+            });
+            return;
+          }
+          
+          setIsResetMode(true);
+        })
+        .catch((error) => {
+          console.error("Error verifying token:", error);
+          toast({
+            variant: "destructive",
+            title: "Error verifying reset link",
+            description: "Please request a new password reset link.",
+          });
+        })
+        .finally(() => {
+          setIsVerifying(false);
+        });
     }
-    
-    verifyResetToken();
-  }, [location.hash, toast, navigate]);
+  }, [hash, toast]);
 
-  async function onSubmit(data: ResetPasswordValues) {
+  async function onResetSubmit(data) {
     setIsProcessing(true);
     try {
       // Update the user's password
@@ -111,27 +119,44 @@ export default function ResetPassword() {
 
       toast({
         title: "Password reset successful",
-        description: "Your password has been changed successfully. You can now log in with your new password.",
+        description: "Your password has been changed successfully.",
       });
 
       // Redirect to login page
       navigate("/login");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error resetting password:", error);
-      
-      // More specific error messages
-      let errorMessage = "An unexpected error occurred. Please try again.";
-      
-      if (error.message.includes("expired")) {
-        errorMessage = "Your password reset link has expired. Please request a new one.";
-      } else if (error.message.includes("invalid")) {
-        errorMessage = "Invalid reset link. Please request a new password reset link.";
-      }
-      
       toast({
         variant: "destructive",
         title: "Failed to reset password",
-        description: errorMessage,
+        description: error.message || "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+  
+  async function onRequestSubmit(data) {
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: window.location.origin + "/reset/password",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Password reset email sent",
+        description: "Please check your email for the reset link.",
+      });
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to send reset email",
+        description: error.message || "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -152,10 +177,6 @@ export default function ResetPassword() {
     );
   }
 
-  if (!isValidToken) {
-    return null; // This will prevent flash of content before redirect in useEffect
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
       <Navigation />
@@ -163,69 +184,113 @@ export default function ResetPassword() {
       <main className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-md mx-auto space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-primary">Reset Your Password</h1>
+            <h1 className="text-2xl font-bold text-primary">
+              {isResetMode ? "Reset Your Password" : "Request Password Reset"}
+            </h1>
             <p className="text-gray-600">
-              Please enter your new password below
+              {isResetMode 
+                ? "Please enter your new password below" 
+                : "Enter your email address to receive a password reset link"}
             </p>
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          disabled={isProcessing}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          disabled={isProcessing}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {isResetMode ? (
+              <Form {...resetForm}>
+                <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
+                  <FormField
+                    control={resetForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            disabled={isProcessing}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={resetForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            disabled={isProcessing}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Resetting...
-                    </>
-                  ) : (
-                    "Reset Password"
-                  )}
-                </Button>
-              </form>
-            </Form>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Resetting...
+                      </>
+                    ) : (
+                      "Reset Password"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            ) : (
+              <Form {...requestForm}>
+                <form onSubmit={requestForm.handleSubmit(onRequestSubmit)} className="space-y-4">
+                  <FormField
+                    control={requestForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="your.email@example.com" 
+                            disabled={isProcessing}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            )}
           </div>
         </div>
       </main>
