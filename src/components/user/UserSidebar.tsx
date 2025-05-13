@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { MenuItemsList } from "./sidebar/MenuItemsList";
 import { useMenuItems } from "./sidebar/useMenuItems";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 export const UserSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggleSidebar } = useSidebar();
   const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
   const { mainMenuItems, companyHubItems, adminItems, consultantItems, isAdmin, isConsultant } = useMenuItems();
   
@@ -16,10 +17,6 @@ export const UserSidebar = () => {
     } else {
       setExpandedSubmenu(menuId);
     }
-  };
-
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
   };
 
   // Map MenuItems to the format expected by MenuItemsList
@@ -47,7 +44,12 @@ export const UserSidebar = () => {
         "h-[calc(100vh-64px)] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col",
         collapsed ? "w-[70px]" : "w-[240px]"
       )}
-      style={{ marginTop: '64px' }} // Added to position sidebar below header
+      style={{ 
+        marginTop: '64px',
+        position: 'fixed',
+        left: 0,
+        zIndex: 30
+      }}
     >
       <SidebarHeader collapsed={collapsed} toggleSidebar={toggleSidebar} />
       

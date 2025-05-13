@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useParams } from "react-router-dom";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 type SidebarHeaderProps = {
   collapsed: boolean;
