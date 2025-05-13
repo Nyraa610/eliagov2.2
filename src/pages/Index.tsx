@@ -1,11 +1,44 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Navigation } from '@/components/Navigation';
-import { ArrowRight, Check, BarChart, Shield, Leaf, Users, CreditCard } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
+import { ArrowRight, BarChart, Shield, Leaf, Users, Check, CreditCard } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function Index() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  
+  // Vérifier l'état d'authentification au chargement de la page
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+      
+      // Configurer un écouteur pour les changements d'authentification
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setUser(session?.user || null);
+        }
+      );
+      
+      return () => {
+        authListener?.subscription?.unsubscribe();
+      };
+    };
+    
+    checkUser();
+  }, []);
+  
+  // Fonction pour gérer le clic sur "Get Started"
+  const handleGetStarted = () => {
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -20,12 +53,11 @@ export default function Index() {
             Simplify your sustainability journey with comprehensive ESG analytics and reporting.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/dashboard">
-              <Button size="lg" className="px-8">
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            {/* Remplacer le Link par un Button qui utilise la fonction handleGetStarted */}
+            <Button size="lg" className="px-8" onClick={handleGetStarted}>
+              {user ? "Go to Dashboard" : "Get Started"}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <Link to="/features">
               <Button size="lg" variant="outline" className="px-8">
                 Explore Features
@@ -35,6 +67,7 @@ export default function Index() {
         </div>
       </section>
       
+      {/* Le reste de votre code reste inchangé */}
       {/* Features Grid */}
       <section className="py-16 bg-gray-50 px-4">
         <div className="max-w-7xl mx-auto">
@@ -177,7 +210,7 @@ export default function Index() {
         </div>
       </section>
       
-      {/* CTA Section */}
+      {/* CTA Section - Aussi mettre à jour ce bouton pour rediriger vers login ou dashboard */}
       <section className="py-16 bg-primary text-white px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Start Your ESG Journey?</h2>
@@ -185,11 +218,25 @@ export default function Index() {
             Join thousands of organizations making progress on their sustainability goals.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" variant="outline" className="bg-white hover:bg-gray-100 text-primary px-8">
+            {user ? (
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-white hover:bg-gray-100 text-primary px-8"
+                onClick={() => navigate("/dashboard")}
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-white hover:bg-gray-100 text-primary px-8"
+                onClick={() => navigate("/register")}
+              >
                 Sign Up Free
               </Button>
-            </Link>
+            )}
             <Link to="/contact">
               <Button size="lg" variant="ghost" className="text-white border border-white hover:bg-white/10 px-8">
                 Contact Sales
