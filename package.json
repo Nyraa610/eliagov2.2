@@ -1,4 +1,20 @@
 {
+    {
+      // ...existing content...
+        "devDependencies": {
+                "@babel/core": "^7.21.0",
+                "@babel/preset-env": "^7.21.0",
+                "@babel/preset-react": "^7.21.0",
+                "@babel/preset-typescript": "^7.21.0",
+                "babel-jest": "^29.0.0"
+            },
+
+            // ...other dependencies...
+            "vite": "^5.4.19",
+            "@vitejs/plugin-react-swc": "^3.7.1"
+        }
+      // ...existing content...
+    }
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
