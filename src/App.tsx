@@ -52,6 +52,7 @@ import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import ESGLaunchpadPage from "./pages/ESGLaunchpad";
 import ESGStrategy from "./pages/ESGStrategy";
+import { usePasswordReset } from "./components/auth/ResetPassword/usePasswordReset";
 
 // Admin pages
 import UserManagement from "./pages/admin/UserManagement";
@@ -113,7 +114,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/register/validate" element={<RegisterValidation />} />
                   <Route path="/register/confirmation" element={<RegisterConfirmation />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/reset-password" element={<usePasswordReset />} />
                   <Route path="/reset/password" element={<ResetPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/features" element={<Features />} />
