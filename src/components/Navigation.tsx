@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Sheet,
@@ -33,9 +33,16 @@ export function Navigation() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConsultant, setIsConsultant] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading, user, signOut } = useAuth();
   
   const isActive = (path: string) => location.pathname === path;
+  
+  // Fonction pour naviguer explicitement vers la page d'accueil
+  const goToHomePage = (e) => {
+    e.preventDefault();
+    navigate('/', { replace: true });
+  };
   
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -89,9 +96,9 @@ export function Navigation() {
       <EngagementTracker />
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
         <div className="flex items-center">
-          <Link
-            to="/"
-            className="flex items-center mr-6"
+          <div
+            onClick={goToHomePage}
+            className="flex items-center mr-6 cursor-pointer"
           >
             <img 
               src="/lovable-uploads/038cd54e-d43d-4877-aa24-981675e8c9f7.png" 
@@ -99,7 +106,7 @@ export function Navigation() {
               className="h-8 w-8 mr-2" 
             />
             <span className="font-bold text-primary hidden md:block">ELIA GO</span>
-          </Link>
+          </div>
           
           {!authLoading && isAuthenticated && (
             <>
