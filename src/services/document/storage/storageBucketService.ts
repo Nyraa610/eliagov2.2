@@ -11,7 +11,7 @@ export const storageBucketService = {
    * @returns Promise<boolean> True if the bucket exists or was created
    */
   async ensureStorageBucketExists(): Promise<boolean> {
-    return this.ensureBucketExists('company_documents_storage');
+    return this.ensureBucketExists('company documents storage');
   },
   
   /**
