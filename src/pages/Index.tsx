@@ -20,7 +20,7 @@ export default function Index() {
             Simplify your sustainability journey with comprehensive ESG analytics and reporting.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/login">
+            <Link to="/dashboard">
               <Button size="lg" className="px-8">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
