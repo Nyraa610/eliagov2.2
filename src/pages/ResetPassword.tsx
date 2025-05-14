@@ -41,6 +41,7 @@ export default function ResetPassword() {
   const [isResetMode, setIsResetMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,80 +65,114 @@ export default function ResetPassword() {
 
   // Parse token from URL on component mount
   useEffect(() => {
-    // Check both hash and query parameters for token
-    const accessToken = getAccessTokenFromUrl();
+    // Check for token in URL
+    const token = getAccessTokenFromUrl();
     
-    if (accessToken) {
-      verifyToken(accessToken);
+    if (token) {
+      setAccessToken(token);
+      verifyToken(token);
     }
-  }, [location, toast]);
+  }, [location]);
 
-  // Function to extract token from URL (checks both hash and query params)
+  // Function to extract token from URL (enhanced to check multiple formats)
   const getAccessTokenFromUrl = () => {
-    // Check hash fragment first (traditional Supabase approach)
+    // Check for token in hash fragment (#)
     if (location.hash) {
       const hashParams = new URLSearchParams(location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
-      const tokenType = hashParams.get("type");
+      const token = hashParams.get("access_token") || hashParams.get("token");
+      const type = hashParams.get("type");
       
-      if (accessToken && tokenType === "recovery") {
-        return accessToken;
+      if (token && (!type || type === "recovery")) {
+        return token;
       }
     }
     
-    // Check query parameters as fallback (newer approach)
+    // Check for token in query parameters (?)
     const queryParams = new URLSearchParams(location.search);
-    const accessToken = queryParams.get("access_token");
-    const tokenType = queryParams.get("type");
+    const token = queryParams.get("access_token") || queryParams.get("token");
+    const type = queryParams.get("type");
     
-    if (accessToken && tokenType === "recovery") {
-      return accessToken;
+    if (token && (!type || type === "recovery")) {
+      return token;
+    }
+    
+    // Check for direct token in pathname (for compatibility with some email clients)
+    const pathSegments = location.pathname.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    if (lastSegment && lastSegment.length > 20) {
+      // Likely a token if it's a long string
+      return lastSegment;
     }
     
     return null;
   };
 
   // Function to verify token validity
-  const verifyToken = (accessToken) => {
+  const verifyToken = async (token) => {
     setIsVerifying(true);
     
-    supabase.auth.getUser(accessToken)
-      .then(({ data, error }) => {
-        if (error || !data.user) {
-          toast({
-            variant: "destructive",
-            title: "Invalid or expired reset link",
-            description: "Please request a new password reset link.",
-          });
-          return;
-        }
-        
+    try {
+      // First try with getUser
+      const { data: userData, error: userError } = await supabase.auth.getUser(token);
+      
+      if (!userError && userData?.user) {
         setIsResetMode(true);
-      })
-      .catch((error) => {
-        console.error("Error verifying token:", error);
-        toast({
-          variant: "destructive",
-          title: "Error verifying reset link",
-          description: "Please request a new password reset link.",
-        });
-      })
-      .finally(() => {
         setIsVerifying(false);
+        return;
+      }
+      
+      // If getUser fails, try with verifyOtp
+      const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery'
       });
+      
+      if (!otpError && otpData) {
+        setIsResetMode(true);
+        setIsVerifying(false);
+        return;
+      }
+      
+      // If both methods fail, show error
+      toast({
+        variant: "destructive",
+        title: "Invalid or expired reset link",
+        description: "Please request a new password reset link.",
+      });
+      
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      toast({
+        variant: "destructive",
+        title: "Error verifying reset link",
+        description: "Please request a new password reset link.",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // Handle password reset submission
   async function onResetSubmit(data) {
     setIsProcessing(true);
     try {
-      // Update the user's password
-      const { error } = await supabase.auth.updateUser({
-        password: data.password,
-      });
+      let result;
+      
+      if (accessToken) {
+        // Try to use the token directly if available
+        result = await supabase.auth.updateUser(
+          { password: data.password },
+          { accessToken }
+        );
+      } else {
+        // Fall back to the default method
+        result = await supabase.auth.updateUser({
+          password: data.password,
+        });
+      }
 
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw result.error;
       }
 
       toast({
@@ -146,7 +181,7 @@ export default function ResetPassword() {
       });
 
       // Redirect to login page
-      navigate(ROUTES.LOGIN);
+      setTimeout(() => navigate(ROUTES.LOGIN), 1500);
     } catch (error) {
       console.error("Error resetting password:", error);
       toast({
@@ -163,8 +198,11 @@ export default function ResetPassword() {
   async function onRequestSubmit(data) {
     setIsProcessing(true);
     try {
+      // Generate the full reset URL
+      const resetUrl = new URL(ROUTES.RESET_PASSWORD, window.location.origin).href;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}${ROUTES.RESET_PASSWORD}`,
+        redirectTo: resetUrl,
       });
 
       if (error) {
@@ -180,10 +218,11 @@ export default function ResetPassword() {
       requestForm.reset();
     } catch (error) {
       console.error("Error requesting password reset:", error);
+      
+      // Show success message even on error to prevent email enumeration attacks
       toast({
-        variant: "destructive",
-        title: "Failed to send reset email",
-        description: error.message || "An unexpected error occurred. Please try again.",
+        title: "Password reset email sent",
+        description: "If the email exists in our system, you'll receive a reset link shortly.",
       });
     } finally {
       setIsProcessing(false);
@@ -208,7 +247,7 @@ export default function ResetPassword() {
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-gray-600">Verifying your reset link...</p>
+            <p className="text-gray-600">Vérification de votre lien de réinitialisation...</p>
           </div>
         </main>
       </div>
@@ -223,12 +262,12 @@ export default function ResetPassword() {
         <div className="max-w-md mx-auto space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold text-primary">
-              {isResetMode ? "Reset Your Password" : "Request Password Reset"}
+              {isResetMode ? "Réinitialiser votre mot de passe" : "Demande de réinitialisation de mot de passe"}
             </h1>
             <p className="text-gray-600">
               {isResetMode 
-                ? "Please enter your new password below" 
-                : "Enter your email address to receive a password reset link"}
+                ? "Veuillez saisir votre nouveau mot de passe ci-dessous" 
+                : "Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation"}
             </p>
           </div>
 
@@ -241,7 +280,7 @@ export default function ResetPassword() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New Password</FormLabel>
+                        <FormLabel>Nouveau mot de passe</FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input 
@@ -257,14 +296,14 @@ export default function ResetPassword() {
                             onClick={togglePasswordVisibility}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                             tabIndex={-1}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                           >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
                         </div>
                         <FormMessage />
                         <p className="text-xs text-gray-500 mt-1">
-                          Password must be at least 8 characters and include uppercase, lowercase, and numbers.
+                          Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.
                         </p>
                       </FormItem>
                     )}
@@ -275,7 +314,7 @@ export default function ResetPassword() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input 
@@ -291,7 +330,7 @@ export default function ResetPassword() {
                             onClick={toggleConfirmPasswordVisibility}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                             tabIndex={-1}
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                            aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                           >
                             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
@@ -309,10 +348,10 @@ export default function ResetPassword() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Resetting...
+                        Réinitialisation en cours...
                       </>
                     ) : (
-                      "Reset Password"
+                      "Réinitialiser le mot de passe"
                     )}
                   </Button>
                 </form>
@@ -329,7 +368,7 @@ export default function ResetPassword() {
                         <FormControl>
                           <Input 
                             type="email" 
-                            placeholder="your.email@example.com" 
+                            placeholder="votre.email@exemple.com" 
                             disabled={isProcessing}
                             {...field} 
                           />
@@ -347,10 +386,10 @@ export default function ResetPassword() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
+                        Envoi en cours...
                       </>
                     ) : (
-                      "Send Reset Link"
+                      "Envoyer le lien de réinitialisation"
                     )}
                   </Button>
                 </form>
@@ -363,7 +402,7 @@ export default function ResetPassword() {
                 onClick={() => navigate(ROUTES.LOGIN)} 
                 className="text-sm text-primary"
               >
-                Back to Login
+                Retour à la connexion
               </Button>
             </div>
           </div>
