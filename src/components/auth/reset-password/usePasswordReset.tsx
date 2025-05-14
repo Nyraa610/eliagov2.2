@@ -20,7 +20,7 @@ export const usePasswordReset = () => {
       window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
     }
   };
-
+  
   useEffect(() => {
     const handlePasswordReset = async () => {
       try {
