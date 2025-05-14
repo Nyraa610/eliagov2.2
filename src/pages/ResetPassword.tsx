@@ -14,31 +14,24 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 // Constants
 const ROUTES = {
   LOGIN: "/login",
-  RESET_PASSWORD: "/reset/password"
 };
 
 // Password reset form schema
 const resetPasswordSchema = z.object({
   password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une lettre majuscule")
+    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une lettre minuscule")
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"],
-});
-
-// Email schema for requesting password reset
-const requestResetSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
 });
 
 export default function ResetPassword() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isResetMode, setIsResetMode] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
@@ -47,19 +40,11 @@ export default function ResetPassword() {
   const location = useLocation();
   
   // Reset form with zod resolver
-  const resetForm = useForm({
+  const form = useForm({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
-    },
-  });
-  
-  // Request form for password reset
-  const requestForm = useForm({
-    resolver: zodResolver(requestResetSchema),
-    defaultValues: {
-      email: "",
     },
   });
 
@@ -71,8 +56,16 @@ export default function ResetPassword() {
     if (token) {
       setAccessToken(token);
       verifyToken(token);
+    } else {
+      // Si pas de token, montrer un message d'erreur
+      toast({
+        variant: "destructive",
+        title: "Lien invalide",
+        description: "Le lien de réinitialisation est invalide ou a expiré.",
+      });
+      setIsVerifying(false);
     }
-  }, [location]);
+  }, []);
 
   // Function to extract token from URL (enhanced to check multiple formats)
   const getAccessTokenFromUrl = () => {
@@ -109,14 +102,11 @@ export default function ResetPassword() {
 
   // Function to verify token validity
   const verifyToken = async (token) => {
-    setIsVerifying(true);
-    
     try {
       // First try with getUser
       const { data: userData, error: userError } = await supabase.auth.getUser(token);
       
       if (!userError && userData?.user) {
-        setIsResetMode(true);
         setIsVerifying(false);
         return;
       }
@@ -128,7 +118,6 @@ export default function ResetPassword() {
       });
       
       if (!otpError && otpData) {
-        setIsResetMode(true);
         setIsVerifying(false);
         return;
       }
@@ -136,24 +125,26 @@ export default function ResetPassword() {
       // If both methods fail, show error
       toast({
         variant: "destructive",
-        title: "Invalid or expired reset link",
-        description: "Please request a new password reset link.",
+        title: "Lien invalide ou expiré",
+        description: "Veuillez demander un nouveau lien de réinitialisation.",
       });
+      navigate(ROUTES.LOGIN);
       
     } catch (error) {
-      console.error("Error verifying token:", error);
+      console.error("Erreur de vérification du token:", error);
       toast({
         variant: "destructive",
-        title: "Error verifying reset link",
-        description: "Please request a new password reset link.",
+        title: "Erreur de vérification",
+        description: "Veuillez demander un nouveau lien de réinitialisation.",
       });
+      navigate(ROUTES.LOGIN);
     } finally {
       setIsVerifying(false);
     }
   };
 
   // Handle password reset submission
-  async function onResetSubmit(data) {
+  async function onSubmit(data) {
     setIsProcessing(true);
     try {
       let result;
@@ -176,53 +167,18 @@ export default function ResetPassword() {
       }
 
       toast({
-        title: "Password reset successful",
-        description: "Your password has been changed successfully.",
+        title: "Mot de passe réinitialisé",
+        description: "Votre mot de passe a été changé avec succès.",
       });
 
       // Redirect to login page
       setTimeout(() => navigate(ROUTES.LOGIN), 1500);
     } catch (error) {
-      console.error("Error resetting password:", error);
+      console.error("Erreur de réinitialisation du mot de passe:", error);
       toast({
         variant: "destructive",
-        title: "Failed to reset password",
-        description: error.message || "An unexpected error occurred. Please try again.",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }
-  
-  // Handle password reset request submission
-  async function onRequestSubmit(data) {
-    setIsProcessing(true);
-    try {
-      // Generate the full reset URL
-      const resetUrl = new URL(ROUTES.RESET_PASSWORD, window.location.origin).href;
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: resetUrl,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Password reset email sent",
-        description: "Please check your email for the reset link.",
-      });
-      
-      // Clear the form after successful submission
-      requestForm.reset();
-    } catch (error) {
-      console.error("Error requesting password reset:", error);
-      
-      // Show success message even on error to prevent email enumeration attacks
-      toast({
-        title: "Password reset email sent",
-        description: "If the email exists in our system, you'll receive a reset link shortly.",
+        title: "Échec de la réinitialisation",
+        description: error.message || "Une erreur inattendue s'est produite. Veuillez réessayer.",
       });
     } finally {
       setIsProcessing(false);
@@ -262,145 +218,103 @@ export default function ResetPassword() {
         <div className="max-w-md mx-auto space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold text-primary">
-              {isResetMode ? "Réinitialiser votre mot de passe" : "Demande de réinitialisation de mot de passe"}
+              Réinitialisation de mot de passe
             </h1>
             <p className="text-gray-600">
-              {isResetMode 
-                ? "Veuillez saisir votre nouveau mot de passe ci-dessous" 
-                : "Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation"}
+              Veuillez saisir votre nouveau mot de passe ci-dessous
             </p>
           </div>
 
           <div className="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
-            {isResetMode ? (
-              <Form {...resetForm}>
-                <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
-                  <FormField
-                    control={resetForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nouveau mot de passe</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input 
-                              type={showPassword ? "text" : "password"}
-                              placeholder="••••••••" 
-                              disabled={isProcessing}
-                              className="pr-10"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <button
-                            type="button"
-                            onClick={togglePasswordVisibility}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            tabIndex={-1}
-                            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                          >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                        <FormMessage />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.
-                        </p>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={resetForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input 
-                              type={showConfirmPassword ? "text" : "password"}
-                              placeholder="••••••••" 
-                              disabled={isProcessing}
-                              className="pr-10"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <button
-                            type="button"
-                            onClick={toggleConfirmPasswordVisibility}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            tabIndex={-1}
-                            aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                          >
-                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Réinitialisation en cours...
-                      </>
-                    ) : (
-                      "Réinitialiser le mot de passe"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            ) : (
-              <Form {...requestForm}>
-                <form onSubmit={requestForm.handleSubmit(onRequestSubmit)} className="space-y-4">
-                  <FormField
-                    control={requestForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nouveau mot de passe</FormLabel>
+                      <div className="relative">
                         <FormControl>
                           <Input 
-                            type="email" 
-                            placeholder="votre.email@exemple.com" 
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••" 
                             disabled={isProcessing}
+                            className="pr-10"
                             {...field} 
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1}
+                          aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <FormMessage />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.
+                      </p>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmer le mot de passe</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input 
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••" 
+                            disabled={isProcessing}
+                            className="pr-10"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={toggleConfirmPasswordVisibility}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1}
+                          aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                        >
+                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Envoi en cours...
-                      </>
-                    ) : (
-                      "Envoyer le lien de réinitialisation"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            )}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-teal-600 hover:bg-teal-700" 
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Réinitialisation en cours...
+                    </>
+                  ) : (
+                    "Réinitialiser le mot de passe"
+                  )}
+                </Button>
+              </form>
+            </Form>
 
             <div className="mt-4 text-center">
               <Button 
                 variant="link" 
                 onClick={() => navigate(ROUTES.LOGIN)} 
-                className="text-sm text-primary"
+                className="text-sm text-teal-600"
               >
                 Retour à la connexion
               </Button>
