@@ -38,7 +38,7 @@ export const usePasswordReset = () => {
         
         console.log("Hash params found:", {
           hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
+          hasRefreshToken: !!refreshToken,  
           hashLength: hash.length
         });
         
