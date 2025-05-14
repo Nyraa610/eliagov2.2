@@ -9,7 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+
+// Constants
+const ROUTES = {
+  LOGIN: "/login",
+  RESET_PASSWORD: "/reset/password"
+};
 
 // Password reset form schema
 const resetPasswordSchema = z.object({
@@ -33,14 +39,13 @@ export default function ResetPassword() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get the hash fragment from the URL
-  const hash = location.hash;
-  
-  // Use the useForm hook with zod resolver for password reset
+  // Reset form with zod resolver
   const resetForm = useForm({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -49,7 +54,7 @@ export default function ResetPassword() {
     },
   });
   
-  // Use the useForm hook for requesting password reset
+  // Request form for password reset
   const requestForm = useForm({
     resolver: zodResolver(requestResetSchema),
     defaultValues: {
@@ -59,52 +64,70 @@ export default function ResetPassword() {
 
   // Parse token from URL on component mount
   useEffect(() => {
-    if (hash) {
-      setIsVerifying(true);
-      
-      // Extract the access token from the URL
-      const hashParams = new URLSearchParams(hash.substring(1));
+    // Check both hash and query parameters for token
+    const accessToken = getAccessTokenFromUrl();
+    
+    if (accessToken) {
+      verifyToken(accessToken);
+    }
+  }, [location, toast]);
+
+  // Function to extract token from URL (checks both hash and query params)
+  const getAccessTokenFromUrl = () => {
+    // Check hash fragment first (traditional Supabase approach)
+    if (location.hash) {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
       const tokenType = hashParams.get("type");
       
-      if (!accessToken || tokenType !== "recovery") {
-        toast({
-          variant: "destructive",
-          title: "Invalid reset link",
-          description: "Please request a new password reset link.",
-        });
-        setIsVerifying(false);
-        return;
+      if (accessToken && tokenType === "recovery") {
+        return accessToken;
       }
-      
-      // Verify the token
-      supabase.auth.getUser(accessToken)
-        .then(({ data, error }) => {
-          if (error || !data.user) {
-            toast({
-              variant: "destructive",
-              title: "Invalid or expired reset link",
-              description: "Please request a new password reset link.",
-            });
-            return;
-          }
-          
-          setIsResetMode(true);
-        })
-        .catch((error) => {
-          console.error("Error verifying token:", error);
+    }
+    
+    // Check query parameters as fallback (newer approach)
+    const queryParams = new URLSearchParams(location.search);
+    const accessToken = queryParams.get("access_token");
+    const tokenType = queryParams.get("type");
+    
+    if (accessToken && tokenType === "recovery") {
+      return accessToken;
+    }
+    
+    return null;
+  };
+
+  // Function to verify token validity
+  const verifyToken = (accessToken) => {
+    setIsVerifying(true);
+    
+    supabase.auth.getUser(accessToken)
+      .then(({ data, error }) => {
+        if (error || !data.user) {
           toast({
             variant: "destructive",
-            title: "Error verifying reset link",
+            title: "Invalid or expired reset link",
             description: "Please request a new password reset link.",
           });
-        })
-        .finally(() => {
-          setIsVerifying(false);
+          return;
+        }
+        
+        setIsResetMode(true);
+      })
+      .catch((error) => {
+        console.error("Error verifying token:", error);
+        toast({
+          variant: "destructive",
+          title: "Error verifying reset link",
+          description: "Please request a new password reset link.",
         });
-    }
-  }, [hash, toast]);
+      })
+      .finally(() => {
+        setIsVerifying(false);
+      });
+  };
 
+  // Handle password reset submission
   async function onResetSubmit(data) {
     setIsProcessing(true);
     try {
@@ -123,7 +146,7 @@ export default function ResetPassword() {
       });
 
       // Redirect to login page
-      navigate("/login");
+      navigate(ROUTES.LOGIN);
     } catch (error) {
       console.error("Error resetting password:", error);
       toast({
@@ -136,11 +159,12 @@ export default function ResetPassword() {
     }
   }
   
+  // Handle password reset request submission
   async function onRequestSubmit(data) {
     setIsProcessing(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: window.location.origin + "/reset/password",
+        redirectTo: `${window.location.origin}${ROUTES.RESET_PASSWORD}`,
       });
 
       if (error) {
@@ -151,6 +175,9 @@ export default function ResetPassword() {
         title: "Password reset email sent",
         description: "Please check your email for the reset link.",
       });
+      
+      // Clear the form after successful submission
+      requestForm.reset();
     } catch (error) {
       console.error("Error requesting password reset:", error);
       toast({
@@ -163,9 +190,20 @@ export default function ResetPassword() {
     }
   }
 
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  // Toggle confirm password visibility
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  // Loading state UI
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50">
         <Navigation />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-4">
@@ -178,7 +216,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50">
       <Navigation />
       
       <main className="container mx-auto px-4 py-16 md:py-24">
@@ -194,7 +232,7 @@ export default function ResetPassword() {
             </p>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
             {isResetMode ? (
               <Form {...resetForm}>
                 <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
@@ -204,15 +242,30 @@ export default function ResetPassword() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            disabled={isProcessing}
-                            {...field} 
-                          />
-                        </FormControl>
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"}
+                              placeholder="••••••••" 
+                              disabled={isProcessing}
+                              className="pr-10"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={togglePasswordVisibility}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            tabIndex={-1}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                         <FormMessage />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Password must be at least 8 characters and include uppercase, lowercase, and numbers.
+                        </p>
                       </FormItem>
                     )}
                   />
@@ -223,14 +276,26 @@ export default function ResetPassword() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Confirm New Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            disabled={isProcessing}
-                            {...field} 
-                          />
-                        </FormControl>
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="••••••••" 
+                              disabled={isProcessing}
+                              className="pr-10"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={toggleConfirmPasswordVisibility}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            tabIndex={-1}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -291,6 +356,16 @@ export default function ResetPassword() {
                 </form>
               </Form>
             )}
+
+            <div className="mt-4 text-center">
+              <Button 
+                variant="link" 
+                onClick={() => navigate(ROUTES.LOGIN)} 
+                className="text-sm text-primary"
+              >
+                Back to Login
+              </Button>
+            </div>
           </div>
         </div>
       </main>
