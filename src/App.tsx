@@ -52,7 +52,6 @@ import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import ESGLaunchpadPage from "./pages/ESGLaunchpad";
 import ESGStrategy from "./pages/ESGStrategy";
-import { usePasswordReset } from "./components/auth/ResetPassword/usePasswordReset";
 
 // Admin pages
 import UserManagement from "./pages/admin/UserManagement";
