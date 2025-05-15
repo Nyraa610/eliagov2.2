@@ -34,7 +34,6 @@ export default function ResetPassword() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,122 +47,33 @@ export default function ResetPassword() {
     },
   });
 
-  // Parse token from URL on component mount
   useEffect(() => {
-    // Check for token in URL
-    const token = getAccessTokenFromUrl();
-    
-    if (token) {
-      setAccessToken(token);
-      verifyToken(token);
+    // Simplifiée: on vérifie juste si on a un hash dans l'URL
+    // Ce qui est le cas quand Supabase redirige après un clic sur le lien de réinitialisation
+    if (location.hash) {
+      setIsVerifying(false);
     } else {
-      // Si pas de token, montrer un message d'erreur
       toast({
         variant: "destructive",
         title: "Lien invalide",
         description: "Le lien de réinitialisation est invalide ou a expiré.",
       });
-      setIsVerifying(false);
-    }
-  }, []);
-
-  // Function to extract token from URL (enhanced to check multiple formats)
-  const getAccessTokenFromUrl = () => {
-    // Check for token in hash fragment (#)
-    if (location.hash) {
-      const hashParams = new URLSearchParams(location.hash.substring(1));
-      const token = hashParams.get("access_token") || hashParams.get("token");
-      const type = hashParams.get("type");
-      
-      if (token && (!type || type === "recovery")) {
-        return token;
-      }
-    }
-    
-    // Check for token in query parameters (?)
-    const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get("access_token") || queryParams.get("token");
-    const type = queryParams.get("type");
-    
-    if (token && (!type || type === "recovery")) {
-      return token;
-    }
-    
-    // Check for direct token in pathname (for compatibility with some email clients)
-    const pathSegments = location.pathname.split('/');
-    const lastSegment = pathSegments[pathSegments.length - 1];
-    if (lastSegment && lastSegment.length > 20) {
-      // Likely a token if it's a long string
-      return lastSegment;
-    }
-    
-    return null;
-  };
-
-  // Function to verify token validity
-  const verifyToken = async (token) => {
-    try {
-      // First try with getUser
-      const { data: userData, error: userError } = await supabase.auth.getUser(token);
-      
-      if (!userError && userData?.user) {
-        setIsVerifying(false);
-        return;
-      }
-      
-      // If getUser fails, try with verifyOtp
-      const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: 'recovery'
-      });
-      
-      if (!otpError && otpData) {
-        setIsVerifying(false);
-        return;
-      }
-      
-      // If both methods fail, show error
-      toast({
-        variant: "destructive",
-        title: "Lien invalide ou expiré",
-        description: "Veuillez demander un nouveau lien de réinitialisation.",
-      });
       navigate(ROUTES.LOGIN);
-      
-    } catch (error) {
-      console.error("Erreur de vérification du token:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de vérification",
-        description: "Veuillez demander un nouveau lien de réinitialisation.",
-      });
-      navigate(ROUTES.LOGIN);
-    } finally {
-      setIsVerifying(false);
     }
-  };
+  }, [location, navigate, toast]);
 
   // Handle password reset submission
   async function onSubmit(data) {
     setIsProcessing(true);
     try {
-      let result;
-      
-      if (accessToken) {
-        // Try to use the token directly if available
-        result = await supabase.auth.updateUser(
-          { password: data.password },
-          { accessToken }
-        );
-      } else {
-        // Fall back to the default method
-        result = await supabase.auth.updateUser({
-          password: data.password,
-        });
-      }
+      // Utilisation de la méthode standard pour mettre à jour le mot de passe
+      // Supabase gère automatiquement le token à partir du hash de l'URL
+      const { error } = await supabase.auth.updateUser({
+        password: data.password
+      });
 
-      if (result.error) {
-        throw result.error;
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -217,7 +127,7 @@ export default function ResetPassword() {
       <main className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-md mx-auto space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-primary">
+            <h1 className="text-2xl font-bold text-teal-600">
               Réinitialisation de mot de passe
             </h1>
             <p className="text-gray-600">
