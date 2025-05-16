@@ -10,9 +10,10 @@ import { useTranslation } from "react-i18next";
 
 interface PersonalDocumentUploaderProps {
   onUploadComplete: () => void;
+  companyId: string;
 }
 
-export function PersonalDocumentUploader({ onUploadComplete }: PersonalDocumentUploaderProps) {
+export function PersonalDocumentUploader({ onUploadComplete, companyId }: PersonalDocumentUploaderProps) {
   const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
