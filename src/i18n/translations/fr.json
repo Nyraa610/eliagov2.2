@@ -284,14 +284,19 @@
       "success": "Chaîne de valeur générée avec succès",
       "error": "Erreur lors de la génération de la chaîne de valeur"
     },
-    "documents": {
-      "title": "Documents",
-      "upload": "Télécharger",
-      "delete": "Supprimer",
-      "noDocuments": "Aucun document téléchargé",
-      "uploadInstructions": "Glissez-déposez des documents ou cliquez pour parcourir"
+    {
+  "documents": {
+    "troubleshootingTools": "Outils de dépannage",
+    "documentCenter": "Centre de documents",
+    "tabs": {
+      "company": "Documents d'entreprise",
+      "personal": "Documents personnels",
+      "valueChain": "Documents de chaîne de valeur",
+      "deliverables": "Livrables Elia Go"
     }
-  },
+  }
+}
+
   "deliverables": {
     "title": "Livrables et Rapports",
     "description": "Accédez à tous vos rapports de durabilité, analyses et documents officiels en un seul endroit"
