@@ -1,135 +1,152 @@
-
-import { useState, useEffect } from "react";
-import { documentService, Document } from "@/services/document";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, Download, FileIcon, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { toast } from "@/components/ui/use-toast";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { DocumentsList } from "@/components/documents/DocumentsList";
+import { Document } from "@/services/types";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { PersonalDocumentUploader } from "@/components/documents/PersonalDocumentUploader";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 
 interface PersonalDocumentsListProps {
-  userId: string;
+  userId?: string; // Optional because we can use the authenticated user
 }
 
 export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { company } = useCompany();
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use provided userId or fall back to authenticated user
+  const effectiveUserId = userId || user?.id;
   
-  useEffect(() => {
-    const loadDocuments = async () => {
-      setLoading(true);
-      try {
-        const data = await documentService.getPersonalDocuments(userId);
-        setDocuments(data);
-      } catch (error) {
-        console.error("Error loading personal documents:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load personal documents",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDocuments = async () => {
+    if (!effectiveUserId || !company?.id) {
+      setError(t('documents.errors.noUserOrCompany', 'User or company information is missing'));
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
     
-    loadDocuments();
-  }, [userId]);
+    try {
+      // Query based on your Document interface structure
+      const { data, error: fetchError } = await supabase
+        .from('documents') // Adjust table name if needed
+        .select('*')
+        .eq('user_id', effectiveUserId)
+        .eq('company_id', company.id)
+        .eq('metadata->is_personal', true) // Assuming personal documents are marked in metadata
+        .order('created_at', { ascending: false });
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      setDocuments(data || []);
+    } catch (err) {
+      console.error('Error fetching personal documents:', err);
+      setError(t('documents.errors.fetchFailed', 'Failed to load documents. Please try again later.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (effectiveUserId && company?.id) {
+      fetchDocuments();
+    }
+  }, [effectiveUserId, company?.id]);
+
+  const handleDocumentUploaded = () => {
+    fetchDocuments();
+  };
 
   const handleDeleteDocument = async (document: Document) => {
-    if (confirm("Are you sure you want to delete this document?")) {
-      try {
-        await documentService.deleteDocument(document.id);
-        setDocuments(documents.filter(d => d.id !== document.id));
-        toast({
-          title: "Document deleted",
-          description: "The document has been successfully deleted",
-        });
-      } catch (error) {
-        console.error("Error deleting document:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete document",
-          variant: "destructive",
-        });
+    try {
+      if (!document.file_path) {
+        toast.error(t('documents.errors.invalidFilePath', 'Invalid file path'));
+        return;
       }
-    }
-  };
-  
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('pdf')) {
-      return <FileText className="h-6 w-6 text-red-500" />;
-    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
-      return <FileText className="h-6 w-6 text-green-500" />;
-    } else if (fileType.includes('word') || fileType.includes('document')) {
-      return <FileText className="h-6 w-6 text-blue-500" />;
-    } else {
-      return <FileText className="h-6 w-6 text-gray-500" />;
-    }
-  };
-  
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Personal Documents</CardTitle>
-      </CardHeader>
       
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-1">No personal documents yet</h3>
-            <p className="text-muted-foreground">
-              Upload documents to keep them organized
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {documents.map(document => (
-              <div
-                key={document.id}
-                className="flex flex-col border rounded-lg p-4"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  {getFileIcon(document.file_type)}
-                  <div className="flex-1">
-                    <h4 className="font-medium">{document.name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Uploaded {formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mt-auto pt-2 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2"
-                    asChild
-                  >
-                    <a href={document.file_path} target="_blank" rel="noopener noreferrer" download>
-                      <Download className="h-4 w-4" />
-                      <span>Download</span>
-                    </a>
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => handleDeleteDocument(document)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      // 1. Delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('company_documents_storage') // Adjust bucket name if needed
+        .remove([document.file_path]);
+      
+      if (storageError) {
+        console.error('Error deleting file from storage:', storageError);
+        toast.error(t('documents.errors.deleteStorageFailed', 'Failed to delete file from storage'));
+        return;
+      }
+      
+      // 2. Delete the document record from the database
+      const { error: dbError } = await supabase
+        .from('documents') // Adjust table name if needed
+        .delete()
+        .eq('id', document.id);
+      
+      if (dbError) {
+        console.error('Error deleting document record:', dbError);
+        toast.error(t('documents.errors.deleteRecordFailed', 'Failed to delete document record'));
+        return;
+      }
+      
+      toast.success(t('documents.deleteSuccess', 'Document deleted successfully'));
+      fetchDocuments();
+    } catch (error) {
+      console.error('Delete document error:', error);
+      toast.error(t('documents.errors.deleteFailed', 'Delete failed: {{error}}', { 
+        error: error instanceof Error ? error.message : String(error) 
+      }));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">{t('documents.personalDocuments', 'Personal Documents')}</h2>
+        {company && <PersonalDocumentUploader 
+          onUploadComplete={handleDocumentUploaded} 
+          companyId={company.id}
+        />}
+      </div>
+      
+      {documents.length > 0 ? (
+        <DocumentsList documents={documents} onDeleteDocument={handleDeleteDocument} />
+      ) : (
+        <div className="text-center p-10 border-2 border-dashed border-gray-300 rounded-lg">
+          <p className="text-lg font-medium text-gray-700">
+            {t('documents.noPersonalDocuments', 'No personal documents yet')}
+          </p>
+          <p className="text-gray-500 mt-2">
+            {t('documents.uploadToOrganize', 'Upload documents to keep them organized')}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
