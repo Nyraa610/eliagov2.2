@@ -1,22 +1,13 @@
 
-import { documentService } from "./documentService";
-import { Document, DocumentFolder, Deliverable } from "./types";
-import { genericDocumentService, type DocumentType, type UploadOptions, type ValidationRules, type UploadedDocument } from "./genericDocumentService";
-import { companyFolderService } from "./companyFolderService";
-import { storageBucketService } from "./storage/storageBucketService";
-import { folderService } from "./storage/folderService";
+import { Document, DocumentFolder } from './types';
+import { documentService } from '../value-chain/document';
+import { personalDocumentService } from './documentService';
+import { storageBucketService } from './storage/storageBucketService';
 
 export {
+  Document,
+  DocumentFolder,
   documentService,
-  genericDocumentService,
-  companyFolderService,
-  storageBucketService,
-  folderService,
-  type Document,
-  type DocumentFolder,
-  type Deliverable,
-  type DocumentType,
-  type UploadOptions, 
-  type ValidationRules,
-  type UploadedDocument
+  personalDocumentService,
+  storageBucketService
 };
