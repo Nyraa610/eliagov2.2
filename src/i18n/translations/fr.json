@@ -26,7 +26,9 @@
     "signIn": "Se connecter",
     "logout": "Déconnexion",
     "resetPassword": "Réinitialiser le mot de passe",
-    "resetPasswordInstructions": "Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe"
+    "resetPasswordInstructions": "Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -283,8 +285,8 @@
       "generating": "Génération en cours...",
       "success": "Chaîne de valeur générée avec succès",
       "error": "Erreur lors de la génération de la chaîne de valeur"
-    },
-    {
+    }
+  },
   "documents": {
     "troubleshootingTools": "Outils de dépannage",
     "documentCenter": "Centre de documents",
@@ -294,19 +296,9 @@
       "valueChain": "Documents de chaîne de valeur",
       "deliverables": "Livrables Elia Go"
     }
-  }
-}
-
+  },
   "deliverables": {
     "title": "Livrables et Rapports",
     "description": "Accédez à tous vos rapports de durabilité, analyses et documents officiels en un seul endroit"
   }
 }
-
-{
-  "auth": {
-    "createAccount": "Créez votre compte",
-    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
-  }
-}
-
