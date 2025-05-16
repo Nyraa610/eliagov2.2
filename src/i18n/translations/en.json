@@ -26,7 +26,9 @@
     "signIn": "Sign in",
     "logout": "Logout",
     "resetPassword": "Reset Password",
-    "resetPasswordInstructions": "Enter your email and we'll send you a link to reset your password"
+    "resetPasswordInstructions": "Enter your email and we'll send you a link to reset your password",
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -285,7 +287,15 @@
       "success": "Value chain generated successfully",
       "error": "Error generating value chain"
     },
-    {
+    "emptyState": {
+      "title": "Create Your Value Chain",
+      "description": "Build a comprehensive value chain to identify ESG impacts and optimization opportunities.",
+      "generateWithAI": "Generate with AI",
+      "aiDescription": "Let AI analyze your business and generate a detailed value chain model.",
+      "or": "or",
+      "manualDescription": "Use the toolbar above to add nodes and create your value chain manually."
+    }
+  },
   "documents": {
     "troubleshootingTools": "Outils de dépannage",
     "documentCenter": "Centre de documents",
@@ -294,14 +304,6 @@
       "personal": "Documents personnels",
       "valueChain": "Documents de chaîne de valeur",
       "deliverables": "Livrables Elia Go"
-    },
-    "emptyState": {
-      "title": "Create Your Value Chain",
-      "description": "Build a comprehensive value chain to identify ESG impacts and optimization opportunities.",
-      "generateWithAI": "Generate with AI",
-      "aiDescription": "Let AI analyze your business and generate a detailed value chain model.",
-      "or": "or",
-      "manualDescription": "Use the toolbar above to add nodes and create your value chain manually."
     }
   },
   "admin": {
@@ -356,11 +358,3 @@
     "description": "Access all your sustainability reports, analyses, and official documents in one place"
   }
 }
-
-{
-  "auth": {
-    "createAccount": "Créez votre compte",
-    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
-  }
-}
-
