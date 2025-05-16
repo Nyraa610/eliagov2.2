@@ -1,33 +1,34 @@
 
-import React, { createContext, useContext } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
+import React, { createContext, useState } from 'react';
 
-type AuthContextType = {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
+interface AuthContextProps {
   isAuthenticated: boolean;
-  companyId: string | null;
-  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signOut: () => Promise<{ error: any | null }>;
-  refreshAuthState: () => Promise<void>;
-};
+  setIsAuthenticated: (value: boolean) => void;
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextProps>({
+  isAuthenticated: false,
+  setIsAuthenticated: () => {},
+});
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useOptimizedAuth();
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
 
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };
