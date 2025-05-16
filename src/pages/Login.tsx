@@ -1,91 +1,126 @@
 
-import { Link } from "react-router-dom";
-import { Navigation } from "@/components/Navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginForm } from "@/components/auth/login/LoginForm";
-import { ResetPasswordDialog } from "@/components/auth/login/ResetPasswordDialog";
-import { TestEmailDialog } from "@/components/auth/login/TestEmailDialog";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
 
-export default function Login() {
-  const [showAdminTools, setShowAdminTools] = useState(false);
-  const [showResetDialog, setShowResetDialog] = useState(false);
-  const [showTestEmailDialog, setShowTestEmailDialog] = useState(false);
-  
-  const handleForgotPassword = () => {
-    setShowResetDialog(true);
+export function Login() {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleAdminTools = () => {
-    setShowAdminTools(!showAdminTools);
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        // Show success message if no error
+        setError('Check your email for the confirmation link');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sage-light/10 to-mediterranean-light/10">
-      <Navigation />
+    <div className="container mx-auto px-4 py-8 max-w-md">
+      <h1 className="text-3xl font-bold mb-6 text-center">{t('auth.login', 'Login')}</h1>
       
-      <div className="container mx-auto px-4 py-16 lg:py-24">
-        <div className="max-w-md mx-auto">
-          <Card className="bg-white/60 backdrop-blur-sm border-gray-200 shadow-sm">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
-              <CardDescription className="text-center">
-                Enter your email and password to access your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <LoginForm onForgotPassword={handleForgotPassword} />
-              
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <Link to="/register" className="text-primary font-medium hover:underline">
-                    Sign up
-                  </Link>
-                </p>
-              </div>
-              
-              {/* Hidden admin tools area, can be toggled with button below */}
-              {showAdminTools && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">Admin Tools</h3>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full text-xs"
-                      onClick={() => setShowTestEmailDialog(true)}
-                    >
-                      Test SMTP Configuration
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Hidden button to toggle admin tools */}
-          <div className="flex justify-end mt-2">
-            <button 
-              className="text-xs text-gray-400 hover:text-gray-500 opacity-30" 
-              onClick={toggleAdminTools}
-            >
-              {showAdminTools ? "Hide Admin Tools" : "Show Admin Tools"}
-            </button>
-          </div>
-          
-          <ResetPasswordDialog 
-            open={showResetDialog} 
-            onClose={() => setShowResetDialog(false)} 
-          />
-          
-          <TestEmailDialog 
-            open={showTestEmailDialog}
-            onClose={() => setShowTestEmailDialog(false)}
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+          <p>{error}</p>
+        </div>
+      )}
+      
+      <form onSubmit={handleLogin} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('auth.emailLabel', 'Email address')}
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-      </div>
+        
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('auth.passwordLabel', 'Password')}
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            {loading ? t('common.loading', 'Loading...') : t('auth.signIn', 'Sign In')}
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleSignUp}
+            disabled={loading}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            {t('auth.signUp', 'Sign Up')}
+          </button>
+        </div>
+      </form>
+      
+      <p className="mt-4 text-sm text-center text-gray-600">
+        {t('auth.forgotPassword', 'Forgot password?')} <a href="#reset" className="text-blue-600 hover:text-blue-800">Click here</a>
+      </p>
     </div>
   );
 }
+
+export default Login;
