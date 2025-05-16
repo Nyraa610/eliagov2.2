@@ -284,24 +284,30 @@
       "success": "Η αλυσίδα αξίας δημιουργήθηκε με επιτυχία",
       "error": "Σφάλμα κατά τη δημιουργία της αλυσίδας αξίας"
     },
-    "documents": {
-      "title": "Έγγραφα",
-      "upload": "Μεταφόρτωση",
-      "delete": "Διαγραφή",
-      "noDocuments": "Δεν έχουν μεταφορτωθεί έγγραφα",
-      "uploadInstructions": "Σύρετε και αποθέστε έγγραφα ή κάντε κλικ για περιήγηση"
-    }
-  },
+    
   "deliverables": {
     "title": "Παραδοτέα και Αναφορές",
     "description": "Αποκτήστε πρόσβαση σε όλες τις αναφορές βιωσιμότητας, αναλύσεις και επίσημα έγγραφα σε ένα μέρος"
   }
-}
+},
 
 {
   "auth": {
     "createAccount": "Créez votre compte",
     "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+  }
+},
+
+{
+  "documents": {
+    "troubleshootingTools": "Outils de dépannage",
+    "documentCenter": "Centre de documents",
+    "tabs": {
+      "company": "Documents d'entreprise",
+      "personal": "Documents personnels",
+      "valueChain": "Documents de chaîne de valeur",
+      "deliverables": "Livrables Elia Go"
+    }
   }
 }
 
