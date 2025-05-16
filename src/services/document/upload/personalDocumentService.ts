@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { Document } from "../types";
 import { toast } from "sonner";
