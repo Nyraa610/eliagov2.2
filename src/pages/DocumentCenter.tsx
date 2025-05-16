@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { TestUploadButton } from "@/components/documents/TestUploadButton";
@@ -8,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
 import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
 import { DeliverablesList } from "@/components/documents/list/DeliverablesList";
-import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "react-i18next";
 
 export default function DocumentCenter() {
+  const { t } = useTranslation();
   const { user, companyId } = useAuth();
   const [activeTab, setActiveTab] = useState("company");
   const [isConsultant, setIsConsultant] = useState(false);
@@ -42,7 +42,7 @@ export default function DocumentCenter() {
     <div className="container mx-auto">
       {companyId && user?.id && (
         <Card className="p-4 mb-4">
-          <h3 className="text-sm font-medium mb-2">Troubleshooting Tools</h3>
+          <h3 className="text-sm font-medium mb-2">{t('documents.troubleshootingTools', 'Troubleshooting Tools')}</h3>
           <TestUploadButton companyId={companyId} />
         </Card>
       )}
@@ -50,15 +50,15 @@ export default function DocumentCenter() {
       {user?.id && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Document Center</CardTitle>
+            <CardTitle>{t('documents.documentCenter', 'Document Center')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="company">Company Documents</TabsTrigger>
-                <TabsTrigger value="personal">Personal Documents</TabsTrigger>
-                <TabsTrigger value="value-chain">Value Chain Documents</TabsTrigger>
-                {isConsultant && <TabsTrigger value="deliverables">Elia Go Deliverables</TabsTrigger>}
+                <TabsTrigger value="company">{t('documents.tabs.company', 'Company Documents')}</TabsTrigger>
+                <TabsTrigger value="personal">{t('documents.tabs.personal', 'Personal Documents')}</TabsTrigger>
+                <TabsTrigger value="value-chain">{t('documents.tabs.valueChain', 'Value Chain Documents')}</TabsTrigger>
+                {isConsultant && <TabsTrigger value="deliverables">{t('documents.tabs.deliverables', 'Elia Go Deliverables')}</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="company" className="space-y-4">
