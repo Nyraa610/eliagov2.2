@@ -297,3 +297,11 @@
     "description": "Αποκτήστε πρόσβαση σε όλες τις αναφορές βιωσιμότητας, αναλύσεις και επίσημα έγγραφα σε ένα μέρος"
   }
 }
+
+{
+  "auth": {
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+  }
+}
+
