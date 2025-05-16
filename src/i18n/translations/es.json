@@ -284,14 +284,19 @@
       "success": "Cadena de valor generada exitosamente",
       "error": "Error al generar la cadena de valor"
     },
-    "documents": {
-      "title": "Documentos",
-      "upload": "Subir",
-      "delete": "Eliminar",
-      "noDocuments": "No hay documentos subidos",
-      "uploadInstructions": "Arrastre y suelte documentos o haga clic para examinar"
+    {
+  "documents": {
+    "troubleshootingTools": "Outils de dépannage",
+    "documentCenter": "Centre de documents",
+    "tabs": {
+      "company": "Documents d'entreprise",
+      "personal": "Documents personnels",
+      "valueChain": "Documents de chaîne de valeur",
+      "deliverables": "Livrables Elia Go"
     }
-  },
+  }
+}
+
   "deliverables": {
     "title": "Entregables e Informes",
     "description": "Acceda a todos sus informes de sostenibilidad, análisis y documentos oficiales en un solo lugar"
