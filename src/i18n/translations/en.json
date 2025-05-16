@@ -285,12 +285,15 @@
       "success": "Value chain generated successfully",
       "error": "Error generating value chain"
     },
-    "documents": {
-      "title": "Documents",
-      "upload": "Upload",
-      "delete": "Delete",
-      "noDocuments": "No documents uploaded",
-      "uploadInstructions": "Drag and drop documents or click to browse"
+    {
+  "documents": {
+    "troubleshootingTools": "Outils de dépannage",
+    "documentCenter": "Centre de documents",
+    "tabs": {
+      "company": "Documents d'entreprise",
+      "personal": "Documents personnels",
+      "valueChain": "Documents de chaîne de valeur",
+      "deliverables": "Livrables Elia Go"
     },
     "emptyState": {
       "title": "Create Your Value Chain",
