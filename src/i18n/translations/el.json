@@ -26,7 +26,9 @@
     "signIn": "Συνδεθείτε",
     "logout": "Αποσύνδεση",
     "resetPassword": "Επαναφορά κωδικού",
-    "resetPasswordInstructions": "Εισάγετε το email σας και θα σας στείλουμε ένα σύνδεσμο για την επαναφορά του κωδικού σας"
+    "resetPasswordInstructions": "Εισάγετε το email σας και θα σας στείλουμε ένα σύνδεσμο για την επαναφορά του κωδικού σας",
+    "createAccount": "Δημιουργήστε τον λογαριασμό σας",
+    "joinElia": "Συνδεθείτε στο ELIA GO για να ξεκινήσετε το ταξίδι βιωσιμότητάς σας"
   },
   "dashboard": {
     "title": "Πίνακας Ελέγχου",
@@ -74,7 +76,7 @@
     "fullName": "Πλήρες όνομα",
     "enterFullName": "Εισάγετε το πλήρες όνομά σας",
     "bio": "Βιογραφικό",
-    "enterBio": "Πείτε μα�� λίγα λόγια για εσάς",
+    "enterBio": "Πείτε μας λίγα λόγια για εσάς",
     "saving": "Αποθήκευση...",
     "saveProfile": "Αποθήκευση προφίλ",
     "languageSettings": "Ρυθμίσεις γλώσσας",
@@ -122,7 +124,7 @@
       "title": "Ανάλυση Διπλής Σημαντικότητας",
       "description": "Εντοπισμός περιβαλλοντικών και κοινωνικών ζητημάτων με σημαντικό επιχειρηματικό αντίκτυπο",
       "shortDescription": "Εντοπίστε τις κύριες περιοχές περιβαλλοντικού και κοινωνικού αντικτύπου",
-      "steps": "Διαβούλευση με ενδιαφερόμενα μέρη, αξιολόγηση επ��πτώσεων και ιεράρχηση",
+      "steps": "Διαβούλευση με ενδιαφερόμενα μέρη, αξιολόγηση επιπτώσεων και ιεράρχηση",
       "start": "Έναρξη Ανάλυσης"
     },
     "actionPlan": {
@@ -262,7 +264,7 @@
     "editor": {
       "title": "Επεξεργαστής Αλυσίδας Αξίας",
       "nodes": "Κόμβοι",
-      "edges": "Σ��νδέσεις",
+      "edges": "Συνδέσεις",
       "save": "Αποθήκευση",
       "export": "Εξαγωγή",
       "import": "Εισαγωγή",
@@ -284,30 +286,19 @@
       "success": "Η αλυσίδα αξίας δημιουργήθηκε με επιτυχία",
       "error": "Σφάλμα κατά τη δημιουργία της αλυσίδας αξίας"
     },
-    
-  "deliverables": {
-    "title": "Παραδοτέα και Αναφορές",
-    "description": "Αποκτήστε πρόσβαση σε όλες τις αναφορές βιωσιμότητας, αναλύσεις και επίσημα έγγραφα σε ένα μέρος"
-  }
-},
-
-{
-  "auth": {
-    "createAccount": "Créez votre compte",
-    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
-  }
-},
-
-{
+    "deliverables": {
+      "title": "Παραδοτέα και Αναφορές",
+      "description": "Αποκτήστε πρόσβαση σε όλες τις αναφορές βιωσιμότητας, αναλύσεις και επίσημα έγγραφα σε ένα μέρος"
+    }
+  },
   "documents": {
-    "troubleshootingTools": "Outils de dépannage",
-    "documentCenter": "Centre de documents",
+    "troubleshootingTools": "Εργαλεία αντιμετώπισης προβλημάτων",
+    "documentCenter": "Κέντρο Εγγράφων",
     "tabs": {
-      "company": "Documents d'entreprise",
-      "personal": "Documents personnels",
-      "valueChain": "Documents de chaîne de valeur",
-      "deliverables": "Livrables Elia Go"
+      "company": "Έγγραφα Εταιρείας",
+      "personal": "Προσωπικά Έγγραφα",
+      "valueChain": "Έγγραφα Αλυσίδας Αξίας",
+      "deliverables": "Παραδοτέα Elia Go"
     }
   }
 }
-
