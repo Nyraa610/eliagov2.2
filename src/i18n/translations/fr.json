@@ -297,3 +297,11 @@
     "description": "Accédez à tous vos rapports de durabilité, analyses et documents officiels en un seul endroit"
   }
 }
+
+{
+  "auth": {
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+  }
+}
+
