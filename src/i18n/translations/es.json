@@ -297,3 +297,11 @@
     "description": "Acceda a todos sus informes de sostenibilidad, análisis y documentos oficiales en un solo lugar"
   }
 }
+
+{
+  "auth": {
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+  }
+}
+
