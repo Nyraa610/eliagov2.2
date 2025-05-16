@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button";
@@ -6,9 +5,8 @@ import { Upload, X, File } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { personalDocumentService } from "@/services/document/documentService";
+import { personalDocumentService } from "@/services/upload/personalDocumentService";
 import { useTranslation } from "react-i18next";
-import { useCompany } from "@/contexts/CompanyContext";
 
 interface PersonalDocumentUploaderProps {
   onUploadComplete: () => void;
@@ -64,7 +62,7 @@ export function PersonalDocumentUploader({ onUploadComplete, companyId }: Person
     
     try {
       // Use the personal document service to upload the file
-      await personalDocumentService.uploadPersonalDocument(selectedFile, user.id, companyId);
+      await personalDocumentService.uploadPersonalDocument(selectedFile, user.id);
       
       setUploadProgress(100);
       

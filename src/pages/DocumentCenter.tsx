@@ -1,45 +1,34 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { DocumentsList } from "@/components/documents/DocumentsList";
-import { Document } from "@/services/types";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Document } from "@/services/document";
+import { Loader2, AlertCircle, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PersonalDocumentUploader } from "@/components/documents/PersonalDocumentUploader";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCompany } from "@/contexts/CompanyContext";
 
-export function DocumentCenter() {
+interface PersonalDocumentsListProps {
+  userId: string;
+}
+
+export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const { company } = useCompany();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Make sure user is available
-  const effectiveUserId = user?.id;
-  
   const fetchDocuments = async () => {
-    if (!effectiveUserId || !company?.id) {
-      setError(t('documents.errors.noUserOrCompany', 'User or company information is missing'));
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     
     try {
-      // Query based on your Document interface structure
       const { data, error: fetchError } = await supabase
-        .from('documents') // Adjust table name if needed
+        .from('documents')
         .select('*')
-        .eq('user_id', effectiveUserId)
-        .eq('company_id', company.id)
-        .eq('metadata->is_personal', true) // Assuming personal documents are marked in metadata
+        .eq('user_id', userId)
+        .eq('is_personal', true)
         .order('created_at', { ascending: false });
       
       if (fetchError) {
@@ -56,26 +45,30 @@ export function DocumentCenter() {
   };
 
   useEffect(() => {
-    if (effectiveUserId && company?.id) {
+    if (userId) {
       fetchDocuments();
     }
-  }, [effectiveUserId, company?.id]);
+  }, [userId]);
 
   const handleDocumentUploaded = () => {
     fetchDocuments();
+    toast.success(t('documents.uploadSuccess', 'Document uploaded successfully'));
   };
 
   const handleDeleteDocument = async (document: Document) => {
     try {
-      if (!document.file_path) {
+      // Extract file path from URL or use document.path if available
+      const filePath = document.path || document.url.split('/').pop();
+      
+      if (!filePath) {
         toast.error(t('documents.errors.invalidFilePath', 'Invalid file path'));
         return;
       }
       
       // 1. Delete the file from storage
       const { error: storageError } = await supabase.storage
-        .from('company_documents_storage') // Adjust bucket name if needed
-        .remove([document.file_path]);
+        .from('documents')
+        .remove([filePath]);
       
       if (storageError) {
         console.error('Error deleting file from storage:', storageError);
@@ -85,7 +78,7 @@ export function DocumentCenter() {
       
       // 2. Delete the document record from the database
       const { error: dbError } = await supabase
-        .from('documents') // Adjust table name if needed
+        .from('documents')
         .delete()
         .eq('id', document.id);
       
@@ -126,10 +119,7 @@ export function DocumentCenter() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">{t('documents.personalDocuments', 'Personal Documents')}</h2>
-        {company && <PersonalDocumentUploader 
-          onUploadComplete={handleDocumentUploaded} 
-          companyId={company.id}
-        />}
+        <PersonalDocumentUploader onUploadComplete={handleDocumentUploaded} />
       </div>
       
       {documents.length > 0 ? (
@@ -147,5 +137,3 @@ export function DocumentCenter() {
     </div>
   );
 }
-
-export default DocumentCenter;
