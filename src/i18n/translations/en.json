@@ -353,3 +353,11 @@
     "description": "Access all your sustainability reports, analyses, and official documents in one place"
   }
 }
+
+{
+  "auth": {
+    "createAccount": "Créez votre compte",
+    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+  }
+}
+
