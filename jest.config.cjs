@@ -4,6 +4,12 @@ module.exports = {
   },
   testEnvironment: 'jsdom',
   moduleNameMapper: {
-        "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+
+  }
+  // ... other config ...
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1'
+        }
     }
 };
