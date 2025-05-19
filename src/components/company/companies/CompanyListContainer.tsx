@@ -6,15 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { CompanyListHeader } from "../CompanyListHeader";
 import { CompanyListContent } from "../CompanyListContent";
 import { supabaseService } from "@/services/base/supabaseService";
-import { MoreCompaniesBox } from "./MoreCompaniesBox";
 
 interface CompanyListContainerProps {
-  maxCompanies?: number;
   onAddSubsidiary?: () => void;
 }
 
 export function CompanyListContainer({
-  maxCompanies,
   onAddSubsidiary
 }: CompanyListContainerProps) {
   const [companies, setCompanies] = useState([]);
@@ -54,18 +51,14 @@ export function CompanyListContainer({
     }
   };
 
-  // Always allow creating companies (remove the maxCompanies restriction)
-  const canCreateCompany = true;
-  const showMoreCompaniesBox = false; // Don't need this limitation anymore
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <CompanyListHeader 
         title="My Companies"
         onRefresh={fetchCompanies}
         onCreateCompany={() => navigate("/company/new")}
         onAddSubsidiary={onAddSubsidiary}
-        canAddCompany={canCreateCompany}
+        canAddCompany={true}
         showRefresh={true}
       />
       

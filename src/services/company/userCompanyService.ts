@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { Company, CompanyWithRole } from "./types";
 
@@ -18,8 +17,42 @@ export const userCompanyService = {
         throw new Error("No authenticated user found");
       }
       
-      console.log(`Fetching companies for user ID: ${userData.user.id}`);
+      // First check if the user is a consultant or admin who should see all companies
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userData.user.id)
+        .single();
       
+      if (profileError) {
+        console.error("Error checking user role:", profileError);
+      } else if (profileData?.role === 'admin' || profileData?.role === 'consultant') {
+        console.log(`User is ${profileData.role}, fetching all companies`);
+        
+        // Fetch all companies for consultants/admins
+        const { data: allCompanies, error: companiesError } = await supabase
+          .from('companies')
+          .select('*')
+          .order('name');
+          
+        if (companiesError) {
+          console.error("Error fetching all companies:", companiesError);
+          throw companiesError;
+        }
+        
+        // Mark all companies with is_admin: true for consultants/admins
+        const userCompanies = allCompanies.map(company => ({
+          ...company,
+          is_admin: true
+        }));
+        
+        console.log(`Retrieved ${userCompanies.length} companies for ${profileData.role}`);
+        return userCompanies as CompanyWithRole[];
+      }
+      
+      console.log(`Fetching companies for regular user ID: ${userData.user.id}`);
+      
+      // For regular users, continue with normal company access logic
       // First try to get companies through the many-to-many relationship
       const { data: userCompanyRoles, error: rolesError } = await supabase
         .from('company_user_roles')
