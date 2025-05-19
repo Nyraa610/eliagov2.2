@@ -33,19 +33,60 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        const { data, error } = await supabaseClient
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+        
+        if (userError || !userData.user) {
+          console.error("Error getting user:", userError);
+          setClientCompanies([]);
+          return;
+        }
+        
+        // First try to get companies through the many-to-many relationship
+        const { data: userCompanies, error: userCompaniesError } = await supabaseClient
+          .from('company_user_roles')
+          .select('company_id')
+          .eq('user_id', userData.user.id);
+          
+        if (userCompaniesError || !userCompanies) {
+          // Fall back to the old method if the new table doesn't exist yet
+          const { data, error } = await supabaseClient
+            .from('companies')
+            .select('id, name, logo_url, industry')
+            .order('name');
+            
+          if (error) throw error;
+          setClientCompanies(data || []);
+          
+          // Select the first company by default if there are any
+          if (data && data.length > 0 && !selectedClientId) {
+            setSelectedClientId(data[0].id);
+            setSelectedClientName(data[0].name);
+          }
+          return;
+        }
+        
+        // If we have company IDs from the relationship table, fetch the actual companies
+        const companyIds = userCompanies.map(uc => uc.company_id);
+        
+        if (companyIds.length === 0) {
+          setClientCompanies([]);
+          return;
+        }
+        
+        const { data: companies, error: companiesError } = await supabaseClient
           .from('companies')
           .select('id, name, logo_url, industry')
+          .in('id', companyIds)
           .order('name');
           
-        if (error) throw error;
+        if (companiesError) throw companiesError;
         
-        setClientCompanies(data || []);
+        setClientCompanies(companies || []);
         
         // Select the first company by default if there are any
-        if (data && data.length > 0 && !selectedClientId) {
-          setSelectedClientId(data[0].id);
-          setSelectedClientName(data[0].name);
+        if (companies && companies.length > 0 && !selectedClientId) {
+          setSelectedClientId(companies[0].id);
+          setSelectedClientName(companies[0].name);
         }
       } catch (error) {
         console.error("Error fetching client companies:", error);

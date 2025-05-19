@@ -27,7 +27,7 @@ export default function NewCompany() {
           </Button>
         </div>
         
-        <CompanyProfileForm onSuccess={handleSuccess} />
+        <CompanyProfileForm onSuccess={handleSuccess} isNewCompany={true} />
       </div>
     </UserLayout>
   );
