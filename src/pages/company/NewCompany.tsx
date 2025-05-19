@@ -5,12 +5,26 @@ import { ChevronLeft } from "lucide-react";
 import { CompanyProfileForm } from "@/components/company/CompanyProfileForm";
 import { Company } from "@/services/companyService";
 import { UserLayout } from "@/components/user/UserLayout";
+import { useToast } from "@/hooks/use-toast";
 
 export default function NewCompany() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const handleSuccess = (company: Company) => {
+    toast({
+      title: "Company created",
+      description: "Your new company has been created successfully.",
+    });
     navigate(`/company/${company.id}`);
+  };
+  
+  const handleError = (error: Error) => {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: error.message || "There was an error creating the company."
+    });
   };
   
   return (
@@ -27,7 +41,11 @@ export default function NewCompany() {
           </Button>
         </div>
         
-        <CompanyProfileForm onSuccess={handleSuccess} isNewCompany={true} />
+        <CompanyProfileForm 
+          onSuccess={handleSuccess} 
+          onError={handleError}
+          isNewCompany={true} 
+        />
       </div>
     </UserLayout>
   );

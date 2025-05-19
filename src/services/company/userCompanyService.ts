@@ -20,28 +20,64 @@ export const userCompanyService = {
       
       console.log(`Fetching companies for user ID: ${userData.user.id}`);
       
-      // Get user's companies through the many-to-many relationship in profiles
-      const { data: userProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('company_id, is_company_admin')
-        .eq('id', userData.user.id);
+      // First try to get companies through the many-to-many relationship
+      const { data: userCompanyRoles, error: rolesError } = await supabase
+        .from('company_user_roles')
+        .select('company_id, is_admin')
+        .eq('user_id', userData.user.id);
         
-      if (profilesError) {
-        console.error("Error fetching user profiles:", profilesError);
-        throw profilesError;
+      if (rolesError) {
+        console.error("Error fetching user company roles:", rolesError);
+        throw rolesError;
       }
       
-      if (!userProfiles || userProfiles.length === 0) {
-        console.log("User is not associated with any company");
-        return [];
+      if (!userCompanyRoles || userCompanyRoles.length === 0) {
+        console.log("User is not associated with any company through company_user_roles");
+        
+        // Fallback to profiles table for backward compatibility
+        const { data: userProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('company_id, is_company_admin')
+          .eq('id', userData.user.id)
+          .maybeSingle();
+          
+        if (profilesError) {
+          console.error("Error fetching user profile:", profilesError);
+          throw profilesError;
+        }
+        
+        if (!userProfiles || !userProfiles.company_id) {
+          console.log("User is not associated with any company in profiles either");
+          return [];
+        }
+        
+        const companyIds = [userProfiles.company_id];
+        console.log("Found company in profiles:", companyIds);
+        
+        // Fetch company details
+        const { data: companies, error: companiesError } = await supabase
+          .from('companies')
+          .select('*')
+          .in('id', companyIds);
+          
+        if (companiesError) {
+          console.error("Error fetching companies:", companiesError);
+          throw companiesError;
+        }
+        
+        // Combine companies with admin status
+        const userCompanies = companies.map(company => ({
+          ...company,
+          is_admin: userProfiles.is_company_admin || false
+        }));
+        
+        console.log(`Retrieved ${userCompanies.length} companies for user via profiles:`, userCompanies);
+        return userCompanies as CompanyWithRole[];
       }
       
-      // Extract company IDs
-      const companyIds = userProfiles.map(profile => profile.company_id).filter(id => id);
-      
-      if (companyIds.length === 0) {
-        return [];
-      }
+      // Extract company IDs from company_user_roles
+      const companyIds = userCompanyRoles.map(role => role.company_id);
+      console.log("Found companies in company_user_roles:", companyIds);
       
       // Fetch company details
       const { data: companies, error: companiesError } = await supabase
@@ -56,14 +92,14 @@ export const userCompanyService = {
       
       // Combine companies with admin status
       const userCompanies = companies.map(company => {
-        const profile = userProfiles.find(p => p.company_id === company.id);
+        const role = userCompanyRoles.find(r => r.company_id === company.id);
         return {
           ...company,
-          is_admin: profile?.is_company_admin || false
+          is_admin: role?.is_admin || false
         };
       });
       
-      console.log(`Retrieved ${userCompanies.length} companies for user:`, userCompanies);
+      console.log(`Retrieved ${userCompanies.length} companies for user via company_user_roles:`, userCompanies);
       return userCompanies as CompanyWithRole[];
     } catch (error) {
       console.error("Exception in getUserCompanies:", error);
@@ -115,11 +151,6 @@ export const userCompanyService = {
         
       if (companyError) {
         console.error("Error creating company:", companyError);
-        
-        if (companyError.message && companyError.message.includes("violates row-level security")) {
-          throw new Error("Permission denied: You don't have access to create a company. Please check with your administrator.");
-        }
-        
         throw companyError;
       }
       
@@ -130,56 +161,29 @@ export const userCompanyService = {
       
       console.log("Company created successfully:", createdCompany);
       
-      // Create a profile entry to link user with company
-      const { error: profileInsertError } = await supabase
-        .from('profiles')
+      // Create a company_user_roles entry to link user with company
+      const { error: roleError } = await supabase
+        .from('company_user_roles')
         .insert({ 
-          id: userData.user.id,
-          email: userData.user.email,
+          user_id: userData.user.id,
           company_id: createdCompany.id,
-          is_company_admin: true,
-          role: 'user' // Default role
+          is_admin: true
         });
         
-      if (profileInsertError) {
-        // If the profile already exists, update it
-        if (profileInsertError.message?.includes("duplicate key value")) {
-          // Just insert the company relationship
-          const { error: relationshipError } = await supabase
-            .from('company_user_roles')
-            .insert({
-              user_id: userData.user.id, 
-              company_id: createdCompany.id, 
-              is_admin: true
-            });
-            
-          if (relationshipError) {
-            console.error("Error creating company-user relationship:", relationshipError);
-            
-            // Clean up by deleting the company if we can't link it to the user
-            try {
-              await supabase.from('companies').delete().eq('id', createdCompany.id);
-            } catch (cleanupError) {
-              console.error("Failed to clean up company after relationship creation failure:", cleanupError);
-            }
-            
-            throw relationshipError;
-          }
-        } else {
-          console.error("Error creating user profile with company:", profileInsertError);
-          
-          // Clean up by deleting the company
-          try {
-            await supabase.from('companies').delete().eq('id', createdCompany.id);
-          } catch (cleanupError) {
-            console.error("Failed to clean up company after profile creation failure:", cleanupError);
-          }
-          
-          throw profileInsertError;
+      if (roleError) {
+        console.error("Error creating company-user relationship:", roleError);
+        
+        // Clean up by deleting the company if we can't link it to the user
+        try {
+          await supabase.from('companies').delete().eq('id', createdCompany.id);
+        } catch (cleanupError) {
+          console.error("Failed to clean up company after relationship creation failure:", cleanupError);
         }
+        
+        throw roleError;
       }
       
-      console.log("User linked to company successfully");
+      console.log("User linked to company successfully via company_user_roles");
       
       // Initialize storage for the company
       try {

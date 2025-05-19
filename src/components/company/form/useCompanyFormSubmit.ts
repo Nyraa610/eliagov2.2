@@ -8,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 interface UseCompanyFormSubmitProps {
   company?: Company;
   onSuccess?: (company: Company) => void;
+  onError?: (error: Error) => void;
 }
 
-export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmitProps) {
+export function useCompanyFormSubmit({ company, onSuccess, onError }: UseCompanyFormSubmitProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
@@ -69,11 +70,6 @@ export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmi
         console.log("Creating new company with data:", companyData);
         result = await companyService.createCompany(companyData);
         console.log("Company created successfully:", result);
-        
-        toast({
-          title: "Company created",
-          description: "New company has been created successfully.",
-        });
       }
       
       console.log("Form submission completed successfully:", result);
@@ -83,7 +79,7 @@ export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmi
       } else {
         navigate(`/company/${result.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving company:", error);
       
       let errorDesc = "There was an error saving the company profile.";
@@ -101,11 +97,15 @@ export function useCompanyFormSubmit({ company, onSuccess }: UseCompanyFormSubmi
       
       setErrorMessage(errorDesc);
       
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorDesc
-      });
+      if (onError && error instanceof Error) {
+        onError(error);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorDesc
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

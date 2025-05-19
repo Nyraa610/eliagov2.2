@@ -20,10 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 interface CompanyProfileFormProps {
   company?: Company;
   onSuccess?: (company: Company) => void;
+  onError?: (error: Error) => void;
   isNewCompany?: boolean;
 }
 
-export function CompanyProfileForm({ company, onSuccess, isNewCompany = false }: CompanyProfileFormProps) {
+export function CompanyProfileForm({ company, onSuccess, onError, isNewCompany = false }: CompanyProfileFormProps) {
   const [showFrenchSearch, setShowFrenchSearch] = useState(false);
   const [registryData, setRegistryData] = useState<any | null>(null);
   const { toast } = useToast();
@@ -33,7 +34,7 @@ export function CompanyProfileForm({ company, onSuccess, isNewCompany = false }:
     isSubmitting, 
     errorMessage,
     resetError
-  } = useCompanyFormSubmit({ company, onSuccess });
+  } = useCompanyFormSubmit({ company, onSuccess, onError });
 
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
