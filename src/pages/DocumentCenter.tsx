@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { TestUploadButton } from "@/components/documents/TestUploadButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
-import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
+// Supprimez les imports inutiles
+// import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
+// import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
 import { DeliverablesList } from "@/components/documents/list/DeliverablesList";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -56,21 +56,11 @@ export default function DocumentCenter() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="company">Company Documents</TabsTrigger>
-                <TabsTrigger value="personal">Personal Documents</TabsTrigger>
-                <TabsTrigger value="value-chain">Value Chain Documents</TabsTrigger>
                 {isConsultant && <TabsTrigger value="deliverables">Elia Go Deliverables</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="company" className="space-y-4">
                 <DocumentsLayout />
-              </TabsContent>
-              
-              <TabsContent value="personal" className="space-y-4">
-                {user && <PersonalDocumentsList userId={user.id} />}
-              </TabsContent>
-              
-              <TabsContent value="value-chain" className="space-y-4">
-                {companyId && <ValueChainDocumentsList companyId={companyId} />}
               </TabsContent>
               
               {isConsultant && (
