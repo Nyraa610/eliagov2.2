@@ -106,4 +106,5 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
         )}
       </CardContent>
     </Card>
-  }
+  );
+}
