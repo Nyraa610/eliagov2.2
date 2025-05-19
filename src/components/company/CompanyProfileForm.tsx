@@ -20,9 +20,10 @@ import { useToast } from "@/hooks/use-toast";
 interface CompanyProfileFormProps {
   company?: Company;
   onSuccess?: (company: Company) => void;
+  isNewCompany?: boolean;
 }
 
-export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormProps) {
+export function CompanyProfileForm({ company, onSuccess, isNewCompany = false }: CompanyProfileFormProps) {
   const [showFrenchSearch, setShowFrenchSearch] = useState(false);
   const [registryData, setRegistryData] = useState<any | null>(null);
   const { toast } = useToast();
@@ -105,7 +106,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>{company ? "Edit Company Profile" : "Create New Company"}</CardTitle>
+        <CardTitle>{isNewCompany ? "Create New Company" : company ? "Edit Company Profile" : "Create Company"}</CardTitle>
         <CardDescription>
           {company 
             ? "Update your company details and information" 
@@ -167,7 +168,7 @@ export function CompanyProfileForm({ company, onSuccess }: CompanyProfileFormPro
                 className="flex items-center gap-2"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {company ? "Save Changes" : "Create Company"}
+                {isNewCompany ? "Create Company" : company ? "Save Changes" : "Create Company"}
               </Button>
             </CardFooter>
           </form>

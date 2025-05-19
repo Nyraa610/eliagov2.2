@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile } from "@/services/base/profileTypes";
-import { Building, Plus, Loader2, Lock } from "lucide-react";
+import { Building, Plus, Loader2 } from "lucide-react";
 import { companyService } from "@/services/company";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CompanySectionProps {
   profile: UserProfile | null;
@@ -19,8 +18,27 @@ interface CompanySectionProps {
 export function CompanySection({ profile, onCompanyCreated }: CompanySectionProps) {
   const [companyName, setCompanyName] = useState("");
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
+  const [userCompanies, setUserCompanies] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Fetch user's companies
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setIsLoading(true);
+        const companies = await companyService.getUserCompanies();
+        setUserCompanies(companies);
+      } catch (error) {
+        console.error("Error fetching user companies:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchCompanies();
+  }, [profile?.id]);
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +53,8 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
 
     setIsCreatingCompany(true);
     try {
-      // Use the userCompanyService.createUserCompany method directly to ensure the user is linked to the company
       const companyData = { 
         name: companyName,
-        // Using a fixed default country since profile doesn't have a country property
         country: "Not specified"
       };
       
@@ -54,7 +70,7 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
       });
       
       setCompanyName("");
-      // Refresh profile to show the new company
+      // Refresh to show the new company
       onCompanyCreated();
     } catch (error) {
       console.error("Error creating company:", error);
@@ -73,62 +89,78 @@ export function CompanySection({ profile, onCompanyCreated }: CompanySectionProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building className="h-5 w-5" />
-          Company Information
+          Company Management
         </CardTitle>
         <CardDescription>
-          {profile?.company_id ? "Your company details" : "Add your company information"}
+          Create and manage your companies
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {profile?.company_id ? (
-          <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-md">
-              <p className="text-green-700 dark:text-green-300">
-                You're associated with a company: {profile.company_name || "Your Company"}
-              </p>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <div className="space-y-2">
-              <Button onClick={() => navigate(`/company/${profile.company_id}`)} variant="default">
-                View Company
-              </Button>
-              
-              <Alert className="mt-4 bg-muted/50 border-dashed">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                  <AlertDescription className="text-sm text-muted-foreground">
-                    Need to manage multiple companies? Upgrade to our <span className="font-medium">Enterprise Plan</span> to create and manage multiple companies and their subsidiaries.
-                  </AlertDescription>
+          ) : (
+            <>
+              {userCompanies.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-medium">Your Companies</h3>
+                  <div className="grid gap-3">
+                    {userCompanies.map((company) => (
+                      <div 
+                        key={company.id} 
+                        className="p-3 border rounded-md bg-background flex justify-between items-center"
+                      >
+                        <div>
+                          <p className="font-medium">{company.name}</p>
+                          {company.is_admin && (
+                            <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/company/${company.id}`)}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </Alert>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleCreateCompany} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Enter your company name"
-                required
-              />
-            </div>
-            <Button type="submit" disabled={isCreatingCompany} className="flex gap-2 items-center">
-              {isCreatingCompany ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  Create Company
-                </>
               )}
-            </Button>
-          </form>
-        )}
+
+              <form onSubmit={handleCreateCompany} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">New Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter company name"
+                    required
+                  />
+                </div>
+                <Button type="submit" disabled={isCreatingCompany} className="flex gap-2 items-center">
+                  {isCreatingCompany ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      Create New Company
+                    </>
+                  )}
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
