@@ -1,30 +1,30 @@
 import { useState, useEffect } from "react";
-import { documentService, Deliverable } from "@/services/document";
+import { documentService, Document } from "@/services/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, FileIcon } from "lucide-react";
+import { FileText, Download, FileIcon, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/components/ui/use-toast";
 
-interface DeliverablesListProps {
-  companyId: string;
+interface PersonalDocumentsListProps {
+  userId: string;
 }
 
-export function DeliverablesList({ companyId }: DeliverablesListProps) {
-  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const loadDeliverables = async () => {
+    const loadDocuments = async () => {
       setLoading(true);
       try {
-        const data = await documentService.getDeliverables(companyId);
-        setDeliverables(data);
+        const data = await documentService.getPersonalDocuments(userId);
+        setDocuments(data);
       } catch (error) {
-        console.error("Error loading deliverables:", error);
+        console.error("Error loading personal documents:", error);
         toast({
           title: "Error",
-          description: "Failed to load deliverables",
+          description: "Failed to load personal documents",
           variant: "destructive",
         });
       } finally {
@@ -32,11 +32,31 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
       }
     };
     
-    loadDeliverables();
-  }, [companyId]);
+    loadDocuments();
+  }, [userId]);
+
+  const handleDeleteDocument = async (document: Document) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+      try {
+        await documentService.deleteDocument(document.id);
+        setDocuments(documents.filter(d => d.id !== document.id));
+        toast({
+          title: "Document deleted",
+          description: "The document has been successfully deleted",
+        });
+      } catch (error) {
+        console.error("Error deleting document:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete document",
+          variant: "destructive",
+        });
+      }
+    }
+  };
   
   const getFileIcon = (fileType: string) => {
-    if (fileType === 'application/pdf' || fileType.includes('pdf')) {
+    if (fileType.includes('pdf')) {
       return <FileText className="h-6 w-6 text-red-500" />;
     } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
       return <FileText className="h-6 w-6 text-green-500" />;
@@ -50,7 +70,7 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Elia Go Deliverables</CardTitle>
+        <CardTitle className="text-lg">Personal Documents</CardTitle>
       </CardHeader>
       
       <CardContent>
@@ -58,45 +78,50 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : deliverables.length === 0 ? (
+        ) : documents.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
             <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-1">No deliverables yet</h3>
+            <h3 className="text-lg font-medium mb-1">No personal documents yet</h3>
             <p className="text-muted-foreground">
-              Complete assessments to generate reports and deliverables
+              Upload documents to keep them organized
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {deliverables.map(deliverable => (
+            {documents.map(document => (
               <div
-                key={deliverable.id}
+                key={document.id}
                 className="flex flex-col border rounded-lg p-4"
               >
                 <div className="flex items-start gap-3 mb-3">
-                  {getFileIcon(deliverable.file_type)}
+                  {getFileIcon(document.file_type)}
                   <div className="flex-1">
-                    <h4 className="font-medium">{deliverable.name}</h4>
+                    <h4 className="font-medium">{document.name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Generated {formatDistanceToNow(new Date(deliverable.created_at), { addSuffix: true })}
+                      Uploaded {formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}
                     </p>
-                    {deliverable.description && (
-                      <p className="text-sm mt-1">{deliverable.description}</p>
-                    )}
                   </div>
                 </div>
                 
-                <div className="mt-auto pt-2">
+                <div className="mt-auto pt-2 flex gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="w-full gap-2"
+                    className="flex-1 gap-2"
                     asChild
                   >
-                    <a href={deliverable.file_path} target="_blank" rel="noopener noreferrer" download>
+                    <a href={document.file_path} target="_blank" rel="noopener noreferrer" download>
                       <Download className="h-4 w-4" />
                       <span>Download</span>
                     </a>
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => handleDeleteDocument(document)}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -106,4 +131,6 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
       </CardContent>
     </Card>
   );
-}
+
+
+
