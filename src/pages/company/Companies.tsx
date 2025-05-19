@@ -1,11 +1,11 @@
 
 import { CompaniesPage } from "@/components/company/companies/CompaniesPage";
+import { UserLayout } from "@/components/user/UserLayout";
 
 export default function Companies() {
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-6">Company Profile</h1>
+    <UserLayout title="My Companies">
       <CompaniesPage />
-    </>
+    </UserLayout>
   );
 }

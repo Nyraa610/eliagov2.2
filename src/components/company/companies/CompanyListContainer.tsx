@@ -54,8 +54,9 @@ export function CompanyListContainer({
     }
   };
 
-  const canCreateCompany = companies.length < (maxCompanies || Infinity) || isAdmin;
-  const showMoreCompaniesBox = companies.length > 0 && !canCreateCompany;
+  // Always allow creating companies (remove the maxCompanies restriction)
+  const canCreateCompany = true;
+  const showMoreCompaniesBox = false; // Don't need this limitation anymore
 
   return (
     <div className="space-y-4">
@@ -76,12 +77,6 @@ export function CompanyListContainer({
           onRefresh={fetchCompanies}
           onCreateCompany={() => navigate("/company/new")}
         />
-        
-        {showMoreCompaniesBox && (
-          <div className="mt-6">
-            <MoreCompaniesBox onClick={onAddSubsidiary || (() => {})} />
-          </div>
-        )}
       </div>
     </div>
   );
