@@ -1,89 +1,109 @@
+import { useState, useEffect } from "react";
+import { documentService, Deliverable } from "@/services/document";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, Download, FileIcon } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "@/components/ui/use-toast";
 
-import { supabase } from "@/lib/supabase";
-import { Document } from "../types";
-import { toast } from "sonner";
-import { storageBucketService } from "../storage/storageBucketService";
-import { folderService } from "../storage/folderService";
+interface DeliverablesListProps {
+  companyId: string;
+}
 
-/**
- * Service for handling company document uploads
- */
-export const companyDocumentService = {
-  /**
-   * Upload a company document
-   * @param file File to upload
-   * @param companyId Company ID for which the document belongs
-   * @param folderId Optional folder ID
-   * @returns Promise<Document> The uploaded document information
-   */
-  async uploadDocument(file: File, companyId: string, folderId: string | null = null): Promise<Document> {
-    try {
-      // Ensure the user is authenticated
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authData.user) {
-        console.error('Authentication error:', authError);
-        throw new Error('User not authenticated');
-      }
-
-      // Ensure the storage bucket exists
-      await folderService.ensureCompanyFolder(companyId);
-
-      // Create a secure file path with sanitized filename
-      const filePath = `${companyId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      console.log(`Uploading file to path: ${filePath}`);
-      
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('company_documents_storage')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
+export function DeliverablesList({ companyId }: DeliverablesListProps) {
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadDeliverables = async () => {
+      setLoading(true);
+      try {
+        const data = await documentService.getDeliverables(companyId);
+        setDeliverables(data);
+      } catch (error) {
+        console.error("Error loading deliverables:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load deliverables",
+          variant: "destructive",
         });
-        
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError);
-        throw new Error(`Error uploading file: ${uploadError.message}`);
+      } finally {
+        setLoading(false);
       }
-      
-      // Get file URL
-      const { data: urlData } = supabase.storage
-        .from('company_documents_storage')
-        .getPublicUrl(filePath);
-        
-      if (!urlData) {
-        throw new Error('Failed to get file URL');
-      }
-      
-      console.log(`File uploaded successfully, URL: ${urlData.publicUrl}`);
-      
-      // Create document record in database with the authenticated user ID
-      const { data, error } = await supabase
-        .from('company_documents')
-        .insert({
-          name: file.name,
-          url: urlData.publicUrl,
-          file_type: file.type,
-          file_size: file.size,
-          folder_id: folderId,
-          company_id: companyId,
-          uploaded_by: authData.user.id,
-          document_type: 'standard',
-        })
-        .select()
-        .single();
-        
-      if (error) {
-        console.error('Error creating document record:', error);
-        throw new Error(`Error creating document record: ${error.message}`);
-      }
-      
-      toast.success(`Document ${file.name} uploaded successfully`);
-      return data as Document;
-    } catch (error) {
-      console.error('Upload document error:', error);
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
-      throw error;
+    };
+    
+    loadDeliverables();
+  }, [companyId]);
+  
+  const getFileIcon = (fileType: string) => {
+    if (fileType === 'application/pdf' || fileType.includes('pdf')) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
+      return <FileText className="h-6 w-6 text-green-500" />;
+    } else if (fileType.includes('word') || fileType.includes('document')) {
+      return <FileText className="h-6 w-6 text-blue-500" />;
+    } else {
+      return <FileText className="h-6 w-6 text-gray-500" />;
     }
-  }
-};
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Elia Go Deliverables</CardTitle>
+      </CardHeader>
+      
+      <CardContent>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : deliverables.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-medium mb-1">No deliverables yet</h3>
+            <p className="text-muted-foreground">
+              Complete assessments to generate reports and deliverables
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {deliverables.map(deliverable => (
+              <div
+                key={deliverable.id}
+                className="flex flex-col border rounded-lg p-4"
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  {getFileIcon(deliverable.file_type)}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{deliverable.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Generated {formatDistanceToNow(new Date(deliverable.created_at), { addSuffix: true })}
+                    </p>
+                    {deliverable.description && (
+                      <p className="text-sm mt-1">{deliverable.description}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-auto pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full gap-2"
+                    asChild
+                  >
+                    <a href={deliverable.file_path} target="_blank" rel="noopener noreferrer" download>
+                      <Download className="h-4 w-4" />
+                      <span>Download</span>
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
