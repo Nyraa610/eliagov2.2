@@ -1,93 +1,78 @@
+
+import { documentUploadService } from "./documentUploadService";
+import { documentRetrievalService } from "./documentRetrievalService";
+import { documentDeletionService } from "./documentDeletionService";
+import { folderService } from "./folderService";
+import { Document, DocumentFolder, Deliverable, DeliverableInput } from "./types";
+import { genericDocumentService } from "./genericDocumentService";
 import { supabase } from "@/lib/supabase";
-import { Document } from "../types";
-import { toast } from "sonner";
-import { storageBucketService } from "../storage/storageBucketService";
+import { v4 as uuidv4 } from "uuid";
+
+// Mock deliverables data stored in localStorage
+const DELIVERABLES_STORAGE_KEY = "deliverables";
+
+const initializeLocalStorage = () => {
+  if (!localStorage.getItem(DELIVERABLES_STORAGE_KEY)) {
+    localStorage.setItem(DELIVERABLES_STORAGE_KEY, JSON.stringify([]));
+  }
+};
 
 /**
- * Service for handling personal document uploads
+ * Unified document service that combines all document-related functionality
  */
-export const personalDocumentService = {
-  /**
-   * Upload a personal document
-   * @param file File to upload
-   * @param userId User ID for the document owner
-   * @param companyId Company ID for the document
-   * @returns Promise<Document> The uploaded document information
-   */
-  async uploadPersonalDocument(file: File, userId: string, companyId: string): Promise<Document> {
+export const documentService = {
+  // Upload methods
+  uploadDocument: documentUploadService.uploadDocument,
+  uploadPersonalDocument: documentUploadService.uploadPersonalDocument,
+  ensureStorageBucketExists: documentUploadService.ensureStorageBucketExists,
+  
+  // Retrieval methods
+  getDocuments: documentRetrievalService.getDocuments,
+  getPersonalDocuments: documentRetrievalService.getPersonalDocuments,
+  getFolders: documentRetrievalService.getFolders,
+  getFolder: documentRetrievalService.getFolder,
+  getDeliverables: documentRetrievalService.getDeliverables,
+  
+  // Deletion methods
+  deleteDocument: documentDeletionService.deleteDocument,
+  deleteFolder: documentDeletionService.deleteFolder,
+  
+  // Folder management methods
+  createFolder: folderService.createFolder,
+  
+  // Generic document methods
+  generic: genericDocumentService,
+  
+  // New method to create a deliverable
+  createDeliverable: async (input: DeliverableInput): Promise<Deliverable> => {
+    const deliverable: Deliverable = {
+      id: uuidv4(),
+      ...input,
+      created_at: new Date().toISOString(),
+      updated_at: null,
+      status: "completed"
+    };
+    
+    // Try to save to Supabase if available
     try {
-      // Ensure the user is authenticated
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authData.user) {
-        console.error('Authentication error:', authError);
-        throw new Error('User not authenticated');
-      }
-
-      // Verify the authenticated user matches the requested userId
-      if (authData.user.id !== userId) {
-        console.error('User ID mismatch');
-        throw new Error('Not authorized to upload for this user');
-      }
-
-      // Ensure the storage bucket exists
-      await storageBucketService.ensureStorageBucketExists();
-
-      // Create a secure file path with sanitized filename
-      const filePath = `personal/${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      console.log(`Uploading personal file to path: ${filePath}`);
-      
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('company_documents_storage')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-        
-      if (uploadError) {
-        console.error('Error uploading personal file:', uploadError);
-        throw new Error(`Error uploading file: ${uploadError.message}`);
-      }
-      
-      // Get file URL
-      const { data: urlData } = supabase.storage
-        .from('company_documents_storage')
-        .getPublicUrl(filePath);
-        
-      if (!urlData) {
-        throw new Error('Failed to get file URL');
-      }
-      
-      console.log(`Personal file uploaded successfully, URL: ${urlData.publicUrl}`);
-      
-      // Create document record in database with the authenticated user ID
-      const { data, error } = await supabase
-        .from('documents') // Adjust table name if needed
-        .insert({
-          name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          size: file.size,
-          company_id: companyId,
-          user_id: userId,
-          metadata: { is_personal: true },
-          description: `Personal document: ${file.name}`
-        })
-        .select()
-        .single();
+      const { error } = await supabase
+        .from('deliverables')
+        .insert(deliverable);
         
       if (error) {
-        console.error('Error creating personal document record:', error);
-        throw new Error(`Error creating personal document record: ${error.message}`);
+        console.error("Error saving deliverable to Supabase:", error);
+        throw error;
       }
+    } catch (err) {
+      console.error("Error in Supabase deliverable creation:", err);
       
-      toast.success(`Document ${file.name} uploaded successfully`);
-      return data as Document;
-    } catch (error) {
-      console.error('Upload personal document error:', error);
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
-      throw error;
+      // Fallback to localStorage
+      initializeLocalStorage();
+      const deliverables = JSON.parse(localStorage.getItem(DELIVERABLES_STORAGE_KEY) || '[]');
+      deliverables.push(deliverable);
+      localStorage.setItem(DELIVERABLES_STORAGE_KEY, JSON.stringify(deliverables));
     }
+    
+    return deliverable;
   }
 };

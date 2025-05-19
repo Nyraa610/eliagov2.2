@@ -1,169 +1,92 @@
-import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Button } from "@/components/ui/button";
-import { Upload, X, File } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { personalDocumentService } from "@/services/upload/personalDocumentService";
-import { useTranslation } from "react-i18next";
 
-interface PersonalDocumentUploaderProps {
-  onUploadComplete: () => void;
-  companyId: string;
-}
+import { supabase } from "@/lib/supabase";
+import { Document } from "../types";
+import { toast } from "sonner";
+import { storageBucketService } from "../storage/storageBucketService";
 
-export function PersonalDocumentUploader({ onUploadComplete, companyId }: PersonalDocumentUploaderProps) {
-  const { t } = useTranslation();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user } = useAuth();
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0]);
-    }
-  }, []);
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    multiple: false,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/png': ['.png'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-    }
-  });
-
-  const handleUpload = async () => {
-    if (!selectedFile || !user?.id) {
-      return;
-    }
-    
-    setIsUploading(true);
-    setUploadProgress(0);
-    
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        return prev + 5;
-      });
-    }, 200);
-    
+/**
+ * Service for handling personal document uploads
+ */
+export const personalDocumentService = {
+  /**
+   * Upload a personal document
+   * @param file File to upload
+   * @param userId User ID for the document owner
+   * @returns Promise<Document> The uploaded document information
+   */
+  async uploadPersonalDocument(file: File, userId: string): Promise<Document> {
     try {
-      // Use the personal document service to upload the file
-      await personalDocumentService.uploadPersonalDocument(selectedFile, user.id);
+      // Ensure the user is authenticated
+      const { data: authData, error: authError } = await supabase.auth.getUser();
       
-      setUploadProgress(100);
+      if (authError || !authData.user) {
+        console.error('Authentication error:', authError);
+        throw new Error('User not authenticated');
+      }
+
+      // Verify the authenticated user matches the requested userId
+      if (authData.user.id !== userId) {
+        console.error('User ID mismatch');
+        throw new Error('Not authorized to upload for this user');
+      }
+
+      // Ensure the storage bucket exists
+      await storageBucketService.ensureStorageBucketExists();
+
+      // Create a secure file path with sanitized filename
+      const filePath = `personal/${userId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      console.log(`Uploading personal file to path: ${filePath}`);
       
-      setTimeout(() => {
-        setIsDialogOpen(false);
-        setSelectedFile(null);
-        onUploadComplete();
-      }, 500);
-    } catch (error) {
-      console.error('Upload failed:', error);
-      // Error toast is already handled in the service
-    } finally {
-      clearInterval(progressInterval);
-      setIsUploading(false);
-    }
-  };
-
-  const clearSelectedFile = () => {
-    setSelectedFile(null);
-  };
-
-  return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Upload size={16} />
-          {t('documents.buttons.upload', 'Upload Document')}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('documents.uploadPersonalDocument', 'Upload Personal Document')}</DialogTitle>
-        </DialogHeader>
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('company_documents_storage')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
         
-        {!selectedFile ? (
-          <div 
-            {...getRootProps()} 
-            className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-          >
-            <input {...getInputProps()} />
-            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm font-medium text-gray-700">
-              {t('documents.dropzone.dragDrop', 'Drag & drop a file here, or click to select')}
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              {t('documents.dropzone.supportedFormats', 'Support for PDF, Word, Excel, and image files')}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
-              <div className="flex items-center gap-3">
-                <File className="h-8 w-8 text-blue-500" />
-                <div className="truncate">
-                  <p className="font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={clearSelectedFile}
-                disabled={isUploading}
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            
-            {isUploading && (
-              <div className="space-y-2">
-                <Progress value={uploadProgress} className="h-2" />
-                <p className="text-xs text-center text-gray-500">
-                  {uploadProgress === 100 
-                    ? t('documents.uploadComplete', 'Upload complete!') 
-                    : t('documents.uploading', 'Uploading...')}
-                </p>
-              </div>
-            )}
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isUploading}
-              >
-                {t('common.cancel', 'Cancel')}
-              </Button>
-              <Button 
-                onClick={handleUpload}
-                disabled={isUploading}
-              >
-                {isUploading 
-                  ? t('documents.uploading', 'Uploading...') 
-                  : t('documents.buttons.upload', 'Upload')}
-              </Button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
+      if (uploadError) {
+        console.error('Error uploading personal file:', uploadError);
+        throw new Error(`Error uploading file: ${uploadError.message}`);
+      }
+      
+      // Get file URL
+      const { data: urlData } = supabase.storage
+        .from('company_documents_storage')
+        .getPublicUrl(filePath);
+        
+      if (!urlData) {
+        throw new Error('Failed to get file URL');
+      }
+      
+      console.log(`Personal file uploaded successfully, URL: ${urlData.publicUrl}`);
+      
+      // Create document record in database with the authenticated user ID
+      const { data, error } = await supabase
+        .from('company_documents')
+        .insert({
+          name: file.name,
+          url: urlData.publicUrl,
+          file_type: file.type,
+          file_size: file.size,
+          uploaded_by: userId,
+          document_type: 'personal',
+          is_personal: true
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error creating personal document record:', error);
+        throw new Error(`Error creating personal document record: ${error.message}`);
+      }
+      
+      toast.success(`Document ${file.name} uploaded successfully`);
+      return data as Document;
+    } catch (error) {
+      console.error('Upload personal document error:', error);
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+};

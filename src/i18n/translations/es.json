@@ -26,9 +26,7 @@
     "signIn": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "resetPassword": "Restablecer contraseña",
-    "resetPasswordInstructions": "Ingrese su correo electrónico y le enviaremos un enlace para restablecer su contraseña",
-    "createAccount": "Créez votre compte",
-    "joinElia": "Rejoignez ELIA GO pour commencer votre parcours de durabilité"
+    "resetPasswordInstructions": "Ingrese su correo electrónico y le enviaremos un enlace para restablecer su contraseña"
   },
   "dashboard": {
     "title": "Panel de Control",
@@ -285,16 +283,13 @@
       "generating": "Generando...",
       "success": "Cadena de valor generada exitosamente",
       "error": "Error al generar la cadena de valor"
-    }
-  },
-  "documents": {
-    "troubleshootingTools": "Outils de dépannage",
-    "documentCenter": "Centre de documents",
-    "tabs": {
-      "company": "Documents d'entreprise",
-      "personal": "Documents personnels",
-      "valueChain": "Documents de chaîne de valeur",
-      "deliverables": "Livrables Elia Go"
+    },
+    "documents": {
+      "title": "Documentos",
+      "upload": "Subir",
+      "delete": "Eliminar",
+      "noDocuments": "No hay documentos subidos",
+      "uploadInstructions": "Arrastre y suelte documentos o haga clic para examinar"
     }
   },
   "deliverables": {
