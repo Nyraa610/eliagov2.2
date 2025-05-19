@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { documentService, Document } from "@/services/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,6 +132,4 @@ export function PersonalDocumentsList({ userId }: PersonalDocumentsListProps) {
       </CardContent>
     </Card>
   );
-
-
-
+}
