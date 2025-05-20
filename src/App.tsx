@@ -24,7 +24,6 @@ import Training from "./pages/Training";
 import CourseView from "./pages/CourseView";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
-import Deliverables from "./pages/Deliverables";
 import RegisterValidation from "./pages/RegisterValidation";
 import RegisterConfirmation from "./pages/RegisterConfirmation";
 import ResetPassword from "./pages/ResetPassword";
@@ -149,7 +148,6 @@ function App() {
                   
                   <Route path="/training" element={<ProtectedRoute><UserLayout><Training /></UserLayout></ProtectedRoute>} />
                   <Route path="/course/:courseId" element={<ProtectedRoute><UserLayout><CourseView /></UserLayout></ProtectedRoute>} />
-                  <Route path="/deliverables" element={<ProtectedRoute><UserLayout><Deliverables /></UserLayout></ProtectedRoute>} />
                   <Route path="/documents" element={<ProtectedRoute><UserLayout><DocumentCenter /></UserLayout></ProtectedRoute>} />
                   <Route path="/company/new" element={<ProtectedRoute><UserLayout><NewCompany /></UserLayout></ProtectedRoute>} />
                   <Route path="/companies" element={<ProtectedRoute><UserLayout><Companies /></UserLayout></ProtectedRoute>} />
