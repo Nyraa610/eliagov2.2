@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   FileText,
@@ -18,13 +17,20 @@ import {
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
+/**
+ * Main menu items configuration
+ * Each item defines a section in the main navigation sidebar
+ */
 const mainMenuItems: MenuItem[] = [
+  // Dashboard - Main entry point
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
     requiresCompany: false,
   },
+  
+  // Assessments section with multiple sub-items
   {
     title: "Assessments",
     href: "/assessment",
@@ -75,18 +81,24 @@ const mainMenuItems: MenuItem[] = [
       },
     ],
   },
+  
+  // ESG Strategy section
   {
     title: "ESG Strategy",
     href: "/esg-strategy",
     icon: Sparkles,
     requiresCompany: true,
   },
+  
+  // Action Plan section
   {
     title: "Action Plan",
     href: "/assessment/action-plan",
     icon: FileCheck2,
     requiresCompany: true,
   },
+  
+  // Talk with Experts - Highlighted feature
   {
     title: "Talk with Experts",
     href: "/expert/talk",
@@ -94,24 +106,32 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: false,
     highlight: true,
   },
+  
+  // Training resources
   {
     title: "Training",
     href: "/training",
     icon: GraduationCap,
     requiresCompany: false,
   },
+  
+  // Documents repository
   {
     title: "Documents",
     href: "/documents",
     icon: Folder,
     requiresCompany: true,
   },
+  
+  // Deliverables section
   {
     title: "Deliverables",
     href: "/deliverables",
     icon: FileText,
     requiresCompany: true,
   },
+  
+  // Engagement tracking
   {
     title: "Engagement",
     href: "/engagement",
@@ -120,7 +140,10 @@ const mainMenuItems: MenuItem[] = [
   }
 ];
 
-// Function to export mainMenuItems
+/**
+ * Returns the main menu items configuration
+ * @returns {MenuItem[]} Array of menu items
+ */
 export const getMainMenuItems = () => {
   return mainMenuItems;
 };
