@@ -124,13 +124,6 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: true,
   },
   
-  // Deliverables section
-  {
-    title: "Deliverables",
-    href: "/deliverables",
-    icon: FileText,
-    requiresCompany: true,
-  },
   
   // Engagement tracking
   {
