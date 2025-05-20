@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   FileText,
@@ -101,7 +102,7 @@ const mainMenuItems: MenuItem[] = [
   // Talk with Experts - Highlighted feature
   {
     title: "Talk with Experts",
-    href: "/expert/talk",
+    href: "/experts",
     icon: MessageSquare,
     requiresCompany: false,
     highlight: true,

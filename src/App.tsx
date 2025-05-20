@@ -1,3 +1,4 @@
+
 import React, { Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import "./App.css";
@@ -51,6 +52,7 @@ import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import ESGLaunchpadPage from "./pages/ESGLaunchpad";
 import ESGStrategy from "./pages/ESGStrategy";
+import Deliverables from "./pages/Deliverables";
 
 // Admin pages
 import UserManagement from "./pages/admin/UserManagement";
@@ -126,6 +128,7 @@ function App() {
                   <Route path="/assessment" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
                   <Route path="/esg-launchpad" element={<ProtectedRoute><UserLayout><ESGLaunchpadPage /></UserLayout></ProtectedRoute>} />
                   <Route path="/esg-strategy" element={<ProtectedRoute><UserLayout><ESGStrategy /></UserLayout></ProtectedRoute>} />
+                  <Route path="/deliverables" element={<ProtectedRoute><UserLayout><Deliverables /></UserLayout></ProtectedRoute>} />
                   
                   {/* Assessment routes */}
                   <Route path="/assessment/esg-diagnostic" element={<ProtectedRoute><UserLayout><Assessment /></UserLayout></ProtectedRoute>} />
