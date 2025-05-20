@@ -1,14 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { TestUploadButton } from "@/components/documents/TestUploadButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// Imports supprimés
-// import { PersonalDocumentsList } from "@/components/documents/list/PersonalDocumentsList";
-// import { ValueChainDocumentsList } from "@/components/documents/list/ValueChainDocumentsList";
-// import { DeliverablesList } from "@/components/documents/list/DeliverablesList";
-import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function DocumentCenter() {
@@ -56,20 +52,11 @@ export default function DocumentCenter() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="company">Company Documents</TabsTrigger>
-                {/* Onglet des livrables supprimé */}
-                {/* {isConsultant && <TabsTrigger value="deliverables">Elia Go Deliverables</TabsTrigger>} */}
               </TabsList>
               
               <TabsContent value="company" className="space-y-4">
                 <DocumentsLayout />
               </TabsContent>
-              
-              {/* Contenu des livrables supprimé */}
-              {/* {isConsultant && (
-                <TabsContent value="deliverables" className="space-y-4">
-                  {companyId && <DeliverablesList companyId={companyId} />}
-                </TabsContent>
-              )} */}
             </Tabs>
           </CardContent>
         </Card>
