@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,8 @@ import { FileText, Download, FileIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
-// Define the Deliverable interface
-interface Deliverable {
+// Define the Document interface
+interface Document {
   id: string;
   name: string;
   description?: string;
@@ -18,8 +17,8 @@ interface Deliverable {
 
 // Mock document service until the real one is implemented
 const documentService = {
-  getDeliverables: async (companyId: string): Promise<Deliverable[]> => {
-    console.log(`Fetching deliverables for company: ${companyId}`);
+  getDocuments: async (companyId: string): Promise<Document[]> => {
+    console.log(`Fetching documents for company: ${companyId}`);
     // Return mock data for now
     return [
       {
@@ -42,29 +41,29 @@ const documentService = {
   }
 };
 
-interface DeliverablesListProps {
+interface DocumentsListProps {
   companyId: string;
 }
 
-export function DeliverablesList({ companyId }: DeliverablesListProps) {
-  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+export function DocumentsList({ companyId }: DocumentsListProps) {
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const loadDeliverables = async () => {
+    const loadDocuments = async () => {
       setLoading(true);
       try {
-        const data = await documentService.getDeliverables(companyId);
-        setDeliverables(data);
+        const data = await documentService.getDocuments(companyId);
+        setDocuments(data);
       } catch (error) {
-        console.error("Error loading deliverables:", error);
-        toast.error("Failed to load deliverables");
+        console.error("Error loading documents:", error);
+        toast.error("Failed to load documents");
       } finally {
         setLoading(false);
       }
     };
     
-    loadDeliverables();
+    loadDocuments();
   }, [companyId]);
   
   const getFileIcon = (fileType: string) => {
@@ -82,7 +81,7 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Elia Go Deliverables</CardTitle>
+        <CardTitle className="text-lg">Elia Go Documents</CardTitle>
       </CardHeader>
       
       <CardContent>
@@ -90,30 +89,30 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : deliverables.length === 0 ? (
+        ) : documents.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
             <FileIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-1">No deliverables yet</h3>
+            <h3 className="text-lg font-medium mb-1">No documents yet</h3>
             <p className="text-muted-foreground">
-              Complete assessments to generate reports and deliverables
+              Complete assessments to generate reports and documents
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {deliverables.map(deliverable => (
+            {documents.map(document => (
               <div
-                key={deliverable.id}
+                key={document.id}
                 className="flex flex-col border rounded-lg p-4"
               >
                 <div className="flex items-start gap-3 mb-3">
-                  {getFileIcon(deliverable.file_type)}
+                  {getFileIcon(document.file_type)}
                   <div className="flex-1">
-                    <h4 className="font-medium">{deliverable.name}</h4>
+                    <h4 className="font-medium">{document.name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Generated {formatDistanceToNow(new Date(deliverable.created_at), { addSuffix: true })}
+                      Generated {formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}
                     </p>
-                    {deliverable.description && (
-                      <p className="text-sm mt-1">{deliverable.description}</p>
+                    {document.description && (
+                      <p className="text-sm mt-1">{document.description}</p>
                     )}
                   </div>
                 </div>
@@ -125,7 +124,7 @@ export function DeliverablesList({ companyId }: DeliverablesListProps) {
                     className="w-full gap-2"
                     asChild
                   >
-                    <a href={deliverable.file_path} target="_blank" rel="noopener noreferrer" download>
+                    <a href={document.file_path} target="_blank" rel="noopener noreferrer" download>
                       <Download className="h-4 w-4" />
                       <span>Download</span>
                     </a>
