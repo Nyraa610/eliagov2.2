@@ -14,10 +14,19 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    // Initialize Supabase client with environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
@@ -39,29 +48,69 @@ serve(async (req) => {
 
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Invalid user token' }),
+        JSON.stringify({ error: 'Invalid user token', details: userError }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { action, companyId, pageId, content, title } = await req.json();
-
-    // Get the Notion API key for the company
-    const { data: integrationData, error: integrationError } = await supabaseClient
-      .from('company_integrations')
-      .select('api_key')
-      .eq('company_id', companyId)
-      .eq('integration_type', 'notion')
-      .single();
-
-    if (integrationError || !integrationData) {
+    // Parse request body
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (error) {
+      console.error('Failed to parse request body:', error);
       return new Response(
-        JSON.stringify({ error: 'Notion integration not found for this company' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const notionApiKey = integrationData.api_key;
+    const { action, companyId, pageId, content, title, apiKey: providedApiKey } = requestData;
+
+    if (!action) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required action parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For the testConnection action, we use the provided API key
+    let notionApiKey = providedApiKey;
+
+    // For other actions, get the Notion API key from the database
+    if (action !== 'testConnection') {
+      if (!companyId) {
+        return new Response(
+          JSON.stringify({ error: 'Missing required companyId parameter' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Get the Notion API key for the company
+      const { data: integrationData, error: integrationError } = await supabaseClient
+        .from('company_integrations')
+        .select('api_key')
+        .eq('company_id', companyId)
+        .eq('integration_type', 'notion')
+        .single();
+
+      if (integrationError || !integrationData) {
+        console.error('Notion integration not found:', integrationError);
+        return new Response(
+          JSON.stringify({ error: 'Notion integration not found for this company', details: integrationError }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      notionApiKey = integrationData.api_key;
+    }
+
+    if (!notionApiKey) {
+      return new Response(
+        JSON.stringify({ error: 'No API key available for request' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     switch (action) {
       case 'listPages': {
@@ -85,16 +134,27 @@ serve(async (req) => {
           }),
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-          console.error('Notion API error:', data);
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { message: response.statusText };
+          }
+          
+          console.error('Notion API error:', response.status, errorData);
           return new Response(
-            JSON.stringify({ error: 'Error fetching Notion pages', details: data }),
+            JSON.stringify({ 
+              error: 'Error fetching Notion pages', 
+              status: response.status,
+              details: errorData 
+            }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
+        const data = await response.json();
+        
         // Transform the results to a simpler format
         const pages = data.results.map(page => ({
           id: page.id,
@@ -145,16 +205,27 @@ serve(async (req) => {
           }),
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-          console.error('Notion API error:', data);
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { message: response.statusText };
+          }
+          
+          console.error('Notion API error:', response.status, errorData);
           return new Response(
-            JSON.stringify({ error: 'Error creating Notion page', details: data }),
+            JSON.stringify({ 
+              error: 'Error creating Notion page', 
+              status: response.status,
+              details: errorData 
+            }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
+        const data = await response.json();
+        
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -167,6 +238,8 @@ serve(async (req) => {
       
       case 'testConnection': {
         // Test if the API key is valid by making a simple request
+        console.log('Testing connection with API key');
+        
         const response = await fetch('https://api.notion.com/v1/users/me', {
           headers: {
             'Authorization': `Bearer ${notionApiKey}`,
@@ -174,13 +247,37 @@ serve(async (req) => {
           },
         });
 
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { message: response.statusText };
+          }
+          
+          console.error('Notion API test error:', response.status, errorData);
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: 'Failed to connect to Notion API',
+              status: response.status,
+              details: errorData 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         const data = await response.json();
+
+        // If we have companyId, this is a connection setup
+        if (companyId && providedApiKey) {
+          console.log('Test successful, returning success response');
+        }
 
         return new Response(
           JSON.stringify({ 
-            success: response.ok,
-            userData: response.ok ? data : null,
-            error: !response.ok ? data : null 
+            success: true,
+            userData: data 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -195,7 +292,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in notion-integration function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -204,6 +301,18 @@ serve(async (req) => {
 // Helper function to convert our action plan content to Notion blocks
 function generateNotionBlocks(content: any) {
   const blocks = [];
+  
+  if (!content) {
+    return [
+      {
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: 'No content provided' } }]
+        }
+      }
+    ];
+  }
   
   if (content.shortTermGoals) {
     blocks.push({

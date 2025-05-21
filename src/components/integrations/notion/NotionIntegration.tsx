@@ -65,15 +65,16 @@ export default function NotionIntegration() {
               }),
             });
             
-            const result = await response.json();
-            
             if (!response.ok) {
-              console.error("Error fetching Notion pages:", result);
+              console.error("Error fetching Notion pages:", response.status, response.statusText);
               toast.error("Couldn't fetch your Notion pages. Please check your API key.");
               setPages([]);
-            } else {
-              setPages(result.pages || []);
+              setIsLoading(false);
+              return;
             }
+            
+            const result = await response.json();
+            setPages(result.pages || []);
           } catch (err) {
             console.error("Error listing Notion pages:", err);
             setPages([]);
@@ -117,11 +118,20 @@ export default function NotionIntegration() {
         }),
       });
       
+      if (!testResponse.ok) {
+        console.error("Notion API test failed:", testResponse.status, testResponse.statusText);
+        setConnectionError("Connection test failed. Please check your API key and try again.");
+        toast.error("Failed to connect to Notion. Invalid API key or connection issue.");
+        setIsConnecting(false);
+        return;
+      }
+      
       const testResult = await testResponse.json();
       
       if (!testResult.success) {
         setConnectionError("Invalid Notion API key. Please check your key and try again.");
         toast.error("Failed to connect to Notion. Invalid API key.");
+        setIsConnecting(false);
         return;
       }
       
@@ -139,6 +149,7 @@ export default function NotionIntegration() {
       if (error) {
         console.error("Error saving Notion API key:", error);
         toast.error("Failed to save your Notion API key");
+        setIsConnecting(false);
         return;
       }
       
@@ -158,11 +169,10 @@ export default function NotionIntegration() {
         }),
       });
       
-      const pagesResult = await pagesResponse.json();
-      
       if (!pagesResponse.ok) {
-        console.error("Error fetching Notion pages:", pagesResult);
+        console.error("Error fetching Notion pages:", pagesResponse.status, pagesResponse.statusText);
       } else {
+        const pagesResult = await pagesResponse.json();
         setPages(pagesResult.pages || []);
       }
     } catch (error) {
@@ -313,7 +323,7 @@ export default function NotionIntegration() {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/action-plan-export')}
+                onClick={() => navigate('/integrations/action-plan-export')}
               >
                 Manage Exports
               </Button>
