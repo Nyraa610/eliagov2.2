@@ -1,16 +1,18 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type MenuItemProps = {
   item: {
     title: string;
-    icon: React.ElementType; // Using ElementType for components
+    icon: React.ElementType; // Changed from ReactNode to ElementType
     path: string;
     submenu?: {
       title: string;
-      icon: React.ElementType; // Using ElementType for components
+      icon: React.ElementType; // Changed from ReactNode to ElementType
       path: string;
     }[];
     disabled?: boolean;
