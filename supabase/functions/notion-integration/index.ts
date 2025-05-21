@@ -112,6 +112,18 @@ serve(async (req) => {
       );
     }
 
+    // Validate API key format for Notion (should start with "secret_")
+    if (!notionApiKey.startsWith('secret_')) {
+      console.error('Invalid Notion API key format - should start with "secret_"');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid API key format', 
+          message: 'Notion API keys should start with "secret_". Please check your integration token.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     switch (action) {
       case 'listPages': {
         // List pages from Notion workspace
@@ -143,9 +155,20 @@ serve(async (req) => {
           }
           
           console.error('Notion API error:', response.status, errorData);
+          
+          // Provide more specific error messages for common issues
+          let errorMessage = 'Error fetching Notion pages';
+          if (response.status === 401) {
+            errorMessage = 'Invalid Notion API key. Please check your integration token.';
+          } else if (response.status === 403) {
+            errorMessage = 'Access denied. Make sure you have shared pages with your integration in Notion.';
+          } else if (response.status === 429) {
+            errorMessage = 'Too many requests to Notion API. Please try again later.';
+          }
+          
           return new Response(
             JSON.stringify({ 
-              error: 'Error fetching Notion pages', 
+              error: errorMessage, 
               status: response.status,
               details: errorData 
             }),
@@ -214,9 +237,20 @@ serve(async (req) => {
           }
           
           console.error('Notion API error:', response.status, errorData);
+          
+          // Provide more specific error messages
+          let errorMessage = 'Error creating Notion page';
+          if (response.status === 401) {
+            errorMessage = 'Invalid Notion API key. Please check your integration token.';
+          } else if (response.status === 403) {
+            errorMessage = 'Access denied. Make sure you have shared the parent page with your integration.';
+          } else if (response.status === 404) {
+            errorMessage = 'Parent page not found. Make sure the page exists and is shared with the integration.';
+          }
+          
           return new Response(
             JSON.stringify({ 
-              error: 'Error creating Notion page', 
+              error: errorMessage, 
               status: response.status,
               details: errorData 
             }),
@@ -256,10 +290,21 @@ serve(async (req) => {
           }
           
           console.error('Notion API test error:', response.status, errorData);
+          
+          // Provide more specific error messages
+          let errorMessage = 'Failed to connect to Notion API';
+          if (response.status === 401) {
+            errorMessage = 'Invalid Notion API key. Please check your integration token.';
+          } else if (response.status === 403) {
+            errorMessage = 'Access denied. Make sure you have the correct permissions.';
+          } else if (response.status === 429) {
+            errorMessage = 'Too many requests to Notion API. Please try again later.';
+          }
+          
           return new Response(
             JSON.stringify({ 
               success: false,
-              error: 'Failed to connect to Notion API',
+              error: errorMessage,
               status: response.status,
               details: errorData 
             }),

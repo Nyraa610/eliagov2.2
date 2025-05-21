@@ -105,6 +105,16 @@ export default function NotionIntegration() {
       // First test the connection with the API key
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Validate API key format before sending to server
+      if (!apiKey.startsWith('secret_')) {
+        setConnectionError("Invalid API key format. Notion API keys should start with 'secret_'.");
+        toast.error("Invalid API key format. Check your integration token.");
+        setIsConnecting(false);
+        return;
+      }
+      
+      console.log('Testing Notion connection with provided API key');
+      
       const testResponse = await fetch('/api/functions/v1/notion-integration', {
         method: 'POST',
         headers: {
@@ -118,19 +128,15 @@ export default function NotionIntegration() {
         }),
       });
       
-      if (!testResponse.ok) {
-        console.error("Notion API test failed:", testResponse.status, testResponse.statusText);
-        setConnectionError("Connection test failed. Please check your API key and try again.");
-        toast.error("Failed to connect to Notion. Invalid API key or connection issue.");
-        setIsConnecting(false);
-        return;
-      }
-      
       const testResult = await testResponse.json();
       
-      if (!testResult.success) {
-        setConnectionError("Invalid Notion API key. Please check your key and try again.");
-        toast.error("Failed to connect to Notion. Invalid API key.");
+      if (!testResponse.ok || !testResult.success) {
+        console.error("Notion API test failed:", testResponse.status, testResult);
+        
+        // Extract error message from response or use a default
+        const errorMessage = testResult.error || "Connection test failed. Please check your API key.";
+        setConnectionError(errorMessage);
+        toast.error(errorMessage);
         setIsConnecting(false);
         return;
       }
@@ -171,9 +177,16 @@ export default function NotionIntegration() {
       
       if (!pagesResponse.ok) {
         console.error("Error fetching Notion pages:", pagesResponse.status, pagesResponse.statusText);
+        
+        const pagesResult = await pagesResponse.json();
+        toast.warning(pagesResult.error || "Connected, but couldn't fetch pages. Make sure to share pages with your integration.");
       } else {
         const pagesResult = await pagesResponse.json();
         setPages(pagesResult.pages || []);
+        
+        if (pagesResult.pages && pagesResult.pages.length === 0) {
+          toast.info("No pages found. Remember to share pages with your integration in Notion.");
+        }
       }
     } catch (error) {
       console.error("Error connecting to Notion:", error);
@@ -354,7 +367,7 @@ export default function NotionIntegration() {
                   <li>Give it a name (e.g., "Elia Go")</li>
                   <li>Select your workspace</li>
                   <li>Under "Capabilities" enable "Read content", "Update content", and "Insert content"</li>
-                  <li>Save and copy your "Internal Integration Token"</li>
+                  <li>Save and copy your "Internal Integration Token" (starts with "secret_")</li>
                   <li>In your Notion workspace, share any pages you want to access with the integration</li>
                 </ol>
               </div>
