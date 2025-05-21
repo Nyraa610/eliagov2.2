@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
@@ -30,7 +31,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       
       {/* Protected routes - require authentication */}
-      <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
