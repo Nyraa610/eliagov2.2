@@ -8,11 +8,11 @@ import { useState } from "react";
 type MenuItemProps = {
   item: {
     title: string;
-    icon: React.ElementType; // Changed from ReactNode to ElementType
+    icon: React.ElementType; // Using ElementType for components
     path: string;
     submenu?: {
       title: string;
-      icon: React.ElementType; // Changed from ReactNode to ElementType
+      icon: React.ElementType; // Using ElementType for components
       path: string;
     }[];
     disabled?: boolean;

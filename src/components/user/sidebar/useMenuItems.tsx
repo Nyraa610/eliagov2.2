@@ -24,7 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export type MenuItem = {
   title: string;
   path: string;
-  icon: React.ReactNode;
+  icon: React.ElementType;
   children?: MenuItem[];
 };
 
@@ -61,117 +61,117 @@ export const useMenuItems = () => {
   }, [user]);
 
   // Main navigation items
-  const mainMenuItems: MenuItem[] = [
+  const mainMenuItems = [
     {
       title: "Dashboard",
       path: "/dashboard",
-      icon: <BarChartBig className="h-5 w-5" />,
+      icon: BarChartBig,
     },
     {
       title: "Assessment",
       path: "/assessment",
-      icon: <ClipboardList className="h-5 w-5" />,
+      icon: ClipboardList,
     },
     {
       title: "Marketplace",
       path: "/marketplace",
-      icon: <Store className="h-5 w-5" />,
+      icon: Store,
       children: [
         {
           title: "Browse Partners",
           path: "/marketplace",
-          icon: <Store className="h-4 w-4" />,
+          icon: Store,
         },
         {
           title: "Become a Partner",
           path: "/marketplace/apply",
-          icon: <Warehouse className="h-4 w-4" />,
+          icon: Warehouse,
         }
       ]
     },
     {
       title: "Deliverables",
       path: "/deliverables",
-      icon: <FileText className="h-5 w-5" />,
+      icon: FileText,
     },
   ];
 
   // Company Hub items
-  const companyHubItems: MenuItem[] = [
+  const companyHubItems = [
     {
       title: "My Company",
       path: "/company",
-      icon: <Building2 className="h-5 w-5" />,
+      icon: Building2,
     },
     {
       title: "Companies",
       path: "/companies",
-      icon: <Building className="h-5 w-5" />,
+      icon: Building,
     },
   ];
 
   // Admin items
-  const adminItems: MenuItem[] = [
+  const adminItems = [
     {
       title: "Admin Panel",
       path: "/admin",
-      icon: <ShieldCheck className="h-5 w-5" />,
+      icon: ShieldCheck,
     },
     {
       title: "User Management",
       path: "/admin/users",
-      icon: <Users className="h-5 w-5" />,
+      icon: Users,
     },
     {
       title: "Marketplace",
       path: "/admin/marketplace/partners",
-      icon: <Store className="h-5 w-5" />,
+      icon: Store,
       children: [
         {
           title: "Partners",
           path: "/admin/marketplace/partners",
-          icon: <Warehouse className="h-4 w-4" />,
+          icon: Warehouse,
         },
         {
           title: "Applications",
           path: "/admin/marketplace/applications",
-          icon: <ClipboardList className="h-4 w-4" />,
+          icon: ClipboardList,
         },
         {
           title: "Leads & Commission",
           path: "/admin/marketplace/leads",
-          icon: <Receipt className="h-4 w-4" />,
+          icon: Receipt,
         }
       ]
     },
     {
       title: "Emission Factors",
       path: "/admin/emission-factors",
-      icon: <Database className="h-5 w-5" />,
+      icon: Database,
     },
     {
       title: "Documentation",
       path: "/admin/documentation",
-      icon: <Book className="h-5 w-5" />,
+      icon: Book,
     },
   ];
 
   // Consultant items
-  const consultantItems: MenuItem[] = [
+  const consultantItems = [
     {
       title: "Client Dashboard",
       path: "/consultant",
-      icon: <BarChart3 className="h-5 w-5" />,
+      icon: BarChart3,
     },
     {
       title: "Client Management",
       path: "/consultant/clients",
-      icon: <Users className="h-5 w-5" />,
+      icon: Users,
     },
     {
       title: "Settings",
       path: "/consultant/settings",
-      icon: <Settings className="h-5 w-5" />,
+      icon: Settings,
     },
   ];
 
