@@ -1,27 +1,25 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
-import Home from './pages/Home';
-import About from './pages/About';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import Dashboard from './pages/Dashboard';
-import ProfilePage from './pages/ProfilePage';
-import AssessmentPage from './pages/assessment/AssessmentPage';
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
+import ResetPasswordPage from './pages/ResetPassword';
+import ProfilePage from './pages/Profile';
+import AssessmentPage from './pages/Assessment';
 import ActionPlan from './pages/assessment/ActionPlan';
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
 import DocumentEditor from './pages/assessment/DocumentEditor';
 import AdminPanel from './pages/admin/AdminPanel';
 import EmissionFactors from './pages/admin/EmissionFactors';
-import AdminUserManagement from './pages/admin/AdminUserManagement';
-import CompanyPage from './pages/CompanyPage';
-import CompanyProfilePage from './pages/CompanyProfilePage';
-import DocumentsPage from './pages/DocumentsPage';
-import CompaniesPage from './pages/CompaniesPage';
+import AdminUserManagement from './pages/admin/UserManagement';
+import CompanyPage from './pages/company/NewCompany';
+import CompanyProfilePage from './pages/company/CompanyProfile';
+import DocumentsPage from './pages/DocumentCenter';
+import CompaniesPage from './pages/company/Companies';
 import NotionIntegration from './components/integrations/notion/NotionIntegration';
 import ActionPlanExportPage from './pages/ActionPlanExportPage';
 import PartnerApplicationPage from './pages/marketplace/PartnerApplicationPage';
@@ -33,8 +31,7 @@ import MarketplaceLeadsPage from './pages/admin/marketplace/MarketplaceLeadsPage
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
+      <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
