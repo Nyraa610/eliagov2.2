@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, AlertCircle, FileCheck, Notion } from "lucide-react";
+import { Loader2, Send, AlertCircle, FileCheck, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -12,7 +11,7 @@ import { assessmentService } from "@/services/assessment";
 
 export default function ActionPlanExport() {
   const navigate = useNavigate();
-  const { user, company } = useCompanyProfile();
+  const { company } = useCompanyProfile();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -22,14 +21,13 @@ export default function ActionPlanExport() {
   
   useEffect(() => {
     const checkConnection = async () => {
-      if (!user?.id) return;
-      
       try {
         // Check if connected to Notion (using localStorage for demo)
-        const connected = localStorage.getItem(`notion_connected_${user.id}`) === 'true';
+        const userId = localStorage.getItem('current_user_id');
+        const connected = userId ? localStorage.getItem(`notion_connected_${userId}`) === 'true' : false;
         setIsConnected(connected);
         
-        if (connected) {
+        if (connected && userId) {
           // Mock fetching pages from Notion
           const pagesList = [
             { id: 'page1', title: 'ESG Action Plans', lastEdited: new Date().toISOString() },
@@ -50,7 +48,7 @@ export default function ActionPlanExport() {
     };
     
     checkConnection();
-  }, [user?.id]);
+  }, []);
   
   const handleSendToNotion = async () => {
     if (!selectedPage || !actionPlanData) {
@@ -89,7 +87,7 @@ export default function ActionPlanExport() {
       setIsSending(false);
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -103,7 +101,7 @@ export default function ActionPlanExport() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2 mb-1">
-            <Notion className="h-6 w-6" />
+            <Database className="h-6 w-6" />
             <CardTitle>Export to Notion</CardTitle>
           </div>
           <CardDescription>
@@ -131,7 +129,7 @@ export default function ActionPlanExport() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2 mb-1">
-            <Notion className="h-6 w-6" />
+            <Database className="h-6 w-6" />
             <CardTitle>Export to Notion</CardTitle>
           </div>
           <CardDescription>
@@ -158,7 +156,7 @@ export default function ActionPlanExport() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2 mb-1">
-          <Notion className="h-6 w-6" />
+          <Database className="h-6 w-6" />
           <CardTitle>Export to Notion</CardTitle>
         </div>
         <CardDescription>

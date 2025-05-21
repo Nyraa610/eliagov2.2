@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, ExternalLink, Notion } from "lucide-react";
+import { Loader2, CheckCircle2, ExternalLink, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 
@@ -47,18 +47,23 @@ export default function NotionIntegration() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [pages, setPages] = useState<any[]>([]);
-  const { user } = useCompanyProfile();
+  const { company } = useCompanyProfile();
   
   useEffect(() => {
     const checkConnection = async () => {
-      if (!user?.id) return;
+      // For demo purposes, get the current user ID from localStorage
+      const userId = localStorage.getItem('current_user_id');
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
-        const connected = await notionService.isConnected(user.id);
+        const connected = await notionService.isConnected(userId);
         setIsConnected(connected);
         
         if (connected) {
-          const pagesList = await notionService.getPagesList(user.id);
+          const pagesList = await notionService.getPagesList(userId);
           setPages(pagesList);
         }
       } catch (error) {
@@ -69,12 +74,14 @@ export default function NotionIntegration() {
     };
     
     checkConnection();
-  }, [user?.id]);
+  }, []);
   
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.id) {
+    // For demo purposes, get the current user ID from localStorage
+    const userId = localStorage.getItem('current_user_id');
+    if (!userId) {
       toast.error("User not authenticated");
       return;
     }
@@ -82,12 +89,12 @@ export default function NotionIntegration() {
     setIsConnecting(true);
     
     try {
-      const success = await notionService.connect(user.id, apiKey);
+      const success = await notionService.connect(userId, apiKey);
       
       if (success) {
         toast.success("Successfully connected to Notion");
         setIsConnected(true);
-        const pagesList = await notionService.getPagesList(user.id);
+        const pagesList = await notionService.getPagesList(userId);
         setPages(pagesList);
       } else {
         toast.error("Failed to connect to Notion. Check your API key.");
@@ -101,10 +108,12 @@ export default function NotionIntegration() {
   };
   
   const handleDisconnect = async () => {
-    if (!user?.id) return;
+    // For demo purposes, get the current user ID from localStorage
+    const userId = localStorage.getItem('current_user_id');
+    if (!userId) return;
     
     try {
-      const success = await notionService.disconnect(user.id);
+      const success = await notionService.disconnect(userId);
       
       if (success) {
         toast.success("Successfully disconnected from Notion");
@@ -131,7 +140,7 @@ export default function NotionIntegration() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2 mb-1">
-          <Notion className="h-6 w-6" />
+          <Database className="h-6 w-6" />
           <CardTitle>Notion Integration</CardTitle>
         </div>
         <CardDescription>
