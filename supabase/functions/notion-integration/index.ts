@@ -112,13 +112,13 @@ serve(async (req) => {
       );
     }
 
-    // Validate API key format for Notion (should start with "secret_")
-    if (!notionApiKey.startsWith('secret_')) {
-      console.error('Invalid Notion API key format - should start with "secret_"');
+    // Updated validation: Accept both secret_ and ntn_ formats
+    if (!notionApiKey.startsWith('secret_') && !notionApiKey.startsWith('ntn_')) {
+      console.error('Invalid Notion API key format - should start with "secret_" or "ntn_"');
       return new Response(
         JSON.stringify({ 
           error: 'Invalid API key format', 
-          message: 'Notion API keys should start with "secret_". Please check your integration token.'
+          message: 'Notion API keys should start with "secret_" for internal integrations or "ntn_" for public integrations.'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

@@ -106,8 +106,8 @@ export default function NotionIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       
       // Validate API key format before sending to server
-      if (!apiKey.startsWith('secret_')) {
-        setConnectionError("Invalid API key format. Notion API keys should start with 'secret_'.");
+      if (!apiKey.startsWith('secret_') && !apiKey.startsWith('ntn_')) {
+        setConnectionError("Invalid API key format. Notion API keys should start with 'secret_' for internal integrations or 'ntn_' for public integrations.");
         toast.error("Invalid API key format. Check your integration token.");
         setIsConnecting(false);
         return;
@@ -367,7 +367,7 @@ export default function NotionIntegration() {
                   <li>Give it a name (e.g., "Elia Go")</li>
                   <li>Select your workspace</li>
                   <li>Under "Capabilities" enable "Read content", "Update content", and "Insert content"</li>
-                  <li>Save and copy your "Internal Integration Token" (starts with "secret_")</li>
+                  <li>Save and copy your "Internal Integration Token" (starts with "secret_" or "ntn_")</li>
                   <li>In your Notion workspace, share any pages you want to access with the integration</li>
                 </ol>
               </div>
