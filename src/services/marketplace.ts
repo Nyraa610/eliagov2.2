@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 export interface MarketplacePartner {
@@ -35,6 +34,20 @@ export interface PartnerApplication {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
+}
+
+export interface ApplicationSubmitData {
+  company_name: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone?: string;
+  company_website?: string;
+  company_description?: string;
+  services_offered?: string;
+  locations: string[];
+  company_sizes: string[];
+  budget_ranges: string[];
+  categories: string[];
 }
 
 export interface MarketplaceRecommendation {
@@ -141,7 +154,7 @@ export const marketplaceService = {
     return data;
   },
 
-  async updatePartnerStatus(partnerId: string, status: string): Promise<void> {
+  async updatePartnerStatus(partnerId: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> {
     const { error } = await supabase
       .from('marketplace_partners')
       .update({
@@ -169,7 +182,7 @@ export const marketplaceService = {
   },
 
   // Partner application functions
-  async submitPartnerApplication(application: Omit<PartnerApplication, 'id' | 'status' | 'created_at' | 'updated_at'>): Promise<PartnerApplication> {
+  async submitPartnerApplication(application: ApplicationSubmitData): Promise<PartnerApplication> {
     const { data, error } = await supabase
       .from('partner_applications')
       .insert({

@@ -95,7 +95,7 @@ export function PartnerApplicationForm() {
     setIsSubmitting(true);
     
     try {
-      await marketplaceService.submitApplication(data as ApplicationSubmitData);
+      await marketplaceService.submitPartnerApplication(data as ApplicationSubmitData);
       
       toast({
         title: "Application submitted successfully",

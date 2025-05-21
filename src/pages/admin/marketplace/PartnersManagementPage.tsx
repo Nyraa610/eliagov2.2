@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AdminMarketplaceLayout } from "@/components/admin/marketplace/AdminMarketplaceLayout";
 import { Button } from "@/components/ui/button";
@@ -80,7 +79,7 @@ function PartnersTable() {
     setFilteredPartners(filtered);
   }, [searchQuery, statusFilter, partners]);
 
-  const handleStatusChange = async (partner: MarketplacePartner, newStatus: string) => {
+  const handleStatusChange = async (partner: MarketplacePartner, newStatus: 'pending' | 'approved' | 'rejected') => {
     try {
       await marketplaceService.updatePartnerStatus(partner.id, newStatus);
       setPartners((prev) =>
