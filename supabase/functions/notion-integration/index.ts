@@ -8,8 +8,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Notion integration function called");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -31,6 +34,7 @@ serve(async (req) => {
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -47,6 +51,7 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user) {
+      console.error('Invalid user token:', userError);
       return new Response(
         JSON.stringify({ error: 'Invalid user token', details: userError }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -57,6 +62,7 @@ serve(async (req) => {
     let requestData;
     try {
       requestData = await req.json();
+      console.log('Request data:', JSON.stringify(requestData));
     } catch (error) {
       console.error('Failed to parse request body:', error);
       return new Response(
@@ -68,6 +74,7 @@ serve(async (req) => {
     const { action, companyId, pageId, content, title, apiKey: providedApiKey } = requestData;
 
     if (!action) {
+      console.error('Missing required action parameter');
       return new Response(
         JSON.stringify({ error: 'Missing required action parameter' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -80,6 +87,7 @@ serve(async (req) => {
     // For other actions, get the Notion API key from the database
     if (action !== 'testConnection') {
       if (!companyId) {
+        console.error('Missing required companyId parameter');
         return new Response(
           JSON.stringify({ error: 'Missing required companyId parameter' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -106,6 +114,7 @@ serve(async (req) => {
     }
 
     if (!notionApiKey) {
+      console.error('No API key available for request');
       return new Response(
         JSON.stringify({ error: 'No API key available for request' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -126,71 +135,85 @@ serve(async (req) => {
 
     switch (action) {
       case 'listPages': {
+        console.log('Listing pages with Notion API key');
         // List pages from Notion workspace
-        const response = await fetch('https://api.notion.com/v1/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${notionApiKey}`,
-            'Notion-Version': '2022-06-28',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filter: {
-              value: 'page',
-              property: 'object'
+        try {
+          const response = await fetch('https://api.notion.com/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${notionApiKey}`,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
             },
-            sort: {
-              direction: 'descending',
-              timestamp: 'last_edited_time'
-            }
-          }),
-        });
-
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch (e) {
-            errorData = { message: response.statusText };
-          }
-          
-          console.error('Notion API error:', response.status, errorData);
-          
-          // Provide more specific error messages for common issues
-          let errorMessage = 'Error fetching Notion pages';
-          if (response.status === 401) {
-            errorMessage = 'Invalid Notion API key. Please check your integration token.';
-          } else if (response.status === 403) {
-            errorMessage = 'Access denied. Make sure you have shared pages with your integration in Notion.';
-          } else if (response.status === 429) {
-            errorMessage = 'Too many requests to Notion API. Please try again later.';
-          }
-          
-          return new Response(
-            JSON.stringify({ 
-              error: errorMessage, 
-              status: response.status,
-              details: errorData 
+            body: JSON.stringify({
+              filter: {
+                value: 'page',
+                property: 'object'
+              },
+              sort: {
+                direction: 'descending',
+                timestamp: 'last_edited_time'
+              }
             }),
-            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          });
+
+          console.log('Notion API status:', response.status);
+          
+          if (!response.ok) {
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              errorData = { message: response.statusText };
+            }
+            
+            console.error('Notion API error:', response.status, errorData);
+            
+            // Provide more specific error messages for common issues
+            let errorMessage = 'Error fetching Notion pages';
+            if (response.status === 401) {
+              errorMessage = 'Invalid Notion API key. Please check your integration token.';
+            } else if (response.status === 403) {
+              errorMessage = 'Access denied. Make sure you have shared pages with your integration in Notion.';
+            } else if (response.status === 429) {
+              errorMessage = 'Too many requests to Notion API. Please try again later.';
+            }
+            
+            return new Response(
+              JSON.stringify({ 
+                error: errorMessage, 
+                status: response.status,
+                details: errorData 
+              }),
+              { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const data = await response.json();
+          console.log('Notion API response:', JSON.stringify(data).substring(0, 200) + '...');
+          
+          // Transform the results to a simpler format
+          const pages = data.results.map(page => ({
+            id: page.id,
+            title: page.properties?.title?.title?.[0]?.plain_text || 
+                  page.properties?.Name?.title?.[0]?.plain_text || 
+                  'Untitled',
+            lastEdited: page.last_edited_time
+          }));
+
+          console.log('Transformed pages:', JSON.stringify(pages).substring(0, 200) + '...');
+
+          return new Response(
+            JSON.stringify({ pages }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          console.error('Error in listPages action:', error);
+          return new Response(
+            JSON.stringify({ error: `Failed to fetch pages: ${error.message || 'Unknown error'}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-
-        const data = await response.json();
-        
-        // Transform the results to a simpler format
-        const pages = data.results.map(page => ({
-          id: page.id,
-          title: page.properties?.title?.title?.[0]?.plain_text || 
-                 page.properties?.Name?.title?.[0]?.plain_text || 
-                 'Untitled',
-          lastEdited: page.last_edited_time
-        }));
-
-        return new Response(
-          JSON.stringify({ pages }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
       
       case 'createPage': {
@@ -202,133 +225,152 @@ serve(async (req) => {
           );
         }
 
-        // Convert our action plan content to Notion blocks
-        const blocks = generateNotionBlocks(content);
+        try {
+          // Convert our action plan content to Notion blocks
+          const blocks = generateNotionBlocks(content);
 
-        const response = await fetch('https://api.notion.com/v1/pages', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${notionApiKey}`,
-            'Notion-Version': '2022-06-28',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            parent: { page_id: pageId },
-            properties: {
-              title: {
-                title: [
-                  {
-                    type: 'text',
-                    text: { content: title }
-                  }
-                ]
-              }
+          const response = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${notionApiKey}`,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
             },
-            children: blocks,
-          }),
-        });
+            body: JSON.stringify({
+              parent: { page_id: pageId },
+              properties: {
+                title: {
+                  title: [
+                    {
+                      type: 'text',
+                      text: { content: title }
+                    }
+                  ]
+                }
+              },
+              children: blocks,
+            }),
+          });
 
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch (e) {
-            errorData = { message: response.statusText };
+          if (!response.ok) {
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              errorData = { message: response.statusText };
+            }
+            
+            console.error('Notion API error:', response.status, errorData);
+            
+            // Provide more specific error messages
+            let errorMessage = 'Error creating Notion page';
+            if (response.status === 401) {
+              errorMessage = 'Invalid Notion API key. Please check your integration token.';
+            } else if (response.status === 403) {
+              errorMessage = 'Access denied. Make sure you have shared the parent page with your integration.';
+            } else if (response.status === 404) {
+              errorMessage = 'Parent page not found. Make sure the page exists and is shared with the integration.';
+            }
+            
+            return new Response(
+              JSON.stringify({ 
+                error: errorMessage, 
+                status: response.status,
+                details: errorData 
+              }),
+              { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
-          
-          console.error('Notion API error:', response.status, errorData);
-          
-          // Provide more specific error messages
-          let errorMessage = 'Error creating Notion page';
-          if (response.status === 401) {
-            errorMessage = 'Invalid Notion API key. Please check your integration token.';
-          } else if (response.status === 403) {
-            errorMessage = 'Access denied. Make sure you have shared the parent page with your integration.';
-          } else if (response.status === 404) {
-            errorMessage = 'Parent page not found. Make sure the page exists and is shared with the integration.';
-          }
+
+          const data = await response.json();
           
           return new Response(
             JSON.stringify({ 
-              error: errorMessage, 
-              status: response.status,
-              details: errorData 
+              success: true, 
+              pageId: data.id,
+              url: data.url 
             }),
-            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          console.error('Error in createPage action:', error);
+          return new Response(
+            JSON.stringify({ error: `Failed to create page: ${error.message || 'Unknown error'}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-
-        const data = await response.json();
-        
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            pageId: data.id,
-            url: data.url 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
       
       case 'testConnection': {
         // Test if the API key is valid by making a simple request
-        console.log('Testing connection with API key');
+        console.log('Testing connection with API key type:', notionApiKey.startsWith('secret_') ? 'Internal' : 'Public');
         
-        const response = await fetch('https://api.notion.com/v1/users/me', {
-          headers: {
-            'Authorization': `Bearer ${notionApiKey}`,
-            'Notion-Version': '2022-06-28',
-          },
-        });
+        try {
+          const response = await fetch('https://api.notion.com/v1/users/me', {
+            headers: {
+              'Authorization': `Bearer ${notionApiKey}`,
+              'Notion-Version': '2022-06-28',
+            },
+          });
 
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch (e) {
-            errorData = { message: response.statusText };
+          console.log('Notion API test response status:', response.status);
+
+          if (!response.ok) {
+            let errorData;
+            try {
+              errorData = await response.json();
+              console.error('Notion API error details:', JSON.stringify(errorData));
+            } catch (e) {
+              errorData = { message: response.statusText };
+              console.error('Could not parse error response:', e);
+            }
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to connect to Notion API';
+            if (response.status === 401) {
+              errorMessage = 'Invalid Notion API key. Please check your integration token.';
+            } else if (response.status === 403) {
+              errorMessage = 'Access denied. Make sure you have the correct permissions.';
+            } else if (response.status === 429) {
+              errorMessage = 'Too many requests to Notion API. Please try again later.';
+            }
+            
+            console.error('Notion API test error:', errorMessage);
+            return new Response(
+              JSON.stringify({ 
+                success: false,
+                error: errorMessage,
+                status: response.status,
+                details: errorData 
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
-          
-          console.error('Notion API test error:', response.status, errorData);
-          
-          // Provide more specific error messages
-          let errorMessage = 'Failed to connect to Notion API';
-          if (response.status === 401) {
-            errorMessage = 'Invalid Notion API key. Please check your integration token.';
-          } else if (response.status === 403) {
-            errorMessage = 'Access denied. Make sure you have the correct permissions.';
-          } else if (response.status === 429) {
-            errorMessage = 'Too many requests to Notion API. Please try again later.';
-          }
-          
+
+          const data = await response.json();
+          console.log('Notion API test successful, user data received');
+
           return new Response(
             JSON.stringify({ 
-              success: false,
-              error: errorMessage,
-              status: response.status,
-              details: errorData 
+              success: true,
+              userData: data 
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
+        } catch (error) {
+          console.error('Exception during Notion API test:', error);
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: `Connection error: ${error.message || 'Unknown error'}`
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
-
-        const data = await response.json();
-
-        // If we have companyId, this is a connection setup
-        if (companyId && providedApiKey) {
-          console.log('Test successful, returning success response');
-        }
-
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            userData: data 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
 
       default:
+        console.error(`Invalid action requested: ${action}`);
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -31,6 +31,7 @@ export default function NotionIntegration() {
     
     const checkConnection = async () => {
       try {
+        console.log("Checking Notion connection for company:", company.id);
         const { data: integration, error } = await supabase
           .from('company_integrations')
           .select('*')
@@ -53,11 +54,19 @@ export default function NotionIntegration() {
             // Get the pages list if connected
             const { data: { session } } = await supabase.auth.getSession();
             
+            if (!session) {
+              console.error("No active session found");
+              toast.error("Authentication error. Please try signing in again.");
+              setIsLoading(false);
+              return;
+            }
+            
+            console.log("Fetching Notion pages list");
             const response = await fetch('/api/functions/v1/notion-integration', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session?.access_token}`,
+                'Authorization': `Bearer ${session.access_token}`,
               },
               body: JSON.stringify({
                 action: 'listPages',
@@ -66,22 +75,33 @@ export default function NotionIntegration() {
             });
             
             if (!response.ok) {
-              console.error("Error fetching Notion pages:", response.status, response.statusText);
-              toast.error("Couldn't fetch your Notion pages. Please check your API key.");
+              let errorData;
+              try {
+                errorData = await response.json();
+                console.error("Error fetching Notion pages:", errorData);
+              } catch (err) {
+                console.error("Could not parse error response:", err);
+                errorData = { error: "Failed to process response" };
+              }
+              
+              toast.error(errorData.error || "Couldn't fetch your Notion pages. Please check your API key.");
               setPages([]);
               setIsLoading(false);
               return;
             }
             
             const result = await response.json();
+            console.log("Notion pages retrieved successfully");
             setPages(result.pages || []);
           } catch (err) {
             console.error("Error listing Notion pages:", err);
+            toast.error("Failed to communicate with Notion API. Please check your connection.");
             setPages([]);
           }
         }
       } catch (error) {
         console.error("Failed to check Notion connection:", error);
+        toast.error("Failed to verify Notion integration status");
       } finally {
         setIsLoading(false);
       }
@@ -105,7 +125,14 @@ export default function NotionIntegration() {
       // First test the connection with the API key
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session) {
+        toast.error("Authentication error. Please try signing in again.");
+        setIsConnecting(false);
+        return;
+      }
+      
       // Validate API key format before sending to server
+      // Accept both secret_ (internal integrations) and ntn_ (public integrations) formats
       if (!apiKey.startsWith('secret_') && !apiKey.startsWith('ntn_')) {
         setConnectionError("Invalid API key format. Notion API keys should start with 'secret_' for internal integrations or 'ntn_' for public integrations.");
         toast.error("Invalid API key format. Check your integration token.");
@@ -119,7 +146,7 @@ export default function NotionIntegration() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           action: 'testConnection',
@@ -128,7 +155,17 @@ export default function NotionIntegration() {
         }),
       });
       
-      const testResult = await testResponse.json();
+      let testResult;
+      try {
+        testResult = await testResponse.json();
+        console.log("Notion test connection response:", testResult);
+      } catch (error) {
+        console.error("Error parsing test connection response:", error);
+        setConnectionError("Failed to process server response. Please try again.");
+        toast.error("Connection error. Please try again later.");
+        setIsConnecting(false);
+        return;
+      }
       
       if (!testResponse.ok || !testResult.success) {
         console.error("Notion API test failed:", testResponse.status, testResult);
@@ -167,7 +204,7 @@ export default function NotionIntegration() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           action: 'listPages',
@@ -175,13 +212,20 @@ export default function NotionIntegration() {
         }),
       });
       
+      let pagesResult;
+      try {
+        pagesResult = await pagesResponse.json();
+      } catch (error) {
+        console.error("Error parsing pages response:", error);
+        toast.warning("Connected to Notion, but couldn't process the pages response.");
+        setIsConnecting(false);
+        return;
+      }
+      
       if (!pagesResponse.ok) {
-        console.error("Error fetching Notion pages:", pagesResponse.status, pagesResponse.statusText);
-        
-        const pagesResult = await pagesResponse.json();
+        console.error("Error fetching Notion pages:", pagesResponse.status, pagesResult);
         toast.warning(pagesResult.error || "Connected, but couldn't fetch pages. Make sure to share pages with your integration.");
       } else {
-        const pagesResult = await pagesResponse.json();
         setPages(pagesResult.pages || []);
         
         if (pagesResult.pages && pagesResult.pages.length === 0) {
@@ -351,7 +395,7 @@ export default function NotionIntegration() {
                 type="password"
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
-                placeholder="Enter your Notion Integration Secret"
+                placeholder="Enter your Notion Integration Token"
                 required
               />
               {connectionError && (
@@ -367,7 +411,7 @@ export default function NotionIntegration() {
                   <li>Give it a name (e.g., "Elia Go")</li>
                   <li>Select your workspace</li>
                   <li>Under "Capabilities" enable "Read content", "Update content", and "Insert content"</li>
-                  <li>Save and copy your "Internal Integration Token" (starts with "secret_" or "ntn_")</li>
+                  <li>Save and copy your Integration Token (starts with "secret_" for internal integrations or "ntn_" for public integrations)</li>
                   <li>In your Notion workspace, share any pages you want to access with the integration</li>
                 </ol>
               </div>
