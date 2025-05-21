@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, AlertCircle, FileCheck, Database, ExternalLink } from "lucide-react";
+import { Loader2, Send, AlertCircle, FileCheck, Database, ExternalLink, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
