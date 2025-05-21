@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,12 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { assessmentService } from "@/services/assessment";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ActionPlanExport() {
   const navigate = useNavigate();
   const { company } = useCompanyProfile();
+  const { user, isAuthenticated } = useAuth(); // Use Auth context to get user
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -22,12 +25,18 @@ export default function ActionPlanExport() {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // Check if connected to Notion (using localStorage for demo)
-        const userId = localStorage.getItem('current_user_id');
-        const connected = userId ? localStorage.getItem(`notion_connected_${userId}`) === 'true' : false;
+        // If not authenticated, just set loading to false
+        if (!isAuthenticated || !user) {
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check if connected to Notion using user ID
+        const userId = user.id;
+        const connected = localStorage.getItem(`notion_connected_${userId}`) === 'true';
         setIsConnected(connected);
         
-        if (connected && userId) {
+        if (connected) {
           // Mock fetching pages from Notion
           const pagesList = [
             { id: 'page1', title: 'ESG Action Plans', lastEdited: new Date().toISOString() },
@@ -48,11 +57,16 @@ export default function ActionPlanExport() {
     };
     
     checkConnection();
-  }, []);
+  }, [isAuthenticated, user]);
   
   const handleSendToNotion = async () => {
     if (!selectedPage || !actionPlanData) {
       toast.error("Please select a destination page");
+      return;
+    }
+    
+    if (!isAuthenticated || !user) {
+      toast.error("You must be logged in to export to Notion");
       return;
     }
     
@@ -93,6 +107,35 @@ export default function ActionPlanExport() {
       <div className="flex justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+  
+  // Display authentication required message
+  if (!isAuthenticated || !user) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-1">
+            <Database className="h-6 w-6" />
+            <CardTitle>Export to Notion</CardTitle>
+          </div>
+          <CardDescription>
+            Send your action plan to a Notion page
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3 p-4 border rounded bg-amber-50">
+            <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="text-amber-800">
+              Authentication required. Please sign in to access this feature.
+            </div>
+          </div>
+          
+          <Button onClick={() => navigate('/login')} className="w-full">
+            Sign In
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
   

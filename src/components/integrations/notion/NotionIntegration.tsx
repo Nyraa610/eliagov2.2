@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, ExternalLink, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock service until the real one is implemented
 const notionService = {
@@ -48,17 +49,19 @@ export default function NotionIntegration() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [pages, setPages] = useState<any[]>([]);
   const { company } = useCompanyProfile();
+  const { user, isAuthenticated } = useAuth(); // Use Auth context to get user
   
   useEffect(() => {
+    // If not authenticated, just set loading to false and return
+    if (!isAuthenticated || !user) {
+      setIsLoading(false);
+      return;
+    }
+    
     const checkConnection = async () => {
-      // For demo purposes, get the current user ID from localStorage
-      const userId = localStorage.getItem('current_user_id');
-      if (!userId) {
-        setIsLoading(false);
-        return;
-      }
-      
       try {
+        const userId = user.id; // Use authenticated user ID
+        
         const connected = await notionService.isConnected(userId);
         setIsConnected(connected);
         
@@ -74,18 +77,17 @@ export default function NotionIntegration() {
     };
     
     checkConnection();
-  }, []);
+  }, [isAuthenticated, user]);
   
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // For demo purposes, get the current user ID from localStorage
-    const userId = localStorage.getItem('current_user_id');
-    if (!userId) {
-      toast.error("User not authenticated");
+    if (!isAuthenticated || !user) {
+      toast.error("You must be logged in to connect Notion");
       return;
     }
     
+    const userId = user.id;
     setIsConnecting(true);
     
     try {
@@ -108,11 +110,10 @@ export default function NotionIntegration() {
   };
   
   const handleDisconnect = async () => {
-    // For demo purposes, get the current user ID from localStorage
-    const userId = localStorage.getItem('current_user_id');
-    if (!userId) return;
+    if (!isAuthenticated || !user) return;
     
     try {
+      const userId = user.id;
       const success = await notionService.disconnect(userId);
       
       if (success) {
@@ -133,6 +134,33 @@ export default function NotionIntegration() {
       <div className="flex justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+  
+  // Show authentication required message if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-1">
+            <Database className="h-6 w-6" />
+            <CardTitle>Notion Integration</CardTitle>
+          </div>
+          <CardDescription>
+            Connect your Notion account to export action plans and other ESG deliverables
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 border rounded bg-amber-50 flex items-center gap-3">
+            <span className="text-amber-600">
+              Authentication required. Please sign in to access this feature.
+            </span>
+          </div>
+          <Button onClick={() => navigate('/login')} className="w-full">
+            Sign In
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
   
