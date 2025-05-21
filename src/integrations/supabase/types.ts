@@ -679,6 +679,175 @@ export type Database = {
           },
         ]
       }
+      marketplace_leads: {
+        Row: {
+          commission_amount: number | null
+          commission_paid: boolean | null
+          commission_paid_at: string | null
+          company_id: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          partner_id: string
+          recommendation_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_paid?: boolean | null
+          commission_paid_at?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          partner_id: string
+          recommendation_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_paid?: boolean | null
+          commission_paid_at?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          partner_id?: string
+          recommendation_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_leads_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_leads_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_partners: {
+        Row: {
+          budget_ranges: string[] | null
+          categories: string[] | null
+          commission_percentage: number | null
+          company_sizes: string[] | null
+          contact_email: string
+          created_at: string | null
+          description: string | null
+          id: string
+          locations: string[] | null
+          logo_url: string | null
+          name: string
+          services: string[] | null
+          status: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          budget_ranges?: string[] | null
+          categories?: string[] | null
+          commission_percentage?: number | null
+          company_sizes?: string[] | null
+          contact_email: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          locations?: string[] | null
+          logo_url?: string | null
+          name: string
+          services?: string[] | null
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          budget_ranges?: string[] | null
+          categories?: string[] | null
+          commission_percentage?: number | null
+          company_sizes?: string[] | null
+          contact_email?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          locations?: string[] | null
+          logo_url?: string | null
+          name?: string
+          services?: string[] | null
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_recommendations: {
+        Row: {
+          action_plan_type: string | null
+          company_id: string | null
+          contacted_at: string | null
+          created_at: string | null
+          id: string
+          match_score: number | null
+          partner_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          action_plan_type?: string | null
+          company_id?: string | null
+          contacted_at?: string | null
+          created_at?: string | null
+          id?: string
+          match_score?: number | null
+          partner_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          action_plan_type?: string | null
+          company_id?: string | null
+          contacted_at?: string | null
+          created_at?: string | null
+          id?: string
+          match_score?: number | null
+          partner_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_recommendations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_recommendations_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_completions: {
         Row: {
           completed_at: string | null
@@ -748,6 +917,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_applications: {
+        Row: {
+          budget_ranges: string[] | null
+          categories: string[] | null
+          company_description: string | null
+          company_name: string
+          company_sizes: string[] | null
+          company_website: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          locations: string[] | null
+          services_offered: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          budget_ranges?: string[] | null
+          categories?: string[] | null
+          company_description?: string | null
+          company_name: string
+          company_sizes?: string[] | null
+          company_website?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          locations?: string[] | null
+          services_offered?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          budget_ranges?: string[] | null
+          categories?: string[] | null
+          company_description?: string | null
+          company_name?: string
+          company_sizes?: string[] | null
+          company_website?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          locations?: string[] | null
+          services_offered?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       partner_commissions: {
         Row: {

@@ -8,14 +8,14 @@ import {
   BarChart4,
   Award,
   FileCheck,
-  LucideIcon,
   Sparkles,
   MessageSquare,
   CheckSquare,
   Target,
   List,
   FileCheck2,
-  Share2
+  Share2,
+  Package
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
@@ -92,12 +92,26 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: true,
   },
   
-  // Action Plan section
+  // Action Plan section with child for delivery providers
   {
     title: "Action Plan",
     href: "/assessment/action-plan",
     icon: FileCheck2,
     requiresCompany: true,
+    children: [
+      {
+        title: "Plan Editor",
+        href: "/assessment/action-plan",
+        icon: FileCheck2,
+        requiresCompany: true,
+      },
+      {
+        title: "Delivery Providers",
+        href: "/assessment/action-plan/providers",
+        icon: Package,
+        requiresCompany: true,
+      }
+    ]
   },
   
   // Deliverables section - New
