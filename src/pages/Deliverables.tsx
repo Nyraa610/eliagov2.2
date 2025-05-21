@@ -56,7 +56,7 @@ export default function Deliverables() {
               <div className="flex items-center justify-between">
                 <CardTitle>External Exports</CardTitle>
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/action-plan-export">New Export</Link>
+                  <Link to="/integrations/action-plan-export">New Export</Link>
                 </Button>
               </div>
             </CardHeader>
@@ -69,7 +69,7 @@ export default function Deliverables() {
                     Export your ESG documents to external platforms
                   </p>
                   <Button variant="outline" asChild>
-                    <Link to="/action-plan-export">Export Action Plan</Link>
+                    <Link to="/integrations/action-plan-export">Export Action Plan</Link>
                   </Button>
                 </div>
               ) : (
@@ -96,9 +96,17 @@ export default function Deliverables() {
                           variant="outline" 
                           size="sm" 
                           className="w-full gap-2"
+                          asChild
                         >
-                          <ExternalLink className="h-4 w-4" />
-                          <span>View in Notion</span>
+                          <a 
+                            href={export_item.notion_url || "#"} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={!export_item.notion_url ? "pointer-events-none opacity-50" : ""}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span>View in Notion</span>
+                          </a>
                         </Button>
                       </div>
                     </div>

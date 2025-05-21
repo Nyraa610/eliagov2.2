@@ -5,41 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, ExternalLink, Database } from "lucide-react";
+import { Loader2, CheckCircle2, ExternalLink, Database, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Mock service until the real one is implemented
-const notionService = {
-  isConnected: async (userId: string): Promise<boolean> => {
-    // Check local storage for demo purposes
-    return localStorage.getItem(`notion_connected_${userId}`) === 'true';
-  },
-  connect: async (userId: string, apiKey: string): Promise<boolean> => {
-    // In a real implementation, we would validate the API key with Notion
-    // For now, we'll just simulate success if the key is not empty
-    if (!apiKey) return false;
-    
-    // Store connection status in localStorage for demo
-    localStorage.setItem(`notion_connected_${userId}`, 'true');
-    localStorage.setItem(`notion_api_key_${userId}`, apiKey);
-    return true;
-  },
-  disconnect: async (userId: string): Promise<boolean> => {
-    localStorage.removeItem(`notion_connected_${userId}`);
-    localStorage.removeItem(`notion_api_key_${userId}`);
-    return true;
-  },
-  getPagesList: async (userId: string): Promise<any[]> => {
-    // This would fetch pages from Notion API
-    // Returning mock data for now
-    return [
-      { id: 'page1', title: 'ESG Action Plans', lastEdited: new Date().toISOString() },
-      { id: 'page2', title: 'Sustainability Projects', lastEdited: new Date().toISOString() }
-    ];
-  }
-};
+import { supabase } from "@/lib/supabase";
 
 export default function NotionIntegration() {
   const navigate = useNavigate();
@@ -47,27 +17,67 @@ export default function NotionIntegration() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [pages, setPages] = useState<any[]>([]);
   const { company } = useCompanyProfile();
-  const { user, isAuthenticated } = useAuth(); // Use Auth context to get user
+  const { user, isAuthenticated } = useAuth();
   
   useEffect(() => {
     // If not authenticated, just set loading to false and return
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !user || !company) {
       setIsLoading(false);
       return;
     }
     
     const checkConnection = async () => {
       try {
-        const userId = user.id; // Use authenticated user ID
+        const { data: integration, error } = await supabase
+          .from('company_integrations')
+          .select('*')
+          .eq('company_id', company.id)
+          .eq('integration_type', 'notion')
+          .single();
+
+        if (error) {
+          console.log("No Notion integration found:", error);
+          setIsConnected(false);
+          setIsLoading(false);
+          return;
+        }
         
-        const connected = await notionService.isConnected(userId);
-        setIsConnected(connected);
+        // Test the connection with the saved API key
+        setIsConnected(integration ? true : false);
         
-        if (connected) {
-          const pagesList = await notionService.getPagesList(userId);
-          setPages(pagesList);
+        if (integration) {
+          try {
+            // Get the pages list if connected
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            const response = await fetch('/api/functions/v1/notion-integration', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token}`,
+              },
+              body: JSON.stringify({
+                action: 'listPages',
+                companyId: company.id
+              }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+              console.error("Error fetching Notion pages:", result);
+              toast.error("Couldn't fetch your Notion pages. Please check your API key.");
+              setPages([]);
+            } else {
+              setPages(result.pages || []);
+            }
+          } catch (err) {
+            console.error("Error listing Notion pages:", err);
+            setPages([]);
+          }
         }
       } catch (error) {
         console.error("Failed to check Notion connection:", error);
@@ -77,52 +87,113 @@ export default function NotionIntegration() {
     };
     
     checkConnection();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, company]);
   
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !user || !company) {
       toast.error("You must be logged in to connect Notion");
       return;
     }
     
-    const userId = user.id;
     setIsConnecting(true);
+    setConnectionError(null);
     
     try {
-      const success = await notionService.connect(userId, apiKey);
+      // First test the connection with the API key
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (success) {
-        toast.success("Successfully connected to Notion");
-        setIsConnected(true);
-        const pagesList = await notionService.getPagesList(userId);
-        setPages(pagesList);
+      const testResponse = await fetch('/api/functions/v1/notion-integration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'testConnection',
+          apiKey,
+          companyId: company.id
+        }),
+      });
+      
+      const testResult = await testResponse.json();
+      
+      if (!testResult.success) {
+        setConnectionError("Invalid Notion API key. Please check your key and try again.");
+        toast.error("Failed to connect to Notion. Invalid API key.");
+        return;
+      }
+      
+      // Store the API key in the database
+      const { error } = await supabase
+        .from('company_integrations')
+        .upsert({
+          company_id: company.id,
+          integration_type: 'notion',
+          api_key: apiKey,
+          is_connected: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'company_id,integration_type' });
+      
+      if (error) {
+        console.error("Error saving Notion API key:", error);
+        toast.error("Failed to save your Notion API key");
+        return;
+      }
+      
+      toast.success("Successfully connected to Notion");
+      setIsConnected(true);
+      
+      // Fetch the available pages
+      const pagesResponse = await fetch('/api/functions/v1/notion-integration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'listPages',
+          companyId: company.id
+        }),
+      });
+      
+      const pagesResult = await pagesResponse.json();
+      
+      if (!pagesResponse.ok) {
+        console.error("Error fetching Notion pages:", pagesResult);
       } else {
-        toast.error("Failed to connect to Notion. Check your API key.");
+        setPages(pagesResult.pages || []);
       }
     } catch (error) {
       console.error("Error connecting to Notion:", error);
       toast.error("An error occurred while connecting to Notion");
+      setConnectionError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsConnecting(false);
     }
   };
   
   const handleDisconnect = async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user || !company) return;
     
     try {
-      const userId = user.id;
-      const success = await notionService.disconnect(userId);
+      const { error } = await supabase
+        .from('company_integrations')
+        .delete()
+        .eq('company_id', company.id)
+        .eq('integration_type', 'notion');
       
-      if (success) {
-        toast.success("Successfully disconnected from Notion");
-        setIsConnected(false);
-        setPages([]);
-      } else {
+      if (error) {
+        console.error("Error disconnecting from Notion:", error);
         toast.error("Failed to disconnect from Notion");
+        return;
       }
+      
+      toast.success("Successfully disconnected from Notion");
+      setIsConnected(false);
+      setPages([]);
+      setApiKey("");
     } catch (error) {
       console.error("Error disconnecting from Notion:", error);
       toast.error("An error occurred while disconnecting from Notion");
@@ -152,12 +223,40 @@ export default function NotionIntegration() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-4 border rounded bg-amber-50 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
             <span className="text-amber-600">
               Authentication required. Please sign in to access this feature.
             </span>
           </div>
           <Button onClick={() => navigate('/login')} className="w-full">
             Sign In
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!company) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-1">
+            <Database className="h-6 w-6" />
+            <CardTitle>Notion Integration</CardTitle>
+          </div>
+          <CardDescription>
+            Connect your Notion account to export action plans and other ESG deliverables
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 border rounded bg-amber-50 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+            <span className="text-amber-600">
+              You need to be associated with a company to use this feature.
+            </span>
+          </div>
+          <Button onClick={() => navigate('/profile')} className="w-full">
+            Go to Profile
           </Button>
         </CardContent>
       </Card>
@@ -178,32 +277,30 @@ export default function NotionIntegration() {
       <CardContent>
         {isConnected ? (
           <div className="space-y-6">
-            <div className="flex items-center gap-2 p-2 border rounded bg-green-50">
+            <div className="flex items-center gap-2 p-3 border rounded bg-green-50">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <span className="text-green-700">Connected to Notion</span>
             </div>
             
-            {pages.length > 0 && (
+            {pages.length > 0 ? (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Available Pages</h3>
                 <div className="space-y-2">
                   {pages.map(page => (
-                    <div key={page.id} className="flex items-center justify-between p-2 border rounded">
+                    <div key={page.id} className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">{page.title}</p>
                         <p className="text-xs text-gray-500">
                           Last edited: {new Date(page.lastEdited).toLocaleDateString()}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" className="gap-1" asChild>
-                        <a href="#" target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                          <span>View</span>
-                        </a>
-                      </Button>
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : (
+              <div className="p-3 border rounded bg-blue-50">
+                <p className="text-blue-700 text-sm">No pages found in your Notion workspace or you may need to share pages with the integration.</p>
               </div>
             )}
             
@@ -231,20 +328,26 @@ export default function NotionIntegration() {
                 type="password"
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
-                placeholder="Enter your Notion API Key"
+                placeholder="Enter your Notion Integration Secret"
                 required
               />
-              <p className="text-xs text-gray-500">
-                You'll need to create an integration in your Notion workspace to get an API key.
-                <a 
-                  href="https://www.notion.so/my-integrations" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline ml-1"
-                >
-                  Learn more
-                </a>
-              </p>
+              {connectionError && (
+                <p className="text-sm text-red-500 mt-1">{connectionError}</p>
+              )}
+              <div className="text-xs text-gray-500 space-y-2">
+                <p>
+                  You'll need to create an integration in your Notion workspace to get an API key.
+                </p>
+                <ol className="list-decimal ml-4 space-y-1">
+                  <li>Go to <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Notion Integrations</a></li>
+                  <li>Click "New integration"</li>
+                  <li>Give it a name (e.g., "Elia Go")</li>
+                  <li>Select your workspace</li>
+                  <li>Under "Capabilities" enable "Read content", "Update content", and "Insert content"</li>
+                  <li>Save and copy your "Internal Integration Token"</li>
+                  <li>In your Notion workspace, share any pages you want to access with the integration</li>
+                </ol>
+              </div>
             </div>
             
             <Button type="submit" disabled={isConnecting} className="w-full">

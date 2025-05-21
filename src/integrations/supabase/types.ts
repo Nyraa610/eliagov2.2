@@ -263,6 +263,47 @@ export type Database = {
           },
         ]
       }
+      company_integrations: {
+        Row: {
+          api_key: string
+          company_id: string
+          created_at: string | null
+          id: string
+          integration_type: string
+          is_connected: boolean | null
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          company_id: string
+          created_at?: string | null
+          id?: string
+          integration_type: string
+          is_connected?: boolean | null
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          is_connected?: boolean | null
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_user_roles: {
         Row: {
           company_id: string

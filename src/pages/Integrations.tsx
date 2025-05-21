@@ -72,11 +72,16 @@ export default function Integrations() {
       >
         <TabsList>
           <TabsTrigger value="notion">Notion</TabsTrigger>
+          <TabsTrigger value="action-plan-export">Action Plan Export</TabsTrigger>
           {/* Add more integrations here in the future */}
         </TabsList>
         
         <TabsContent value="notion" className="space-y-6">
           <NotionIntegration />
+        </TabsContent>
+        
+        <TabsContent value="action-plan-export" className="space-y-6">
+          <ActionPlanExport />
         </TabsContent>
       </Tabs>
     </div>
