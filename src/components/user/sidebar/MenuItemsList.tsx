@@ -5,11 +5,11 @@ import { MenuItem } from "./MenuItem";
 type MenuItemsListProps = {
   menuItems: {
     title: string;
-    icon: React.ElementType; // Changed from ReactNode to ElementType
+    icon: React.ElementType;
     path: string;
     submenu?: {
       title: string;
-      icon: React.ElementType; // Changed from ReactNode to ElementType
+      icon: React.ElementType;
       path: string;
     }[];
     disabled?: boolean;

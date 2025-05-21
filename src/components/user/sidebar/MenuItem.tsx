@@ -1,18 +1,16 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 type MenuItemProps = {
   item: {
     title: string;
-    icon: React.ElementType; // Changed from ReactNode to ElementType
+    icon: React.ElementType; // Using ElementType instead of ReactNode
     path: string;
     submenu?: {
       title: string;
-      icon: React.ElementType; // Changed from ReactNode to ElementType
+      icon: React.ElementType; // Using ElementType instead of ReactNode
       path: string;
     }[];
     disabled?: boolean;
@@ -37,8 +35,8 @@ export const MenuItem = ({
     location.pathname.startsWith(subItem.path)
   );
   
-  // Create an instance of the icon component
-  const IconComponent = item.icon;
+  // Get the icon component to render
+  const Icon = item.icon;
   
   if (hasSubmenu && !collapsed) {
     return (
@@ -54,7 +52,7 @@ export const MenuItem = ({
             )}
           >
             <div className="flex items-center">
-              <IconComponent className="h-4 w-4" />
+              <Icon className="h-4 w-4" />
               <span className="ml-3">{item.title}</span>
             </div>
             {isExpanded ? 
@@ -66,7 +64,7 @@ export const MenuItem = ({
           {isExpanded && (
             <ul className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-2">
               {item.submenu?.map((subItem) => {
-                const SubIconComponent = subItem.icon;
+                const SubIcon = subItem.icon;
                 return (
                   <li key={subItem.path}>
                     <Link 
@@ -78,7 +76,7 @@ export const MenuItem = ({
                           : "text-gray-600 hover:bg-gray-100"
                       )}
                     >
-                      <SubIconComponent className="h-4 w-4" />
+                      <SubIcon className="h-4 w-4" />
                       <span className="ml-3">{subItem.title}</span>
                     </Link>
                   </li>
@@ -105,7 +103,7 @@ export const MenuItem = ({
         )}
       >
         <div className="flex items-center">
-          <IconComponent className="h-4 w-4" />
+          <Icon className="h-4 w-4" />
           {!collapsed && <span className="ml-3">{item.title}</span>}
         </div>
         {hasSubmenu && !collapsed && <ChevronRight className="h-4 w-4" />}
