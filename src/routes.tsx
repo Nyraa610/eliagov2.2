@@ -1,31 +1,23 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserLayout } from './components/user/UserLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
-import Home from './pages/Home';
-import About from './pages/About';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import Dashboard from './pages/Dashboard';
-import ProfilePage from './pages/ProfilePage';
-import AssessmentPage from './pages/assessment/AssessmentPage';
+import Profile from './pages/Profile';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import AssessmentPage from './pages/Assessment';
 import ActionPlan from './pages/assessment/ActionPlan';
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
 import DocumentEditor from './pages/assessment/DocumentEditor';
 import AdminPanel from './pages/admin/AdminPanel';
 import EmissionFactors from './pages/admin/EmissionFactors';
-import AdminUserManagement from './pages/admin/AdminUserManagement';
-import CompanyPage from './pages/CompanyPage';
-import CompanyProfilePage from './pages/CompanyProfilePage';
-import DocumentsPage from './pages/DocumentsPage';
-import CompaniesPage from './pages/CompaniesPage';
 import NotionIntegration from './components/integrations/notion/NotionIntegration';
 import ActionPlanExportPage from './pages/ActionPlanExportPage';
-import PartnerApplicationPage from './pages/marketplace/PartnerApplicationPage';
 import MarketplacePage from './pages/marketplace/MarketplacePage';
+import PartnerApplicationPage from './pages/marketplace/PartnerApplicationPage';
 import PartnersManagementPage from './pages/admin/marketplace/PartnersManagementPage';
 import PartnerApplicationsPage from './pages/admin/marketplace/PartnerApplicationsPage';
 import MarketplaceLeadsPage from './pages/admin/marketplace/MarketplaceLeadsPage';
@@ -33,22 +25,15 @@ import MarketplaceLeadsPage from './pages/admin/marketplace/MarketplaceLeadsPage
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       
       {/* Protected routes - require authentication */}
       <Route element={<ProtectedRoute />}>
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/companies" element={<CompaniesPage />} />
-          <Route path="/company/:id" element={<CompanyProfilePage />} />
-          <Route path="/company" element={<CompanyPage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="/deliverables" element={<DocumentsPage />} />
+          <Route path="/profile" element={<Profile />} />
           
           {/* Assessment routes */}
           <Route path="/assessment" element={<AssessmentPage />} />
@@ -68,7 +53,6 @@ function AppRoutes() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminPanel />} />
             <Route path="emission-factors" element={<EmissionFactors />} />
-            <Route path="users" element={<AdminUserManagement />} />
             
             {/* Admin marketplace routes */}
             <Route path="marketplace/partners" element={<PartnersManagementPage />} />

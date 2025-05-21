@@ -20,21 +20,17 @@ export const UserSidebar = () => {
   };
 
   // Map MenuItems to the format expected by MenuItemsList
-  const mapMenuItems = (items) => {
+  const mapMenuItems = (items: any[]) => {
     return items.map(item => ({
       title: item.title || item.label,
       icon: item.icon,
       path: item.path || item.href,
-      submenu: item.submenuItems?.map(subItem => ({
-        title: subItem.title || subItem.label,
-        icon: subItem.icon,
-        path: subItem.path || subItem.href
-      })) || item.children?.map(subItem => ({
+      submenu: item.children?.map((subItem: any) => ({
         title: subItem.title || subItem.label,
         icon: subItem.icon,
         path: subItem.path || subItem.href
       })),
-      disabled: false
+      disabled: item.disabled || false
     }));
   };
 
