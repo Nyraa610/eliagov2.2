@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileEdit, Download, FileText } from "lucide-react";
+import { ArrowLeft, FileEdit, Download, FileText, Send, Notion } from "lucide-react";
 import { assessmentService } from "@/services/assessment";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ export default function ActionPlanResults() {
   const [loading, setLoading] = useState(true);
   const [documentData, setDocumentData] = useState<any>(null);
   const [exporting, setExporting] = useState<'pdf' | 'word' | null>(null);
+  const [isConnectedToNotion, setIsConnectedToNotion] = useState(false);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -19,6 +20,13 @@ export default function ActionPlanResults() {
         setLoading(true);
         const data = await assessmentService.getDocumentTemplate('action_plan');
         setDocumentData(data);
+        
+        // Check if connected to Notion (using localStorage for demo)
+        const userId = localStorage.getItem('current_user_id');
+        if (userId) {
+          const notionConnected = localStorage.getItem(`notion_connected_${userId}`) === 'true';
+          setIsConnectedToNotion(notionConnected);
+        }
       } catch (error) {
         console.error("Failed to fetch action plan data:", error);
         toast.error("Failed to load action plan results");
@@ -65,6 +73,10 @@ export default function ActionPlanResults() {
   
   const handleBack = () => {
     navigate("/assessment/action-plan");
+  };
+  
+  const handleExportToNotion = () => {
+    navigate("/action-plan-export");
   };
   
   if (loading) {
@@ -114,6 +126,15 @@ export default function ActionPlanResults() {
           >
             <FileText className="h-4 w-4" />
             {exporting === 'word' ? 'Exporting...' : 'Export Word'}
+          </Button>
+          
+          <Button
+            variant={isConnectedToNotion ? "default" : "outline"}
+            className="flex items-center gap-2"
+            onClick={handleExportToNotion}
+          >
+            <Notion className="h-4 w-4" />
+            Export to Notion
           </Button>
           
           <Button

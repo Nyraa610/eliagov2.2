@@ -14,7 +14,8 @@ import {
   CheckSquare,
   Target,
   List,
-  FileCheck2
+  FileCheck2,
+  Share2
 } from "lucide-react";
 import { MenuItem } from "../types/menuItemTypes";
 
@@ -99,6 +100,14 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: true,
   },
   
+  // Deliverables section - New
+  {
+    title: "Deliverables",
+    href: "/deliverables",
+    icon: Share2,
+    requiresCompany: true,
+  },
+  
   // Talk with Experts - Highlighted feature
   {
     title: "Talk with Experts",
@@ -123,7 +132,6 @@ const mainMenuItems: MenuItem[] = [
     icon: Folder,
     requiresCompany: true,
   },
-  
   
   // Engagement tracking
   {
