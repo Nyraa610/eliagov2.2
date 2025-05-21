@@ -23,18 +23,18 @@ export const UserSidebar = () => {
   const mapMenuItems = (items) => {
     return items.map(item => ({
       title: item.title || item.label,
-      icon: item.icon,
+      icon: item.icon, // Pass the icon component directly
       path: item.path || item.href,
       submenu: item.submenuItems?.map(subItem => ({
         title: subItem.title || subItem.label,
-        icon: subItem.icon,
+        icon: subItem.icon, // Pass the icon component directly
         path: subItem.path || subItem.href
       })) || item.children?.map(subItem => ({
         title: subItem.title || subItem.label,
-        icon: subItem.icon,
+        icon: subItem.icon, // Pass the icon component directly
         path: subItem.path || subItem.href
       })),
-      disabled: item.disabled || false
+      disabled: false
     }));
   };
 
