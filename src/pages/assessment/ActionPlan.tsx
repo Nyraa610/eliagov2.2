@@ -11,7 +11,6 @@ import { ActionPlanTabs } from "@/components/assessment/action-plan/ActionPlanTa
 import { assessmentService } from "@/services/assessment";
 import { useToast } from "@/components/ui/use-toast";
 import { engagementService } from "@/services/engagement";
-import { MarketplaceNotification } from "@/components/assessment/action-plan/MarketplaceNotification";
 
 export default function ActionPlan() {
   const { t } = useTranslation();
@@ -181,9 +180,6 @@ export default function ActionPlan() {
           {t("assessment.actionPlan.description")}
         </p>
       </div>
-      
-      {/* Add the marketplace notification */}
-      <MarketplaceNotification />
       
       <AssessmentBase 
         title={t("assessment.actionPlan.title")} 

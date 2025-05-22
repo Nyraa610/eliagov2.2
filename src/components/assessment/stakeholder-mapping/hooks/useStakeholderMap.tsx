@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Node, Edge, Connection, addEdge } from "@xyflow/react";
 import { toast } from "sonner";
 import { stakeholderService } from "@/services/stakeholderService";
+import { documentService } from "@/services/document";
 import { supabase } from "@/lib/supabase";
 
 export const useStakeholderMap = () => {
@@ -196,8 +198,16 @@ export const useStakeholderMap = () => {
       const savedVersions = await stakeholderService.getStakeholderMapVersions(companyId);
       setVersions(savedVersions);
       
-      // Skip the deliverable creation as the service doesn't have this method
-      // We'll need to implement this separately if needed
+      // Save as a deliverable
+      await documentService.createDeliverable({
+        company_id: companyId,
+        name: versionName,
+        description: "Stakeholder mapping visual representation",
+        file_path: imageUrl,
+        file_type: "image/png",
+        assessment_type: "stakeholder_mapping",
+        category: "stakeholder_map"
+      });
       
       // No return needed since return type is void
     } catch (error) {
