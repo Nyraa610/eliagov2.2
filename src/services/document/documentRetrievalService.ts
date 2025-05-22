@@ -1,11 +1,9 @@
-
 import { supabase } from "@/lib/supabase";
-import { Document, DocumentFolder, Deliverable } from "./types";
+import { Document, DocumentFolder } from "./types";
 
 // Mock data storage keys
 const DOCUMENTS_STORAGE_KEY = "documents";
 const FOLDERS_STORAGE_KEY = "folders";
-const DELIVERABLES_STORAGE_KEY = "deliverables";
 
 export const documentRetrievalService = {
   getDocuments: async (
@@ -124,41 +122,5 @@ export const documentRetrievalService = {
     const folders = JSON.parse(localStorage.getItem(FOLDERS_STORAGE_KEY) || "[]");
     const folder = folders.find((f: DocumentFolder) => f.id === folderId);
     return folder || null;
-  },
-  
-  getDeliverables: async (companyId: string, category?: string): Promise<Deliverable[]> => {
-    try {
-      // First try to get from Supabase
-      let query = supabase.from("deliverables").select("*").eq("company_id", companyId);
-      
-      if (category) {
-        query = query.eq("category", category);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      if (data) {
-        return data as Deliverable[];
-      }
-    } catch (error) {
-      console.error("Error fetching deliverables:", error);
-    }
-    
-    // Fallback to localStorage if Supabase fails
-    const deliverables = JSON.parse(localStorage.getItem(DELIVERABLES_STORAGE_KEY) || "[]");
-    let filtered = deliverables.filter((d: Deliverable) => d.company_id === companyId);
-    
-    if (category) {
-      filtered = filtered.filter((d: Deliverable) => d.category === category);
-    }
-    
-    // Sort by created_at descending
-    filtered.sort((a: Deliverable, b: Deliverable) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-    
-    return filtered;
   }
 };
