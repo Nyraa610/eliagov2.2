@@ -52,7 +52,6 @@ import { UserLayout } from "./components/user/UserLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import ESGLaunchpadPage from "./pages/ESGLaunchpad";
 import ESGStrategy from "./pages/ESGStrategy";
-import Deliverables from "./pages/Deliverables";
 import Integrations from "./pages/Integrations";
 import ActionPlanExportPage from "./pages/ActionPlanExportPage";
 
