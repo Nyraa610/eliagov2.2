@@ -150,7 +150,6 @@ function App() {
                   <Route path="/assessment/value-chain-results" element={<ProtectedRoute><UserLayout><ValueChainResults /></UserLayout></ProtectedRoute>} />
                   
                   {/* Deliverables and Integrations routes */}
-                  <Route path="/deliverables" element={<ProtectedRoute><UserLayout><Deliverables /></UserLayout></ProtectedRoute>} />
                   <Route path="/integrations/:integrationTab" element={<ProtectedRoute><UserLayout><Integrations /></UserLayout></ProtectedRoute>} />
                   <Route path="/integrations" element={<Navigate to="/integrations/notion" replace />} />
                   <Route path="/action-plan-export" element={<ProtectedRoute><UserLayout><ActionPlanExportPage /></UserLayout></ProtectedRoute>} />
