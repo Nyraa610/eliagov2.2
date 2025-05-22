@@ -52,14 +52,7 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
             
             {additionalActions}
             
-            {showDeliverables && (
-              <Button variant="outline" className="gap-2" asChild>
-                <Link to="/deliverables">
-                  <Share2 className="h-4 w-4" />
-                  {t("assessment.results.viewDeliverables", "View Deliverables")}
-                </Link>
-              </Button>
-            )}
+        
           </div>
         </CardContent>
       </Card>
