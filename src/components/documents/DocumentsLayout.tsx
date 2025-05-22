@@ -1,6 +1,6 @@
 // DocumentsLayout.tsx
-import { LoadingState } from "@/components/ui/loading-state";
-import { ErrorState } from "@/components/ui/error-state";
+import { LoadingState } from "@/components/documents/list/loading-state";
+import { ErrorState } from "@/components/documents/list/error-state";
 
 export function DocumentsLayout() {
   // ... vos imports et états existants ...
