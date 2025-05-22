@@ -5,7 +5,7 @@ import { Toaster } from './components/ui/toaster';
 import Dashboard from './pages/Dashboard';
 import ActionPlan from './pages/assessment/ActionPlan';
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
-import DeliveryProviders from './pages/assessment/DeliveryProviders';
+import yProviders from './pages/assessment/DeliveryProviders';
 import DeliveryProviderDetail from './pages/assessment/DeliveryProviderDetail';
 import { UserLayout } from './components/user/UserLayout';
 import Login from './pages/Login';
@@ -20,7 +20,6 @@ import MaterialityAnalysis from './pages/assessment/MaterialityAnalysis';
 import IroAnalysis from './pages/assessment/IroAnalysis';
 import StakeholderMapping from './pages/assessment/StakeholderMapping';
 import CarbonEvaluation from './pages/assessment/CarbonEvaluation';
-import Deliverables from './pages/Deliverables';
 import Experts from './pages/Experts';
 import Training from './pages/Training';
 import Documents from './pages/Documents';
@@ -65,7 +64,6 @@ function App() {
           <Route path="/assessment/action-plan/providers" element={<DeliveryProviders />} />
           <Route path="/assessment/action-plan/providers/:providerId" element={<DeliveryProviderDetail />} />
           
-          <Route path="/deliverables" element={<Deliverables />} />
           <Route path="/experts" element={<Experts />} />
           <Route path="/training" element={<Training />} />
           <Route path="/documents" element={<Documents />} />
