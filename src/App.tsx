@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -11,7 +10,6 @@ import DeliveryProviderDetail from './pages/assessment/DeliveryProviderDetail';
 import { UserLayout } from './components/user/UserLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Assessment from './pages/Assessment';
@@ -34,7 +32,6 @@ import CompanyHub from './pages/CompanyHub';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import { useAuth } from './contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
 
 function App() {
   return (
@@ -43,41 +40,59 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         
         {/* User routes */}
         <Route path="/" element={<UserLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/assessment" element={<Assessment />} />
-          <Route path="/assessment/esg-diagnostic" element={<EsgDiagnostic />} />
-          <Route path="/assessment/value-chain" element={<ValueChain />} />
-          <Route path="/assessment/materiality-analysis" element={<MaterialityAnalysis />} />
-          <Route path="/assessment/iro" element={<IroAnalysis />} />
-          <Route path="/assessment/stakeholder-mapping" element={<StakeholderMapping />} />
-          <Route path="/assessment/carbon-evaluation" element={<CarbonEvaluation />} />
-          <Route path="/assessment/action-plan" element={<ActionPlan />} />
-          <Route path="/assessment/action-plan-results" element={<ActionPlanResults />} />
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route 
+            path="profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* New delivery providers routes */}
-          <Route path="/assessment/action-plan/providers" element={<DeliveryProviders />} />
-          <Route path="/assessment/action-plan/providers/:providerId" element={<DeliveryProviderDetail />} />
+          {/* Assessment routes */}
+          <Route path="assessment">
+            <Route index element={<Assessment />} />
+            <Route path="esg-diagnostic" element={<EsgDiagnostic />} />
+            <Route path="value-chain" element={<ValueChain />} />
+            <Route path="materiality-analysis" element={<MaterialityAnalysis />} />
+            <Route path="iro" element={<IroAnalysis />} />
+            <Route path="stakeholder-mapping" element={<StakeholderMapping />} />
+            <Route path="carbon-evaluation" element={<CarbonEvaluation />} />
+            <Route path="action-plan">
+              <Route index element={<ActionPlan />} />
+              <Route path="results" element={<ActionPlanResults />} />
+              <Route path="providers">
+                <Route index element={<DeliveryProviders />} />
+                <Route path=":providerId" element={<DeliveryProviderDetail />} />
+              </Route>
+            </Route>
+          </Route>
           
-          <Route path="/experts" element={<Experts />} />
-          <Route path="/training" element={<Training />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/engagement" element={<Engagement />} />
-          <Route path="/company-hub" element={<CompanyHub />} />
+          {/* Other user routes */}
+          <Route path="experts" element={<Experts />} />
+          <Route path="training" element={<Training />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="engagement" element={<Engagement />} />
+          <Route path="company-hub" element={<CompanyHub />} />
         </Route>
         
         {/* Admin routes */}
-        <Route path="/admin" element={
-          <ProtectedRoute roles={['admin']}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }>
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UsersAdmin />} />
           <Route path="companies" element={<CompaniesAdmin />} />
