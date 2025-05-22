@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -5,7 +6,7 @@ import { Toaster } from './components/ui/toaster';
 import Dashboard from './pages/Dashboard';
 import ActionPlan from './pages/assessment/ActionPlan';
 import ActionPlanResults from './pages/assessment/ActionPlanResults';
-import yProviders from './pages/assessment/DeliveryProviders';
+import DeliveryProviders from './pages/assessment/DeliveryProviders';
 import DeliveryProviderDetail from './pages/assessment/DeliveryProviderDetail';
 import { UserLayout } from './components/user/UserLayout';
 import Login from './pages/Login';
@@ -28,12 +29,12 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UsersAdmin from './pages/admin/UsersAdmin';
 import CompaniesAdmin from './pages/admin/CompaniesAdmin';
 import AssessmentsAdmin from './pages/admin/AssessmentsAdmin';
-import AdminLayout from './components/admin/AdminLayout';
+import { AdminLayout } from './components/admin/AdminLayout';
 import CompanyHub from './pages/CompanyHub';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import { useAuth } from './contexts/AuthContext';
-import { Navigate } from 'react-router';
+import { Navigate } from 'react-router-dom';
 
 function App() {
   return (
@@ -72,7 +73,11 @@ function App() {
         </Route>
         
         {/* Admin routes */}
-        <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>
+        <Route path="/admin" element={
+          <ProtectedRoute roles={['admin']}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UsersAdmin />} />
           <Route path="companies" element={<CompaniesAdmin />} />
