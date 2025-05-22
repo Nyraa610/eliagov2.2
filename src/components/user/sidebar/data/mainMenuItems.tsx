@@ -100,13 +100,7 @@ const mainMenuItems: MenuItem[] = [
     requiresCompany: true,
   },
   
-  // Deliverables section - New
-  {
-    title: "Deliverables",
-    href: "/deliverables",
-    icon: Share2,
-    requiresCompany: true,
-  },
+
   
   // Talk with Experts - Highlighted feature
   {
