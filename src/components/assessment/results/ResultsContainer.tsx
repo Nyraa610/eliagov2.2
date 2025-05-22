@@ -20,7 +20,7 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
   description,
   children,
   reportUrl,
-  showDeliverables = true,
+  showDeliverables = false,
   additionalActions
 }) => {
   const { t } = useTranslation();
