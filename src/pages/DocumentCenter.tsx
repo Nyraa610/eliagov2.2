@@ -51,7 +51,7 @@ export default function DocumentCenter() {
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="company">Company Documents</TabsTrigger>
+                <TabsTrigger value="company">User Documents</TabsTrigger>
               </TabsList>
               
               <TabsContent value="company" className="space-y-4">
