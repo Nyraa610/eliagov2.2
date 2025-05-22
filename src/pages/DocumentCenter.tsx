@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +11,6 @@ export default function DocumentCenter() {
   const [activeTab, setActiveTab] = useState("company");
   const [isConsultant, setIsConsultant] = useState(false);
   
-  // Check if user is a consultant
   useEffect(() => {
     const checkConsultantRole = async () => {
       if (!user?.id) return;
@@ -34,33 +32,58 @@ export default function DocumentCenter() {
     checkConsultantRole();
   }, [user?.id]);
   
-  return (
-    <div className="container mx-auto">
-      {companyId && user?.id && (
-        <Card className="p-4 mb-4">
-          <h3 className="text-sm font-medium mb-2">Troubleshooting Tools</h3>
-          <TestUploadButton companyId={companyId} />
+  if (!user?.id) {
+    return (
+      <div className="container mx-auto p-8">
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-xl font-semibold text-center text-gray-700">
+              Please sign in to access the Document Center
+            </h2>
+          </CardContent>
         </Card>
-      )}
-      
-      {user?.id && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Document Center</CardTitle>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Troubleshooting Tools - Only show for consultants/admins */}
+      {isConsultant && companyId && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Troubleshooting Tools</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="company">Company Documents</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="company" className="space-y-4">
-                <DocumentsLayout />
-              </TabsContent>
-            </Tabs>
+            <TestUploadButton companyId={companyId} />
           </CardContent>
         </Card>
       )}
+      
+      {/* Main Document Center */}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle className="text-2xl">Document Center</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="company">Company Documents</TabsTrigger>
+              {isConsultant && <TabsTrigger value="personal">Personal Documents</TabsTrigger>}
+            </TabsList>
+            
+            <TabsContent value="company" className="space-y-4">
+              <DocumentsLayout />
+            </TabsContent>
+            
+            {isConsultant && (
+              <TabsContent value="personal" className="space-y-4">
+                <DocumentsLayout type="personal" />
+              </TabsContent>
+            )}
+          </CardContent>
+        </CardContent>
+      </Card>
     </div>
   );
 }
